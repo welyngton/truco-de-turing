@@ -9049,6 +9049,7 @@ export default function (NeuroDeck) {
 
   // src/cenas/mesa/cenario.js
   var COR_ROTULO = { ouro: "#2a1606", vinho: "#fff0e0", pedra: "#f6ecd6" };
+  var TEMPO_DE_SEGURAR = 450;
   var metodosDoCenario = {
     /** Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. */
     desenharCenarioFixo() {
@@ -9143,14 +9144,21 @@ export default function (NeuroDeck) {
         if (temDica()) segurando = setTimeout(() => {
           segurou = true;
           mostrarDica();
-        }, 450);
+        }, TEMPO_DE_SEGURAR);
       });
-      botao.on("pointerup", () => {
+      botao.on("pointerup", (ponteiro) => {
         clearTimeout(segurando);
-        if (segurou) {
+        const duracao = ponteiro && ponteiro.downTime > 0 && ponteiro.upTime >= ponteiro.downTime ? ponteiro.upTime - ponteiro.downTime : null;
+        const foiSegurado = temDica() && (duracao === null ? segurou : duracao >= TEMPO_DE_SEGURAR);
+        if (foiSegurado) {
+          if (!segurou) mostrarDica();
           segurou = false;
           setTimeout(() => this.esconderDicaDoBotao(), 2200);
           return;
+        }
+        if (segurou) {
+          segurou = false;
+          this.esconderDicaDoBotao();
         }
         if (botao.habilitado) {
           Som.selecionar();

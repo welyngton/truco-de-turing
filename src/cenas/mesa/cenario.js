@@ -14,6 +14,8 @@ import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colun
 
 /** Cor do rótulo de cada variante de botão. */
 const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
+/** Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. */
+const TEMPO_DE_SEGURAR = 450;
 
 export const metodosDoCenario = {
   /** Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. */
@@ -97,11 +99,23 @@ export const metodosDoCenario = {
     botao.on('pointerdown', () => {
       segurou = false;
       clearTimeout(segurando);
-      if (temDica()) segurando = setTimeout(() => { segurou = true; mostrarDica(); }, 450);
+      if (temDica()) segurando = setTimeout(() => { segurou = true; mostrarDica(); }, TEMPO_DE_SEGURAR);
     });
-    botao.on('pointerup', () => {
+    botao.on('pointerup', (ponteiro) => {
       clearTimeout(segurando);
-      if (segurou) { segurou = false; setTimeout(() => this.esconderDicaDoBotao(), 2200); return; }
+      /* Segurou ou tocou? Pelo tempo real do toque (carimbo de tempo dos eventos), não pela ordem em
+         que o temporizador e o evento rodam: com a página ocupada (as simulações da dica do truco,
+         por exemplo), os dois chegam fora de ordem e um toque rápido viraria "segurar", ou o
+         contrário. Sem os carimbos (evento emitido à mão), vale o temporizador. */
+      const duracao = ponteiro && ponteiro.downTime > 0 && ponteiro.upTime >= ponteiro.downTime ? ponteiro.upTime - ponteiro.downTime : null;
+      const foiSegurado = temDica() && (duracao === null ? segurou : duracao >= TEMPO_DE_SEGURAR);
+      if (foiSegurado) {
+        if (!segurou) mostrarDica(); /* o temporizador ainda não tinha rodado */
+        segurou = false;
+        setTimeout(() => this.esconderDicaDoBotao(), 2200);
+        return;
+      }
+      if (segurou) { segurou = false; this.esconderDicaDoBotao(); } /* temporizador atrasado num toque rápido */
       if (botao.habilitado) { Som.selecionar(); acao(); }
     });
     botao.texto = texto;
