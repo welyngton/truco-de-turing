@@ -62,10 +62,12 @@ describe('oponentes e dicas', () => {
     const t = cronometrar(() => jogadaGulosa(mao, mao.vez), { repeticoes: 40 });
     registrarMedida({ grupo, nome: 'Decisão gulosa', valor: t.media, unidade: 'ms', limite: 60, melhor: 'menor', detalhe: 'p95 ' + t.p95.toFixed(1) + ' ms' });
   });
-  it('partidas simuladas pelo Mestre Monte Carlo numa decisão (orçamento de 380 ms)', () => {
+  it('decisão do Mestre Monte Carlo (40 partidas simuladas por jogada)', () => {
     const mao = maoJogada(6);
-    const jogada = jogadaMonteCarlo(mao, mao.vez, 380);
-    registrarMedida({ grupo, nome: 'Simulações por decisão (Monte Carlo)', valor: jogada.simulacao ? jogada.simulacao.partidas : 400, unidade: 'partidas', limite: 150, melhor: 'maior' });
+    const jogada = jogadaMonteCarlo(mao, mao.vez);
+    registrarMedida({ grupo, nome: 'Simulações por decisão (Monte Carlo)', valor: jogada.simulacao ? jogada.simulacao.partidas : 400, unidade: 'partidas', limite: 80, melhor: 'maior' });
+    const t = cronometrar(() => jogadaMonteCarlo(mao, mao.vez), { repeticoes: 5, aquecimento: 1 });
+    registrarMedida({ grupo, nome: 'Decisão do Monte Carlo', valor: t.media, unidade: 'ms', limite: 1500, melhor: 'menor', detalhe: 'p95 ' + t.p95.toFixed(1) + ' ms' });
   });
   it('chance de vitória com 40 simulações (dica do truco)', () => {
     const mao = maoJogada(6);

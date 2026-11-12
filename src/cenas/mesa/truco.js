@@ -16,12 +16,13 @@ export const metodosDoTruco = {
   },
 
   /** Registra o pedido de `j`, grita na tela e pergunta a resposta ao outro jogador. */
-  anunciarTruco(j) {
+  anunciarTruco(j, daRede = false) {
+    if (this.online && !daRede) return this.enviarOnline({ tipo: 'truco', cadeira: j });
     pedirTruco(this.partida, j);
     this.impactoDoTruco(this.partida.pedido.para);
     this.avisarVerbete('truco');
     this.faixa(GRITO_TRUCO[this.partida.pedido.para], COR_JOGADOR_CSS[j], 72);
-    if (this.mao.jogadores[j].tipo === 'oponente') this.falar(provocar('truco'));
+    if (this.mao.jogadores[j].tipo === 'oponente') this.falar(provocar('truco'), j);
     this.anotarNaLinhaDoTempo(null, [{ tipo: 'truco', jogador: j }], this.mao.jogadores[j].nome + ' pediu ' + GRITO_TRUCO[this.partida.pedido.para].replace('!', '') + '.');
     this.ocupada = true;
     this.redesenhar();
@@ -34,11 +35,15 @@ export const metodosDoTruco = {
     const quem = 1 - pedido.por;
     const jogador = this.mao.jogadores[quem];
     const podeAumentar = proximoValor(pedido.para) != null;
+    /* online: só quem recebeu o pedido responde na própria tela; pelo computador, só o anfitrião */
+    if (this.online && (jogador.tipo === 'oponente' ? !this.souAnfitriaoOnline() : quem !== this.cadeiraOnline())) return this.esperarRede();
     if (jogador.tipo === 'oponente') {
       const resposta = responderAoTruco(this.mao, quem, jogador.oponente, pedido.para, podeAumentar);
-      this.falar(provocar(resposta));
+      this.falar(provocar(resposta), quem);
       return this.aplicarResposta(quem, resposta);
     }
+    /* várias pessoas no aparelho: quem responde pega o aparelho antes, sem ver a mão de quem pediu */
+    if (this.variosHumanos && this.quemVe !== quem) return this.passarAparelho(quem, () => this.pedirResposta());
     const quemPediu = this.mao.jogadores[pedido.por].nome;
     const botoes = [
       /* quem corre entrega o valor atual da mão */
@@ -47,7 +52,7 @@ export const metodosDoTruco = {
     ];
     if (podeAumentar) botoes.push({ rotulo: 'Pedir ' + GRITO_TRUCO[proximoValor(pedido.para)], acao: () => this.aplicarResposta(quem, 'aumentar') });
     confirmar(GRITO_TRUCO[pedido.para],
-      escaparHtml((this.doisHumanos ? jogador.nome + ', responda. ' : '') + 'Se aceitar, a mão vale ' + pedido.para + ' tentos. Se correr, ' + quemPediu + ' leva ' + partida.valor + ' agora.') +
+      escaparHtml((this.variosHumanos ? jogador.nome + ', responda. ' : '') + 'Se aceitar, a mão vale ' + pedido.para + ' tentos. Se correr, ' + quemPediu + ' leva ' + partida.valor + ' agora.') +
         this.dicaDaRespostaAoTruco(quem),
       botoes, { grito: true, topo: '<div class="quem">' + escaparHtml(quemPediu) + ' pediu</div>' });
   },
@@ -56,7 +61,8 @@ export const metodosDoTruco = {
    * Aplica a resposta de `quem`.
    * @param {'aceitar'|'correr'|'aumentar'} resposta
    */
-  aplicarResposta(quem, resposta) {
+  aplicarResposta(quem, resposta, daRede = false) {
+    if (this.online && !daRede) return this.enviarOnline({ tipo: 'resposta', cadeira: quem, resposta });
     const resultado = responderTruco(this.partida, quem, resposta);
     const nome = this.mao.jogadores[quem].nome;
     const texto = { correr: nome + ' correu do truco.', aceitar: nome + ' aceitou: a mão vale ' + this.partida.valor + '.', aumentar: nome + ' pediu mais.' }[resposta];

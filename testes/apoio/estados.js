@@ -1,9 +1,10 @@
 /**
  * @file Estados de jogo prontos para os testes: mãos novas, mãos jogadas até certo ponto e
- * mesas montadas à mão com cartas escolhidas.
+ * mesas montadas à mão com cartas escolhidas (ver também montagem.js).
  */
 import { novaMao, aplicarJogada, jogadasLegais } from '../../src/nucleo/partida.js';
 import { jogadaAleatoria } from '../../src/nucleo/oponentes/estrategias.js';
+import { montarRede } from './montagem.js';
 
 /** Dois jogadores genéricos. */
 export const JOGADORES = [{ nome: 'Ana', tipo: 'humano' }, { nome: 'Bia', tipo: 'humano' }];
@@ -13,7 +14,7 @@ export function maoNova(opcoes = {}) {
   return novaMao({ semente: 7, inicio: 'sorteio', jogadores: JOGADORES, ...opcoes });
 }
 
-/** Joga `passos` jogadas aleatórias (reprodutíveis) a partir de uma mão nova. */
+/** Joga `passos` jogadas aleatórias a partir de uma mão nova. */
 export function maoJogada(passos, opcoes = {}) {
   const mao = maoNova(opcoes);
   for (let i = 0; i < passos && mao.fase === 'jogo'; i++) aplicarJogada(mao, jogadaAleatoria(mao, mao.vez));
@@ -44,12 +45,5 @@ export function procurarSituacao(condicao, { sementes = 400, opcoes = {} } = {})
 /** Mão em que o jogador 0 tem exatamente as pilhas dadas (uma lista de [valor, naipe] por camada). */
 export function redeCom(pilhas, opcoes = {}) {
   const mao = novaMao({ semente: 1, inicio: 'sorteio', ...opcoes, jogadores: [{ nome: 'A' }, { nome: 'B' }] });
-  mao.jogadores[0].caminho = pilhas.map((cartas, camada) => {
-    const n = mao.camadas[camada][0];
-    n.cartas = cartas.map(([valor, naipe], i) => ({ id: valor + naipe + i, valor, naipe }));
-    n.revelado = true; n.dono = 0; n.rodadaRevelada = 1;
-    return n.id;
-  });
-  return mao;
+  return montarRede(mao, 0, pilhas);
 }
-

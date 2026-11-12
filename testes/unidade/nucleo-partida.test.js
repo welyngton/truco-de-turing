@@ -1,38 +1,40 @@
 /**
- * @file Testes de unidade do motor da mão (partida.js): criação, consultas, cada tipo de jogada,
- * erros de jogadas inválidas, fim da mão e desempates.
+ * @file Testes de unidade da mão (partida.js), a camada de tradução sobre o motor do NeuroDeck:
+ * criação, visão da interface, consultas, cada tipo de jogada, eventos e registro, erros de
+ * jogadas inválidas, fim da mão e desempates.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  FORMAS_DE_INICIO, NOME_EFEITO, novaMao, copiarMao, fronteira, alvosDeAtivacao, alvosDeEmpilhamento,
+  FORMAS_DE_INICIO, NOME_EFEITO, novaMao, copiarMao, atualizarVisao, finalizarMao, fronteira, alvosDeAtivacao, alvosDeEmpilhamento,
   efeitoDoEmpilhamento, podeEmpilhar, camadasDesfaziveis, valorParaTransfer, podePassar, jogadasLegais, aplicarJogada,
 } from '../../src/nucleo/partida.js';
 import { TOTAL_CAMADAS, TAMANHO_MAO } from '../../src/nucleo/rede.js';
 import { JOGADORES, maoNova, maoJogada, maoAteOFim, procurarSituacao } from '../apoio/estados.js';
+import { darMao, montarRede, finalizarRede, ajustar, esvaziarCamada, encerrar } from '../apoio/montagem.js';
 
 /** Ativa o primeiro neurônio livre para quem está na vez. */
 const ativarQualquer = (mao) => aplicarJogada(mao, jogadasLegais(mao, mao.vez).find((x) => x.tipo === 'ativar'));
 
-/** Coloca na mão do jogador cartas com os valores dados (ids novos). */
-function darCartas(mao, j, valores, naipe = 'O') {
-  mao.jogadores[j].mao = valores.map((valor, i) => ({ id: 'T' + j + valor + i, valor, naipe: ['E', 'C', 'P', 'O'][i % 4] || naipe }));
-}
+/** Ids das cartas da mão do jogador. */
+const ids = (mao, j) => mao.jogadores[j].mao.map((c) => c.id);
 
 describe('novaMao', () => {
-  it('monta a mesa 3-5-5-5-5-5-4, distribui 5 cartas e queima 10 no limbo', () => {
+  it('monta a mesa 3-5-5-5-5-5-4, distribui 5 cartas e separa 10 no limbo', () => {
     const mao = novaMao({ semente: 5, jogadores: JOGADORES });
     assert.equal(mao.camadas.length, TOTAL_CAMADAS);
     assert.equal(Object.keys(mao.neuronios).length, 32);
     for (const j of mao.jogadores) assert.equal(j.mao.length, TAMANHO_MAO);
     assert.equal(mao.limbo.length, 10);
-    assert.equal(mao.fase, 'inicio'); /* padrão: revela e volta */
+    assert.equal(mao.fase, 'inicio'); /* padrão do NeuroDeck: revela e descarta */
+    assert.equal(mao.config.inicio, 'revela-descarta');
     assert.deepEqual(mao.historico, [[0, 0]]);
+    assert.equal(mao.nd.rules, 'fusao'); /* regras da fusão no motor */
   });
   it('início por sorteio já começa a fase de jogo e emite o evento', () => {
     const mao = maoNova();
     assert.equal(mao.fase, 'jogo');
-    assert.equal(mao.eventos[0].tipo, 'inicio');
+    assert.deepEqual(mao.eventos[0], { tipo: 'inicio', jogador: mao.primeiro, como: 'sorteio' });
   });
   it('oceano sorteia o vento; mesma semente, mesma mesa', () => {
     const a = maoNova({ terreno: 'oceano' }), b = maoNova({ terreno: 'oceano' });
@@ -42,9 +44,62 @@ describe('novaMao', () => {
   it('sem semente usa uma semente nova', () => {
     assert.ok(Number.isInteger(novaMao({ jogadores: JOGADORES }).semente));
   });
+  it('baralho de truco: 2 baralhos, mão de 10 cartas e ids únicos', () => {
+    const mao = maoNova({ baralho: 'truco' });
+    assert.deepEqual(mao.jogadores.map((j) => j.mao.length), [10, 10]);
+    const todas = [...mao.camadas.flat().flatMap((n) => n.cartas), ...mao.jogadores.flatMap((j) => j.mao), ...mao.limbo];
+    assert.equal(todas.length, 54);
+    assert.equal(new Set(todas.map((c) => c.id)).size, 54);
+  });
+  it('opção desconhecida é recusada com mensagem clara', () => {
+    assert.throws(() => maoNova({ baralho: 'tarot' }), /Baralho desconhecido/);
+    assert.throws(() => maoNova({ terreno: 'lua' }), /Terreno desconhecido/);
+    assert.throws(() => maoNova({ inicio: 'dado' }), /início desconhecida/);
+  });
   it('constantes de apoio', () => {
+    assert.equal(Object.keys(FORMAS_DE_INICIO)[0], 'revela-descarta'); /* a primeira é o padrão */
     assert.ok(FORMAS_DE_INICIO['revela-volta'] && FORMAS_DE_INICIO.sorteio);
     assert.ok(NOME_EFEITO.tunagem && NOME_EFEITO.stackoverflow);
+  });
+});
+
+describe('visão da interface', () => {
+  it('a visão acompanha o estado do motor a cada jogada', () => {
+    const mao = maoNova();
+    for (let passo = 0; passo < 60 && mao.fase === 'jogo'; passo++) {
+      const legais = jogadasLegais(mao, mao.vez, { comDropout: true });
+      aplicarJogada(mao, legais[(passo * 7) % legais.length]);
+      const nd = mao.nd;
+      assert.equal(mao.vez, nd.turn);
+      assert.equal(mao.cemiterio.length, nd.graveyard.length);
+      assert.equal(mao.limbo.length, nd.limbo.length);
+      mao.jogadores.forEach((jogador, j) => {
+        assert.equal(jogador.mao.length, nd.hands[j].length);
+        assert.equal(jogador.caminho.length, nd.nets[j].path.length);
+        assert.equal(jogador.situacao === 'construindo', !nd.nets[j].finished);
+        for (const id of jogador.caminho) assert.equal(mao.neuronios[id].dono, j);
+      });
+      for (const n of mao.camadas.flat()) {
+        const slot = nd.layers[n.camada][n.posicao];
+        assert.equal(n.removido, slot.removed);
+        assert.equal(n.cartas.length, slot.removed ? 0 : 1 + slot.stack.length);
+      }
+    }
+    assert.equal(mao.historico.length > 2, true);
+  });
+  it('atualizarVisao refaz a visão depois de uma mudança direta no estado do motor', () => {
+    const mao = maoNova();
+    mao.nd.hands[0].pop();
+    assert.equal(mao.jogadores[0].mao.length, 5);
+    assert.equal(atualizarVisao(mao), mao);
+    assert.equal(mao.jogadores[0].mao.length, 4);
+  });
+  it('as cartas da interface mantêm valor, naipe e id ao longo da mão', () => {
+    const mao = maoNova();
+    const antes = mao.camadas[0][0].cartas[0];
+    ativarQualquer(mao);
+    assert.equal(mao.camadas[0][0].cartas[0], antes); /* o mesmo objeto */
+    assert.match(antes.id, /^(10|[2-9AJQK])[ECPO]$/);
   });
 });
 
@@ -53,8 +108,11 @@ describe('copiarMao', () => {
     const mao = maoJogada(4), copia = copiarMao(mao);
     assert.equal(copia.simulacao, true);
     assert.deepEqual(copia.eventos, []);
+    assert.notEqual(copia.nd, mao.nd);
     ativarQualquer(copia);
     assert.notEqual(copia.turno, mao.turno);
+    assert.deepEqual(copia.eventos, []);
+    assert.deepEqual(copia.registro, []);
     assert.equal(copia.neuronios[copia.camadas[0][0].id], copia.camadas[0][0]);
   });
 });
@@ -70,7 +128,7 @@ describe('consultas', () => {
   it('alvosDeAtivacao: livres da próxima camada; vazio para rede finalizada', () => {
     const mao = maoNova();
     assert.equal(alvosDeAtivacao(mao, 0).length, 3);
-    mao.jogadores[0].situacao = 'concluida';
+    finalizarRede(mao, 0, 'output');
     assert.deepEqual(alvosDeAtivacao(mao, 0), []);
   });
   it('alvosDeEmpilhamento: só fronteiras ocultas de redes em construção', () => {
@@ -93,6 +151,7 @@ describe('consultas', () => {
     assert.ok(!podeEmpilhar(mao, jogada.jogador, jogada.neuronio, []));
     assert.ok(!podeEmpilhar(mao, jogada.jogador, 'inexistente', jogada.cartas));
     assert.ok(!podeEmpilhar(mao, jogada.jogador, jogada.neuronio, ['carta-fora-da-mao']));
+    assert.ok(!podeEmpilhar(mao, jogada.jogador, 'C0N0', jogada.cartas)); /* entrada é imune */
   });
   it('camadasDesfaziveis: camadas ocultas do caminho', () => {
     const mao = maoNova();
@@ -102,146 +161,230 @@ describe('consultas', () => {
   });
   it('valorParaTransfer: quatro iguais na mão, uma vez por mão', () => {
     const mao = maoNova();
-    darCartas(mao, 0, ['7', '7', '7', '7', '2']);
+    darMao(mao, 0, ['7E', '7C', '7P', '7O', '2E']);
     assert.equal(valorParaTransfer(mao, 0), '7');
-    mao.jogadores[0].transferUsado = true;
+    mao.nd.transferUsed[0] = true;
+    atualizarVisao(mao);
     assert.equal(valorParaTransfer(mao, 0), null);
-    darCartas(mao, 1, ['7', '8', '9', '2', '3']);
+    darMao(mao, 1, ['7E', '8E', '9E', '2E', '3E']);
     assert.equal(valorParaTransfer(mao, 1), null);
   });
-  it('podePassar: só sem neurônio para ativar', () => {
-    const mao = maoNova();
-    assert.equal(podePassar(mao, mao.vez), false);
-    mao.camadas[0].forEach((n) => { n.dono = 9; });
-    assert.equal(podePassar(mao, mao.vez), true);
+  it('podePassar: rede interrompida por early stop com cartas na mão, ou nenhuma outra jogada', () => {
+    const mao = maoNova(), j = mao.vez;
+    assert.equal(podePassar(mao, j), false); /* rede em construção */
+    assert.equal(podePassar(mao, 1 - j), false); /* fora da vez */
+    finalizarRede(mao, j, 'earlystop');
+    assert.equal(podePassar(mao, j), true);
+    finalizarRede(mao, j, 'output'); /* chegou à saída e não tem jogada: só resta passar */
+    assert.equal(podePassar(mao, j), true);
+    assert.deepEqual(jogadasLegais(mao, j), [{ tipo: 'passar', jogador: j }]);
   });
 });
 
 describe('jogadasLegais', () => {
-  it('fase de início: uma jogada por carta da mão', () => {
+  it('fase de início: uma jogada por carta da mão, para quem ainda não escolheu', () => {
     const mao = novaMao({ semente: 2, jogadores: JOGADORES });
     assert.equal(jogadasLegais(mao, 0).length, 5);
     assert.ok(jogadasLegais(mao, 0).every((x) => x.tipo === 'inicio'));
+    aplicarJogada(mao, jogadasLegais(mao, 0)[0]);
+    assert.deepEqual(jogadasLegais(mao, 0), []);
+    assert.equal(jogadasLegais(mao, 1).length, 5);
   });
-  it('fora da vez: nenhuma jogada', () => {
+  it('fora da vez e depois do fim: nenhuma jogada', () => {
     const mao = maoNova();
     assert.deepEqual(jogadasLegais(mao, 1 - mao.vez), []);
+    const fim = maoAteOFim();
+    assert.deepEqual(jogadasLegais(fim, 0).concat(jogadasLegais(fim, 1)), []);
   });
   it('inclui dropout só com a opção comDropout', () => {
-    const mao = maoJogada(6);
+    const mao = maoNova();
+    for (let i = 0; i < 6; i++) ativarQualquer(mao);
     const j = mao.vez;
-    if (camadasDesfaziveis(mao, j)) {
-      assert.ok(!jogadasLegais(mao, j).some((x) => x.tipo === 'dropout'));
-      assert.ok(jogadasLegais(mao, j, { comDropout: true }).some((x) => x.tipo === 'dropout'));
-    }
+    assert.ok(!jogadasLegais(mao, j).some((x) => x.tipo === 'dropout'));
+    const dropouts = jogadasLegais(mao, j, { comDropout: true }).filter((x) => x.tipo === 'dropout');
+    assert.deepEqual(dropouts.map((x) => x.n), [1, 2]);
   });
-  it('com manilhas de pontos diferentes, considera cada combinação de cartas', () => {
-    const { mao, jogada } = procurarSituacao((m, x) => x.tipo === 'empilhar', { opcoes: { baralho: 'truco' } });
-    const alvo = mao.neuronios[jogada.neuronio];
-    mao.jogadores[mao.vez].mao = [
-      { id: 'X1', valor: alvo.cartas[0].valor, naipe: 'E' }, { id: 'X2', valor: alvo.cartas[0].valor, naipe: 'C' },
-      { id: 'X3', valor: alvo.cartas[0].valor, naipe: 'P' },
-    ];
-    const pilhas = jogadasLegais(mao, mao.vez).filter((x) => x.tipo === 'empilhar' && x.neuronio === alvo.id);
-    assert.ok(pilhas.length >= 1);
+  it('toda jogada listada é aceita, em mãos inteiras de todos os baralhos', () => {
+    for (const baralho of ['classico', 'truco', 'fraternidade', 'yinyang', 'powerbi']) {
+      const mao = maoNova({ baralho, semente: 21 });
+      for (let passo = 0; passo < 300 && mao.fase === 'jogo'; passo++) {
+        const legais = jogadasLegais(mao, mao.vez, { comDropout: true });
+        assert.ok(legais.length > 0, baralho);
+        for (const jogada of legais) assert.doesNotThrow(() => aplicarJogada(copiarMao(mao), jogada), baralho + ': ' + JSON.stringify(jogada));
+        aplicarJogada(mao, legais[(passo * 5 + 1) % legais.length]);
+      }
+      assert.equal(mao.fase, 'fim', baralho);
+    }
   });
 });
 
 describe('aplicarJogada', () => {
-  it('início "revela e volta": a carta mais forte começa e volta para a mão', () => {
+  it('início "revela e descarta" (padrão): a carta mais forte começa e as cartas vão para o cemitério', () => {
     const mao = novaMao({ semente: 4, jogadores: JOGADORES });
-    mao.jogadores[0].mao[0] = { id: 'AE', valor: 'A', naipe: 'E' };
-    mao.jogadores[1].mao[0] = { id: '2O', valor: '2', naipe: 'O' };
-    aplicarJogada(mao, { tipo: 'inicio', jogador: 0, carta: 'AE' });
+    const reveladas = [darMao(mao, 0, ['AE', '2E', '3E', '4E', '5E'])[0], darMao(mao, 1, ['2O', '3O', '4O', '5O', '6O'])[0]];
+    aplicarJogada(mao, { tipo: 'inicio', jogador: 0, carta: reveladas[0].id });
     assert.equal(mao.fase, 'inicio');
-    aplicarJogada(mao, { tipo: 'inicio', jogador: 1, carta: '2O' });
+    assert.equal(mao.jogadores[0].cartaInicial, reveladas[0]);
+    assert.deepEqual(mao.eventos, []); /* a escolha fica escondida até os dois revelarem */
+    aplicarJogada(mao, { tipo: 'inicio', jogador: 1, carta: reveladas[1].id });
     assert.equal(mao.fase, 'jogo');
     assert.equal(mao.vez, 0);
-    assert.equal(mao.jogadores[0].mao.length, 5);
-  });
-  it('início "revela e descarta": as cartas vão para o cemitério; empate vai para o sorteio', () => {
-    const mao = novaMao({ semente: 4, inicio: 'revela-descarta', jogadores: JOGADORES });
-    mao.jogadores[0].mao[0] = { id: 'K1', valor: 'K', naipe: 'E' };
-    mao.jogadores[1].mao[0] = { id: 'K2', valor: 'K', naipe: 'E' };
-    aplicarJogada(mao, { tipo: 'inicio', jogador: 0, carta: 'K1' });
-    aplicarJogada(mao, { tipo: 'inicio', jogador: 1, carta: 'K2' });
+    assert.deepEqual(mao.jogadores.map((j) => j.mao.length), [4, 4]);
     assert.equal(mao.cemiterio.length, 2);
-    assert.equal(mao.jogadores[0].mao.length, 4);
-    assert.ok(mao.eventos.some((e) => e.tipo === 'inicio' && e.empate));
+    const evento = mao.eventos.find((e) => e.tipo === 'inicio');
+    assert.deepEqual({ jogador: evento.jogador, como: evento.como, descarta: evento.descarta, empate: evento.empate }, { jogador: 0, como: 'revela', descarta: true, empate: false });
+    assert.deepEqual(evento.cartas, reveladas);
+    assert.match(mao.registro[0], /Ana começa/);
+  });
+  it('início "revela e volta": as cartas voltam para a mão; empate vai para o sorteio', () => {
+    const mao = novaMao({ semente: 4, inicio: 'revela-volta', jogadores: JOGADORES });
+    const reveladas = [darMao(mao, 0, ['KE', '2E'])[0], darMao(mao, 1, ['KE', '2O'])[0]];
+    aplicarJogada(mao, { tipo: 'inicio', jogador: 0, carta: reveladas[0].id });
+    aplicarJogada(mao, { tipo: 'inicio', jogador: 1, carta: reveladas[1].id });
+    assert.equal(mao.cemiterio.length, 0);
+    assert.deepEqual(mao.jogadores.map((j) => j.mao.length), [2, 2]);
+    assert.ok(mao.eventos.some((e) => e.tipo === 'inicio' && e.empate && !e.descarta));
+    assert.throws(() => aplicarJogada(mao, { tipo: 'inicio', jogador: 0, carta: reveladas[0].id }), /já começou/);
   });
   it('ativar: revela, liga à rede e passa a vez', () => {
     const mao = maoNova(), j = mao.vez;
     const alvo = alvosDeAtivacao(mao, j)[0];
+    mao.eventos.splice(0);
     aplicarJogada(mao, { tipo: 'ativar', jogador: j, neuronio: alvo.id });
     assert.ok(alvo.revelado && alvo.dono === j);
     assert.equal(mao.vez, 1 - j);
     assert.equal(mao.jogadores[j].estatisticas.ativacoes, 1);
+    assert.deepEqual(mao.eventos, [{ tipo: 'ativacao', jogador: j, neuronio: alvo.id, carta: alvo.cartas[0] }]);
+    assert.match(mao.registro.at(-1), /ativou .* na camada Entrada/);
   });
   it('ativar na camada de saída conclui a rede', () => {
     const mao = maoNova();
     for (let i = 0; i < 14 && mao.fase === 'jogo'; i++) ativarQualquer(mao);
-    assert.ok(mao.jogadores.some((j) => j.situacao === 'concluida'));
-    assert.ok(mao.eventos.some((e) => e.tipo === 'completa'));
+    assert.deepEqual(mao.jogadores.map((j) => j.situacao), ['concluida', 'concluida']);
+    assert.equal(mao.eventos.filter((e) => e.tipo === 'completa').length, 2);
+    assert.equal(mao.fase, 'fim');
+    assert.equal(mao.eventos.at(-1).tipo, 'fim');
   });
-  it('tunagem, overfit, early stop e stack overflow', () => {
-    for (const tipo of ['tunagem', 'overfit', 'earlystop', 'stackoverflow']) {
-      const { mao, jogada } = procurarSituacao((m, x) => x.tipo === 'empilhar' && efeitoDoEmpilhamento(m, x.jogador, m.neuronios[x.neuronio], x.cartas.length).tipo === tipo, { sementes: 3000 });
-      const dono = mao.neuronios[jogada.neuronio].dono;
-      aplicarJogada(mao, jogada);
-      assert.ok(mao.eventos.some((e) => e.tipo === tipo), tipo);
-      if (tipo === 'earlystop') assert.equal(mao.jogadores[dono].situacao, 'earlystop');
-      if (tipo === 'stackoverflow') assert.deepEqual(mao.jogadores[dono].mao, []);
+  it('tunagem, overfit, early stop e stack overflow: eventos, estatísticas e registro', () => {
+    for (const [quantas, proprio, tipo] of [[1, true, 'tunagem'], [1, false, 'overfit'], [2, false, 'earlystop'], [3, false, 'stackoverflow']]) {
+      const mao = maoNova();
+      for (let i = 0; i < 4; i++) ativarQualquer(mao);
+      const j = mao.vez, dono = proprio ? j : 1 - j, alvo = fronteira(mao, dono);
+      const pilha = alvo.cartas.slice(), somaAntes = mao.historico.at(-1)[j];
+      const jogadas = darMao(mao, j, Array.from({ length: quantas }, (_, i) => [alvo.cartas[0].valor, 'ECPO'[i]]));
+      mao.eventos.splice(0);
+      aplicarJogada(mao, { tipo: 'empilhar', jogador: j, neuronio: alvo.id, cartas: jogadas.map((c) => c.id) });
+      const evento = mao.eventos.find((e) => e.tipo === tipo);
+      assert.ok(evento, tipo);
+      assert.equal(evento.dono, dono);
+      assert.equal(mao.jogadores[j].acoesUsadas, 1);
+      if (tipo === 'tunagem') {
+        assert.deepEqual(evento.cartas, jogadas);
+        assert.equal(evento.ganho, mao.historico.at(-1)[j] - somaAntes);
+        assert.equal(alvo.cartas.length, 2);
+        assert.equal(mao.jogadores[j].estatisticas.tunagens, 1);
+      } else {
+        assert.deepEqual(evento.cartas, pilha.concat(jogadas)); /* tudo o que foi para o cemitério */
+        assert.equal(evento.proprio, false);
+        assert.equal(alvo.removido, true);
+        assert.equal(mao.jogadores[dono].estatisticas.sofridos, 1);
+      }
+      if (tipo === 'overfit') assert.equal(mao.jogadores[j].estatisticas.overfits, 1);
+      if (tipo === 'earlystop') { assert.equal(mao.jogadores[dono].situacao, 'earlystop'); assert.equal(mao.jogadores[j].estatisticas.earlyStops, 1); }
+      if (tipo === 'stackoverflow') { assert.deepEqual(mao.jogadores[dono].mao, []); assert.equal(mao.jogadores[j].estatisticas.overflows, 1); assert.match(mao.registro.at(-1), /STACK OVERFLOW/); }
     }
   });
-  it('dropout: desvira, paga com cartas e não gasta o turno', () => {
+  it('dropout: os neurônios vão para o cemitério, paga com cartas e não gasta o turno', () => {
     const mao = maoNova();
     for (let i = 0; i < 4; i++) ativarQualquer(mao);
-    const j = mao.vez, pagamento = [mao.jogadores[j].mao[0].id];
+    const j = mao.vez, desfeito = fronteira(mao, j), pagamento = [mao.jogadores[j].mao[0].id];
+    mao.eventos.splice(0);
     aplicarJogada(mao, { tipo: 'dropout', jogador: j, n: 1, pagamento });
     assert.equal(mao.vez, j);
     assert.equal(mao.jogadores[j].dropouts, 1);
+    assert.equal(desfeito.removido, true);
+    assert.equal(mao.cemiterio.length, 2);
+    assert.deepEqual(mao.eventos[0].neuronios, [desfeito.id]);
+    assert.equal(mao.eventos[0].pagas[0].id, pagamento[0]);
     assert.throws(() => aplicarJogada(mao, { tipo: 'dropout', jogador: j, n: 3, pagamento: [] }), /Dropout inválido/);
   });
-  it('transfer learning: troca quatro iguais por cartas do limbo', () => {
+  it('transfer learning: troca quatro iguais por cartas do limbo e não gasta o turno', () => {
     const mao = maoNova(), j = mao.vez;
-    darCartas(mao, j, ['9', '9', '9', '9', '2']);
-    const ids = mao.jogadores[j].mao.slice(0, 4).map((c) => c.id);
-    aplicarJogada(mao, { tipo: 'transfer', jogador: j, cartas: ids });
+    const cartas = darMao(mao, j, ['9E', '9C', '9P', '9O', '2E']).slice(0, 4).map((c) => c.id);
+    aplicarJogada(mao, { tipo: 'transfer', jogador: j, cartas });
     assert.ok(mao.jogadores[j].transferUsado);
     assert.equal(mao.jogadores[j].mao.length, 5);
     assert.equal(mao.limbo.length, 6);
+    assert.equal(mao.vez, j);
+    assert.equal(mao.jogadores[j].estatisticas.transfer, 1);
+    assert.equal(mao.eventos.at(-1).entram, 4);
     assert.throws(() => aplicarJogada(mao, { tipo: 'transfer', jogador: mao.vez, cartas: [] }), /indisponível/);
   });
-  it('Power BI troca a mão depois de uma ação', () => {
+  it('Power BI embaralha a mão com o limbo depois de uma ação com cartas', () => {
     const mao = maoNova({ baralho: 'powerbi' }), j = mao.vez;
-    darCartas(mao, j, ['5', '5', '5', '5', '3']);
-    aplicarJogada(mao, { tipo: 'transfer', jogador: j, cartas: mao.jogadores[j].mao.slice(0, 4).map((c) => c.id) });
-    assert.ok(mao.eventos.some((e) => e.tipo === 'powerbi'));
-    assert.ok(mao.jogadores[j].mao.every((c) => c.id.includes('~')));
+    const cartas = darMao(mao, j, ['5E', '5C', '5P', '5O', '3E']).slice(0, 4).map((c) => c.id);
+    aplicarJogada(mao, { tipo: 'transfer', jogador: j, cartas });
+    assert.ok(mao.eventos.some((e) => e.tipo === 'powerbi' && e.jogador === j));
+    assert.equal(mao.jogadores[j].mao.length, 5);
+    assert.equal(mao.limbo.length, 6);
   });
-  it('passar: só sem neurônio livre; dois passes seguidos encerram a mão', () => {
+  it('passar: recusado com a rede em construção; permitido depois de um early stop', () => {
+    const mao = maoNova(), j = mao.vez;
+    assert.throws(() => aplicarJogada(mao, { tipo: 'passar', jogador: j }), /Só passa/);
+    finalizarRede(mao, j, 'earlystop');
+    mao.eventos.splice(0);
+    aplicarJogada(mao, { tipo: 'passar', jogador: j });
+    assert.deepEqual(mao.eventos, [{ tipo: 'passe', jogador: j }]);
+    assert.equal(mao.vez, 1 - j);
+  });
+  it('rede sem neurônio livre na camada seguinte é finalizada como travada', () => {
     const mao = maoNova();
-    assert.throws(() => aplicarJogada(mao, { tipo: 'passar', jogador: mao.vez }), /Só passa/);
-    mao.camadas[0].forEach((n) => { n.dono = 9; });
-    aplicarJogada(mao, { tipo: 'passar', jogador: mao.vez });
-    aplicarJogada(mao, { tipo: 'passar', jogador: mao.vez });
+    for (let i = 0; i < 2; i++) ativarQualquer(mao);
+    const j = mao.vez;
+    esvaziarCamada(mao, 1);
+    darMao(mao, 0, []); darMao(mao, 1, []);
+    mao.eventos.splice(0);
+    aplicarJogada(mao, { tipo: 'passar', jogador: j });
+    assert.deepEqual(mao.jogadores.map((x) => x.situacao), ['travada', 'travada']);
+    assert.deepEqual(mao.eventos.filter((e) => e.tipo === 'travada').map((e) => e.jogador).sort(), [0, 1]);
     assert.equal(mao.fase, 'fim');
-    assert.ok(mao.resultado.travados.every(Boolean));
+    assert.deepEqual(mao.resultado.travados, [true, true]);
   });
-  it('erros: fora da vez, mão não iniciada, jogada desconhecida, carta fora da mão', () => {
+  it('oceano: a virada do vento a cada rodada vira evento', () => {
+    const mao = maoNova({ terreno: 'oceano' });
+    mao.eventos.splice(0);
+    ativarQualquer(mao);
+    assert.ok(!mao.eventos.some((e) => e.tipo === 'vento'));
+    ativarQualquer(mao); /* fim da primeira rodada */
+    assert.deepEqual(mao.eventos.filter((e) => e.tipo === 'vento'), [{ tipo: 'vento', naipe: mao.vento }]);
+    assert.equal(mao.rodada, 2);
+  });
+  it('erros: fora da vez, mão não iniciada, jogada desconhecida, carta fora da mão; o estado não muda', () => {
     const mao = maoNova();
+    const foto = JSON.stringify(mao.nd);
     assert.throws(() => aplicarJogada(mao, { tipo: 'ativar', jogador: 1 - mao.vez, neuronio: 'C0N0' }), /Não é a vez/);
     assert.throws(() => aplicarJogada(mao, { tipo: 'voar', jogador: mao.vez }), /desconhecida/);
     assert.throws(() => aplicarJogada(mao, { tipo: 'ativar', jogador: mao.vez, neuronio: 'C3N0' }), /indisponível/);
+    assert.throws(() => aplicarJogada(mao, { tipo: 'ativar', jogador: 7, neuronio: 'C0N0' }), /inexistente/);
+    assert.throws(() => aplicarJogada(mao, { tipo: 'empilhar', jogador: mao.vez, neuronio: 'C0N0', cartas: [mao.jogadores[mao.vez].mao[0].id] }), /Empilhamento inválido/);
+    assert.equal(JSON.stringify(mao.nd), foto);
     const parada = novaMao({ semente: 1, jogadores: JOGADORES });
     assert.throws(() => aplicarJogada(parada, { tipo: 'ativar', jogador: 0, neuronio: 'C0N0' }), /não está em andamento/);
     const { mao: m2, jogada } = procurarSituacao((m, x) => x.tipo === 'dropout');
     assert.throws(() => aplicarJogada(m2, { ...jogada, pagamento: ['nao-existe'] }), /fora da mão/);
   });
-  it('rede travada antes da saída pode ser finalizada por early stop no próprio neurônio', () => {
-    const { mao, jogada } = procurarSituacao((m, x) => x.tipo === 'empilhar' && m.neuronios[x.neuronio].dono === x.jogador && m.neuronios[x.neuronio].cartas.length + x.cartas.length === 3, { sementes: 3000 });
-    aplicarJogada(mao, jogada);
-    assert.equal(mao.jogadores[jogada.jogador].estatisticas.autoParadas, 1);
+  it('early stop na própria rede: empilhar 2 cartas no próprio neurônio finaliza a rede', () => {
+    const mao = maoNova();
+    for (let i = 0; i < 4; i++) ativarQualquer(mao);
+    const j = mao.vez, propria = fronteira(mao, j);
+    const cartas = darMao(mao, j, [[propria.cartas[0].valor, 'E'], [propria.cartas[0].valor, 'C'], ['2', 'O']]).slice(0, 2).map((c) => c.id);
+    aplicarJogada(mao, { tipo: 'empilhar', jogador: j, neuronio: propria.id, cartas });
+    assert.equal(mao.jogadores[j].estatisticas.autoParadas, 1);
+    assert.equal(mao.jogadores[j].situacao, 'earlystop');
+    assert.ok(mao.eventos.some((e) => e.tipo === 'earlystop' && e.proprio));
+    /* quem se aplicou early stop e ainda tem cartas pode passar (regra da fusão) */
+    ativarQualquer(mao);
+    if (mao.vez === j) assert.equal(podePassar(mao, j), true);
   });
 });
 
@@ -252,36 +395,52 @@ describe('fim da mão e desempates', () => {
     assert.ok([0, 1].includes(mao.resultado.vencedor));
     assert.equal(mao.resultado.somas.length, 2);
     assert.ok(mao.resultado.motivo);
+    assert.match(mao.registro.at(-1), /Fim da mão/);
+    assert.deepEqual(mao.historico.at(-1), mao.resultado.somas);
   });
-  /** Força uma mão empatada na soma e encerra com dois passes. */
+  it('finalizarMao encerra a mão no ponto em que está', () => {
+    const mao = maoJogada(5);
+    assert.equal(finalizarMao(mao), mao);
+    assert.equal(mao.fase, 'fim');
+    assert.ok(mao.resultado);
+    assert.equal(finalizarMao(mao).eventos.filter((e) => e.tipo === 'fim').length, 1); /* não encerra duas vezes */
+  });
+  /** Mão empatada em 0 x 0, com as redes finalizadas, encerrada na hora. */
   function empatada(ajuste) {
     const mao = maoNova();
+    for (const j of [0, 1]) { montarRede(mao, j, []); finalizarRede(mao, j, 'output'); }
     ajuste(mao);
-    mao.camadas[0].forEach((n) => { n.dono = 9; });
-    aplicarJogada(mao, { tipo: 'passar', jogador: mao.vez });
-    aplicarJogada(mao, { tipo: 'passar', jogador: mao.vez });
-    return mao.resultado;
+    return encerrar(mao);
   }
+  it('sem empate: maior soma da rede', () => {
+    const r = empatada((m) => montarRede(m, 1, [['9']]));
+    assert.equal(r.vencedor, 1);
+    assert.equal(r.motivo, 'maior soma da rede');
+  });
   it('1º desempate: menos dropouts', () => {
-    const r = empatada((m) => { m.jogadores[0].dropouts = 2; });
+    const r = empatada((m) => ajustar(m, { dropouts: [2, 0] }));
     assert.equal(r.vencedor, 1);
     assert.match(r.motivo, /dropouts/);
   });
   it('2º: quem ficou sem cartas perde', () => {
-    const r = empatada((m) => { m.jogadores[1].mao = []; });
+    const r = empatada((m) => darMao(m, 1, []));
     assert.equal(r.vencedor, 0);
     assert.match(r.motivo, /sem cartas/);
   });
   it('3º: soma das melhores cartas da mão', () => {
-    const r = empatada((m) => { darCartas(m, 0, ['2', '3']); darCartas(m, 1, ['9', '8', '7']); });
+    const r = empatada((m) => { darMao(m, 0, ['2E', '3E']); darMao(m, 1, ['9E', '8E', '7E']); });
     assert.equal(r.vencedor, 1);
-    assert.match(r.motivo, /melhores cartas/);
+    assert.match(r.motivo, /2 melhores cartas/);
   });
-  it('4º: carta mais alta; 5º: quem jogou primeiro', () => {
-    const r1 = empatada((m) => { m.jogadores[0].mao = [{ id: 'a', valor: '5', naipe: 'E' }]; m.jogadores[1].mao = [{ id: 'b', valor: '5', naipe: 'O' }]; });
+  it('4º: carta mais alta; 5º: naipe; 6º: quem jogou primeiro', () => {
+    const r1 = empatada((m) => { darMao(m, 0, ['QO']); darMao(m, 1, ['JE']); });
     assert.equal(r1.vencedor, 0);
     assert.match(r1.motivo, /carta mais alta/);
-    const r2 = empatada((m) => { m.jogadores[0].mao = [{ id: 'a', valor: '5', naipe: 'E' }]; m.jogadores[1].mao = [{ id: 'b', valor: '5', naipe: 'E' }]; });
-    assert.match(r2.motivo, /primeiro/);
+    const r2 = empatada((m) => { darMao(m, 0, ['5E']); darMao(m, 1, ['5O']); });
+    assert.equal(r2.vencedor, 0);
+    assert.match(r2.motivo, /naipe/);
+    const r3 = empatada((m) => { darMao(m, 0, ['5E']); darMao(m, 1, ['5E']); ajustar(m, { primeiro: 1 }); });
+    assert.equal(r3.vencedor, 1);
+    assert.match(r3.motivo, /primeiro/);
   });
 });

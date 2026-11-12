@@ -13,6 +13,7 @@ import { pontuarRede } from '../nucleo/pontuacao.js';
 import { TERRENOS } from '../nucleo/terrenos.js';
 import { BARALHOS } from '../nucleo/baralhos.js';
 import { VERBETES } from './grimorio.js';
+import { ARQUITETURAS } from '../nucleo/rede.js';
 
 /** Graduações com nome e cor da medalha. */
 export const GRADUACOES = {
@@ -54,8 +55,17 @@ export const CONQUISTAS = [
   { id: 'cartografo', nome: 'Cartógrafo', descricao: 'Vença mãos em todos os terrenos.', graduacao: 'platina', teste: (c) => Object.keys(TERRENOS).every((t) => c.progresso.terrenos[t]) },
   { id: 'colecionador', nome: 'Colecionador', descricao: 'Vença mãos com todos os baralhos.', graduacao: 'platina', teste: (c) => Object.keys(BARALHOS).every((b) => c.progresso.baralhos[b]) },
   { id: 'zap', nome: 'Zap na saída', descricao: 'Vença com o Zap (4♣) na rede, no baralho de truco.', graduacao: 'ouro', teste: (c) => c.venceu && c.mao.config.baralho === 'truco' && meu(c).caminho.some((id) => { const carta = c.mao.neuronios[id].cartas[0]; return carta.valor === '4' && carta.naipe === 'P'; }) },
-  { id: 'biblio', nome: 'Bibliotecário', descricao: 'Leia todos os verbetes do Grimório.', graduacao: 'prata', teste: (c) => c.progresso.verbetesLidos >= VERBETES.length },
+  { id: 'biblio', nome: 'Bibliotecário', descricao: 'Leia todos os verbetes da Biblioteca de conceitos.', graduacao: 'prata', teste: (c) => c.progresso.verbetesLidos >= VERBETES.length },
+  /* conquistas da fusão: baralhos, mesas e arquiteturas do NeuroDeck */
+  { id: 'nobreza', nome: 'Sangue azul', descricao: 'Vença uma mão do baralho Nobreza com figuras iguais vizinhas na sua rede.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.config.baralho === 'nobreza' && pontuarRede(c.mao, c.eu).neuronios.some((n) => n.notas.includes('×2 figura')) },
+  { id: 'backprop', nome: 'Forward pass de ouro', descricao: 'Termine uma mão do baralho Backprop com a saída da sua rede em 45 ou mais.', graduacao: 'ouro', teste: (c) => c.mao.config.baralho === 'backprop' && c.mao.resultado.somas[c.eu] >= 45 },
+  { id: 'tunador', nome: 'Ajuste fino', descricao: 'Faça 3 tunagens numa mesma mão.', graduacao: 'bronze', teste: (c) => meu(c).estatisticas.tunagens >= 3 },
+  { id: 'batch', nome: 'Batch grande', descricao: 'Vença uma mão com 4 ou mais jogadores na mesa.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.jogadores.length >= 4 },
+  { id: 'ensemble', nome: 'Ensemble', descricao: 'Vença uma mão contra quatro adversários (5 jogadores).', graduacao: 'ouro', teste: (c) => c.venceu && c.mao.jogadores.length >= 5 },
+  { id: 'bigdata', nome: 'Big data', descricao: 'Vença uma mão jogada com 3 baralhos.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.config.baralhos >= 3 },
+  { id: 'profunda', nome: 'Deep learning de verdade', descricao: 'Vença uma mão na arquitetura profunda.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.config.arquitetura === 'profunda' },
+  { id: 'arquiteto', nome: 'Arquiteto de redes', descricao: 'Vença mãos em todas as arquiteturas (padrão, curta, profunda e larga).', graduacao: 'platina', teste: (c) => Object.keys(ARQUITETURAS).every((a) => c.progresso.arquiteturas && c.progresso.arquiteturas[a]) },
 ];
 
 /** Conquistas que podem ser ganhas mesmo quando a mão termina porque alguém correu do truco. */
-export const VALEM_SEM_MAO_COMPLETA = new Set(['correu', 'campeao', 'maquina', 'primeira', 'dez', 'cinquenta', 'gato10', 'gato100', 'biblio', 'truco', 'doze', 'cartografo', 'colecionador']);
+export const VALEM_SEM_MAO_COMPLETA = new Set(['correu', 'campeao', 'maquina', 'primeira', 'dez', 'cinquenta', 'gato10', 'gato100', 'biblio', 'truco', 'doze', 'cartografo', 'colecionador', 'arquiteto']);

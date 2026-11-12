@@ -78,10 +78,13 @@ index.html                 página de desenvolvimento
 src/principal.js           ponto de entrada: cria o Phaser.Game
 src/aplicacao.js           opções, progresso, conquistas e navegação menu ⇄ mesa
 src/configuracao.js        mundo 1280x720, cores, fontes, resolução
-src/estilo.css             painéis HTML (menu, regras, grimório, conquistas, sobre)
-src/nucleo/                regras puras (sem Phaser): cartas, baralhos, terrenos, rede,
-                           pontuação, partida, truco e oponentes
-src/conteudo/              Grimório, conquistas, textos e progresso salvo
+src/estilo.css             painéis HTML (menu, regras, biblioteca, conquistas, avatares, sobre)
+src/motor/                 motor de regras do NeuroDeck (do colega Francisco): estado, ações,
+                           baralhos, terrenos, desempates e bots. Ver src/motor/ORIGEM.md
+src/nucleo/                camada de tradução (sem Phaser): entrega às telas a mão, as jogadas,
+                           a pontuação e os oponentes no formato da interface, sobre o motor;
+                           e o modo truco
+src/conteudo/              Biblioteca de conceitos, conquistas, textos e progresso salvo
 src/arte/                  arte procedural em canvas: cartas, versos, mesas, avatares, ícones
 src/interface/             menu, telas HTML, avisos e som (WebAudio)
 src/cenas/                 cenas do Phaser: carregamento, menu e mesa
@@ -94,55 +97,90 @@ relatorios/                relatórios de testes, cobertura e performance
 docs/                      manual e referência
 ```
 
-O núcleo (`src/nucleo`) não depende do Phaser: roda no navegador e no Node, o que permite testar regras
-e balanceamento com milhares de partidas.
+O motor (`src/motor`) e o núcleo (`src/nucleo`) não dependem do Phaser: rodam no navegador e no Node,
+o que permite testar regras e balanceamento com milhares de partidas.
+
+### Fusão com o NeuroDeck
+
+Por decisão do professor, o jogo unificado usa as **regras do NeuroDeck** e a **interface do Truco de
+Turing**. O motor do NeuroDeck foi copiado do site publicado sem alterações (o SHA-256 de cada arquivo e
+1.000 partidas com semente conferem com o site) e depois recebeu as quatro mudanças de regra decididas
+em 10/11/2026; o conjunto original continua disponível com `rules: 'nd-2.0.0'` e é testado contra o
+site a cada execução. `src/nucleo` virou uma camada de tradução: as telas chamam as mesmas funções de
+antes e quem decide as regras é o motor. Detalhes em [`src/motor/ORIGEM.md`](src/motor/ORIGEM.md).
 
 ## Regras implementadas
 
-Seguem a especificação do enunciado: mesa 3-5-5-5-5-5-4, 5 cartas na mão, 10 no limbo; uma carta por camada
-da entrada à saída; Ás 11, figuras 0; par de figuras iguais adjacentes +10, trio +20, quadra zera a rede;
-tunagem, overfit, early stop, stack overflow, dropout (GatoNet, não consome o turno), transfer learning
-(uma vez por mão); entrada e saída imunes; desempates na ordem do enunciado; as três opções de "quem começa".
+São as regras do motor do NeuroDeck com as decisões da fusão: mesa 3-5-5-5-5-5-4, 5 cartas na mão, 10 no
+limbo; uma carta por camada da entrada à saída; Ás 11, figuras 0; figuras iguais em camadas vizinhas
+valem 10 cada (par 20, trio 30) e a quadra zera a rede; tunagem, overfit, early stop, stack overflow,
+dropout (GatoNet) e transfer learning (uma vez por mão), os dois últimos sem gastar o turno; entrada e
+saída imunes; desempates na ordem do enunciado; as três opções de "quem começa".
 
-Pontos em que o enunciado deixa margem e a leitura adotada:
+Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo, 10/11/2026):
 
-| Ponto | Leitura adotada |
+| Ponto | Regra |
 |---|---|
-| Exemplo 8-K-K-3 com tunagem = 41 | Cartas de figura empilhadas contam para o combo: K(2)+K(1) = trio (20) + tunagem (10) → 8+20+10+3 = 41. Quatro figuras iguais seguidas, contando empilhadas, causam vanishing gradient. |
-| Efeito de empilhar | Decidido pelo tamanho final da pilha: 2 = tunagem (própria) ou overfit (adversário); 3 = early stop; 4 = stack overflow. Vale também na própria rede (auto-early-stop, auto-stack-overflow). |
-| Dropout | Desvira os últimos neurônios ocultos (voltam à mesa sem dono, marcados como "lembra: X"); cartas de tunagem empilhadas vão ao cemitério. |
-| Transfer learning | Consome o turno. |
-| Passar a vez | Só quando não há neurônio livre para ativar (rede finalizada ou travada). |
-| Fim da mão | Todas as redes finalizadas, ou todos passam em sequência. Redes travadas contam a soma parcial. |
-| Terrenos | Valem até a rede ser finalizada; a soma congela no early stop, stack overflow ou chegada à saída. |
+| Par e trio de figuras | Cada figura da sequência vale 10: par 20, trio 30. Quatro figuras iguais causam vanishing gradient. |
+| Carta empilhada (professor) | Conta na sequência de figuras, como as outras (sem bônus extra). O exemplo 8-K-K-3 com tunagem num K tem três Reis: 8 + 30 + 3 = 41. Tunar os dois Reis de um par forma quadra e zera a rede. |
+| Efeito de empilhar | Decidido pelo tamanho final da pilha: 2 = tunagem (própria) ou overfit (adversário); 3 = early stop; 4 = stack overflow. Vale também na própria rede (auto early stop, auto stack overflow). |
+| Dropout (professor) | Os neurônios desfeitos saem da mesa e vão para o cemitério, com as tunagens. Não gasta o turno. |
+| Camada sem neurônio livre (professor) | A rede é finalizada ali ("acabou o campo") e conta a soma parcial. |
+| Transfer learning (professor) | Não gasta o turno. |
+| Passar a vez | Só quem teve a rede interrompida por early stop, do rival ou aplicado em si, e ainda tem cartas (atacar não é obrigatório); ou quem não tem nenhuma outra jogada. Quem não pode jogar é pulado. |
+| Desempate pela carta mais alta | Compara a força da carta (Ás > K > Q > J > 10 … 2); o naipe só decide entre cartas iguais. |
+| Quem começa | Padrão: cada um revela uma carta, que vai para o cemitério. No menu também há a opção em que a carta volta para a mão e o sorteio. |
+| Fim da mão | Todas as redes finalizadas, ou ninguém mais tem jogada. |
+| Terrenos | Montanha: +1 ponto por camada alcançada. Pântano: neurônio sem tunagem perde 1 ponto por rodada. Oceano: neurônio do naipe do vento, revelado na rodada, vale o dobro para sempre. |
+| Baralho Truco | Só as cartas do truco, em 2 baralhos (mão de 10 cartas); as figuras valem pontos próprios e não formam par nem trio. |
 
 ## Proposta geral de mecânicas para gerar engajamento
 
 - **Truco** por cima da mecânica: cada mão vale 1 tento; peça TRUCO (3), SEIS, NOVE, DOZE; correr entrega o valor atual; partida até 12; mão de onze.
 - **Tensão de corrida**: chegar à saída torna a rede imune; tunar aumenta a soma, mas deixa o neurônio a uma carta do early stop.
 - **Três oponentes, um por nível**:
-  - *Zé do Ruído* (fácil): sorteia qualquer jogada válida; bom para aprender as regras.
-  - *Gradiente Guloso* (médio): como a descida de gradiente, escolhe o lance que mais melhora o placar agora, olhando um turno à frente pelo valor esperado.
-  - *Mestre Monte Carlo* (difícil): sorteia as cartas ocultas, simula centenas de partidas e escolhe o lance que mais venceu; mostra a própria chance de vitória e truca com base nas simulações.
-- **5 baralhos e 4 terrenos** da seção de extensões (Truco com manilhas, Fraternidade, Yin-yang, Power BI; Montanha, Pântano, Oceano).
-- **27 conquistas** em graduações de bronze a antimatéria, incluindo as do enunciado (Desk rejection, Marcha dos patos, Contra tudo e contra todos, Artilheiro dos gols inúteis, 100 dropouts…).
+  - *Zé do Ruído* (fácil): sorteia uma jogada válida; bom para aprender as regras.
+  - *Gradiente Guloso* (médio): como a descida de gradiente, escolhe o lance que mais melhora o placar agora, sem olhar adiante.
+  - *Mestre Monte Carlo* (difícil): sorteia as cartas ocultas, simula dezenas de partidas para cada lance e escolhe o que mais venceu; mostra a própria chance de vitória e truca com base nas simulações.
+- **7 baralhos e 4 terrenos**: Clássico, Truco com manilhas, Nobreza, Backprop (o naipe é o peso, as figuras são ativações e a rede vale a saída do forward pass), Fraternidade, Yin-yang e Power BI; mesa neutra, Montanha, Pântano e Oceano, cada terreno com ambiente animado (neve, neblina e vaga-lumes, ondas e vento).
+- **35 conquistas** em graduações de bronze a antimatéria, incluindo as do enunciado (Desk rejection, Marcha dos patos, Contra tudo e contra todos, Artilheiro dos gols inúteis, 100 dropouts…) e as da fusão (baralhos Nobreza e Backprop, mesas de 4 e 5 jogadores, 3 baralhos, arquiteturas).
+- **9 avatares** para o jogador, 6 deles liberados por conquistas (Menu > Avatar).
 - **Modo dicas**: dicas de estratégia a cada vez, sempre com o conceito de redes neurais por trás, e explicações nos botões (mouse ou segurar no celular); só usam o que está à vista e nunca dizem qual carta virada escolher. Mãos com dicas não valem conquistas.
-- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (como jogar, Grimório e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
-- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Grimório.
-- **Música por terreno** (ligada por padrão): blues na mesa neutra, valsa no oceano, épica na montanha e gótica no pântano; fanfarra e confete na vitória.
+- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Biblioteca de conceitos e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
+- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos da Biblioteca de conceitos.
+- **Trilha sonora** (ligada por padrão): canção de ninar no menu, blues lento na Planície (mesa neutra), valsa com marimba no oceano, épica com trompa, harpa e tambores na montanha e uma dança de fada com harmônica de vidro e glockenspiel no pântano; fanfarra e confete na vitória.
 - **Feedback visual**: conexões com espessura proporcional ao valor (como no Playground), curva de treino, explosões, banners, músicas e sons.
 
 ## Conteúdo educativo
 
-Cada mecânica corresponde a um verbete do **Grimório**, que aparece como aviso na primeira vez em que acontece:
-neurônio, camadas, propagação direta, pesos, curva de treino, fine-tuning, overfitting, dropout, early stopping,
-explosão de gradientes, vanishing gradient, transfer learning, ruído, Monte Carlo, mudança de distribuição
-(terrenos como weight decay e concept drift) e decisão sob incerteza (truco).
+Cada mecânica corresponde a um verbete da **Biblioteca de conceitos** (o antigo Grimório), que aparece como aviso na
+primeira vez em que acontece: neurônio, função de ativação, camadas e arquiteturas, propagação direta, pesos, curva de
+treino, retropropagação, fine-tuning, overfitting, dropout, early stopping, stack overflow, vanishing gradient, transfer
+learning, ruído, Monte Carlo, mudança de distribuição (terrenos como weight decay e concept drift) e decisão sob
+incerteza (truco). Cada verbete traz a equação, uma figura quando ajuda, como aparece no jogo e até onde a comparação
+vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Ver o conceito".
 
-## Ideias de extensão
+## Jogar online
 
-Mais de 2 jogadores e múltiplos baralhos (o motor já itera sobre `jogadores`), coringas com efeitos,
-modo online (o estado é serializável), tutorial guiado e um laboratório de simulação na interface.
+Botão **Jogar online** no menu:
+
+- **Conta**: entrar com Google ou e-mail e senha guarda conquistas, avatares e progresso na conta,
+  que vale em qualquer aparelho; o progresso do aparelho e o da conta se juntam sem contar nada em dobro.
+- **Sala**: quem cria a sala escolhe quantas pessoas vão jogar e passa o código de 5 letras; as
+  cadeiras que sobrarem ficam com o computador. A sala usa as opções do menu, e o truco vale entre 2 jogadores.
+- **Como funciona**: todos os aparelhos criam a mesma mão com a mesma semente e aplicam as mesmas
+  ações na mesma ordem, numerada pelo anfitrião (`src/online/sala.js`). Quem cai vira computador
+  no mesmo ponto em todas as telas; se o anfitrião sai, a próxima pessoa assume a sala. Quem
+  recarrega a aba volta à mesma cadeira.
+- **Onde roda**: pela internet, com o projeto Firebase do grupo (`src/online/configuracao.js`,
+  regras em `firestore.rules`); sem login, a sala funciona entre abas e janelas do mesmo navegador.
+
+Limite conhecido: cada aparelho tem o estado completo da mão (é assim que a sincronia funciona sem
+servidor próprio), então quem abrir o console do navegador consegue ver as cartas dos outros.
+
+## Próximos passos
+
+Carregar mods na interface (o motor já tem o registro de baralhos, terrenos e ações).
 
 ## Licença
 
@@ -150,9 +188,11 @@ Distribuído sob a [GPL-3.0](https://github.com/welyngton/truco-de-turing#GPL-3.
 
 Autores:
 <!-- autores -->
-- Welyngton Jose Vinicius Dal Pra ([@welyngton](https://github.com/welyngton))
-- Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande))
-- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo))
+- Welyngton José Vinicius Dal Prá ([@welyngton](https://github.com/welyngton)): Truco de Turing (interface, arte, sons, conquistas e modo truco)
+- Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande)): testes, validação das regras e fusão com o NeuroDeck
+- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações na Biblioteca de conceitos
+- Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções da fusão
+- Francisco Lima: NeuroDeck (regras, motor, oponentes e mods)
 <!-- /autores -->
 
 Regras originais: Peng Yaohao - FPO-UNB - 2026-2

@@ -5,8 +5,12 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { VERBETES } from '../../src/conteudo/grimorio.js';
+import { FIGURAS, figuraDaBiblioteca } from '../../src/conteudo/figurasDaBiblioteca.js';
+import { ACOES_DA_AJUDA } from '../../src/interface/telas/ajudaDasAcoes.js';
+import { NeuroDeck } from '../../src/motor/engine.js';
 import { AMBIENTACAO, PROVOCACOES, provocar } from '../../src/conteudo/textos.js';
 import { GRADUACOES, CONQUISTAS, VALEM_SEM_MAO_COMPLETA } from '../../src/conteudo/conquistas.js';
+import { AVATARES_DO_JOGADOR, avatarLiberado, avatarDoJogador, conquistaQueLibera, avataresDaConquista } from '../../src/conteudo/avatares.js';
 import { DICAS_GERAIS, escolherDicaDeJogo } from '../../src/conteudo/dicasDeJogo.js';
 import { carregarProgresso, salvarProgresso } from '../../src/conteudo/progresso.js';
 import { novaMao, aplicarJogada } from '../../src/nucleo/partida.js';
@@ -16,6 +20,7 @@ import { jogadaAleatoria } from '../../src/nucleo/oponentes/estrategias.js';
 import { BARALHOS } from '../../src/nucleo/baralhos.js';
 import { TERRENOS } from '../../src/nucleo/terrenos.js';
 import { maoNova, maoAteOFim, redeCom } from '../apoio/estados.js';
+import { darMao, montarRede } from '../apoio/montagem.js';
 
 describe('grimorio.js', () => {
   it('verbetes com id único, título, categoria, conceito e "no jogo"', () => {
@@ -23,15 +28,57 @@ describe('grimorio.js', () => {
     assert.equal(new Set(VERBETES.map((v) => v.id)).size, VERBETES.length);
     for (const v of VERBETES) assert.ok(v.titulo && v.categoria && v.conceito && v.noJogo, v.id);
   });
-  it('verbetes completos: ideia, onde a comparação falha, matemática com LaTeX balanceado e autoria', () => {
-    const completos = VERBETES.filter((v) => v.ideia);
-    assert.ok(completos.length >= 6);
-    for (const v of completos) {
-      assert.ok(v.ondeFalha && v.aprofundar && v.formula && v.autoria, v.id);
-      for (const campo of ['ideia', 'conceito', 'noJogo', 'ondeFalha', 'aprofundar']) {
-        assert.equal((v[campo].match(/\$/g) || []).length % 2, 0, v.id + '.' + campo + ': cifrões sem par');
+  it('verbetes de Ação: ideia do dia a dia e autoria; matemática em LaTeX balanceado quando houver', () => {
+    const comIdeia = VERBETES.filter((v) => v.ideia);
+    assert.deepEqual(comIdeia.map((v) => v.id).sort(), ['dropout', 'earlystop', 'overfit', 'stackoverflow', 'tunagem', 'transfer'].sort());
+    for (const v of comIdeia) {
+      assert.equal(v.autoria, 'Suzy Arcanjo', v.id);
+      assert.ok(!('ondeFalha' in v), v.id + ': o limite da comparação fica em `limite`');
+      if (v.aprofundar || v.formula) assert.ok(v.aprofundar && v.formula, v.id + ': aprofundar e formula andam juntos');
+      for (const campo of ['ideia', 'conceito', 'noJogo', 'limite', 'aprofundar']) {
+        if (v[campo]) assert.equal((v[campo].match(/\$/g) || []).length % 2, 0, v.id + '.' + campo + ': cifrões sem par');
       }
     }
+    assert.deepEqual(VERBETES.filter((v) => v.formula).map((v) => v.id), ['overfit', 'stackoverflow', 'transfer']);
+  });
+  it('Biblioteca de conceitos: todo verbete tem equação em MathML e "até onde vale a comparação"; as figuras existem', () => {
+    for (const v of VERBETES) {
+      assert.match(v.equacao, /^(<math display="block">.*?<\/math>)+$/s, v.id);
+      assert.ok(v.limite && v.limite.length > 20, v.id);
+      if (v.figura) assert.ok(FIGURAS[v.figura], v.id + ': figura ' + v.figura);
+    }
+    for (const nome of Object.keys(FIGURAS)) assert.match(figuraDaBiblioteca(nome), /^<svg[^>]*role="img"[^>]*aria-label="[^"]+".*<\/svg>$/s, nome);
+    assert.equal(figuraDaBiblioteca('nao-existe'), '');
+  });
+  it('textos revistos: as linhas não são pesos, stack overflow não é conceito de redes, a curva da mesa sobe', () => {
+    const v = Object.fromEntries(VERBETES.map((x) => [x.id, x]));
+    assert.match(v.pesos.limite, /não são pesos/);
+    assert.doesNotMatch(v.pesos.noJogo, /laranja é o adversário/); /* com 3 a 5 jogadores há outras cores */
+    assert.match(v.stackoverflow.conceito, /não é um conceito de redes neurais/);
+    assert.match(v.stackoverflow.conceito, /outro fenômeno/);
+    assert.match(v.perda.noJogo, /sobe/);
+  });
+  it('ajuda das ações: cada ação da barra tem verbete na Biblioteca e regra no motor', () => {
+    const ids = new Set(VERBETES.map((x) => x.id));
+    for (const a of ACOES_DA_AJUDA) {
+      assert.ok(ids.has(a.verbete), a.id);
+      assert.ok(NeuroDeck.action(a.motor).rule, a.id);
+      assert.ok(a.resumo && a.quando, a.id);
+    }
+    for (const id of ['tunagem', 'overfit', 'earlystop', 'stackoverflow', 'dropout', 'transfer', 'passar']) assert.ok(ACOES_DA_AJUDA.some((a) => a.id === id), id);
+  });
+});
+
+describe('avatares.js', () => {
+  it('livres desde o início e os outros liberados pela conquista; o escolhido só vale se liberado', () => {
+    const p = { desbloqueadas: {}, avatar: 'gato' };
+    assert.deepEqual(AVATARES_DO_JOGADOR.filter((a) => avatarLiberado(a, p)).map((a) => a.id), ['p1', 'p2', 'robo']);
+    assert.equal(avatarDoJogador(p), 'p1'); /* gato ainda bloqueado */
+    p.desbloqueadas.gato10 = 1;
+    assert.equal(avatarDoJogador(p), 'gato');
+    assert.equal(avatarDoJogador({ desbloqueadas: {}, avatar: 'nao-existe' }), 'p1');
+    for (const a of AVATARES_DO_JOGADOR) if (a.conquista) assert.ok(CONQUISTAS.some((c) => c.id === a.conquista) && conquistaQueLibera(a), a.id);
+    assert.deepEqual(avataresDaConquista('contra').map((a) => a.id), ['cosmico']);
   });
 });
 
@@ -92,6 +139,14 @@ describe('conquistas.js', () => {
       c.mao = redeCom([[['4', 'P']]], { baralho: 'truco' });
     }, (c) => { c.venceu = true; c.mao = redeCom([[['5', 'P']]], { baralho: 'truco' }); }],
     biblio: [(c) => { c.progresso.verbetesLidos = VERBETES.length; }],
+    nobreza: [(c) => { c.venceu = true; c.mao = redeCom([['8'], ['KC'], ['KP']], { baralho: 'nobreza' }); }, (c) => { c.venceu = true; c.mao = redeCom([['8'], ['KC'], ['QP']], { baralho: 'nobreza' }); }],
+    backprop: [(c) => { c.mao = redeCom([['8']], { baralho: 'backprop' }); c.mao.resultado = { somas: [45, 0] }; }, (c) => { c.mao = redeCom([['8']], { baralho: 'backprop' }); c.mao.resultado = { somas: [44.9, 0] }; }],
+    tunador: [(c) => { c.mao.jogadores[0].estatisticas.tunagens = 3; }, (c) => { c.mao.jogadores[0].estatisticas.tunagens = 2; }],
+    batch: [(c) => { c.venceu = true; c.mao.jogadores = [...c.mao.jogadores, ...c.mao.jogadores]; }, (c) => { c.venceu = true; }],
+    ensemble: [(c) => { c.venceu = true; c.mao.jogadores = Array(5).fill(c.mao.jogadores[0]); }, (c) => { c.venceu = true; c.mao.jogadores = Array(4).fill(c.mao.jogadores[0]); }],
+    bigdata: [(c) => { c.venceu = true; c.mao.config.baralhos = 3; }, (c) => { c.venceu = true; c.mao.config.baralhos = 2; }],
+    profunda: [(c) => { c.venceu = true; c.mao.config.arquitetura = 'profunda'; }, (c) => { c.venceu = true; c.mao.config.arquitetura = 'larga'; }],
+    arquiteto: [(c) => { c.progresso.arquiteturas = { padrao: true, curta: true, profunda: true, larga: true }; }, (c) => { c.progresso.arquiteturas = { padrao: true, curta: true, profunda: true }; }],
   };
   it('graduações com nome e cor', () => {
     for (const g of Object.values(GRADUACOES)) assert.ok(g.nome && /^#/.test(g.cor));
@@ -133,35 +188,37 @@ describe('dicasDeJogo.js', () => {
     const dica = (mao, j = 0, partida = novaPartida(12), recentes = []) => { const d = escolherDicaDeJogo(mao, j, partida, recentes); vistas.add(d.id); return d; };
     /* oportunidades de ataque contra a fronteira do adversário (jogador 1) */
     const ataque = (pilha, naMao, valor = '9') => {
-      const mao = redeCom([[['5', 'O']], [['3', 'E']]]);
-      mao.jogadores[1].caminho = ['C0N1', 'C1N1'];
-      Object.assign(mao.neuronios.C1N1, { revelado: true, dono: 1, cartas: Array.from({ length: pilha }, (_, i) => ({ id: 'v' + i, valor, naipe: 'E' })) });
-      mao.neuronios.C0N1.dono = 1; mao.neuronios.C0N1.revelado = true;
-      mao.jogadores[0].mao = Array.from({ length: naMao }, (_, i) => ({ id: 'm' + i, valor, naipe: 'C' }));
+      const mao = redeCom([['5O'], ['3E']]);
+      montarRede(mao, 1, [['2C'], Array.from({ length: pilha }, () => valor + 'E')]);
+      darMao(mao, 0, Array.from({ length: naMao }, () => valor + 'C'));
       return mao;
     };
     assert.equal(dica(ataque(1, 3)).id, 'ataque-overflow');
     assert.equal(dica(ataque(2, 1)).id, 'ataque-earlystop');
     assert.equal(dica(ataque(1, 1)).id, 'ataque-overfit');
     /* riscos na própria rede */
-    assert.equal(dica(redeCom([[['5', 'O']], [['K', 'E']], [['K', 'C']]])).id, 'risco-vanishing');
-    assert.equal(dica(redeCom([[['5', 'O']], [['7', 'E'], ['7', 'C']]])).id, 'risco-tunado');
-    const tunar = redeCom([[['5', 'O']], [['7', 'E']]]);
-    tunar.jogadores[0].mao = [{ id: 'x', valor: '7', naipe: 'O' }];
+    assert.equal(dica(redeCom([['5O'], ['KE'], ['KC']])).id, 'risco-vanishing');
+    assert.equal(dica(redeCom([['5O'], ['7E', '7C']])).id, 'risco-tunado');
+    const tunar = redeCom([['5O'], ['7E']]);
+    darMao(tunar, 0, ['7O']);
     assert.equal(dica(tunar).id, 'tunagem');
+    assert.match(dica(tunar).texto, /soma 7 pontos/);
+    const tunarFigura = redeCom([['5O'], ['QE']]);
+    darMao(tunarFigura, 0, ['QO']);
+    assert.match(dica(tunarFigura).texto, /sequência/);
     /* corrida, truco, transfer, mão curta e terrenos */
-    const corrida = redeCom([[['2', 'O']]]);
-    corrida.jogadores[1].caminho = ['C0N1', 'C1N1', 'C2N1', 'C3N1', 'C4N1', 'C5N1'];
-    corrida.jogadores[0].mao = ['3', '4', '5'].map((v) => ({ id: 'c' + v, valor: v, naipe: 'E' }));
-    corrida.jogadores[1].caminho.forEach((id) => { Object.assign(corrida.neuronios[id], { revelado: true, dono: 1, cartas: [{ id: id + 'x', valor: '9', naipe: 'P' }] }); });
+    const corrida = redeCom([['2O']]);
+    montarRede(corrida, 1, Array.from({ length: 6 }, () => ['9P']));
+    darMao(corrida, 0, ['3E', '4E', '5E']);
     assert.equal(dica(corrida).id, 'corrida');
-    const frente = redeCom([[['A', 'O']], [['A', 'E']]]);
+    const frente = redeCom([['AO'], ['AE']]);
+    darMao(frente, 0, ['3E', '4E', '5C']); /* sem Ás na mão, para não cair na dica de tunagem */
     assert.equal(dica(frente, 0, novaPartida(12), ['risco-tunado']).id, 'truco');
-    const quatro = redeCom([[['2', 'O']]]);
-    quatro.jogadores[0].mao = ['E', 'C', 'P', 'O'].map((n) => ({ id: '6' + n, valor: '6', naipe: n }));
+    const quatro = redeCom([['2O']]);
+    darMao(quatro, 0, ['6E', '6C', '6P', '6O']);
     assert.equal(dica(quatro).id, 'transfer');
-    const curta = redeCom([[['2', 'O']]]);
-    curta.jogadores[0].mao = [{ id: 'z', valor: '3', naipe: 'E' }];
+    const curta = redeCom([['2O']]);
+    darMao(curta, 0, ['3E']);
     assert.equal(dica(curta).id, 'mao-curta');
     assert.equal(dica(redeCom([[['2', 'O']]], { terreno: 'pantano' })).id, 'terreno-pantano');
     assert.equal(dica(redeCom([[['2', 'O']]], { terreno: 'montanha' })).id, 'terreno-montanha');

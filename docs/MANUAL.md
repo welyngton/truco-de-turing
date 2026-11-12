@@ -1,7 +1,7 @@
 # Manual do código — Truco de Turing
 
 Este manual explica como o código do jogo está organizado, como rodar, testar e publicar, e como
-estender o jogo (novo baralho, terreno, oponente, conquista ou verbete do Grimório).
+estender o jogo (novo baralho, terreno, oponente, conquista ou verbete da Biblioteca de conceitos).
 
 A lista completa de módulos e funções, com a descrição de cada uma, fica em
 [`docs/REFERENCIA.md`](REFERENCIA.md). Ela é gerada a partir dos comentários do código com
@@ -24,14 +24,22 @@ A regra mais importante da arquitetura é a separação em camadas, em que cada 
 │ interface/          HTML sobreposto: menu, telas, avisos, som │
 ├───────────────────────────────────────────────────────────────┤
 │ arte/               desenho procedural em canvas (sem Phaser) │
-│ conteudo/           textos, Grimório, conquistas, progresso   │
+│ conteudo/           textos, Biblioteca, conquistas, progresso │
 ├───────────────────────────────────────────────────────────────┤
-│ nucleo/             regras puras: sem Phaser, sem DOM          │
+│ nucleo/             camada de tradução e modo truco           │
+├───────────────────────────────────────────────────────────────┤
+│ motor/              regras do NeuroDeck: sem Phaser, sem DOM  │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-- **`nucleo/`** é o motor de regras. Não usa Phaser nem `document`, por isso roda também no Node
-  (testes e simulações em massa). Toda regra do jogo mora aqui.
+- **`motor/`** é o motor de regras do NeuroDeck (estado da partida, ações, baralhos, terrenos,
+  desempates e bots), trazido na fusão dos dois jogos. Toda regra do jogo mora aqui. O código está
+  em inglês, como no original; a origem, a conferência da cópia e as mudanças estão em
+  `src/motor/ORIGEM.md`.
+- **`nucleo/`** é a camada de tradução: guarda o estado do motor e entrega às telas a mão, as
+  jogadas, a pontuação e os oponentes no formato da interface. Não decide nenhuma regra, com uma
+  exceção: o modo truco (tentos e pedidos), que é do Truco de Turing. Como o motor, não usa Phaser
+  nem `document`, por isso roda também no Node (testes e simulações em massa).
 - **`arte/`** desenha cartas, versos, mesas, avatares e botões em `<canvas>`, em qualquer densidade
   de pixels. Não conhece o Phaser: devolve canvases que as cenas transformam em texturas.
 - **`conteudo/`** guarda o que é texto ou dado: verbetes, conquistas, falas dos oponentes e o
@@ -50,14 +58,22 @@ src/
   aplicacao.js              estado fora da partida: opções, progresso, conquistas, navegação
   configuracao.js           tamanho do mundo, cores, fontes, resolução e densidade das texturas
   estilo.css                estilo dos painéis HTML
-  nucleo/                   REGRAS (puras)
-    aleatorio.js              sorteios reprodutíveis com semente
-    cartas.js                 valores, naipes, nomes, força das cartas, baralho de 52
-    baralhos.js               baralhos com efeitos e pontos de cada carta
+  motor/                    REGRAS (motor do NeuroDeck, em inglês; ver ORIGEM.md)
+    engine.js                 fachada do motor
+    engine/                   core (estado, turnos, desempates), actions, decks, terrains,
+                              registry (API de mods), util
+    bot.js                    bots: aleatório, guloso e Monte Carlo
+    sim.js                    partidas entre bots
+  nucleo/                   CAMADA DE TRADUÇÃO (pura) e modo truco
+    traducao.js               conversões: cartas, jogadas, situações, motivos de vitória
+    partida.js                a mão vista pela interface: estado do motor (mao.nd), visão,
+                              jogadas legais, aplicação de jogadas, eventos e registro
+    pontuacao.js              pontuação do motor no formato das telas (neurônios, combos, notas)
+    baralhos.js               baralhos: nome, resumo, manilhas e pontos de cada carta
     terrenos.js               terrenos (nome e resumo)
+    cartas.js                 valores, naipes, nomes das cartas
     rede.js                   formato da rede: 3-5-5-5-5-5-4, nomes das camadas
-    pontuacao.js              soma da rede: tunagem, combos de figuras, vanishing, terrenos
-    partida.js                estado de uma mão, jogadas legais, aplicação de jogadas, desempates
+    aleatorio.js              sorteios com semente (usados pelo menu)
     truco.js                  tentos, pedidos de TRUCO/SEIS/NOVE/DOZE, mão de onze
     oponentes/
       comum.js                  avaliação, determinização e simulação até o fim
@@ -125,19 +141,34 @@ docs/
   constante exportada e método tem um comentário `/** ... */`. Regras sutis ganham comentário no ponto
   em que acontecem.
 - **Módulos pequenos e com um assunto:** se um arquivo começa a tratar de dois assuntos, ele é dividido.
-- **Regras só no núcleo:** a cena nunca decide uma regra; ela chama `nucleo/` e desenha o resultado.
+- **Regras só no motor:** a cena nunca decide uma regra; ela chama `nucleo/`, que traduz para o motor, e desenha o resultado.
 - **Identificadores dos dados:** naipes `E` (espadas), `C` (copas), `P` (paus), `O` (ouros); uma
   carta é `{ id, valor, naipe }`, por exemplo `{ id: '7O', valor: '7', naipe: 'O' }`.
 
-## 4. O núcleo de regras
+## 4. O motor e a camada de tradução
+
+As regras são do motor do NeuroDeck (`src/motor/`). O núcleo (`src/nucleo/`) guarda o estado do motor
+e o apresenta às telas com o vocabulário do Truco de Turing:
+
+| Truco de Turing (interface) | Motor do NeuroDeck |
+|---|---|
+| `mao` (visão) | `state`, guardado em `mao.nd` |
+| `jogadores[j].caminho`, `situacao` | `nets[j].path`, `finished` e `reason` |
+| neurônio `{ id: 'C2N3', cartas, dono, removido }` | slot `layers[2][3]` com `card`, `stack`, `owner`, `removed` |
+| carta `{ valor: 'K', naipe: 'E' }` | carta `{ rank: 13, suit: 'S' }` |
+| jogada `ativar` | movimento `advance` |
+| jogada `empilhar` | `tune` (no próprio neurônio) ou `overfit`, `earlystop`, `stackoverflow` (no do rival, pelo tamanho final da pilha) |
+| `dropout`, `transfer`, `passar`, `inicio` | `dropout`, `transfer`, `pass`, `reveal` |
 
 ### 4.1 Estado de uma mão (`nucleo/partida.js`)
 
-`novaMao(opcoes)` cria o estado completo de uma mão. Os campos principais:
+`novaMao(opcoes)` cria a partida no motor (`newGame`) e monta a visão. Depois de cada jogada,
+`atualizarVisao(mao)` refaz a visão a partir de `mao.nd`. Os campos principais:
 
 | Campo | Conteúdo |
 |---|---|
 | `config` | `{ baralho, terreno, inicio }` escolhidos no menu |
+| `nd` | estado do motor: a fonte da verdade (é o que os bots e as simulações usam) |
 | `camadas` | lista de camadas; cada uma é uma lista de neurônios |
 | `neuronios` | mapa `id → { id, camada, posicao, cartas, revelado, dono, removido, conhecido }` |
 | `jogadores` | `{ nome, tipo: 'humano'|'oponente', oponente, mao, caminho, situacao, dropouts, transferUsado, cartaInicial, estatisticas }` |
@@ -148,12 +179,18 @@ docs/
 | `registro`, `historico` | linhas do registro de jogadas e curva de treino |
 | `resultado` | `{ somas, vencedor, motivo, travados }` ao fim |
 
-`situacao` de um jogador: `'construindo'`, `'concluida'` (chegou à saída), `'earlystop'` ou `'overflow'`.
+`situacao` de um jogador: `'construindo'`, `'concluida'` (chegou à saída), `'earlystop'`, `'overflow'`
+ou `'travada'` (ficou sem neurônio livre na camada seguinte e a rede foi finalizada).
+
+A visão é só leitura: quem precisa montar uma situação (testes, ferramentas) altera `mao.nd` e chama
+`atualizarVisao`. As funções de `testes/apoio/montagem.js` fazem isso (`darMao`, `montarRede`,
+`finalizarRede`…).
 
 ### 4.2 Jogadas
 
-As jogadas são objetos simples. `jogadasLegais(mao, j)` lista as possíveis e `aplicarJogada(mao, jogada)`
-aplica uma delas (ou lança erro se for inválida):
+As jogadas são objetos simples. `jogadasLegais(mao, j)` traduz a lista do motor (`legalMoves`) e
+`aplicarJogada(mao, jogada)` traduz a jogada, entrega ao motor (`applyMove`) e refaz a visão; se a
+jogada for inválida, lança erro e o estado não muda:
 
 | Jogada | Formato |
 |---|---|
@@ -165,37 +202,48 @@ aplica uma delas (ou lança erro se for inválida):
 | Passar a vez | `{ tipo: 'passar', jogador }` |
 
 O efeito de empilhar depende do tamanho final da pilha (`efeitoDoEmpilhamento`): 2 cartas = tunagem
-(própria rede) ou overfit (adversário); 3 = early stop; 4 = stack overflow.
+(própria rede) ou overfit (adversário); 3 = early stop; 4 = stack overflow. Dropout e transfer
+learning não gastam a vez. `jogadaParaND` e `jogadaParaTT` fazem a tradução nos dois sentidos.
 
 ### 4.3 Eventos
 
-Cada jogada emite eventos em `mao.eventos`. A cena da mesa os anima em `efeitos.js` (um método
-`animar_<tipo>` por evento):
+Cada jogada emite eventos em `mao.eventos`, gerados pela camada de tradução comparando o antes e o
+depois. A cena da mesa os anima em `efeitos.js` (um método `animar_<tipo>` por evento):
 
 `inicio`, `ativacao`, `completa`, `tunagem`, `overfit`, `earlystop`, `stackoverflow`, `dropout`,
-`transfer`, `passe`, `vento`, `powerbi`, `fim`.
+`transfer`, `passe`, `travada`, `vento`, `powerbi`, `fim`.
 
 ### 4.4 Pontuação (`nucleo/pontuacao.js`)
 
-`pontuarRede(mao, j)` devolve `{ total, neuronios, combos, vanishing }`. Cada neurônio traz os pontos
-já com tunagem, terreno e baralho e uma lista `notas` explicando os ajustes, mostrada na inspeção e na
-tela de resultado.
+`pontuarRede(mao, j)` pede a pontuação ao motor (`score`) e devolve `{ total, neuronios, combos,
+vanishing }`. Cada neurônio traz os pontos já com tunagem, terreno e baralho e uma lista `notas`
+explicando os ajustes; as sequências de figuras (par, trio, quadra) vêm em `combos`. A soma dos
+neurônios mais a dos combos dá o total.
 
 ### 4.5 Truco (`nucleo/truco.js`)
 
 `novaPartida(alvo)` cria o placar; `pedirTruco`, `responderTruco('aceitar'|'correr'|'aumentar')`,
-`marcarTentos` e `proximaMao` implementam a escada 1 → 3 → 6 → 9 → 12 e a mão de onze.
+`marcarTentos` e `proximaMao` implementam a escada 1 → 3 → 6 → 9 → 12 e a mão de onze. O modo truco
+roda por cima das mãos do motor e não depende dele.
 
 ### 4.6 Oponentes (`nucleo/oponentes/`)
 
-| Chave | Nome | Nível | Método |
+São os bots do NeuroDeck (`motor/bot.js`); o núcleo só traduz a jogada escolhida.
+
+| Chave | Nome | Nível | Bot do motor |
 |---|---|---|---|
-| `aleatorio` | Zé do Ruído | Fácil | sorteia uma jogada válida |
-| `guloso` | Gradiente Guloso | Médio | olha um turno à frente pelo valor esperado |
-| `montecarlo` | Mestre Monte Carlo | Difícil | sorteia as cartas ocultas (determinização) e simula partidas até o fim |
+| `aleatorio` | Zé do Ruído | Fácil | `randomPolicy`: sorteia uma jogada válida |
+| `guloso` | Gradiente Guloso | Médio | `greedyMove`: melhor ganho imediato |
+| `montecarlo` | Mestre Monte Carlo | Difícil | `monteCarloResults`: sorteia as cartas ocultas (determinização) e simula partidas até o fim |
 
 `escolherJogada(mao, j)`, `querTrucar(mao, j, perfil)` e `responderAoTruco(...)` são as três decisões
-de um oponente.
+de um oponente. As de truco usam `chanceDeVitoria`, estimada por simulação.
+
+### 4.7 Conjuntos de regras do motor
+
+`newGame({ rules })` aceita `'fusao'` (padrão: regras decididas na fusão) e `'nd-2.0.0'` (o motor
+original). O teste `motor-equivalencia` joga 1.000 partidas com `'nd-2.0.0'` e compara com o resumo
+gravado no site do NeuroDeck; o `motor-regras` cobre o que mudou.
 
 ## 5. A cena da mesa (`cenas/mesa/`)
 
@@ -210,7 +258,7 @@ copiados para o protótipo com `Object.assign` no fim de `CenaMesa.js`. Dentro d
 | `entrada.js` | cliques e toques: neurônios, cartas da mão, botões de ação |
 | `turnos.js` | fluxo da mão: `iniciarMao`, `executarJogada`, `avancar`, vez do oponente, troca de aparelho |
 | `truco.js` | pedir, anunciar e responder truco |
-| `efeitos.js` | animação de cada evento, faíscas, faixas, balão de fala e avisos do Grimório |
+| `efeitos.js` | animação de cada evento, faíscas, faixas, balão de fala e avisos da Biblioteca de conceitos |
 | `resultado.js` | fim da mão, tentos, conquistas, comemoração da vitória e tela de resultado |
 | `dicas.js` | modo dicas: sugestão de jogada (busca gulosa) e dicas flutuantes dos botões |
 
@@ -235,7 +283,7 @@ cliques durante animações) e `this.encerrada`.
 ### 5.1 Dicas, revisão e música
 
 - **Botões da mesa** (`cenario.js` e `entrada.js`): o painel esquerdo tem só **REGRAS** (janela com
-  Como jogar, Grimório e a chave das dicas) e **MENU** (janela com som, música, voltar ao jogo e sair
+  Regras, Ajuda das ações, Biblioteca de conceitos e a chave das dicas) e **MENU** (janela com som, música, voltar ao jogo e sair
   da partida); o direito tem TRUCO e a linha Dropout · Transfer · Passar. Os botões são grandes e
   quase quadrados, ficam longe da borda de baixo (gestos do celular) e a área de toque passa
   `FOLGA_DE_TOQUE` da borda desenhada. O Phaser acompanha vários dedos (`TOQUES_SIMULTANEOS`), para
@@ -243,7 +291,7 @@ cliques durante animações) e `this.encerrada`.
 - **Dicas** (`dicas.js` e `conteudo/dicasDeJogo.js`): a chave "Ativar dicas" (na janela REGRAS) fica em
   `Aplicacao.dicasLigadas` (só na sessão). Ligada, a cada vez do humano `escolherDicaDeJogo` escolhe
   uma dica de jogo (oportunidade de ataque ou tunagem, risco, terreno, placar ou estratégia geral) e a
-  mostra com o conceito do Grimório ligado a ela. As dicas usam **só informação pública** e nunca
+  mostra com o conceito da Biblioteca de conceitos ligado a ela. As dicas usam **só informação pública** e nunca
   apontam qual neurônio oculto ativar; um teste em `testes/unidade/conteudo.test.js` sorteia de novo tudo o que
   está escondido e confere que a dica não muda. Os botões que recebem `opcoes.dica` em `criarBotao`
   ganham dicas flutuantes (mouse: ao passar; toque: segurar 0,45 s, e soltar depois de segurar não
@@ -252,7 +300,7 @@ cliques durante animações) e `this.encerrada`.
 - **Revisão** (`interface/telas/revisao.js`): cada jogada e cada lance de truco viram um passo em
   `this.linhaDoTempo` (`anotarNaLinhaDoTempo`, em `turnos.js`), com as somas depois do passo. A revisão
   desenha a curva em SVG, aponta maior salto, golpe mais duro e virada, e liga cada tipo de passo ao
-  verbete do Grimório. `this.historicoDaPartida` guarda o placar mão a mão.
+  verbete da Biblioteca de conceitos. `this.historicoDaPartida` guarda o placar mão a mão.
 - **Música** (`interface/musica.js`): cada terreno tem uma música definida por andamento, acordes por
   compasso e uma função `tocar` chamada a cada passo. Um agendador marca as notas 0,4 s à frente no
   relógio do WebAudio. A música começa ligada até a pessoa escolher (`progresso.musicaEscolhida`). Para uma música nova, acrescente uma entrada em `MUSICAS` com a chave do terreno.
@@ -312,21 +360,23 @@ as escritas à mão, ficam como estão: a pessoa é reconhecida pelo `[@login]` 
 ## 8. Como estender
 
 ### Novo baralho
-1. Em `nucleo/baralhos.js`, acrescente uma entrada em `BARALHOS` com `nome`, `resumo` e `montar()`.
-   Para efeitos, use os campos existentes (`pontosFixos`, `manilhas`, `fraternidade`, `trocaMao`) ou
-   crie um novo e trate-o em `nucleo/pontuacao.js` (pontos) ou `nucleo/partida.js` (fluxo).
-2. Em `arte/versos.js`, escreva `versoNovo(ctx, W, H, aleatorio)` e registre em `VERSOS`.
-3. O menu lista os baralhos automaticamente. Rode `npm run testar` e uma simulação com o baralho.
+1. No motor: escreva o baralho no formato de `motor/engine/decks.js` (`id`, `name`, `score` e,
+   se precisar, `build`, `cardValue`, `stackValue`) e registre com `NeuroDeck.registerDeck`.
+2. Em `nucleo/traducao.js`, acrescente a chave em `BARALHO_ND`; em `nucleo/baralhos.js`, a entrada em
+   `BARALHOS` com `nome` e `resumo` (e `manilhas` ou `figurasValem`, se for o caso).
+3. Em `arte/versos.js`, escreva `versoNovo(ctx, W, H, aleatorio)` e registre em `VERSOS`.
+4. O menu lista os baralhos automaticamente. Rode `npm run testar` e uma simulação com o baralho.
 
 ### Novo terreno
-1. `nucleo/terrenos.js`: entrada em `TERRENOS` com `nome` e `resumo`.
-2. `nucleo/pontuacao.js`: o efeito nos pontos (veja montanha, pântano e oceano em `pontuarNeuronios`).
+1. No motor: escreva o terreno no formato de `motor/engine/terrains.js` (ganchos `neuronBonus`,
+   `onRoundEnd`, `onCardPlayed`…) e registre com `NeuroDeck.registerTerrain`.
+2. `nucleo/traducao.js`: chave em `TERRENO_ND`; `nucleo/terrenos.js`: entrada em `TERRENOS` com `nome` e `resumo`.
 3. `arte/mesas.js`: o fundo da mesa (registre na tabela de `desenharMesa`).
 4. `arte/cartasDeTerreno.js`: a paleta e a paisagem da carta de terreno.
 
 ### Novo oponente
-1. Escreva a estratégia em `nucleo/oponentes/estrategias.js` (recebe `mao` e `j`, devolve uma jogada
-   de `jogadasLegais`).
+1. Escreva a estratégia em `nucleo/oponentes/estrategias.js`: recebe `mao` e `j`, escolhe um
+   movimento do motor (de `ND.legalMoves(mao.nd, j)`) e o devolve traduzido com `jogadaParaTT`.
 2. Registre o perfil em `OPONENTES` (`nucleo/oponentes/index.js`) e ligue-o em `escolherJogada`.
 3. Desenhe o avatar em `arte/avatares.js` e acrescente a chave em `AVATARES` de `CenaCarregamento.js`.
 
@@ -335,15 +385,17 @@ Acrescente em `CONQUISTAS` (`conteudo/conquistas.js`) um objeto `{ id, nome, des
 teste(ctx) }` e um ícone com o mesmo `id` em `arte/icones.js`. Se ela puder ser obtida numa mão
 encerrada por truco, inclua o `id` em `VALEM_SEM_MAO_COMPLETA`.
 
-### Novo verbete do Grimório
-Acrescente em `VERBETES` (`conteudo/grimorio.js`) `{ id, titulo, categoria, conceito, noJogo }`. Para
+### Novo verbete da Biblioteca de conceitos
+Acrescente em `VERBETES` (`conteudo/grimorio.js`) `{ id, titulo, categoria, conceito, equacao, noJogo, limite }`
+(e, se quiser, `figura`, com o nome de uma figura de `conteudo/figurasDaBiblioteca.js`, e `fonte`). A equação é
+MathML montada com os auxiliares do topo do arquivo. Para
 o aviso aparecer durante a partida, chame `this.avisarVerbete('id')` no ponto certo de `efeitos.js`.
 
-Para o verbete completo, acrescente também `ideia` (comparação do dia a dia), `ondeFalha` (limites da
-comparação), `aprofundar` (a matemática; `$...$` vira fórmula na linha), `formula` (LaTeX em destaque,
-sem cifrões) e `autoria`. Use `String.raw` nos campos com LaTeX, para não precisar dobrar as barras.
-As fórmulas são desenhadas pelo KaTeX (carregado do CDN em `index.html`); sem rede, aparecem como
-código LaTeX. O verbete de Dropout é um bom modelo.
+Opcionalmente, acrescente `ideia` (comparação do dia a dia, mostrada como "A ideia"), `autoria` e, para
+uma segunda matemática além da equação, `aprofundar` (texto; `$...$` vira fórmula na linha) com `formula`
+(LaTeX em destaque, sem cifrões), que aparecem em "Para se aprofundar". Use `String.raw` nos campos com
+LaTeX, para não precisar dobrar as barras. Essas fórmulas são desenhadas pelo KaTeX (carregado do CDN em
+`index.html`); sem rede, aparecem como código LaTeX. O verbete de Overfitting é um bom modelo.
 
 ## 9. Testes e relatórios
 
@@ -362,6 +414,16 @@ mesmos arquivos de `src/`), com a lista de cada função e método e quantas vez
 
 No GitHub, o workflow `.github/workflows/testes.yml` faz o mesmo em cada pull request e push na
 main e publica os relatórios como artefato da execução.
+
+As regras têm três níveis de teste: `motor-equivalencia` (a cópia do motor joga como o site do
+NeuroDeck), `motor-regras` e `motor-inicio` (o que a fusão mudou no motor) e `regras-de-negocio`
+(os 40 testes RN da especificação, pela interface do núcleo). Para montar uma situação com cartas
+escolhidas, use `testes/apoio/montagem.js` (`darMao`, `montarRede`, `finalizarRede`, `encerrar`…),
+que altera o estado do motor e refaz a visão; nos testes de interface, `carregarMontagem(pagina)`
+deixa as mesmas funções disponíveis na página como `M`.
+
+Em máquinas sem o Chromium do Playwright, aponte `CHROMIUM_DO_SISTEMA` para um Chrome ou Chromium
+já instalado (`CHROMIUM_DO_SISTEMA=/usr/bin/google-chrome npm run testar:interface`).
 
 Para testar algo novo: uma função pura vai num arquivo de `testes/unidade/`; uma mudança de
 tela ou de fluxo da mesa ganha um caso em `testes/interface/` usando `comecarPartida`, `naCena` e

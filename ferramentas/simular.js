@@ -17,7 +17,7 @@ const inicio = Date.now();
 
 for (let p = 0; p < N; p++) {
   const mao = novaMao({
-    baralho, terreno, inicio: 'revela-volta', semente: p * 7919 + 13,
+    baralho, terreno, inicio: 'revela-descarta', semente: p * 7919 + 13,
     jogadores: [{ nome: 'A', tipo: 'oponente', oponente: op1 }, { nome: 'B', tipo: 'oponente', oponente: op2 }],
   });
   try {

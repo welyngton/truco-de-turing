@@ -1,5 +1,6 @@
 /**
- * @file Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), fraternidade (anéis), yin-yang (A e 2) e Power BI (painel de indicadores).
+ * @file Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de
+ * computação), fraternidade (anéis), yin-yang (A e 2) e Power BI (painel de indicadores).
  *
  * Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas
  * resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
@@ -267,7 +268,106 @@ function versoPowerBI(ctx, W, H, aleatorio) {
   legenda(ctx, W, H / 2 + 84, null, 'DASHBOARD', Y, 150);
 }
 
-const VERSOS = { classico: versoClassico, truco: versoTruco, fraternidade: versoFraternidade, yinyang: versoYinYang, powerbi: versoPowerBI };
+/** Nobreza: veludo púrpura com flores-de-lis e uma coroa dourada no medalhão */
+function versoNobreza(ctx, W, H, aleatorio) {
+  ctx.save(); caminhoArredondado(ctx, 9, 9, W - 18, H - 18, 9); ctx.clip();
+  ctx.fillStyle = degradeRadial(ctx, W / 2, H / 2, 20, W / 2, H / 2, H * 0.72, [[0, '#5b2a86'], [0.6, '#3a1658'], [1, '#170726']]);
+  ctx.fillRect(0, 0, W, H);
+  granulado(ctx, 0, 0, W, H, aleatorio, 0.18, 0.08);
+  /* trama de losangos com flores-de-lis pequenas */
+  ctx.strokeStyle = 'rgba(242,212,136,.16)'; ctx.lineWidth = 0.8;
+  for (let d = -H; d < W + H; d += 24) {
+    ctx.beginPath(); ctx.moveTo(d, 0); ctx.lineTo(d + H, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(d, H); ctx.lineTo(d + H, 0); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(242,212,136,.28)';
+  for (let y = 12; y < H; y += 24) for (let x = (y / 24) % 2 ? 12 : 24; x < W; x += 24) florDeLis(ctx, x, y, 4.5);
+  ctx.restore();
+  molduraDourada(ctx, W, H, degradeLinear(ctx, 0, 0, W, H, DOURADO));
+  /* medalhão com a coroa */
+  const cx = W / 2, cy = H / 2 - 8;
+  sombraSuave(ctx, 12, 4, 0.6);
+  ctx.fillStyle = degradeRadial(ctx, cx, cy - 10, 4, cx, cy, 58, [[0, '#7a3cae'], [1, '#2a0d44']]);
+  ctx.beginPath(); ctx.arc(cx, cy, 56, 0, Math.PI * 2); ctx.fill();
+  semSombra(ctx);
+  ctx.strokeStyle = degradeLinear(ctx, cx - 56, cy - 56, cx + 56, cy + 56, DOURADO); ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, 56, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, 50, 0, Math.PI * 2); ctx.stroke();
+  coroa(ctx, cx, cy + 4, 70, degradeLinear(ctx, cx - 35, cy - 30, cx + 35, cy + 30, DOURADO));
+  legenda(ctx, W, H / 2 + 74, 'J · Q · K', 'NOBREZA', '#f2d488', 150);
+}
+/** Flor-de-lis simples, centrada em (x, y), de tamanho s. */
+function florDeLis(ctx, x, y, s) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - s * 1.6); ctx.quadraticCurveTo(x + s * 0.7, y - s * 0.4, x, y + s * 0.4); ctx.quadraticCurveTo(x - s * 0.7, y - s * 0.4, x, y - s * 1.6);
+  ctx.moveTo(x - s * 0.2, y); ctx.quadraticCurveTo(x - s * 1.6, y - s * 1.2, x - s * 1.2, y + s * 0.6); ctx.quadraticCurveTo(x - s * 0.6, y + s * 0.2, x - s * 0.2, y + s * 0.3);
+  ctx.moveTo(x + s * 0.2, y); ctx.quadraticCurveTo(x + s * 1.6, y - s * 1.2, x + s * 1.2, y + s * 0.6); ctx.quadraticCurveTo(x + s * 0.6, y + s * 0.2, x + s * 0.2, y + s * 0.3);
+  ctx.fill();
+  ctx.fillRect(x - s * 0.9, y + s * 0.5, s * 1.8, s * 0.35);
+}
+/** Coroa de três pontas com gemas, de largura l, base em (cx, cy). */
+function coroa(ctx, cx, cy, l, ouro) {
+  const a = l * 0.62, x0 = cx - l / 2;
+  ctx.fillStyle = ouro; ctx.strokeStyle = '#5a3a08'; ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x0, cy); ctx.lineTo(x0 - l * 0.04, cy - a * 0.75); ctx.lineTo(x0 + l * 0.22, cy - a * 0.38);
+  ctx.lineTo(cx, cy - a); ctx.lineTo(x0 + l * 0.78, cy - a * 0.38); ctx.lineTo(x0 + l * 1.04, cy - a * 0.75); ctx.lineTo(x0 + l, cy);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillRect(x0 - 2, cy, l + 4, a * 0.22); ctx.strokeRect(x0 - 2, cy, l + 4, a * 0.22);
+  [[x0 - l * 0.04, cy - a * 0.75, '#e8304a'], [cx, cy - a, '#3fa7e0'], [x0 + l * 1.04, cy - a * 0.75, '#e8304a']].forEach(function (g) {
+    ctx.fillStyle = g[2]; ctx.beginPath(); ctx.arc(g[0], g[1], l * 0.06, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  });
+  [0.25, 0.5, 0.75].forEach(function (f, i) { ctx.fillStyle = i === 1 ? '#3fae6a' : '#e8304a'; ctx.beginPath(); ctx.arc(x0 + l * f, cy + a * 0.11, l * 0.045, 0, Math.PI * 2); ctx.fill(); });
+}
+
+/** Backprop: papel de projeto azul com o grafo de computação de um neurônio (x·w + b → f → a) */
+function versoBackprop(ctx, W, H, aleatorio) {
+  const TINTA = '#cfe6ff', AC = '#ffb347';
+  ctx.save(); caminhoArredondado(ctx, 9, 9, W - 18, H - 18, 9); ctx.clip();
+  ctx.fillStyle = degradeLinear(ctx, 0, 0, 0, H, [[0, '#123a63'], [1, '#081d33']]);
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(207,230,255,.08)'; ctx.lineWidth = 0.6;
+  for (let g = 9; g < W; g += 8) { ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, H); ctx.stroke(); }
+  for (let g2 = 9; g2 < H; g2 += 8) { ctx.beginPath(); ctx.moveTo(0, g2); ctx.lineTo(W, g2); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(207,230,255,.16)'; ctx.lineWidth = 0.9;
+  for (let g3 = 9; g3 < W; g3 += 40) { ctx.beginPath(); ctx.moveTo(g3, 0); ctx.lineTo(g3, H); ctx.stroke(); }
+  for (let g4 = 9; g4 < H; g4 += 40) { ctx.beginPath(); ctx.moveTo(0, g4); ctx.lineTo(W, g4); ctx.stroke(); }
+  ctx.restore();
+  ctx.strokeStyle = TINTA; ctx.lineWidth = 2; caminhoArredondado(ctx, 15, 15, W - 30, H - 30, 7); ctx.stroke();
+  ctx.setLineDash([4, 3]); ctx.lineWidth = 1; caminhoArredondado(ctx, 21, 21, W - 42, H - 42, 5); ctx.stroke(); ctx.setLineDash([]);
+  /* grafo: três entradas → Σ → f → saída, com setas do forward pass */
+  const no = function (x, y, r, rotulo, cor) {
+    ctx.fillStyle = '#0d2c4d'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = cor || TINTA; ctx.lineWidth = 1.8; ctx.stroke();
+    ctx.fillStyle = cor || TINTA; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '700 ' + Math.round(r * 0.9) + 'px Georgia, serif'; ctx.fillText(rotulo, x, y + 1);
+  };
+  const seta = function (x0, y0, x1, y1) {
+    ctx.strokeStyle = TINTA; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    const ang = Math.atan2(y1 - y0, x1 - x0);
+    ctx.fillStyle = TINTA; ctx.beginPath(); ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 - 7 * Math.cos(ang - 0.4), y1 - 7 * Math.sin(ang - 0.4)); ctx.lineTo(x1 - 7 * Math.cos(ang + 0.4), y1 - 7 * Math.sin(ang + 0.4)); ctx.closePath(); ctx.fill();
+  };
+  const cy = H / 2 - 18, ent = [[44, cy - 52, 'x₁'], [44, cy, 'x₂'], [44, cy + 52, 'x₃']];
+  ent.forEach(function (e, i) {
+    seta(e[0] + 13, e[1], 102, cy + (i - 1) * 6);
+    ctx.fillStyle = AC; ctx.font = 'italic 10px Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('w' + (i + 1), 74, (e[1] + cy) / 2 - 5);
+    no(e[0], e[1], 13, e[2]);
+  });
+  no(116, cy, 17, 'Σ', AC);
+  seta(133, cy, 152, cy);
+  ctx.fillStyle = '#0d2c4d'; caminhoArredondado(ctx, 154, cy - 15, 30, 30, 5); ctx.fill();
+  ctx.strokeStyle = AC; ctx.lineWidth = 1.8; ctx.stroke();
+  ctx.strokeStyle = AC; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(158, cy + 8); ctx.lineTo(169, cy + 8); ctx.lineTo(180, cy - 9); ctx.stroke();
+  seta(184, cy, 202, cy);
+  ctx.fillStyle = TINTA; ctx.font = 'italic 700 14px Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('a', 210, cy + 1);
+  ctx.fillStyle = AC; ctx.font = 'italic 10px Georgia, serif'; ctx.fillText('+ b', 116, cy + 30);
+  /* fórmula */
+  ctx.fillStyle = TINTA; ctx.font = 'italic 15px Georgia, serif'; ctx.fillText('a = f ( w · a + b )', W / 2, H / 2 + 54);
+  legenda(ctx, W, H / 2 + 84, null, 'BACKPROP', TINTA, 150);
+}
+
+const VERSOS = { classico: versoClassico, truco: versoTruco, nobreza: versoNobreza, backprop: versoBackprop, fraternidade: versoFraternidade, yinyang: versoYinYang, powerbi: versoPowerBI };
 
 /**
  * Desenha o verso do baralho.

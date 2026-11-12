@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
-	<testsuite name="jogo no navegador" time="28.034769" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="WebGL (padrão)" time="22.706242" classname="test"/>
-		<testcase name="Canvas 2D" time="5.322399" classname="test"/>
+	<testsuite name="jogo no navegador" time="18.158861" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="WebGL (padrão)" time="12.853246" classname="test"/>
+		<testcase name="Canvas 2D" time="5.300369" classname="test"/>
 	</testsuite>
-	<testsuite name="motor de regras" time="1.629644" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="pontuar uma rede no meio da mão" time="0.032683" classname="test"/>
-		<testcase name="listar as jogadas legais" time="0.050014" classname="test"/>
-		<testcase name="mãos inteiras por segundo (jogadas aleatórias)" time="1.500544" classname="test"/>
-		<testcase name="copiar e determinizar uma mão" time="0.044847" classname="test"/>
+	<testsuite name="motor de regras" time="1.833627" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="pontuar uma rede no meio da mão" time="0.043960" classname="test"/>
+		<testcase name="listar as jogadas legais" time="0.064284" classname="test"/>
+		<testcase name="mãos inteiras por segundo (jogadas aleatórias)" time="1.500958" classname="test"/>
+		<testcase name="copiar e determinizar uma mão" time="0.222187" classname="test"/>
 	</testsuite>
-	<testsuite name="oponentes e dicas" time="0.207260" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="decisão do Gradiente Guloso" time="0.015734" classname="test"/>
-		<testcase name="partidas simuladas pelo Mestre Monte Carlo numa decisão (orçamento de 380 ms)" time="0.133670" classname="test"/>
-		<testcase name="chance de vitória com 40 simulações (dica do truco)" time="0.044147" classname="test"/>
-		<testcase name="escolher a dica de jogo" time="0.013413" classname="test"/>
+	<testsuite name="oponentes e dicas" time="0.576829" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="decisão do Gradiente Guloso" time="0.002601" classname="test"/>
+		<testcase name="decisão do Mestre Monte Carlo (40 partidas simuladas por jogada)" time="0.420324" classname="test"/>
+		<testcase name="chance de vitória com 40 simulações (dica do truco)" time="0.122335" classname="test"/>
+		<testcase name="escolher a dica de jogo" time="0.031264" classname="test"/>
 	</testsuite>
-	<testsuite name="arte procedural e empacotamento" time="0.589466" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="desenhar cartas, versos e a mesa" time="0.433598" classname="test"/>
-		<testcase name="tempo de empacotamento e tamanho do arquivo único" time="0.155689" classname="test"/>
+	<testsuite name="arte procedural e empacotamento" time="0.694766" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="desenhar cartas, versos e a mesa" time="0.481799" classname="test"/>
+		<testcase name="tempo de empacotamento e tamanho do arquivo único" time="0.212688" classname="test"/>
 	</testsuite>
 	<!-- tests 12 -->
 	<!-- suites 4 -->
@@ -27,5 +27,5 @@
 	<!-- cancelled 0 -->
 	<!-- skipped 0 -->
 	<!-- todo 0 -->
-	<!-- duration_ms 31895.399963 -->
+	<!-- duration_ms 22578.220309 -->
 </testsuites>

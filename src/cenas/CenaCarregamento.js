@@ -6,6 +6,7 @@ import { MUNDO, DENSIDADE, RESOLUCAO, CORES_CSS } from '../configuracao.js';
 import { TERRENOS } from '../nucleo/terrenos.js';
 import { desenharCartaDeTerreno } from '../arte/cartasDeTerreno.js';
 import { desenharAvatar } from '../arte/avatares.js';
+import { AVATARES_DO_JOGADOR } from '../conteudo/avatares.js';
 import { desenharFaisca } from '../arte/botoes.js';
 import { ajustarCamera, texturaDaMesa, texturaDoVerso, criarTexturaDeInspecao } from './recursos.js';
 
@@ -43,6 +44,8 @@ export class CenaCarregamento extends Phaser.Scene {
     for (const uso of ['inspecao', 'mao', 'mesa']) texturaDoVerso(this, uso, 'classico');
     for (const terreno of Object.keys(TERRENOS)) adicionar('terreno-' + terreno, desenharCartaDeTerreno(terreno, DENSIDADE.inspecao));
     for (const [tipo, cor] of Object.entries(AVATARES)) adicionar('avatar-' + tipo, desenharAvatar(tipo, cor, DENSIDADE.avatar));
+    /* avatares extras do jogador (os liberados por conquistas também, para trocar sem recarregar) */
+    for (const a of AVATARES_DO_JOGADOR) if (!AVATARES[a.id]) adicionar('avatar-' + a.id, desenharAvatar(a.id, CORES_CSS.j0, DENSIDADE.avatar));
     adicionar('faisca', desenharFaisca(Math.min(RESOLUCAO, 2), '#ffffff'));
     criarTexturaDeInspecao(this);
   }

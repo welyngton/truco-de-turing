@@ -30,8 +30,8 @@ const caminho = (...partes) => join(raiz, ...partes);
 
 /** Suítes de teste: pasta, título e descrição para o relatório. */
 const SUITES = {
-  unidade: { pasta: 'testes/unidade', titulo: 'Testes de unidade', descricao: 'Regras do jogo, oponentes, conteúdo (conquistas, dicas, Grimório), arte procedural desenhada num canvas de verdade, telas em HTML (jsdom), som e música (WebAudio de mentira), aplicação e ferramentas de linha de comando.' },
-  interface: { pasta: 'testes/interface', titulo: 'Testes de interface', descricao: 'O jogo inteiro rodando no Chromium (Playwright): menu e telas, mãos completas contra os três oponentes e entre duas pessoas, cada ação da mesa, truco, modo dicas (mouse e toque), som, música, comemorações e celular (vertical e horizontal).' },
+  unidade: { pasta: 'testes/unidade', titulo: 'Testes de unidade', descricao: 'Regras do jogo, oponentes, conteúdo (conquistas, avatares, dicas, Biblioteca de conceitos), motor do NeuroDeck e a camada de tradução, arte procedural desenhada num canvas de verdade, telas em HTML (jsdom), som e música (WebAudio de mentira), aplicação e ferramentas de linha de comando.' },
+  interface: { pasta: 'testes/interface', titulo: 'Testes de interface', descricao: 'O jogo inteiro rodando no Chromium (Playwright): menu e telas (regras, ajuda das ações, Biblioteca, avatares), mãos completas contra os três oponentes, entre duas pessoas e em mesas de 3 a 5 jogadores, cada ação da mesa e os painéis de leitura, truco, modo dicas (mouse e toque), som, música, comemorações e celular (vertical e horizontal).' },
   performance: { pasta: 'testes/performance', titulo: 'Testes de performance', descricao: 'Tempos do motor de regras, dos oponentes, das dicas, da arte e do empacotamento no Node; tempo de carregamento, quadros por segundo, memória e tempo de resposta no navegador. Cada medida tem um limite; acima dele, o teste falha.' },
 };
 

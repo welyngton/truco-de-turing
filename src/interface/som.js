@@ -63,6 +63,8 @@ function ruido(duracao, volume, atraso, filtro) {
 /** Efeitos sonoros do jogo, um por acontecimento. */
 export const Som = {
   desbloquear() { audio(); },
+  /** O navegador já liberou o som (houve um clique e o contexto está rodando)? Não cria o contexto. */
+  liberado() { return !!contexto && contexto.state === 'running'; },
   definirMudo(valor) { mudo = valor; },
   estaMudo() { return mudo; },
   virarCarta() { ruido(0.06, 0.18, 0, 5000); nota(880, 0.05, 'triangle', 0.05, 0.02); },

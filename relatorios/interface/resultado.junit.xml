@@ -1,34 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
-	<testsuite name="ações da mesa" time="268.333673" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="vm">
-		<testcase name="inspeção, seleção, Esc, tunagem, overfit, stack overflow e early stop na própria rede" time="66.880433" classname="test"/>
-		<testcase name="dropout (escolher camadas e pagar), cancelar, transfer learning, passar a vez e vanishing gradient" time="49.171090" classname="test"/>
-		<testcase name="truco: pedir, responder (aumentar, aceitar, correr) e a mão terminada por corrida" time="47.989861" classname="test"/>
-		<testcase name="dicas: aviso de conquistas, dica de jogo a cada vez, dicas dos botões com o mouse e desligar" time="28.971286" classname="test"/>
-		<testcase name="celular: segurar um botão mostra a dica sem executar a ação; toque rápido executa" time="18.712677" classname="test"/>
-		<testcase name="celular em tela cheia: botão responde mesmo com o polegar apoiado na borda da tela" time="14.540838" classname="test"/>
-		<testcase name="som, música, comemorações, derrota e voltar ao menu" time="42.058399" classname="test"/>
+	<testsuite name="ações da mesa" time="389.446789" disabled="0" errors="0" tests="9" failures="0" skipped="0" hostname="vm">
+		<testcase name="inspeção, seleção, Esc, tunagem, overfit, stack overflow e early stop na própria rede" time="85.346653" classname="test"/>
+		<testcase name="barra de ações do NeuroDeck: botões acendem pela seleção, selo de tunagem, pontos por neurônio e painéis de leitura" time="33.498437" classname="test"/>
+		<testcase name="dropout (escolher camadas e pagar), cancelar, transfer learning, passar a vez e vanishing gradient" time="41.078511" classname="test"/>
+		<testcase name="truco: pedir, responder (aumentar, aceitar, correr) e a mão terminada por corrida" time="51.760926" classname="test"/>
+		<testcase name="truco com duas pessoas no aparelho: quem responde pega o aparelho antes de ver o pedido" time="36.987995" classname="test"/>
+		<testcase name="dicas: aviso de conquistas, dica de jogo a cada vez, dicas dos botões com o mouse e desligar" time="37.275976" classname="test"/>
+		<testcase name="celular: segurar um botão mostra a dica sem executar a ação; toque rápido executa" time="22.505195" classname="test"/>
+		<testcase name="celular em tela cheia: botão responde mesmo com o polegar apoiado na borda da tela" time="17.311270" classname="test"/>
+		<testcase name="som, música, comemorações, derrota e voltar ao menu" time="63.673673" classname="test"/>
 	</testsuite>
-	<testsuite name="menu e telas" time="55.623503" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="carrega, mostra o menu com as escolhas e abre Como jogar, Grimório, Conquistas e Sobre" time="24.164093" classname="test"/>
-		<testcase name="celular na vertical: só o aviso para girar; ao girar, o jogo é criado e o menu aparece" time="28.948333" classname="test"/>
-		<testcase name="renderizador Canvas e resolução forçados pela URL" time="2.505100" classname="test"/>
+	<testsuite name="menu e telas" time="92.036453" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="carrega, mostra o menu com as escolhas e abre Regras (abas, ajuda das ações), Biblioteca de conceitos, Conquistas, Mods e Sobre" time="53.169822" classname="test"/>
+		<testcase name="celular na vertical: só o aviso para girar; ao girar, o jogo é criado e o menu aparece" time="36.408587" classname="test"/>
+		<testcase name="renderizador Canvas e resolução forçados pela URL" time="2.452125" classname="test"/>
 	</testsuite>
-	<testsuite name="mãos completas contra o computador" time="329.867900" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="Zé do Ruído · clássico · neutro · revela e volta" time="184.105131" classname="test"/>
-		<testcase name="Gradiente Guloso · truco · montanha · revela e descarta" time="76.574247" classname="test"/>
-		<testcase name="Mestre Monte Carlo · fraternidade · pântano · sorteio" time="69.182398" classname="test"/>
+	<testsuite name="partida online entre abas" time="386.906437" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="criar, entrar pelo código, jogar uma mão com truco e terminar igual nas duas telas" time="161.221446" classname="test"/>
+		<testcase name="quem fecha a aba no meio da mão vira computador e a outra tela termina a mão" time="107.171468" classname="test"/>
+		<testcase name="quem fecha a aba antes de escolher a carta de quem começa vira computador e a outra tela termina a mão" time="118.506863" classname="test"/>
 	</testsuite>
-	<testsuite name="duas pessoas e mão única" time="66.768892" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="duas pessoas no mesmo aparelho (yin-yang, oceano): o aparelho troca de mãos entre as vezes" time="35.252572" classname="test"/>
-		<testcase name="mão única sem truco (Power BI): &amp;quot;Nova partida&amp;quot; recomeça o placar" time="31.515999" classname="test"/>
+	<testsuite name="mãos completas contra o computador" time="320.073011" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="Zé do Ruído · clássico · neutro · revela e volta" time="126.884737" classname="test"/>
+		<testcase name="Gradiente Guloso · truco · montanha · revela e descarta" time="75.834125" classname="test"/>
+		<testcase name="Mestre Monte Carlo · fraternidade · pântano · sorteio" time="117.348357" classname="test"/>
 	</testsuite>
-	<!-- tests 15 -->
-	<!-- suites 4 -->
-	<!-- pass 15 -->
+	<testsuite name="mesa dinâmica: arquiteturas, 3 a 5 jogadores e vários baralhos" time="229.564278" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="4 jogadores (2 humanos e 2 Zé do Ruído), arquitetura profunda, 2 baralhos" time="60.547060" classname="test"/>
+		<testcase name="5 jogadores contra o Gradiente Guloso, arquitetura larga" time="115.674522" classname="test"/>
+		<testcase name="3 jogadores, arquitetura curta, Pântano" time="53.342232" classname="test"/>
+	</testsuite>
+	<testsuite name="duas pessoas e mão única" time="99.887041" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="duas pessoas no mesmo aparelho (yin-yang, oceano): o aparelho troca de mãos entre as vezes" time="48.335393" classname="test"/>
+		<testcase name="mão única sem truco (Power BI): &amp;quot;Nova partida&amp;quot; recomeça o placar" time="51.551265" classname="test"/>
+	</testsuite>
+	<!-- tests 23 -->
+	<!-- suites 6 -->
+	<!-- pass 23 -->
 	<!-- fail 0 -->
 	<!-- cancelled 0 -->
 	<!-- skipped 0 -->
 	<!-- todo 0 -->
-	<!-- duration_ms 453785.026117 -->
+	<!-- duration_ms 1040530.507959 -->
 </testsuites>

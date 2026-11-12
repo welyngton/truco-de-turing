@@ -6,7 +6,7 @@
  * Assim a referência nunca fica desatualizada: basta documentar o código e rodar `npm run docs`.
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** Pasta do projeto. `TRUCO_RAIZ` permite rodar sobre uma cópia (usado nos testes). */
@@ -37,7 +37,13 @@ function limparComentario(bloco) {
 function lerModulo(caminho) {
   const codigo = readFileSync(caminho, 'utf8');
   const arquivo = (/\/\*\*\s*\n?\s*\*?\s*@file([\s\S]*?)\*\//.exec(codigo) || [, ''])[1];
-  const descricao = limparComentario('/**' + arquivo + '*/');
+  let descricao = limparComentario('/**' + arquivo + '*/');
+  /* arquivos sem @file (o motor do NeuroDeck, em src/motor/): usa o primeiro parágrafo dos comentários `//` do topo */
+  if (!descricao) {
+    const topo = (/^(?:\/\/.*\n)+/.exec(codigo) || [''])[0].split('\n').map((linha) => linha.replace(/^\/\/ ?/, ''));
+    const fim = topo.findIndex((linha) => !linha.trim());
+    descricao = topo.slice(0, fim < 0 ? topo.length : fim).join(' ').replace(/\s+/g, ' ').trim();
+  }
   const itens = [];
   /* comentário seguido de declaração: função, classe, const/let exportada ou método de objeto */
   const padrao = /\/\*\*((?:(?!\*\/)[\s\S])*)\*\/\s*\n\s*(export\s+)?(?:(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)|class\s+(\w+)|(?:const|let)\s+(\w+)|(\w+)\s*\(([^)]*)\)\s*\{)/g;
@@ -58,7 +64,8 @@ const pastas = ['src', 'ferramentas'];
 for (const pasta of pastas) {
   for (const caminho of arquivosJs(join(raiz, pasta))) {
     const { descricao, itens } = lerModulo(caminho);
-    saida += '## `' + relative(raiz, caminho) + '`\n\n' + (descricao ? descricao + '\n\n' : '');
+    /* caminho sempre com "/", também no Windows, para a referência sair igual em qualquer sistema */
+    saida += '## `' + relative(raiz, caminho).split(sep).join('/') + '`\n\n' + (descricao ? descricao + '\n\n' : '');
     if (!itens.length) continue;
     saida += '| Nome | Tipo | Descrição |\n|---|---|---|\n';
     for (const item of itens) {

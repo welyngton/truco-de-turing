@@ -1,6 +1,7 @@
 /**
  * @file Ponto de entrada dos oponentes: perfis (nome, nível, estilo), escolha de jogada e
- * decisões de truco.
+ * decisões de truco. As jogadas vêm dos bots do NeuroDeck (ver estrategias.js); as decisões de
+ * truco são do Truco de Turing e usam a chance de vitória estimada por simulação.
  */
 import { pontosDaCarta } from '../baralhos.js';
 import { FORCA_VALOR, ORDEM_NAIPE } from '../cartas.js';
@@ -13,15 +14,15 @@ export { chanceDeVitoria } from './comum.js';
 export const OPONENTES = {
   aleatorio: {
     nome: 'Zé do Ruído', nivel: 'Fácil', metodo: 'aleatório', avatar: 'ruido',
-    estilo: 'Sorteia qualquer jogada válida, sem olhar o placar. Ativa neurônios às cegas, ataca por acaso e responde ao truco no cara ou coroa. Bom para aprender as regras.',
+    estilo: 'Sorteia uma jogada válida, sem olhar o placar. Ativa neurônios às cegas, ataca quando calha e responde ao truco no cara ou coroa. Bom para aprender as regras.',
   },
   guloso: {
     nome: 'Gradiente Guloso', nivel: 'Médio', metodo: 'busca gulosa', avatar: 'gradiente',
-    estilo: 'Como a descida de gradiente, sempre dá o passo que mais melhora o placar agora: testa cada jogada um turno à frente pelo valor esperado. Tuna neurônios fortes e aplica overfit nos fortes do adversário, mas não planeja além do próximo lance. Pede truco quando se vê bem à frente.',
+    estilo: 'Como a descida de gradiente, sempre dá o passo que mais melhora o placar agora: compara a diferença de pontos depois de cada jogada. Tuna neurônios fortes e aplica overfit nos fortes do adversário, mas não planeja além do próximo lance. Pede truco quando se vê bem à frente.',
   },
   montecarlo: {
     nome: 'Mestre Monte Carlo', nivel: 'Difícil', metodo: 'simulação de Monte Carlo', avatar: 'mc',
-    estilo: 'Sorteia as cartas que não vê, joga centenas de partidas simuladas até o fim e escolhe o lance que mais venceu. Guarda ataques para a hora certa, mostra a própria chance de vitória e truca (às vezes blefando) com base nas simulações.',
+    estilo: 'Sorteia as cartas que não vê, joga dezenas de partidas simuladas até o fim para cada lance e escolhe o que mais venceu. Guarda ataques para a hora certa, mostra a própria chance de vitória e truca (às vezes blefando) com base nas simulações.',
   },
 };
 
@@ -43,13 +44,13 @@ function cartaDeInicio(mao, j) {
  * Escolhe a jogada do oponente `j` conforme o seu perfil.
  * @param {object} mao
  * @param {number} j
- * @param {number} [orcamentoMs] Tempo de pensamento do Monte Carlo.
+ * @param {number} [simulacoes] Partidas simuladas por jogada no Monte Carlo (por padrão, o número do motor).
  */
-export function escolherJogada(mao, j, orcamentoMs) {
+export function escolherJogada(mao, j, simulacoes) {
   const perfil = mao.jogadores[j].oponente;
   if (mao.fase === 'inicio') return { tipo: 'inicio', jogador: j, carta: cartaDeInicio(mao, j).id };
   if (perfil === 'aleatorio') return jogadaAleatoria(mao, j);
-  if (perfil === 'montecarlo') return jogadaMonteCarlo(mao, j, orcamentoMs);
+  if (perfil === 'montecarlo') return jogadaMonteCarlo(mao, j, simulacoes);
   return jogadaGulosa(mao, j);
 }
 

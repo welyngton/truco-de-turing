@@ -11,26 +11,48 @@ import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, mostrarAviso } from './interface/paineis.js';
 
-/** Opções usadas na primeira visita. */
-const OPCOES_PADRAO = { oponente: 'guloso', baralho: 'classico', terreno: 'neutro', inicio: 'revela-volta', alvo: 12 };
+/**
+ * Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles
+ * jogam no mesmo aparelho (os outros são oponentes do perfil `oponente`), `arquitetura` é uma das
+ * arquiteturas do NeuroDeck e `baralhos` quantos baralhos entram na partida.
+ */
+export const OPCOES_PADRAO = {
+  oponente: 'guloso', baralho: 'classico', terreno: 'neutro', inicio: 'revela-descarta', alvo: 12,
+  jogadores: 2, humanos: 1, arquitetura: 'padrao', baralhos: 1,
+};
+
+/**
+ * Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte
+ * o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`.
+ */
+export function normalizarOpcoes(opcoes) {
+  const o = { ...OPCOES_PADRAO, ...(opcoes || {}) };
+  if (o.oponente === 'doisHumanos') { o.oponente = OPCOES_PADRAO.oponente; o.humanos = Math.max(2, Number(o.humanos) || 2); }
+  o.jogadores = Math.max(2, Math.min(5, Number(o.jogadores) || 2));
+  o.humanos = Math.max(1, Math.min(o.jogadores, Number(o.humanos) || 1));
+  o.baralhos = Math.max(1, Math.min(4, Number(o.baralhos) || 1));
+  return o;
+}
 
 export const Aplicacao = {
   /** Progresso salvo no navegador (ver conteudo/progresso.js). */
   progresso: carregarProgresso(),
-  /** Escolhas do menu: oponente, baralho, terreno, inicio, alvo. */
+  /** Escolhas do menu: oponente, baralho, terreno, inicio, alvo, jogadores, humanos, arquitetura, baralhos. */
   opcoes: null,
-  /** Verbetes do Grimório já mostrados como aviso nesta sessão. */
+  /** Verbetes da Biblioteca de conceitos já mostrados como aviso nesta sessão. */
   verbetesAvisados: {},
   /** Instância do Phaser.Game (definida em principal.js). */
   jogo: null,
   /** Dicas ligadas nesta sessão (mãos jogadas com dicas não valem conquistas). */
   dicasLigadas: false,
+  /** Partida online em andamento: `{ sala }` (ver src/online/sala.js), ou null. */
+  online: null,
 
   /** Carrega opções e preferência de som. */
   iniciar() {
     /* a música começa ligada até a pessoa escolher (progressos antigos guardavam "desligada" sem escolha) */
     if (!this.progresso.musicaEscolhida) this.progresso.musica = true;
-    this.opcoes = { ...OPCOES_PADRAO, ...(this.progresso.opcoes || {}) };
+    this.opcoes = normalizarOpcoes(this.progresso.opcoes);
     Som.definirMudo(!!this.progresso.mudo);
   },
 
@@ -70,6 +92,8 @@ export const Aplicacao = {
   /** Volta da mesa para o menu. */
   irParaMenu() {
     fecharTodos();
+    /* sair da mesa online sai da sala (os outros veem a cadeira passar para o computador) */
+    if (this.online) { try { this.online.sala.sair(); } catch (e) { /* já fechada */ } this.online = null; }
     document.body.classList.remove('em-partida');
     this.jogo.scene.stop('Mesa');
     this.jogo.scene.start('Menu');
@@ -104,7 +128,10 @@ export const Aplicacao = {
     if (ctx.venceu) {
       p.vitorias++;
       if (ctx.completa && jogador.acoesUsadas === 0) p.vitoriasZen++;
-      if (ctx.completa) { p.terrenos[ctx.mao.config.terreno] = true; p.baralhos[ctx.mao.config.baralho] = true; }
+      if (ctx.completa) {
+        p.terrenos[ctx.mao.config.terreno] = true; p.baralhos[ctx.mao.config.baralho] = true;
+        p.arquiteturas = p.arquiteturas || {}; p.arquiteturas[ctx.mao.config.arquitetura || 'padrao'] = true;
+      }
     }
     ctx.progresso = p;
     const novas = [];

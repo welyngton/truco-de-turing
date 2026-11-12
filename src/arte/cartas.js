@@ -16,7 +16,7 @@ import { AMBIENTACAO } from '../conteudo/textos.js';
 
 /**
  * Dados que a carta mostra.
- * @returns {{nome: string, pontos: number, figura: boolean, manilha: string|undefined, tipo: string,
+ * @returns {{nome: string, pontos: number, figura: boolean, figuraSemPontos: boolean, manilha: string|undefined, tipo: string,
  *   regras: string, ambientacao: string, raridade: 'comum'|'incomum'|'rara'|'mitica'}}
  */
 export function dadosDaCarta(carta, baralho) {
@@ -24,14 +24,28 @@ export function dadosDaCarta(carta, baralho) {
   const manilha = dadosBaralho.manilhas && dadosBaralho.manilhas[carta.valor + carta.naipe];
   const pontos = pontosDaCarta(carta, baralho);
   const figura = ehFigura(carta);
-  const tipo = manilha ? 'Manilha — Neurônio Lendário' : figura ? 'Neurônio — Figura' : carta.valor === 'A' ? 'Neurônio — Ás' : 'Neurônio — Numérico';
-  const regras = figura
-    ? 'Ativa com 0. Tunagem: +10.\nPar vizinho +10 · Trio +20 · Quadra zera a rede.'
-    : (manilha ? 'Manilha: ' : '') + 'Ativa com ' + pontos + ' pontos.\nTunagem: empilhe outro ' + carta.valor + ' e some o valor dele.';
+  const forward = !!dadosBaralho.forward;
+  const tipo = manilha ? 'Manilha — Neurônio Lendário' : forward && figura ? 'Neurônio — Ativação' : figura ? 'Neurônio — Figura' : carta.valor === 'A' ? 'Neurônio — Ás' : 'Neurônio — Numérico';
+  /* no truco e na nobreza as figuras valem pontos próprios; no backprop são funções de ativação */
+  const figuraSemPontos = figura && !dadosBaralho.figurasValem;
+  let regras;
+  if (forward) {
+    const peso = String(PESO_BACKPROP[carta.naipe]).replace('.', ',');
+    regras = (figura ? 'Ativação ' + ATIVACAO_BACKPROP[carta.valor] + ', viés 0.' : 'Linear, viés b = ' + pontos + '.') + '\nPeso pelo naipe: w = ' + peso + '. Saída: a = f(w·a + b).';
+  } else if (figuraSemPontos) {
+    regras = 'Ativa com 0. Iguais vizinhas ou empilhadas:\nPar 20 · Trio 30 · Quadra zera a rede.';
+  } else {
+    regras = (manilha ? 'Manilha: ' : '') + 'Ativa com ' + pontos + ' pontos.\n' +
+      (figura && baralho === 'nobreza' ? 'Figuras iguais vizinhas valem o dobro.' : 'Tunagem: empilhe outro ' + carta.valor + ' e some o valor dele.');
+  }
   const ambientacao = (manilha && AMBIENTACAO[manilha]) || AMBIENTACAO[carta.valor];
   const raridade = manilha ? 'mitica' : figura ? 'rara' : carta.valor === 'A' ? 'incomum' : 'comum';
-  return { nome: nomeDaCarta(carta, baralho), pontos, figura, manilha, tipo, regras, ambientacao, raridade };
+  return { nome: nomeDaCarta(carta, baralho), pontos, figura, figuraSemPontos, manilha, tipo, regras, ambientacao, raridade };
 }
+
+/** Baralho Backprop: peso de cada naipe e ativação de cada figura (iguais às do motor). */
+const PESO_BACKPROP = { E: 1.2, C: 1.0, P: 0.8, O: 0.6 };
+const ATIVACAO_BACKPROP = { J: 'ReLU', Q: 'sigmoide', K: 'tanh' };
 
 /** Cores da gema de raridade (claro, escuro). */
 const RARIDADE = { comum: ['#1a1a1a', '#5a5a5a'], incomum: ['#e9eef3', '#7a8794'], rara: ['#fff0b0', '#b98a1e'], mitica: ['#ffd27a', '#d4451c'] };
@@ -129,7 +143,7 @@ export function desenharCartaCompleta(carta, baralho, S) {
   gema(ctx, gx, 28, 10, P.gema, null);
   ctx.fillStyle = '#fff'; ctx.font = '700 13px ' + FONTE_SIMBOLOS; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(naipeInfo.simbolo, gx, 28.5);
-  gema(ctx, gx - 22, 28, 10, '#8c8378', info.figura ? '0' : String(info.pontos), { cor: '#fff' });
+  gema(ctx, gx - 22, 28, 10, '#8c8378', String(info.pontos), { cor: '#fff' });
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.fillStyle = TINTA;
   ajustarFonte(ctx, info.nome, 150, 15.5, '700', 'Cinzel, Georgia, serif', 10);
@@ -172,7 +186,7 @@ export function desenharCartaCompleta(carta, baralho, S) {
   /* caixa de poder */
   placa(ctx, 168, 292, 56, 26, P, { raio: 6 });
   ctx.fillStyle = TINTA; ctx.font = '800 15px Spectral, Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(info.figura ? '0' : String(info.pontos), 186, 305.5);
+  ctx.fillText(String(info.pontos), 186, 305.5);
   ctx.font = '700 14px ' + FONTE_SIMBOLOS; ctx.fillStyle = naipeInfo.vermelho ? '#a8232f' : TINTA;
   ctx.fillText(naipeInfo.simbolo, 209, 305.5);
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
@@ -213,8 +227,35 @@ export function desenharCartaDaMesa(carta, baralho, S) {
     desenharFigura(ctx, carta.valor, carta.naipe, wx + ww / 2 - 3, wy + wh + 1, wh * 0.9);
   } else {
     cenarioDoNaipe(ctx, carta.naipe, wx, wy, ww, wh, aleatorio, { constelacao: false });
-    brilho(ctx, wx + ww / 2, wy + wh * 0.55, ww * 0.6, P.brilho, 0.7);
-    desenharEmblema(ctx, naipeInfo.emblema, wx + ww / 2, wy + wh * 0.55, carta.valor === 'A' || info.manilha ? 70 : 60, 0.08);
+    const cx = wx + ww / 2, cy = wy + wh * 0.56;
+    brilho(ctx, cx, cy, ww * 0.6, P.brilho, 0.7);
+    const destaque = carta.valor === 'A' || info.manilha;
+    /* medalhão: anel dourado com um naipe pequeno por número da carta (2 a 10), em volta do emblema */
+    const n = destaque ? 0 : Math.min(10, Number(carta.valor) || 0), r = 23;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,236,170,.85)'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.arc(cx, cy, r + 6, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,236,170,.4)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.arc(cx, cy, r - 6, 0, Math.PI * 2); ctx.stroke();
+    if (destaque) {
+      for (let k = 0; k < 16; k++) {
+        const a = k * Math.PI / 8;
+        ctx.strokeStyle = 'rgba(255,236,170,' + (k % 2 ? 0.35 : 0.8) + ')'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * (r + 8), cy + Math.sin(a) * (r + 8)); ctx.lineTo(cx + Math.cos(a) * (r + (k % 2 ? 11 : 15)), cy + Math.sin(a) * (r + (k % 2 ? 11 : 15))); ctx.stroke();
+      }
+    }
+    ctx.restore();
+    desenharEmblema(ctx, naipeInfo.emblema, cx, cy, destaque ? 56 : 40, 0.08);
+    if (n) {
+      ctx.save();
+      ctx.font = '700 8px ' + FONTE_SIMBOLOS; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let k = 0; k < n; k++) {
+        const a = -Math.PI / 2 + k * 2 * Math.PI / n, px = cx + Math.cos(a) * r, py = cy + Math.sin(a) * r;
+        ctx.fillStyle = 'rgba(255,248,230,.95)'; ctx.beginPath(); ctx.arc(px, py, 4.6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = vermelho ? '#a8232f' : '#16120e'; ctx.fillText(naipeInfo.simbolo, px, py + 0.5);
+      }
+      ctx.restore();
+    }
   }
   ctx.restore();
   ctx.strokeStyle = '#0b0907'; ctx.lineWidth = 1.4;
@@ -231,8 +272,17 @@ export function desenharCartaDaMesa(carta, baralho, S) {
   }
   indice(18, 13);
   ctx.save(); ctx.translate(MINI_L, MINI_A); ctx.rotate(Math.PI); indice(18, 13); ctx.restore();
+  /* legenda curta embaixo da janela: nome da manilha (truco) ou ativação e peso (backprop) */
+  const legenda = info.manilha || (BARALHOS[baralho].forward ? (info.figura ? ATIVACAO_BACKPROP[carta.valor] : 'w ' + String(PESO_BACKPROP[carta.naipe]).replace('.', ',')) : '');
+  if (legenda) {
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '800 10px Cinzel, Georgia, serif';
+    const lw = Math.min(ww + 4, ctx.measureText(legenda).width + 12);
+    ctx.fillStyle = 'rgba(13,10,8,.82)'; caminhoArredondado(ctx, MINI_L / 2 - lw / 2, wy + wh + 3, lw, 14, 4); ctx.fill();
+    ctx.fillStyle = '#f6dc8f'; ctx.fillText(legenda, MINI_L / 2, wy + wh + 10.5);
+  }
   /* gema de valor (canto superior direito) */
-  gema(ctx, MINI_L - 21, 22, 11.5, info.manilha ? '#e0601c' : P.gema, info.figura ? '0' : String(info.pontos));
+  gema(ctx, MINI_L - 21, 22, 11.5, info.manilha ? '#e0601c' : P.gema, String(info.pontos));
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   return o.c;
 }
