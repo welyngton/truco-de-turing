@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.1.0 — 2026-11-12
+
+- feat: trilha do menu vira um baião animado; Mods com link para o manual ([#39](https://github.com/welyngton/truco-de-turing/pull/39), por [@welyngton](https://github.com/welyngton) e [@claude](https://github.com/claude))
+
 ## 2.0.0 — 2026-11-12
 
 - feat!: fusão com o NeuroDeck (issues #1 a #11 do fork de Diego Casagrande) ([#38](https://github.com/welyngton/truco-de-turing/pull/38), por [@welyngton](https://github.com/welyngton), [@diegocasagrande](https://github.com/diegocasagrande), [@claude](https://github.com/claude) e [@chiconatovini](https://github.com/chiconatovini))
