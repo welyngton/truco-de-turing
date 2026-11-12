@@ -6,12 +6,13 @@
  * cada jogada passa por `executarJogada()`, que aplica as regras, anima os eventos e chama
  * `avancar()` de novo quando a animação termina.
  */
+import { avatarDoJogador } from '../../conteudo/avatares.js';
 import { novaMao, aplicarJogada, jogadasLegais, camadasDesfaziveis } from '../../nucleo/partida.js';
 import { podeTrucar } from '../../nucleo/truco.js';
 import { OPONENTES, escolherJogada, querTrucar } from '../../nucleo/oponentes/index.js';
 import { mostrarAviso, confirmar } from '../../interface/paineis.js';
 import { liberarCartasDaMao, texturaDoVerso } from '../recursos.js';
-import { colunaX, linhaY, ajustarCartaDaMesa, ajustarBloco, PAINEL_ESQ } from './layout.js';
+import { colunaX, linhaY, ajustarCartaDaMesa, ajustarBloco, cartaDaMesa, PAINEL_ESQ } from './layout.js';
 import { FONTES } from '../../configuracao.js';
 
 export const metodosDeTurnos = {
@@ -23,14 +24,39 @@ export const metodosDeTurnos = {
   /** Jogador mostrado embaixo (quem está vendo; o 0 enquanto o aparelho troca de mãos). */
   jogadorDeBaixo() { return this.quemVe < 0 ? 0 : this.quemVe; },
 
-  /** Jogador mostrado em cima. */
-  jogadorDeCima() { return this.quemVe < 0 ? 1 : 1 - this.quemVe; },
+  /** Os outros jogadores, na ordem em que jogam depois de quem está embaixo (mãos de cima, da esquerda para a direita). */
+  outrosJogadores() {
+    const n = this.mao ? this.mao.jogadores.length : this.numJogadores, baixo = this.jogadorDeBaixo();
+    return Array.from({ length: n - 1 }, (_, k) => (baixo + 1 + k) % n);
+  },
 
-  /** Textura do avatar do jogador. */
+  /** Ordem dos blocos do placar, de cima para baixo: os outros jogadores e, por último, quem está vendo. */
+  ordemDoPlacar() { return [...this.outrosJogadores(), this.jogadorDeBaixo()]; },
+
+  /**
+   * Textura do avatar do jogador. O primeiro humano usa o avatar escolhido (tela de avatares); os
+   * outros humanos do aparelho usam o truqueiro que sobrar.
+   */
   avatarDe(j) {
     const jogador = this.mao.jogadores[j];
     if (jogador.tipo === 'oponente') return 'avatar-' + OPONENTES[jogador.oponente].avatar;
-    return j === 0 ? 'avatar-p1' : 'avatar-p2';
+    const escolhido = avatarDoJogador(this.app.progresso);
+    if (j === 0) return 'avatar-' + escolhido;
+    return escolhido === 'p2' ? 'avatar-p1' : 'avatar-p2';
+  },
+
+  /**
+   * Jogadores da mão: os humanos primeiro ("Você", ou "Jogador 1", "Jogador 2"… quando há mais de
+   * um), depois os oponentes do computador, numerados quando há mais de um do mesmo perfil.
+   */
+  montarJogadores() {
+    if (this.online) return this.jogadoresOnline();
+    const perfil = this.opcoes.oponente, bots = this.numJogadores - this.humanos;
+    return Array.from({ length: this.numJogadores }, (_, j) => {
+      if (j < this.humanos) return { nome: this.variosHumanos ? 'Jogador ' + (j + 1) : 'Você', tipo: 'humano' };
+      const k = j - this.humanos;
+      return { nome: OPONENTES[perfil].nome + (bots > 1 ? ' ' + (k + 1) : ''), tipo: 'oponente', oponente: perfil };
+    });
   },
 
   /** O jogador humano que está vendo a tela pode jogar agora? */
@@ -49,7 +75,7 @@ export const metodosDeTurnos = {
     this.modo = 'livre';
     this.selecao = [];
     this.dicaDoCursor = null;
-    this.vanishingAvisado = [false, false];
+    this.vanishingAvisado = new Array(this.numJogadores).fill(false);
     this.trucoConsideradoNoTurno = -1;
     this.oponenteCorreu = false;
     this.dicaAtual = null;
@@ -64,11 +90,15 @@ export const metodosDeTurnos = {
     this.cartasDoAdversario = [];
     liberarCartasDaMao(this);
 
-    const jogadores = this.doisHumanos
-      ? [{ nome: 'Jogador 1', tipo: 'humano' }, { nome: 'Jogador 2', tipo: 'humano' }]
-      : [{ nome: 'Você', tipo: 'humano' }, { nome: OPONENTES[this.opcoes.oponente].nome, tipo: 'oponente', oponente: this.opcoes.oponente }];
-    this.mao = novaMao({ baralho: this.opcoes.baralho, terreno: this.opcoes.terreno, inicio: this.opcoes.inicio, jogadores });
-    this.quemVe = 0;
+    const o = this.opcoes;
+    this.mao = novaMao({
+      baralho: o.baralho, terreno: o.terreno, inicio: o.inicio, arquitetura: o.arquitetura, baralhos: o.baralhos,
+      jogadores: this.montarJogadores(),
+      /* online: a mesma semente em todos os aparelhos (ver online.js) */
+      ...(this.online ? { semente: this.sementeDaMao() } : {}),
+    });
+    this.quemVe = this.online ? this.cadeiraOnline() : 0;
+    this.inicioDosBotsEnviado = new Set();
     this.criarNeuronios();
     this.painel.inspecao.setTexture('terreno-' + this.opcoes.terreno);
     ajustarBloco(this.painel.notaInspecao, 'Passe o cursor ou toque numa carta para inspecioná-la.', 12, PAINEL_ESQ.l - 30, 40, 9.5);
@@ -81,8 +111,11 @@ export const metodosDeTurnos = {
   /** Cria uma imagem clicável para cada neurônio, com a animação de distribuição. */
   criarNeuronios() {
     this.visuais = {};
-    const etiqueta = { fontFamily: FONTES.texto, fontStyle: '800', fontSize: '12px', color: '#24170c', backgroundColor: '#f6dc8f', padding: { x: 4, y: 1 } };
-    const lembranca = { fontFamily: FONTES.texto, fontStyle: '700', fontSize: '11px', color: '#f6dc8f', backgroundColor: 'rgba(0,0,0,.65)', padding: { x: 3, y: 1 } };
+    const { ml, ma, l } = cartaDaMesa(), escala = Math.max(0.75, l / 62);
+    /* selo de tunagem (canto de cima, dourado) e pontos do neurônio na rede (canto de baixo, na cor do dono) */
+    const etiqueta = { fontFamily: FONTES.texto, fontStyle: '800', fontSize: Math.round(12 * escala) + 'px', color: '#24170c', backgroundColor: '#f6dc8f', padding: { x: 4, y: 1 } };
+    const ponto = { fontFamily: FONTES.titulo, fontStyle: '800', fontSize: Math.round(12 * escala) + 'px', color: '#0d0a08', padding: { x: 4, y: 1 } };
+    const lembranca = { fontFamily: FONTES.texto, fontStyle: '700', fontSize: Math.round(11 * escala) + 'px', color: '#f6dc8f', backgroundColor: 'rgba(0,0,0,.65)', padding: { x: 3, y: 1 } };
     for (const camada of this.mao.camadas) {
       for (const n of camada) {
         const x = colunaX(n.camada), y = linhaY(n.camada, n.posicao);
@@ -90,10 +123,11 @@ export const metodosDeTurnos = {
         imagem.on('pointerdown', () => this.aoClicarNoNeuronio(n.id));
         imagem.on('pointerover', () => this.aoPassarNoNeuronio(n.id, true));
         imagem.on('pointerout', () => this.aoPassarNoNeuronio(n.id, false));
-        const pilha = this.add.text(x - 18, y + 33, '', etiqueta).setOrigin(0.5).setDepth(4);
-        const memoria = this.add.text(x, y + 32, '', lembranca).setOrigin(0.5).setDepth(4);
-        this.visuais[n.id] = { imagem, pilha, memoria };
-        this.objetosDoTabuleiro.push(imagem, pilha, memoria);
+        const pilha = this.add.text(x + ml * 0.62, y - ma * 0.78, '', etiqueta).setOrigin(0.5).setDepth(4);
+        const pontos = this.add.text(x + ml * 0.62, y + ma * 0.8, '', ponto).setOrigin(0.5).setDepth(4).setVisible(false);
+        const memoria = this.add.text(x, y + ma * 0.74, '', lembranca).setOrigin(0.5).setDepth(4);
+        this.visuais[n.id] = { imagem, pilha, memoria, pontos };
+        this.objetosDoTabuleiro.push(imagem, pilha, memoria, pontos);
         imagem.setAlpha(0).y -= 30;
         this.tweens.add({ targets: imagem, alpha: 1, y, duration: 260, delay: n.camada * 40 + n.posicao * 25, ease: 'Back.out' });
       }
@@ -103,15 +137,20 @@ export const metodosDeTurnos = {
   /* ------------------------------------------------------------------ jogadas */
 
   /** Aplica uma jogada (de qualquer jogador), anima os eventos e segue o fluxo. */
-  executarJogada(jogada) {
+  executarJogada(jogada, daRede = false) {
+    /* online: a jogada vai para a sala e volta numerada (online.js) */
+    if (this.online && !daRede) return this.enviarOnline({ tipo: 'jogada', cadeira: jogada.jogador, jogada });
     try {
       aplicarJogada(this.mao, jogada);
     } catch (erro) {
       mostrarAviso('Jogada inválida', erro.message);
       this.redesenhar();
+      /* online: a ação recusada é recusada em todas as telas; a mesa segue esperando a próxima */
+      if (daRede) this.time.delayedCall(30, () => this.avancar());
       return;
     }
     this.selecao = [];
+    this.acaoEscolhida = null;
     if (this.modo !== 'inicio') this.modo = 'livre';
     const eventos = this.mao.eventos.splice(0);
     this.ocupada = true;
@@ -129,8 +168,9 @@ export const metodosDeTurnos = {
     if (mao.fase === 'fim') return this.encerrarMao(null);
     if (mao.fase === 'inicio') return this.avancarNoInicio();
     const vez = mao.vez, jogador = mao.jogadores[vez];
+    if (this.online && this.avancarOnline()) return;
     if (jogador.tipo === 'oponente') return this.vezDoOponente();
-    if (this.doisHumanos && this.quemVe !== vez) return this.passarAparelho(vez, () => { this.quemVe = vez; this.avancar(); });
+    if (this.variosHumanos && this.quemVe !== vez) return this.passarAparelho(vez, () => { this.quemVe = vez; this.avancar(); });
     this.quemVe = vez;
     this.ocupada = false;
     this.modo = 'livre';
@@ -174,6 +214,7 @@ export const metodosDeTurnos = {
   /** Fase de início: oponentes escolhem a carta; humanos escolhem um de cada vez. */
   avancarNoInicio() {
     const mao = this.mao;
+    if (this.online) return this.avancarNoInicioOnline();
     mao.jogadores.forEach((jogador, j) => {
       if (jogador.tipo === 'oponente' && !jogador.cartaInicial) aplicarJogada(mao, escolherJogada(mao, j));
     });
@@ -186,7 +227,7 @@ export const metodosDeTurnos = {
     }
     const comecar = () => { this.quemVe = esperando; this.modo = 'inicio'; this.ocupada = false; this.redesenhar(); };
     const alguemEscolheu = mao.jogadores.some((jogador) => !!jogador.cartaInicial);
-    if (this.doisHumanos && (alguemEscolheu || this.quemVe !== esperando)) return this.passarAparelho(esperando, comecar);
+    if (this.variosHumanos && (alguemEscolheu || this.quemVe !== esperando)) return this.passarAparelho(esperando, comecar);
     comecar();
   },
 
@@ -206,6 +247,10 @@ export const metodosDeTurnos = {
    */
   vezDoOponente() {
     const mao = this.mao, vez = mao.vez, perfil = mao.jogadores[vez].oponente;
+    /* uma decisão por vez: chamadas repetidas para a mesma vez (online, quando alguém cai) não jogam duas vezes */
+    const chave = mao.turno + ':' + vez + ':' + mao.registro.length;
+    if (this.oponenteDecidindo === chave) return;
+    this.oponenteDecidindo = chave;
     this.ocupada = true;
     this.notaDoOponente = perfil === 'montecarlo' ? 'simulando partidas…' : 'pensando…';
     this.redesenhar();
@@ -214,7 +259,7 @@ export const metodosDeTurnos = {
       this.notaDoOponente = null;
       if (this.trucoConsideradoNoTurno !== mao.turno && podeTrucar(this.partida, vez)) {
         this.trucoConsideradoNoTurno = mao.turno;
-        if (querTrucar(mao, vez, perfil)) return this.anunciarTruco(vez);
+        if (querTrucar(mao, vez, perfil)) { this.oponenteDecidindo = null; return this.anunciarTruco(vez); }
       }
       const jogada = escolherJogada(mao, vez);
       if (jogada.simulacao) {

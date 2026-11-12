@@ -10,13 +10,15 @@ import { instalarNavegadorFalso, registroDeAudio, limparRegistroDeAudio, esperar
 instalarNavegadorFalso({ toque: true });
 const paineis = await import('../../src/interface/paineis.js');
 const { Som, contextoDeAudio } = await import('../../src/interface/som.js');
-const { Musica } = await import('../../src/interface/musica.js');
+const { Musica, MUSICAS, TRILHAS, gravarTrilha } = await import('../../src/interface/musica.js');
 const { abrirMenu } = await import('../../src/interface/menu.js');
+const { abrirAvatares } = await import('../../src/interface/telas/avatares.js');
 const { abrirRegras } = await import('../../src/interface/telas/regras.js');
 const { abrirGrimorio, htmlDoVerbete } = await import('../../src/interface/telas/grimorio.js');
 const { textoComFormulas, formulaHtml } = await import('../../src/interface/formulas.js');
 const { abrirConquistas, medalhaHtml } = await import('../../src/interface/telas/conquistas.js');
 const { abrirSobre } = await import('../../src/interface/telas/sobre.js');
+const { abrirMods } = await import('../../src/interface/telas/mods.js');
 const { abrirRevisao } = await import('../../src/interface/telas/revisao.js');
 const { Aplicacao } = await import('../../src/aplicacao.js');
 const { VERSAO } = await import('../../src/versao.js');
@@ -111,8 +113,24 @@ describe('som.js e musica.js', () => {
     Som.definirMudo(false);
     assert.ok(contextoDeAudio());
   });
+  it('trilhas: menu e os quatro terrenos, com tema composto que cabe nos compassos', () => {
+    assert.deepEqual(TRILHAS, ['menu', 'neutro', 'oceano', 'montanha', 'pantano']);
+    for (const nome of TRILHAS) {
+      limparRegistroDeAudio();
+      const contexto = contextoDeAudio(), saida = contexto.createGain();
+      gravarTrilha(saida, nome, 20);
+      assert.ok(registroDeAudio.osciladores.length > 100, nome);
+      /* um compasso de tema por acorde; nenhuma nota invade a seguinte nem passa do compasso */
+      const m = MUSICAS[nome], passos = m.tempos * m.subdivisao;
+      assert.equal(m.tema.length, m.acordes.length, nome);
+      for (const compasso of m.tema) {
+        let fim = 0;
+        for (const [passo, , dur] of compasso) { assert.ok(passo >= fim && passo + dur <= passos, nome); fim = passo + dur; }
+      }
+    }
+  });
   it('música: cada terreno agenda notas; trocar, repetir e parar', async (t) => {
-    for (const terreno of ['neutro', 'oceano', 'montanha', 'pantano', 'desconhecido']) {
+    for (const terreno of ['menu', 'neutro', 'oceano', 'montanha', 'pantano', 'desconhecido']) {
       limparRegistroDeAudio();
       Musica.tocar(terreno);
       assert.ok(Musica.tocando());
@@ -143,16 +161,59 @@ describe('telas', () => {
     const app = appFalso();
     abrirMenu(app);
     assert.equal($('#m-baralho').value, 'truco');
-    assert.ok($('#m-oponente').options.length >= 4);
+    assert.equal($('#m-oponente').options.length, 3);
     $('#m-terreno').value = 'montanha';
     $('#m-terreno').dispatchEvent(new window.Event('change'));
     assert.ok($$('.miniatura img').length >= 1);
-    for (const id of ['m-regras', 'm-grimorio', 'm-conquistas', 'm-sobre']) {
+    for (const id of ['m-regras', 'm-grimorio', 'm-conquistas', 'm-mods', 'm-sobre']) {
       clicar($('#' + id));
       assert.equal(app.opcoes.terreno, 'montanha');
     }
     clicar($('#m-jogar'));
     assert.equal(app.jogou, 1);
+  });
+
+  it('menu: configurações do NeuroDeck (jogadores, humanos, oponentes, arquitetura e baralhos)', () => {
+    const app = appFalso();
+    abrirMenu(app);
+    const mudar = (id, valor) => { $('#' + id).value = String(valor); $('#' + id).dispatchEvent(new window.Event('change')); };
+    /* padrão: 2 jogadores, 1 humano, arquitetura padrão, 1 baralho (o Truco pede 2) */
+    assert.deepEqual([$('#m-jogadores').value, $('#m-humanos').value, $('#m-arquitetura').value, $('#m-baralhos').value], ['2', '1', 'padrao', '1']);
+    assert.match($('#m-mesa-dica').textContent, /Mesa 3-5-5-5-5-5-4 .*Mão de 10 cartas \(o baralho Truco usa no mínimo 2 baralhos\)/);
+    /* cada opção de partida com o seu rótulo: a de mão única não pode virar "12 tentos" */
+    assert.match($('#m-partida option[value="12"]').textContent, /com truco/);
+    assert.equal($('#m-partida option[value="1"]').textContent, 'Mão única, sem truco');
+    /* 4 jogadores: a lista de humanos vai até 4, a mesa cresce e o truco sai */
+    mudar('m-jogadores', 4);
+    assert.equal($('#m-humanos').options.length, 4);
+    assert.match($('#m-mesa-dica').textContent, /Mesa 5-7-7-7-7-7-6/);
+    assert.match($('#m-partida option[value="12"]').textContent, /truco só com 2/);
+    assert.equal($('#m-partida option[value="1"]').textContent, 'Mão única, sem truco');
+    assert.match($('#m-oponente-rotulo').textContent, /Oponentes \(3/);
+    /* todos humanos: some a escolha de oponente */
+    mudar('m-humanos', 4);
+    assert.equal($('#m-campo-oponente').hidden, true);
+    mudar('m-humanos', 2);
+    assert.equal($('#m-campo-oponente').hidden, false);
+    mudar('m-arquitetura', 'profunda');
+    mudar('m-baralhos', 3);
+    mudar('m-baralho', 'classico');
+    assert.match($('#m-mesa-dica').textContent, /Mão de 15 cartas\.$/);
+    /* voltando para 3 jogadores, os humanos ficam no máximo 3 */
+    mudar('m-jogadores', 3);
+    assert.equal($('#m-humanos').value, '2');
+    clicar($('#m-jogar'));
+    assert.deepEqual({ jogadores: app.opcoes.jogadores, humanos: app.opcoes.humanos, arquitetura: app.opcoes.arquitetura, baralhos: app.opcoes.baralhos },
+      { jogadores: 3, humanos: 2, arquitetura: 'profunda', baralhos: 3 });
+  });
+
+  it('mods: tipos, exemplo comentado e o aviso de que a interface ainda não carrega mods', async () => {
+    abrirMods();
+    const texto = $('.mods').textContent;
+    for (const termo of ['registerDeck', 'registerTerrain', 'registerAction', 'apiVersion', 'Regularização L1', 'neurodeck-fpo.web.app/?mod=', 'Ainda não no jogo unificado']) assert.ok(texto.includes(termo), termo);
+    clicar($('#mods-copiar'));
+    await esperar(20);
+    assert.ok($('#mods-copiado').textContent.length > 0);
   });
   it('regras: marca o tutorial como visto e chama aoFechar', () => {
     const app = appFalso();
@@ -174,14 +235,14 @@ describe('telas', () => {
     assert.ok($$('#g-lista .lido').length >= 2);
     abrirGrimorio(app, 'nao-existe');
   });
-  it('grimório: verbete completo mostra ideia, onde falha, matemática e autoria', () => {
-    const app = appFalso();
-    abrirGrimorio(app, 'dropout');
+  it('Biblioteca: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
+    abrirGrimorio(appFalso(), 'overfit');
     const texto = $('#g-verbete').textContent;
-    for (const trecho of ['A ideia', 'Na vida real', 'No jogo', 'Onde a comparação falha', 'Para se aprofundar', 'Suzy Arcanjo']) assert.match(texto, new RegExp(trecho));
+    for (const trecho of ['A ideia', 'No jogo', 'Até onde vale a comparação', 'Para se aprofundar', 'Suzy Arcanjo']) assert.match(texto, new RegExp(trecho));
+    assert.ok($('#g-verbete .equacao math'));
     assert.ok($('#g-verbete .formula-bloco, #g-verbete .katex-display'));
     const curto = htmlDoVerbete(VERBETES.find((v) => !v.ideia));
-    assert.doesNotMatch(curto, /A ideia|Para se aprofundar/);
+    assert.doesNotMatch(curto, /A ideia|Para se aprofundar|Colaboração/);
   });
   it('fórmulas: KaTeX quando existe, LaTeX escapado como código quando não', () => {
     const semKatex = textoComFormulas('peso $w<1$ e $$a \\cdot b$$ fim', null);
@@ -191,22 +252,63 @@ describe('telas', () => {
     assert.match(formulaHtml('c', false, { renderToString: () => { throw new Error('ruim'); } }), /formula-tex/);
     assert.equal(textoComFormulas('sem fórmula <b>', null), 'sem fórmula &lt;b&gt;');
   });
+  it('Biblioteca de conceitos: título novo, equação, figura e "até onde vale a comparação"', () => {
+    abrirGrimorio(appFalso(), 'dropout');
+    assert.match($('.camada h2').textContent, /Biblioteca de conceitos/);
+    assert.ok($('#g-verbete .equacao math'));
+    assert.ok($('#g-verbete .figura svg'));
+    assert.match($('#g-verbete .limite').textContent, /Até onde vale/);
+    assert.match($('#g-verbete .fonte').textContent, /Srivastava/);
+  });
+  it('regras em abas: troca de aba, ajuda das ações e "Ver o conceito" abrindo o verbete certo', () => {
+    const app = appFalso();
+    abrirRegras(app);
+    const abas = $$('.abas [data-aba]').map((b) => b.textContent);
+    assert.deepEqual(abas, ['Como jogar', 'Ações', 'Pontuação', 'Baralhos e terrenos', 'Dicas e estratégias']);
+    assert.ok(!$$('.abas [data-aba]').some((b) => /Cartas|Decisões/.test(b.textContent)));
+    clicar($('.abas [data-aba="pontuacao"]'));
+    assert.equal($('section.aba[data-aba="pontuacao"]').hidden, false);
+    assert.equal($('section.aba[data-aba="jogar"]').hidden, true);
+    clicar($('.abas [data-aba="extensoes"]'));
+    assert.equal($$('section.aba[data-aba="extensoes"] .extensao').length, 11); /* 7 baralhos e 4 terrenos */
+    clicar($('#r-ajuda-acoes'));
+    assert.equal($$('.cartao-acao').length, 8);
+    assert.match($('.cartao-acao[data-acao="earlystop"]').textContent, /Early stopping/);
+    clicar($('.cartao-acao[data-acao="stackoverflow"] [data-verbete]'));
+    assert.match($('#g-verbete h2').textContent, /Stack overflow/);
+    assert.ok(app.progresso.lidos.stackoverflow);
+  });
+  it('avatares: escolhe um liberado, ignora o bloqueado e avisa quem mudou', () => {
+    const app = appFalso();
+    app.progresso.desbloqueadas = { gato10: 1 };
+    let mudou = null;
+    abrirAvatares(app, (id) => { mudou = id; });
+    assert.equal($$('.avatar-opcao').length, 9);
+    assert.equal($$('.avatar-opcao.bloqueado').length, 5);
+    clicar($('.avatar-opcao[data-avatar="cosmico"]')); /* bloqueado: nada muda */
+    assert.equal(mudou, null);
+    clicar($('.avatar-opcao[data-avatar="gato"]'));
+    assert.equal(app.progresso.avatar, 'gato');
+    assert.equal(mudou, 'gato');
+    assert.equal($('.avatar-opcao[data-avatar="gato"]').getAttribute('aria-pressed'), 'true');
+    assert.match($('.avatar-opcao[data-avatar="cosmico"]').textContent, /Contra tudo e contra todos/);
+  });
   it('conquistas: medalhas bloqueadas e desbloqueadas, contagem e retrato', async () => {
     const app = appFalso();
     abrirConquistas(app);
-    assert.match($('.conquistas-resumo').textContent, /1 de 27/);
+    assert.match($('.conquistas-resumo').textContent, /1 de 35/);
     assert.equal($$('.conquista').length, CONQUISTAS.length);
     await esperar(50);
     assert.ok($('#c-retrato canvas'));
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
     assert.match(medalhaHtml(CONQUISTAS[0], false), /cadeado|bloquead/);
   });
-  it('sobre: versão, disciplina, professor e autores', () => {
+  it('sobre: versão, os dois jogos, disciplina, professor e autores', () => {
     abrirSobre();
     const texto = $('.camada').textContent;
     assert.ok(texto.includes('Versão ' + VERSAO));
     assert.match(texto, /Peng Yaohao/);
-    assert.match(texto, /Welyngton/);
+    for (const termo of ['NeuroDeck', 'Truco de Turing', 'Francisco Lima', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo', 'neurodeck-fpo.web.app']) assert.ok(texto.includes(termo), termo);
   });
   it('revisão: resumo, curva, linha do tempo comentada e placar da partida', () => {
     const mao = maoAteOFim({ terreno: 'pantano' });

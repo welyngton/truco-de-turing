@@ -8,6 +8,8 @@ import { embaralhar } from '../nucleo/aleatorio.js';
 import { Aplicacao } from '../aplicacao.js';
 import { abrirMenu } from '../interface/menu.js';
 import { fecharTodos } from '../interface/paineis.js';
+import { Musica } from '../interface/musica.js';
+import { Som } from '../interface/som.js';
 import { ajustarCamera, colocarFundo, texturaDaCartaNaMesa } from './recursos.js';
 
 /** Neurônios por coluna da rede decorativa. */
@@ -24,6 +26,24 @@ export class CenaMenu extends Phaser.Scene {
     this.espalharCartas();
     fecharTodos();
     abrirMenu(Aplicacao);
+    this.tocarMusicaDoMenu();
+  }
+
+  /**
+   * Trilha do menu. O navegador só libera som depois de um gesto: se ainda não liberou, a música
+   * começa no primeiro toque ou clique na página (sem pedir nada à pessoa).
+   */
+  tocarMusicaDoMenu() {
+    if (!Aplicacao.progresso.musica) return;
+    if (Som.liberado()) { Musica.tocar('menu'); return; }
+    const aoTocar = () => {
+      document.removeEventListener('pointerdown', aoTocar, true);
+      if (!this.sys.isActive() || !Aplicacao.progresso.musica) return;
+      Som.desbloquear();
+      Musica.tocar('menu');
+    };
+    document.addEventListener('pointerdown', aoTocar, true);
+    this.events.once('shutdown', () => document.removeEventListener('pointerdown', aoTocar, true));
   }
 
   /** Nove cartas semitransparentes flutuando devagar. */

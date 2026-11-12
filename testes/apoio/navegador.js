@@ -43,7 +43,8 @@ let contadorDeCobertura = 0;
  * @returns {Promise<{navegador, contexto, pagina, erros: string[], fechar: () => Promise<void>}>}
  */
 export async function abrirJogo(base, opcoes = {}) {
-  const navegador = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  /* CHROMIUM_DO_SISTEMA: caminho de um Chrome/Chromium já instalado, para máquinas sem o Chromium do Playwright */
+  const navegador = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'], executablePath: process.env.CHROMIUM_DO_SISTEMA || undefined });
   let config = { viewport: opcoes.viewport || { width: 1280, height: 720 } };
   if (opcoes.dispositivo) {
     config = { ...devices[opcoes.dispositivo] };
@@ -71,6 +72,21 @@ export async function abrirJogo(base, opcoes = {}) {
       await navegador.close();
     },
   };
+}
+
+/**
+ * Outra aba no mesmo navegador de `jogo` (mesmo contexto, então o BroadcastChannel liga as duas):
+ * usada nos testes da sala online entre abas.
+ */
+export async function abrirOutraAba(jogo, base, consulta = '') {
+  const pagina = await jogo.contexto.newPage();
+  const erros = [];
+  pagina.on('pageerror', (e) => erros.push(String(e && e.stack || e)));
+  pagina.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) erros.push(m.text()); });
+  await pagina.route(/cdnjs\.cloudflare\.com/, (r) => r.fulfill({ body: PHASER, contentType: 'text/javascript' }));
+  await pagina.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: '', contentType: 'text/css' }));
+  await pagina.goto(base + '/index.html' + consulta);
+  return { pagina, erros };
 }
 
 /** Converte a cobertura do Chromium para o formato do V8 que o c8 junta com a do Node. */
@@ -101,6 +117,12 @@ export async function esperarCena(pagina, condicao, tempo = 60000) {
     try { return !!new Function('cena', 'app', 'jogo', corpo)(cena, app, jogo); } catch (e) { return false; }
   }, [condicao], { timeout: tempo, polling: 50 });
 }
+
+/**
+ * Carrega na página as funções de montagem de situações (testes/apoio/montagem.js) como `M`,
+ * para o código de `naCena` montar mãos e redes no estado do motor: `M.darMao(cena.mao, 0, ['7E'])`.
+ */
+export const carregarMontagem = (pagina) => pagina.evaluate(async () => { globalThis.M = await import('/testes/apoio/montagem.js'); });
 
 /** Espera o menu aparecer. */
 export const esperarMenu = (pagina) => pagina.waitForSelector('#m-jogar', { timeout: 60000 });

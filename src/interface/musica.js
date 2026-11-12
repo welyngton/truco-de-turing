@@ -1,16 +1,17 @@
 /**
- * @file Música de fundo sintetizada com WebAudio, uma para cada terreno:
+ * @file Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cada terreno.
  *
- * | Terreno  | Estilo                         | Andamento |
- * |----------|--------------------------------|-----------|
- * | neutro   | blues com balanço (shuffle) em Mi | 92 bpm |
- * | oceano   | valsa lenta em Sol, com ondas  | 66 bpm (3/4) |
- * | montanha | épica em Lá menor, com tambores | 88 bpm |
- * | pantano  | sombria e gótica em Ré menor, órgão e sino | 56 bpm |
+ * | Trilha              | Estilo                                                        | Andamento    |
+ * |---------------------|---------------------------------------------------------------|--------------|
+ * | menu                | canção de ninar em Fá: harpa, caixinha de música e um coro suave | 76 bpm     |
+ * | neutro (Planície)   | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm     |
+ * | oceano              | valsa em Sol: marimba ao fundo, coro que preenche os repousos | 63 bpm (3/4) |
+ * | montanha            | épica em Lá menor: trompa, harpa ao fundo e tambores nos repousos | 84 bpm   |
+ * | pantano             | dança de fada em Ré menor: harmônica de vidro, glockenspiel e pizzicato | 60 bpm |
  *
- * Cada música é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão.
- * A melodia é sorteada por compasso com uma semente fixa, então o laço sempre se repete igual.
- * Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio (sem atrasos).
+ * Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As
+ * melodias são compostas (uma tabela de notas por compasso), então o laço sempre se repete igual e
+ * o tema fica na cabeça. Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio.
  */
 import { contextoDeAudio } from './som.js';
 
@@ -107,6 +108,53 @@ function sino(saida, tempo, midi, volume = 0.06) {
   }
 }
 
+/** Harpa: corda dedilhada que soa e some devagar. */
+function harpa(saida, tempo, midi, volume = 0.04) {
+  voz(saida, tempo, midi, 0.04, { forma: 'triangle', volume, ataque: 0.004, liberacao: 1.3, filtro: 3000 });
+  voz(saida, tempo, midi + 12, 0.03, { forma: 'sine', volume: volume * 0.3, ataque: 0.004, liberacao: 0.8 });
+}
+
+/** Glockenspiel e caixinha de música: barra de metal, ataque seco e brilho agudo. */
+function glockenspiel(saida, tempo, midi, volume = 0.05) {
+  for (const [razao, peso, dur] of [[1, 1, 1.3], [2.0, 0.18, 0.5], [3.9, 0.22, 0.25]]) {
+    const a = saida.context, osc = a.createOscillator(), ganho = a.createGain();
+    osc.type = 'sine'; osc.frequency.value = hz(midi) * razao;
+    ganho.gain.setValueAtTime(0.0001, tempo);
+    ganho.gain.exponentialRampToValueAtTime(volume * peso, tempo + 0.004);
+    ganho.gain.exponentialRampToValueAtTime(0.0001, tempo + dur);
+    osc.connect(ganho); ganho.connect(saida);
+    osc.start(tempo); osc.stop(tempo + dur + 0.05);
+  }
+}
+
+/** Harmônica de vidro: senoides puras com entrada macia e um leve tremor. */
+function harmonicaDeVidro(saida, tempo, midi, duracao, volume = 0.05) {
+  voz(saida, tempo, midi, duracao, { forma: 'sine', volume, ataque: 0.05, liberacao: 0.45, vibrato: 7 });
+  voz(saida, tempo, midi + 12, duracao, { forma: 'sine', volume: volume * 0.22, ataque: 0.08, liberacao: 0.35 });
+  voz(saida, tempo, midi + 19, duracao * 0.6, { forma: 'sine', volume: volume * 0.07, ataque: 0.1, liberacao: 0.25 });
+}
+
+/** Marimba: tecla de madeira, grave arredondado e um harmônico que some rápido. */
+function marimba(saida, tempo, midi, volume = 0.05) {
+  voz(saida, tempo, midi, 0.02, { forma: 'sine', volume, ataque: 0.003, liberacao: 0.45 });
+  voz(saida, tempo, midi + 24, 0.01, { forma: 'sine', volume: volume * 0.25, ataque: 0.002, liberacao: 0.1 });
+}
+
+/** Pizzicato: corda beliscada, curta e abafada. */
+function pizzicato(saida, tempo, midi, volume = 0.08) {
+  voz(saida, tempo, midi, 0.03, { forma: 'triangle', volume, ataque: 0.004, liberacao: 0.22, filtro: 1000 });
+}
+
+/** Coro (pad): acorde de senoides que entra e sai devagar e passa um pouco do compasso. */
+function coro(saida, tempo, notas, duracao, volume = 0.018) {
+  for (const n of notas) voz(saida, tempo, n, duracao, { forma: 'sine', volume, ataque: duracao * 0.3, liberacao: duracao * 0.35, vibrato: 3 });
+}
+
+/** Toca a nota da melodia composta que começa neste passo, se houver. Tabela: [passo, midi, passos]. */
+function melodia(tabela, compasso, passo, tocarNota, d) {
+  for (const [p, midi, n] of tabela[compasso % tabela.length]) if (p === passo) tocarNota(midi, d * n);
+}
+
 /* ======================================================================== músicas */
 
 /*
@@ -115,97 +163,158 @@ function sino(saida, tempo, midi, volume = 0.06) {
  * [fundamental, ...]) e `tocar(saida, t, compasso, passo, acorde, sortear, duracaoDoPasso)`,
  * chamada a cada passo.
  */
-const MUSICAS = {
-  /* Blues em Mi, 12 compassos, com baixo "boogie" e balanço */
+export const MUSICAS = {
+  /* Menu: canção de ninar em Fá (F Dm B♭ C F Am B♭ C), harpa em arpejo, coro e caixinha de música */
+  menu: {
+    bpm: 76, tempos: 4, subdivisao: 2, balanco: 0,
+    acordes: [[41, 53, 57, 60], [38, 53, 57, 62], [34, 53, 58, 62], [36, 52, 55, 60], [41, 53, 57, 60], [33, 52, 57, 60], [34, 53, 58, 62], [36, 52, 55, 58]],
+    tema: [
+      [[0, 72, 3], [3, 69, 1], [4, 72, 2], [6, 74, 2]], [[0, 77, 4], [4, 76, 2], [6, 74, 2]],
+      [[0, 74, 3], [3, 70, 1], [4, 74, 2], [6, 77, 2]], [[0, 76, 6], [6, 72, 2]],
+      [[0, 72, 3], [3, 69, 1], [4, 72, 2], [6, 77, 2]], [[0, 76, 4], [4, 72, 2], [6, 69, 2]],
+      [[0, 70, 3], [3, 74, 1], [4, 72, 2], [6, 70, 2]], [[0, 67, 4], [4, 72, 4]],
+    ],
+    tocar(s, t, compasso, passo, acorde, sortear, d) {
+      const [r, a, b, c] = acorde;
+      harpa(s, t, [a, b, c, a + 12, b + 12, c + 12, b + 12, a + 12][passo], 0.03);
+      if (passo === 0) { voz(s, t, r, d * 7.6, { forma: 'sine', volume: 0.12, ataque: 0.05, liberacao: 0.8 }); coro(s, t, [a, b, c], d * 8.5, 0.012); }
+      melodia(this.tema, compasso, passo, (nota, dur) => {
+        glockenspiel(s, t, nota + 12, 0.035);
+        voz(s, t, nota, dur * 0.95, { forma: 'sine', volume: 0.045, ataque: 0.03, liberacao: 0.4, vibrato: 4 });
+      }, d);
+    },
+  },
+
+  /* Planície (mesa neutra): blues lento em Mi, 12 compassos; o tema é cantado, com notas longas e
+     passos curtos, sobre baixo em mínimas, acordes macios e escovinha */
   neutro: {
-    bpm: 92, tempos: 4, subdivisao: 2, balanco: 0.33,
+    bpm: 72, tempos: 4, subdivisao: 2, balanco: 0.22,
     acordes: [40, 40, 40, 40, 45, 45, 40, 40, 47, 45, 40, 47].map((r) => [r, r + 4, r + 7, r + 10]),
+    tema: [
+      [[0, 68, 3], [3, 71, 1], [4, 73, 2], [6, 71, 2]], [[0, 68, 4], [4, 66, 2], [6, 64, 2]],
+      [[0, 68, 3], [3, 71, 1], [4, 73, 2], [6, 76, 2]], [[0, 74, 4], [4, 73, 2], [6, 71, 2]],
+      [[0, 73, 3], [3, 76, 1], [4, 73, 2], [6, 69, 2]], [[0, 69, 6], [6, 68, 2]],
+      [[0, 68, 3], [3, 71, 1], [4, 68, 2], [6, 66, 2]], [[0, 64, 8]],
+      [[0, 71, 3], [3, 73, 1], [4, 75, 2], [6, 71, 2]], [[0, 73, 3], [3, 69, 1], [4, 68, 2], [6, 66, 2]],
+      [[0, 68, 4], [4, 64, 4]], [[0, 66, 4], [4, 71, 4]],
+    ],
     tocar(s, t, compasso, passo, acorde, sortear, d) {
       const r = acorde[0];
-      const boogie = [0, 4, 7, 9, 10, 9, 7, 4];
-      voz(s, t, r + boogie[passo], d * 0.9, { forma: 'triangle', volume: 0.13, liberacao: 0.05 });
+      if (passo === 0 || passo === 4) voz(s, t, passo ? r + 7 : r, d * 3.6, { forma: 'triangle', volume: 0.12, ataque: 0.02, liberacao: 0.3 });
       if (passo === 2 || passo === 6) {
-        for (const n of acorde.slice(1)) voz(s, t, n + 12, d * 0.6, { forma: 'square', volume: 0.018, filtro: 1800, liberacao: 0.08 });
+        for (const n of acorde.slice(1)) voz(s, t, n + 12, d * 1.6, { forma: 'sine', volume: 0.016, ataque: 0.03, liberacao: 0.4, vibrato: 3 });
       }
-      if (passo % 2 === 1) chiado(s, t, 0.05, { volume: 0.025, filtro: 7000 });
-      if (passo === 0 || passo === 4) tambor(s, t, { volume: 0.12, de: 90, para: 50, duracao: 0.25 });
-      /* frase de gaita/guitarra na escala de blues, em metade dos compassos */
-      if (compasso % 2 === 1 && passo % 2 === 0 && sortear() < 0.7) {
-        const blues = [0, 3, 5, 6, 7, 10, 12];
-        const nota = 64 + blues[Math.floor(sortear() * blues.length)];
-        voz(s, t, nota, d * (sortear() < 0.3 ? 2 : 1), { forma: 'sawtooth', volume: 0.03, filtro: 2200, vibrato: 12, liberacao: 0.12 });
-      }
+      if (passo % 2 === 1) chiado(s, t, 0.08, { volume: 0.012, filtro: 6000 });
+      if (passo === 0) tambor(s, t, { volume: 0.07, de: 80, para: 48, duracao: 0.3 });
+      melodia(this.tema, compasso, passo, (nota, dur) => {
+        voz(s, t, nota, dur * 0.95, { forma: 'sine', volume: 0.065, ataque: 0.03, liberacao: 0.35, vibrato: 5 });
+        voz(s, t, nota, dur * 0.95, { forma: 'triangle', volume: 0.02, ataque: 0.03, liberacao: 0.3, filtro: 1800 });
+      }, d);
     },
   },
 
-  /* Valsa lenta em Sol, compasso 3/4: baixo no 1, acordes no 2 e no 3, melodia cantada e o mar ao fundo */
+  /* Valsa em Sol, 3/4: baixo e coro ligados de um compasso ao outro (os repousos ficam cheios),
+     marimba ao fundo, tema cantado e o mar */
   oceano: {
-    bpm: 66, tempos: 3, subdivisao: 1, balanco: 0,
+    bpm: 63, tempos: 3, subdivisao: 2, balanco: 0,
     acordes: [[43, 55, 59, 62], [40, 55, 59, 64], [36, 55, 60, 64], [38, 54, 57, 62], [43, 55, 59, 62], [47, 54, 59, 62], [36, 55, 60, 64], [38, 54, 57, 60]],
+    tema: [
+      [[0, 74, 3], [3, 71, 1], [4, 74, 2]], [[0, 76, 4], [4, 74, 1], [5, 71, 1]],
+      [[0, 72, 3], [3, 76, 1], [4, 72, 2]], [[0, 69, 6]],
+      [[0, 71, 3], [3, 74, 1], [4, 79, 2]], [[0, 78, 4], [4, 74, 2]],
+      [[0, 76, 3], [3, 72, 1], [4, 69, 2]], [[0, 72, 3], [3, 69, 1], [4, 66, 2]],
+    ],
     tocar(s, t, compasso, passo, acorde, sortear, d) {
+      const [r, a, b, c] = acorde;
       if (passo === 0) {
-        voz(s, t, acorde[0], d * 1.2, { forma: 'sine', volume: 0.2, ataque: 0.02, liberacao: 0.5 });
-        if (compasso % 2 === 0) chiado(s, t, d * 5, { volume: 0.025, filtro: 600, tipo: 'lowpass', ataque: d * 2.2 }); /* onda */
-      } else {
-        for (const n of acorde.slice(1)) voz(s, t, n, d * 0.8, { forma: 'triangle', volume: 0.035, ataque: 0.03, liberacao: 0.3 });
+        voz(s, t, r, d * 6.4, { forma: 'sine', volume: 0.16, ataque: 0.04, liberacao: 0.9 });
+        coro(s, t, [a, b, c], d * 6.8, 0.016);
+        if (compasso % 2 === 0) chiado(s, t, d * 10, { volume: 0.022, filtro: 600, tipo: 'lowpass', ataque: d * 4 }); /* onda */
       }
-      /* melodia: notas longas nos tempos fortes, às vezes uma passagem */
-      if (passo === 0 || (passo === 2 && sortear() < 0.45)) {
-        const escolhidas = acorde.slice(1).map((n) => n + 12);
-        const nota = escolhidas[Math.floor(sortear() * escolhidas.length)];
-        voz(s, t, nota, passo === 0 ? d * 1.9 : d * 0.9, { forma: 'sine', volume: 0.07, ataque: 0.06, liberacao: 0.6, vibrato: 8 });
-      }
+      if (passo >= 2) marimba(s, t, [a, b, c, b][passo - 2] + 12, 0.032);
+      melodia(this.tema, compasso, passo, (nota, dur) => voz(s, t, nota, dur * 0.98, { forma: 'sine', volume: 0.07, ataque: 0.05, liberacao: 0.7, vibrato: 7 }), d);
     },
   },
 
-  /* Épica em Lá menor: tambores taiko, cordas em ostinato e metais em notas longas */
+  /* Épica em Lá menor: tema na trompa (macia, sem o ataque espetado da flauta), harpa ao fundo,
+     cordas em ostinato, metais sustentados e tambores que marcam os repousos do tema */
   montanha: {
-    bpm: 88, tempos: 4, subdivisao: 2, balanco: 0,
+    bpm: 84, tempos: 4, subdivisao: 2, balanco: 0,
     acordes: [[45, 57, 60, 64], [41, 57, 60, 65], [48, 55, 60, 64], [43, 55, 59, 62], [45, 57, 60, 64], [41, 57, 60, 65], [43, 55, 59, 62], [40, 56, 59, 64]],
+    tema: [
+      [[0, 69, 6], [6, 71, 1], [7, 72, 1]], [[0, 72, 4], [4, 69, 4]],
+      [[0, 67, 3], [3, 72, 1], [4, 76, 4]], [[0, 74, 6]],
+      [[0, 76, 3], [3, 74, 1], [4, 72, 2], [6, 71, 2]], [[0, 72, 4], [4, 77, 4]],
+      [[0, 74, 3], [3, 72, 1], [4, 71, 4]], [[0, 68, 6]],
+    ],
     tocar(s, t, compasso, passo, acorde, sortear, d) {
-      const r = acorde[0];
-      /* ostinato das cordas: fundamental e quinta, em colcheias */
-      voz(s, t, (passo % 2 ? r + 7 : r) + 12, d * 0.85, { forma: 'sawtooth', volume: 0.04, filtro: 900, liberacao: 0.06 });
-      /* tambores: 1, 3, 3 e meio e um rufar no fim de cada 4 compassos */
-      if ([0, 4, 5].includes(passo)) tambor(s, t, { volume: passo === 0 ? 0.4 : 0.28, de: 120, para: 40, duracao: 0.6 });
-      if (compasso % 4 === 3 && passo >= 6) { tambor(s, t, { volume: 0.25, de: 180, para: 80, duracao: 0.2 }); tambor(s, t + d / 2, { volume: 0.25, de: 180, para: 80, duracao: 0.2 }); }
-      /* metais: acorde sustentado no início do compasso */
+      const [r, a, b, c] = acorde;
+      voz(s, t, (passo % 2 ? r + 7 : r) + 12, d * 0.85, { forma: 'sawtooth', volume: 0.026, filtro: 800, liberacao: 0.06 });
+      harpa(s, t, [a, b, c, a + 12, b + 12, c + 12, a + 24, c + 12][passo], 0.026);
       if (passo === 0) {
-        for (const n of acorde.slice(1)) voz(s, t, n, d * 7.5, { forma: 'sawtooth', volume: 0.022, filtro: 1400, ataque: 0.25, liberacao: 0.4 });
-        voz(s, t, r - 12, d * 7.5, { forma: 'triangle', volume: 0.16, ataque: 0.05, liberacao: 0.3 });
+        for (const n of acorde.slice(1)) voz(s, t, n, d * 7.5, { forma: 'sawtooth', volume: 0.016, filtro: 1200, ataque: 0.3, liberacao: 0.4 });
+        voz(s, t, r - 12, d * 7.5, { forma: 'triangle', volume: 0.15, ataque: 0.05, liberacao: 0.3 });
+        tambor(s, t, { volume: 0.32, de: 120, para: 40, duracao: 0.6 });
       }
-      /* tema heroico nos tempos 1 e 3 */
-      if ((passo === 0 || passo === 4) && sortear() < 0.85) {
-        const nota = acorde[1 + Math.floor(sortear() * 3)] + 12;
-        voz(s, t, nota, d * (passo === 0 ? 3.5 : 3), { forma: 'square', volume: 0.03, filtro: 2600, ataque: 0.04, liberacao: 0.2, vibrato: 6 });
-      }
-      if (compasso % 8 === 0 && passo === 0) chiado(s, t, 2.2, { volume: 0.05, filtro: 5000 }); /* prato */
+      if (passo === 4) tambor(s, t, { volume: 0.2, de: 120, para: 40, duracao: 0.5 });
+      /* repousos do tema (fim das frases): os tambores respondem */
+      if (compasso % 4 === 3 && passo >= 6) { tambor(s, t, { volume: 0.3, de: 150, para: 60, duracao: 0.35 }); tambor(s, t + d / 2, { volume: 0.24, de: 170, para: 70, duracao: 0.25 }); }
+      if (compasso % 8 === 0 && passo === 0) chiado(s, t, 2.2, { volume: 0.04, filtro: 5000 }); /* prato */
+      melodia(this.tema, compasso, passo, (nota, dur) => {
+        voz(s, t, nota, dur * 0.95, { forma: 'sawtooth', volume: 0.03, filtro: 1100, ataque: 0.09, liberacao: 0.35, vibrato: 5 });
+        voz(s, t, nota, dur * 0.95, { forma: 'triangle', volume: 0.035, ataque: 0.07, liberacao: 0.35 });
+      }, d);
     },
   },
 
-  /* Sombria e gótica em Ré menor harmônico: órgão, sino a cada dois compassos e um lamento */
+  /* Ré menor, no espírito da "Dança da Fada Açucarada" (Tchaikovsky), mais lenta: tema curto e
+     saltitante na harmônica de vidro, glockenspiel dobrando, pizzicato no baixo, órgão bem baixo e
+     um sino a cada quatro compassos */
   pantano: {
-    bpm: 56, tempos: 4, subdivisao: 1, balanco: 0,
-    acordes: [[38, 50, 53, 57], [34, 50, 53, 58], [31, 50, 55, 58], [33, 49, 52, 57], [38, 50, 53, 57], [34, 50, 53, 58], [36, 48, 52, 55], [33, 49, 52, 57]],
+    bpm: 60, tempos: 4, subdivisao: 2, balanco: 0,
+    acordes: [[38, 50, 53, 57], [33, 49, 52, 55], [38, 50, 53, 57], [43, 50, 55, 58], [43, 50, 55, 58], [38, 50, 53, 57], [33, 49, 52, 55], [38, 50, 53, 57]],
+    tema: [
+      [[0, 69, 1], [2, 65, 1], [3, 69, 1], [4, 68, 1], [6, 64, 2]], [[0, 65, 1], [2, 64, 1], [3, 62, 1], [4, 61, 2], [6, 62, 2]],
+      [[0, 69, 1], [2, 65, 1], [3, 69, 1], [4, 68, 1], [6, 64, 2]], [[0, 70, 1], [2, 69, 1], [3, 67, 1], [4, 65, 2], [6, 64, 2]],
+      [[0, 74, 1], [2, 70, 1], [3, 74, 1], [4, 73, 1], [6, 69, 2]], [[0, 70, 1], [2, 69, 1], [3, 67, 1], [4, 65, 2], [6, 67, 2]],
+      [[0, 69, 1], [2, 73, 1], [3, 76, 1], [4, 73, 2], [6, 69, 2]], [[0, 74, 2], [2, 69, 1], [3, 65, 1], [4, 62, 4]],
+    ],
     tocar(s, t, compasso, passo, acorde, sortear, d) {
+      const [r, a, b] = acorde;
+      if (passo % 2 === 0) pizzicato(s, t, passo % 4 ? r + 7 : r, 0.13);
       if (passo === 0) {
-        /* órgão: cada nota do acorde com o 1º e 2º harmônicos */
-        for (const n of acorde.slice(1)) {
-          for (const [oitava, vol] of [[0, 0.03], [12, 0.012], [19, 0.006]]) voz(s, t, n + oitava, d * 3.8, { forma: 'sine', volume: vol, ataque: 0.4, liberacao: 0.8, desafinar: oitava ? 4 : 0 });
-        }
-        voz(s, t, acorde[0], d * 3.9, { forma: 'sawtooth', volume: 0.04, filtro: 300, ataque: 0.5, liberacao: 0.8 }); /* zumbido grave */
-        if (compasso % 2 === 0) sino(s, t, 62, 0.05);
+        for (const n of acorde.slice(1)) voz(s, t, n, d * 7.6, { forma: 'sine', volume: 0.02, ataque: 0.5, liberacao: 0.8 });
+        if (compasso % 4 === 0) sino(s, t, 62, 0.035);
       }
-      /* lamento: notas lentas da escala de Ré menor harmônico */
-      if ((passo === 1 || passo === 3) && sortear() < 0.6) {
-        const escala = [62, 64, 65, 67, 69, 70, 73, 74];
-        const nota = escala[Math.floor(sortear() * escala.length)];
-        voz(s, t, nota, d * 1.8, { forma: 'triangle', volume: 0.05, ataque: 0.15, liberacao: 0.9, vibrato: 14 });
-      }
-      if (passo === 2 && sortear() < 0.3) tambor(s, t, { volume: 0.18, de: 70, para: 35, duracao: 1.2 });
+      if (passo === 3 || passo === 7) pizzicato(s, t, a + 12, 0.05);
+      melodia(this.tema, compasso, passo, (nota, dur) => {
+        harmonicaDeVidro(s, t, nota + 12, Math.min(dur, d * 1.6) * 0.8, 0.1);
+        glockenspiel(s, t, nota + 24, passo % 4 === 0 ? 0.07 : 0.045);
+      }, d);
+      if (passo === 6 && compasso % 2 === 1) voz(s, t, b - 12, d * 1.8, { forma: 'sawtooth', volume: 0.02, filtro: 500, ataque: 0.05, liberacao: 0.3 }); /* fagote */
     },
   },
 };
+
+/**
+ * Toca `segundos` da trilha `nome` numa saída qualquer (por exemplo, um OfflineAudioContext) a
+ * partir do tempo 0. Usado para gravar amostras das trilhas e nos testes.
+ */
+export function gravarTrilha(saida, nome, segundos) {
+  const m = MUSICAS[nome];
+  const d = 60 / m.bpm / m.subdivisao, passosPorCompasso = m.tempos * m.subdivisao;
+  let tempo = 0.05, passo = 0, compasso = 0;
+  while (tempo < segundos) {
+    const c = compasso % m.acordes.length;
+    const atraso = m.balanco && passo % 2 === 1 ? d * m.balanco : 0;
+    m.tocar(saida, tempo + atraso, c, passo, m.acordes[c], sorteador(c * 7919 + passo * 31 + 1), d);
+    tempo += d; passo++;
+    if (passo >= passosPorCompasso) { passo = 0; compasso++; }
+  }
+}
+
+/** Nomes das trilhas: menu e terrenos. */
+export const TRILHAS = Object.keys(MUSICAS);
 
 /* ======================================================================== agendador */
 

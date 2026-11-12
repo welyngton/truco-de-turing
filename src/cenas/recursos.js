@@ -10,6 +10,7 @@ import { CARTA_L, CARTA_A } from '../arte/paleta.js';
 import { desenharCartaCompleta, desenharCartaDaMesa } from '../arte/cartas.js';
 import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
+import { ICONES_DAS_ACOES } from '../arte/icones.js';
 
 /**
  * Todo texto do Phaser nasce na resolução interna, para não borrar com o zoom da câmera.
@@ -85,10 +86,14 @@ export function texturaDoVerso(cena, uso, baralho = 'classico') {
   return chave;
 }
 
-/** Textura da carta completa no tamanho da mão. */
+/**
+ * Textura da carta no tamanho da mão: a face limpa (índices grandes, medalhão central e gema de
+ * pontos), a mesma da mesa em densidade maior. A carta completa, com tipo e texto de regras,
+ * aparece na inspeção ao passar o cursor.
+ */
 export function texturaDaCartaNaMao(cena, carta, baralho) {
   const chave = 'carta-mao:' + baralho + ':' + carta.valor + carta.naipe;
-  if (!cena.textures.exists(chave)) cena.textures.addCanvas(chave, desenharCartaCompleta(carta, baralho, DENSIDADE.mao));
+  if (!cena.textures.exists(chave)) cena.textures.addCanvas(chave, desenharCartaDaMesa(carta, baralho, DENSIDADE.mao));
   return chave;
 }
 
@@ -150,4 +155,18 @@ export function retanguloNaTela(cena, x, y, l, a) {
   const px = (wx) => caixa.left + (wx - camera.worldView.x) * camera.zoom * kx;
   const py = (wy) => caixa.top + (wy - camera.worldView.y) * camera.zoom * ky;
   return { x: px(x - l / 2), y: py(y - a / 2), l: px(x + l / 2) - px(x - l / 2), a: py(y + a / 2) - py(y - a / 2) };
+}
+
+/**
+ * Carrega os ícones das ações (SVG) como texturas `icone-acao:<id>`, em 128 px. O carregamento é
+ * assíncrono; quem usa confere `textures.exists` e segue sem o ícone se ele ainda não chegou.
+ */
+export function carregarIconesDasAcoes(cena) {
+  for (const [id, svg] of Object.entries(ICONES_DAS_ACOES)) {
+    const chave = 'icone-acao:' + id;
+    if (cena.textures.exists(chave) || typeof Image === 'undefined') continue;
+    const imagem = new Image(128, 128);
+    imagem.onload = () => { if (!cena.textures.exists(chave)) cena.textures.addImage(chave, imagem); };
+    imagem.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg width="128" height="128" '));
+  }
 }

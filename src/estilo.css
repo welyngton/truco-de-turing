@@ -157,9 +157,9 @@ html, body { overscroll-behavior: none; }
 .ponto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
 .menu-acoes { display: grid; gap: 10px; margin-top: 6px; max-width: 520px; }
 .menu-acoes .botao.jogar { font-size: 20px; padding: 12px 20px; letter-spacing: 0.12em; }
-.menu-mais { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.menu-mais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .menu-mais .botao { font-size: 13px; padding: 9px 6px; white-space: nowrap; }
-@media (max-width: 520px) { .menu-mais { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .menu-mais { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .menu-painel { padding: 22px 24px; }
 .campo { display: grid; gap: 4px; margin-bottom: 12px; }
 .campo label { font-family: var(--fonte-interface); font-weight: 700; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #6b1a22; }
@@ -168,6 +168,12 @@ html, body { overscroll-behavior: none; }
   background: #fbf4e2; border: 2px solid #2b1608; border-radius: 8px; padding: 8px 10px; width: 100%;
 }
 .campo .dica { font-size: 14px; color: #5a4630; line-height: 1.35; min-width: 0; }
+/* dois campos curtos lado a lado (jogadores e humanos; arquitetura e baralhos; início e partida) */
+.campos-duplos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.campo[hidden] { display: none; }
+.dica-da-mesa { font-size: 13px; color: #5a4630; line-height: 1.3; margin: -6px 0 12px; }
+#m-oponente-dica { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.menu-painel { max-height: calc(100dvh - 24px); overflow-y: auto; }
 /* seletor com a miniatura (verso do baralho, mesa do terreno) ao lado, na mesma linha */
 .campo-linha { display: flex; gap: 10px; align-items: center; }
 .campo-linha select { flex: 1; min-width: 0; }
@@ -192,6 +198,13 @@ html, body { overscroll-behavior: none; }
 .grimorio-verbete { min-width: 0; }
 .grimorio-verbete .categoria { font: 700 12px var(--fonte-interface); letter-spacing: 0.16em; text-transform: uppercase; color: #6b1a22; }
 .grimorio-verbete .no-jogo { border-left: 4px solid var(--azul); background: rgba(74, 163, 223, 0.1); padding: 10px 14px; border-radius: 0 8px 8px 0; }
+.grimorio-verbete .equacao { margin: 12px 0; padding: 10px 12px; background: rgba(255, 248, 230, 0.7); border: 1px solid rgba(60, 40, 20, 0.15); border-radius: 8px; overflow-x: auto; font-size: 18px; color: #2b1608; }
+.grimorio-verbete .equacao math { font-size: 1.05em; }
+.grimorio-verbete .equacao math + math { margin-top: 10px; }
+.grimorio-verbete .figura { margin: 10px 0; }
+.grimorio-verbete .figura-svg { width: 100%; max-width: 480px; height: auto; display: block; margin: 0 auto; }
+.grimorio-verbete .limite { border-left: 4px solid #c8742a; background: rgba(200, 116, 42, 0.1); padding: 10px 14px; border-radius: 0 8px 8px 0; }
+.grimorio-verbete .fonte { font-size: 13px; color: #6b5a40; font-style: italic; }
 
 /* ---------- Conquistas ---------- */
 .folha.larga { width: min(1060px, 100%); }
@@ -228,13 +241,30 @@ html, body { overscroll-behavior: none; }
 .folha.sobre h3:first-of-type { margin-top: 14px; }
 .folha.sobre a { color: #7a1626; }
 .folha.sobre .versao { margin-top: -6px; font-family: var(--fonte-interface); font-size: 13px; letter-spacing: 0.04em; color: #7a6a4c; }
-.folha.sobre .autores { font-weight: 600; margin-bottom: 0; }
+.folha.sobre .autores { margin-bottom: 0; }
 .folha.sobre .contribuicoes { font-size: 13px; font-style: italic; color: #7a6a4c; margin-top: 10px; }
+
+/* ---------- Mods ---------- */
+.tipos-de-mod { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tipo-de-mod { background: rgba(255, 255, 255, 0.45); border: 1px solid #c9b48a; border-radius: 8px; padding: 10px 12px; }
+.tipo-de-mod h4 { margin: 0 0 4px; font-family: var(--fonte-titulo); color: #6b1a22; }
+.tipo-de-mod p { margin: 0 0 6px; font-size: 14px; }
+.tipo-de-mod .campos { font-size: 13px; color: #5a4630; }
+.codigo-mod { background: #1c140c; color: #f3e6c4; border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; line-height: 1.45; max-height: 320px; }
+.mods-copiado { margin-left: 10px; font-size: 14px; color: #3f6b2e; }
+.aviso-mods { background: #f9eeda; border-left: 4px solid #c99a3a; padding: 8px 12px; border-radius: 4px; }
+@media (max-width: 760px) { .tipos-de-mod { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------- Fim de mão ---------- */
 .resultado-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 12px; }
+/* 3 a 5 jogadores: redes em colunas mais estreitas, que quebram linha quando não cabem */
+.resultado-grade.varios { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.resultado-grade.varios .total { font-size: 30px; }
 .rede { border-radius: 10px; padding: 12px 14px; background: rgba(255, 255, 255, 0.4); border-top: 6px solid var(--azul); min-width: 0; }
 .rede.j1 { border-top-color: var(--laranja); }
+.rede.j2 { border-top-color: #5cc98a; }
+.rede.j3 { border-top-color: #b48cff; }
+.rede.j4 { border-top-color: #ff6fb1; }
 .rede .total { font: 900 40px var(--fonte-titulo); line-height: 1; }
 .rede .situacao { font: 700 12px var(--fonte-interface); letter-spacing: 0.14em; text-transform: uppercase; color: #6b1a22; }
 .termos { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
@@ -357,7 +387,7 @@ html, body { overscroll-behavior: none; }
   .miniatura.verso { --largura-miniatura: 24px; width: 24px; height: 34px; }
   .miniatura.mesa { --largura-miniatura: 54px; width: 54px; height: 31px; }
   .campo-linha .miniatura { margin-inline: calc((54px - var(--largura-miniatura)) / 2); }
-  .menu-mais { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .menu-mais { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .campo .dica { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .menu-capa { gap: 8px; }
   .menu-capa h1 { font-size: clamp(26px, 4.2vw, 42px); }
@@ -399,10 +429,74 @@ html, body { overscroll-behavior: none; }
   .camada, .folha, .aviso, .trofeu, .folha.vitoria { animation: none; }
 }
 
-/* Grimório: verbetes completos, com a matemática para se aprofundar */
+/* Biblioteca de conceitos: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
 .grimorio-verbete .aprofundar { margin-top: 14px; border-top: 1px solid rgba(43, 22, 8, 0.2); padding-top: 4px; }
 .grimorio-verbete .aprofundar h3 { margin: 8px 0 4px; }
 .grimorio-verbete .katex-display { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
 .grimorio-verbete .formula-bloco { margin: 10px 0; overflow-x: auto; }
 .grimorio-verbete .formula-tex { font-size: 0.92em; white-space: nowrap; }
 .grimorio-verbete .autoria { font-size: 13px; font-style: italic; color: #6b5536; }
+
+/* painéis de leitura da mesa (placar por camada, registro completo, cemitério) */
+.painel-mesa .nota { font-style: italic; color: #5a4630; }
+.placar-camadas td.vazio { color: #9a8c6c; }
+.placar-camadas tr.soma td { border-top: 2px solid rgba(60, 40, 20, 0.3); }
+.placar-camadas small { color: #6b5a40; }
+.registro-completo { max-height: 52vh; overflow: auto; margin: 8px 0; padding-left: 28px; font-size: 14px; }
+.registro-completo li { margin: 2px 0; }
+.cartas-do-painel { display: flex; flex-wrap: wrap; gap: 6px; }
+.carta-mini { display: inline-block; min-width: 34px; text-align: center; padding: 3px 6px; border-radius: 6px; background: #fff8e6; border: 1px solid rgba(60, 40, 20, 0.3); font-weight: 700; }
+
+/* regras em abas (conteúdo do manual do NeuroDeck) */
+.folha.regras { width: min(860px, 100%); }
+.abas { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 6px; border-bottom: 2px solid rgba(60, 40, 20, 0.2); }
+.abas button { font: 700 13px var(--fonte-titulo); letter-spacing: 0.04em; color: #6b1a22; background: transparent; border: 0; border-bottom: 3px solid transparent; padding: 8px 10px; cursor: pointer; margin-bottom: -2px; }
+.abas button[aria-selected='true'] { color: #2b1608; border-bottom-color: #6b1a22; }
+.abas button:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.aba[hidden] { display: none; }
+.extensoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; margin-top: 8px; }
+.extensao { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; background: rgba(255, 248, 230, 0.6); border: 1px solid rgba(60, 40, 20, 0.15); border-radius: 10px; padding: 10px; }
+.extensao p { margin: 4px 0 0; font-size: 14px; }
+.extensao-arte { display: flex; gap: 6px; min-width: 60px; }
+.extensao-arte img { height: 104px; width: auto; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); }
+.nota-regras { font-style: italic; color: #5a4630; }
+button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-decoration: underline; font: inherit; cursor: pointer; }
+
+/* ajuda das ações (o "?" do NeuroDeck) */
+.cartoes-acao { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 10px; }
+.cartao-acao { background: rgba(255, 248, 230, 0.7); border: 1px solid rgba(60, 40, 20, 0.2); border-radius: 10px; padding: 12px 14px; }
+.cartao-acao[aria-current='true'] { border: 2px solid #6b1a22; box-shadow: 0 0 0 3px rgba(107, 26, 34, 0.15); }
+.cartao-acao h3 { margin-top: 0; }
+.cartao-acao p { font-size: 14.5px; }
+.cartao-acao .em-ml { border-left: 4px solid var(--azul); background: rgba(74, 163, 223, 0.1); padding: 8px 10px; border-radius: 0 8px 8px 0; }
+.cartao-acao h3 { display: flex; align-items: center; gap: 8px; }
+.cartao-acao .icone-acao { display: inline-flex; width: 34px; height: 34px; flex: none; }
+.cartao-acao .icone-acao svg { width: 100%; height: 100%; }
+
+/* avatares do jogador */
+.botao-avatar { display: inline-flex; align-items: center; gap: 8px; }
+.botao-avatar img { width: 26px; height: 26px; border-radius: 50%; }
+.avatares-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-top: 12px; }
+.avatar-opcao { display: grid; justify-items: center; gap: 4px; padding: 12px 10px; background: rgba(255, 248, 230, 0.7); border: 2px solid rgba(60, 40, 20, 0.2); border-radius: 12px; cursor: pointer; font: inherit; color: inherit; text-align: center; }
+.avatar-opcao[aria-pressed='true'] { border-color: #6b1a22; box-shadow: 0 0 0 3px rgba(107, 26, 34, 0.18); }
+.avatar-opcao:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.avatar-opcao small { font-size: 13px; color: #5a4630; }
+.avatar-opcao.bloqueado { cursor: not-allowed; }
+.avatar-opcao.bloqueado .avatar-retrato img { filter: grayscale(1) brightness(0.55); }
+.avatar-retrato { position: relative; width: 84px; height: 84px; }
+.avatar-retrato img { width: 100%; height: 100%; border-radius: 50%; }
+.avatar-retrato .cadeado { position: absolute; inset: 22px; }
+.avatar-retrato .cadeado svg { width: 100%; height: 100%; }
+.avatar-liberado { color: #2f6b2a; }
+
+/* jogar online */
+.jogar-linha { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.jogar-online { font-size: 15px; }
+.folha.online { width: min(640px, 100%); }
+.online input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; border: 1.5px solid #2b1608; border-radius: 8px; background: #fff8e6; }
+.online .campos-duplos { margin: 8px 0; }
+.codigo-sala { font: 900 26px var(--fonte-titulo); letter-spacing: 0.18em; color: #6b1a22; margin-left: 8px; }
+.cadeiras { margin: 8px 0 14px; padding-left: 26px; }
+.cadeiras li { margin: 4px 0; font-weight: 700; }
+.cadeiras li.vaga { color: #9a8c6c; font-style: italic; font-weight: 400; }
+.cadeiras li.oponente { color: #5a4630; font-weight: 400; }

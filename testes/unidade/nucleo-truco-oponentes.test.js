@@ -1,19 +1,18 @@
 /**
  * @file Testes de unidade do truco (truco.js) e dos oponentes (oponentes/comum.js,
- * estrategias.js e index.js).
+ * estrategias.js e index.js). Os oponentes são os bots do NeuroDeck, traduzidos para a interface.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ESCADA_TRUCO, GRITO_TRUCO, novaPartida, proximoValor, ehMaoDeOnze, podeTrucar, pedirTruco, responderTruco, marcarTentos, proximaMao,
 } from '../../src/nucleo/truco.js';
-import {
-  cartasOcultas, determinizar, pontosEsperadosPorCamada, avaliar, agruparEquivalentes, concretizar, simularAteOFim, chanceDeVitoria,
-} from '../../src/nucleo/oponentes/comum.js';
+import { novoGerador, determinizar, chanceDeVitoria } from '../../src/nucleo/oponentes/comum.js';
 import { jogadaAleatoria, jogadaGulosa, jogadaMonteCarlo } from '../../src/nucleo/oponentes/estrategias.js';
 import { OPONENTES, escolherJogada, querTrucar, responderAoTruco } from '../../src/nucleo/oponentes/index.js';
 import { novaMao, jogadasLegais, copiarMao } from '../../src/nucleo/partida.js';
 import { maoNova, maoJogada, maoAteOFim } from '../apoio/estados.js';
+import { finalizarRede } from '../apoio/montagem.js';
 
 /** Confere que a jogada é uma das legais (comparando os campos essenciais). */
 function ehLegal(mao, j, jogada) {
@@ -71,48 +70,34 @@ describe('truco.js', () => {
 });
 
 describe('oponentes/comum.js', () => {
-  it('cartasOcultas: neurônios virados, mão do outro e limbo', () => {
-    const mao = maoNova();
-    const ocultas = cartasOcultas(mao, 0);
-    assert.equal(ocultas.length, 32 + 5 + 10);
-    assert.ok(!ocultas.some((c) => mao.jogadores[0].mao.includes(c)));
+  it('novoGerador: números em [0, 1), uma sequência por gerador', () => {
+    const gerador = novoGerador();
+    const numeros = Array.from({ length: 50 }, gerador);
+    assert.ok(numeros.every((x) => x >= 0 && x < 1));
+    assert.ok(new Set(numeros).size > 40);
   });
   it('determinizar: mantém o que j vê e redistribui o resto', () => {
     const mao = maoJogada(5), j = mao.vez, copia = determinizar(mao, j);
     assert.deepEqual(copia.jogadores[j].mao, mao.jogadores[j].mao);
-    for (const id of mao.jogadores[0].caminho) assert.deepEqual(copia.neuronios[id].cartas, mao.neuronios[id].cartas);
+    for (const jogador of mao.jogadores) for (const id of jogador.caminho) assert.deepEqual(copia.neuronios[id].cartas, mao.neuronios[id].cartas);
     assert.equal(copia.simulacao, true);
+    /* as cartas escondidas são as mesmas, em outros lugares */
+    const escondidas = (m) => [...m.camadas.flat().filter((n) => !n.revelado && !n.removido).map((n) => n.cartas[0].id), ...m.jogadores[1 - j].mao.map((c) => c.id), ...m.limbo.map((c) => c.id)].sort();
+    assert.deepEqual(escondidas(copia), escondidas(mao));
+    assert.notDeepEqual(determinizar(mao, j).limbo.map((c) => c.id).concat(determinizar(mao, j).limbo.map((c) => c.id)), mao.limbo.map((c) => c.id).concat(mao.limbo.map((c) => c.id)));
   });
-  it('pontosEsperadosPorCamada: um número positivo', () => {
-    const e = pontosEsperadosPorCamada(maoNova(), 0);
-    assert.ok(e > 0 && e < 14);
-  });
-  it('avaliar: ±1000 no fim, vantagem projetada durante a mão', () => {
-    const fim = maoAteOFim();
-    const v = fim.resultado.vencedor;
-    assert.ok(avaliar(fim, v, 5) >= 1000);
-    assert.ok(avaliar(fim, 1 - v, 5) <= -1000);
-    assert.equal(typeof avaliar(maoNova(), 0, 5), 'number');
-  });
-  it('agruparEquivalentes e concretizar: ativações desconhecidas da mesma camada viram uma jogada com alternativas', () => {
-    const mao = maoNova(), j = mao.vez;
-    const grupos = agruparEquivalentes(mao, jogadasLegais(mao, j));
-    const ativar = grupos.find((x) => x.tipo === 'ativar');
-    assert.equal(ativar.alternativas.length, 3);
-    const concreta = concretizar(ativar);
-    assert.ok(ativar.alternativas.includes(concreta.neuronio));
-    assert.equal(concreta.alternativas, undefined);
-    assert.deepEqual(concretizar({ tipo: 'passar', jogador: 0 }), { tipo: 'passar', jogador: 0 });
-  });
-  it('simularAteOFim e chanceDeVitoria', () => {
-    const copia = copiarMao(maoNova());
-    simularAteOFim(copia);
-    assert.equal(copia.fase, 'fim');
+  it('chanceDeVitoria: entre 0 e 1 durante a mão; 0,5 antes de começar; 0 ou 1 no fim', () => {
     const c = chanceDeVitoria(maoJogada(6), 0, 10);
     assert.ok(c >= 0 && c <= 1);
     assert.equal(chanceDeVitoria(novaMao({ semente: 1, jogadores: [{ nome: 'a' }, { nome: 'b' }] }), 0, 5), 0.5);
     const fim = maoAteOFim();
     assert.equal(chanceDeVitoria(fim, fim.resultado.vencedor, 5), 1);
+    assert.equal(chanceDeVitoria(fim, 1 - fim.resultado.vencedor, 5), 0);
+  });
+  it('chanceDeVitoria não altera a mão', () => {
+    const mao = maoJogada(6), foto = JSON.stringify(mao.nd);
+    chanceDeVitoria(mao, 1, 8);
+    assert.equal(JSON.stringify(mao.nd), foto);
   });
 });
 
@@ -123,15 +108,17 @@ describe('oponentes/estrategias.js', () => {
       if (mao.fase !== 'jogo') continue;
       assert.ok(ehLegal(mao, j, jogadaAleatoria(mao, j)), 'aleatória');
       assert.ok(ehLegal(mao, j, jogadaGulosa(mao, j)), 'gulosa');
-      const mc = jogadaMonteCarlo(mao, j, 30);
-      if (mc.simulacao) { assert.ok(mc.simulacao.partidas > 0 && mc.simulacao.taxaDeVitoria >= 0); delete mc.simulacao; }
+      const mc = jogadaMonteCarlo(mao, j, 6);
+      if (mc.simulacao) { assert.ok(mc.simulacao.partidas >= 12 && mc.simulacao.partidas % 6 === 0 && mc.simulacao.taxaDeVitoria >= 0 && mc.simulacao.taxaDeVitoria <= 1); delete mc.simulacao; }
       assert.ok(ehLegal(mao, j, mc), 'Monte Carlo');
     }
   });
   it('Monte Carlo com uma jogada só devolve direto', () => {
     const mao = maoNova(), j = mao.vez;
-    mao.camadas[0].forEach((n) => { n.dono = 9; });
-    assert.equal(jogadaMonteCarlo(mao, j, 10).tipo, 'passar');
+    finalizarRede(mao, j, 'output');
+    const jogada = jogadaMonteCarlo(mao, j, 10);
+    assert.equal(jogada.tipo, 'passar');
+    assert.equal(jogada.simulacao, undefined);
   });
 });
 
@@ -141,7 +128,7 @@ describe('oponentes/index.js', () => {
     for (const o of Object.values(OPONENTES)) assert.ok(o.nome && o.nivel && o.metodo && o.avatar && o.estilo);
   });
   it('escolherJogada: carta de início por perfil e jogada por estratégia', () => {
-    for (const inicio of ['revela-volta', 'revela-descarta']) {
+    for (const inicio of ['revela-descarta', 'revela-volta']) {
       const mao = novaMao({ semente: 3, inicio, jogadores: [{ nome: 'a' }, { nome: 'b', tipo: 'oponente', oponente: 'guloso' }] });
       const x = escolherJogada(mao, 1);
       assert.equal(x.tipo, 'inicio');
@@ -149,7 +136,7 @@ describe('oponentes/index.js', () => {
     }
     for (const perfil of ['aleatorio', 'guloso', 'montecarlo']) {
       const mao = maoNova({ jogadores: [{ nome: 'a', tipo: 'oponente', oponente: perfil }, { nome: 'b', tipo: 'oponente', oponente: perfil }] });
-      assert.ok(ehLegal(mao, mao.vez, (({ simulacao, ...x }) => x)(escolherJogada(mao, mao.vez, 20))));
+      assert.ok(ehLegal(mao, mao.vez, (({ simulacao, ...x }) => x)(escolherJogada(mao, mao.vez, 6))));
     }
   });
   it('querTrucar e responderAoTruco: respostas válidas para cada perfil', (t) => {

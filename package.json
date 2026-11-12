@@ -23,6 +23,13 @@
     "educacao"
   ],
   "license": "GPL-3.0-only",
+  "author": "Welyngton José Vinicius Dal Prá",
+  "contributors": [
+    "Diego Casagrande",
+    "Vinícius Chiconato",
+    "Suzy Arcanjo",
+    "Francisco Lima (motor do NeuroDeck)"
+  ],
   "dependencies": {
     "phaser": "^3.80.1"
   },

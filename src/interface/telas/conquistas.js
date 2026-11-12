@@ -2,6 +2,7 @@
  * @file Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as
  * medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado).
  */
+import { abrirAvatares } from './avatares.js';
 import { CONQUISTAS, GRADUACOES } from '../../conteudo/conquistas.js';
 import { ICONES_CONQUISTAS, ICONE_CADEADO } from '../../arte/icones.js';
 import { desenharRetratoEmMoldura } from '../../arte/retrato.js';
@@ -40,8 +41,9 @@ export function abrirConquistas(app) {
     '<div class="conquistas-principal"><h2>Conquistas</h2>' +
     '<p class="conquistas-resumo"><b>' + total + '</b> de ' + CONQUISTAS.length + ' desbloqueadas · ' + p.vitorias + ' mãos vencidas · ' + p.dropouts + ' dropouts</p>' +
     '<div class="conquistas-lista">' + CONQUISTAS.map((c) => itemHtml(c, !!p.desbloqueadas[c.id])).join('') + '</div>' +
-    '<p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador.</p></div></div></div>';
+    '<p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
   const painel = abrirPainel(html, { fechaAoClicarFora: true });
+  painel.elemento.querySelector('#c-avatares').addEventListener('click', () => abrirAvatares(app));
   const densidade = Math.min(3, Math.max(2, globalThis.devicePixelRatio || 1));
   desenharRetratoEmMoldura(FOTO_PROFESSOR, densidade, 'Prof. Peng Yaohao', 'Grão-mestre da guilda', (canvas) => {
     painel.elemento.querySelector('#c-retrato')?.appendChild(canvas);

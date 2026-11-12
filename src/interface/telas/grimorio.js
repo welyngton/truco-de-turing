@@ -1,43 +1,42 @@
 /**
- * @file Tela do Grimório: lista de verbetes à esquerda e o verbete escolhido à direita.
- * Ler um verbete conta para a conquista "Bibliotecário".
+ * @file Tela da Biblioteca de conceitos (antes "Grimório"): lista de verbetes à esquerda e o
+ * verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até
+ * onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
  */
-import { VERBETES } from '../../conteudo/grimorio.js';
+import { VERBETES, NOME_DA_BIBLIOTECA } from '../../conteudo/grimorio.js';
+import { figuraDaBiblioteca } from '../../conteudo/figurasDaBiblioteca.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
 import { textoComFormulas } from '../formulas.js';
 
-/** Parágrafo com rótulo em negrito, se houver texto. */
-function secao(rotulo, texto, classe = '') {
-  if (!texto) return '';
-  return '<p' + (classe ? ' class="' + classe + '"' : '') + '><b>' + rotulo + ':</b> ' + textoComFormulas(texto) + '</p>';
-}
-
 /**
- * Corpo do verbete. Os verbetes completos têm a ideia, o conceito, a jogada, onde a comparação
- * falha e a matemática; os curtos, só o conceito e a jogada.
+ * Corpo do verbete: a ideia do dia a dia (verbetes de Ação), o conceito, a equação, a figura, como
+ * aparece no jogo, até onde a comparação vale, a matemática para se aprofundar, a fonte e a autoria.
+ * Equação (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador.
  * @param {object} v Verbete de `VERBETES`.
  * @returns {string}
  */
 export function htmlDoVerbete(v) {
-  if (!v.ideia) return '<p>' + textoComFormulas(v.conceito) + '</p>' + secao('No jogo', v.noJogo, 'no-jogo');
-  return secao('A ideia', v.ideia) +
-    secao('Na vida real', v.conceito) +
-    secao('No jogo', v.noJogo, 'no-jogo') +
-    secao('Onde a comparação falha', v.ondeFalha) +
+  return (v.ideia ? '<p class="ideia"><b>A ideia:</b> ' + escaparHtml(v.ideia) + '</p>' : '') +
+    '<p>' + escaparHtml(v.conceito) + '</p>' +
+    (v.equacao ? '<div class="equacao">' + v.equacao + '</div>' : '') +
+    (v.figura ? '<figure class="figura">' + figuraDaBiblioteca(v.figura) + '</figure>' : '') +
+    '<p class="no-jogo"><b>No jogo:</b> ' + escaparHtml(v.noJogo) + '</p>' +
+    (v.limite ? '<p class="limite"><b>Até onde vale a comparação:</b> ' + escaparHtml(v.limite) + '</p>' : '') +
     (v.aprofundar ? '<div class="aprofundar"><h3>Para se aprofundar</h3><p>' + textoComFormulas(v.aprofundar) + '</p>' +
       (v.formula ? textoComFormulas('$$' + v.formula + '$$') : '') + '</div>' : '') +
-    (v.autoria ? '<p class="autoria">Verbete redigido por ' + escaparHtml(v.autoria) + '.</p>' : '');
+    (v.fonte ? '<p class="fonte">Fonte: ' + escaparHtml(v.fonte) + '</p>' : '') +
+    (v.autoria ? '<p class="autoria">Colaboração de ' + escaparHtml(v.autoria) + '.</p>' : '');
 }
 
 /**
- * Abre o Grimório.
+ * Abre a Biblioteca de conceitos.
  * @param {object} app Aplicação (guarda os verbetes lidos).
  * @param {string} [idInicial] Verbete aberto de início.
  * @param {() => void} [aoFechar]
  */
 export function abrirGrimorio(app, idInicial, aoFechar) {
   const html = '<div class="folha"><button class="fechar-x" data-fechar aria-label="Fechar">×</button>' +
-    '<h2>Grimório de conceitos</h2><p>Cada mecânica do jogo é um conceito de aprendizado de máquina. Os verbetes aparecem destacados quando acontecem na mesa.</p>' +
+    '<h2>' + NOME_DA_BIBLIOTECA + '</h2><p>Cada mecânica do jogo é um conceito de aprendizado de máquina. Os verbetes aparecem destacados quando acontecem na mesa, e a ajuda de cada ação leva ao verbete dela.</p>' +
     '<div class="grimorio"><nav class="grimorio-lista" id="g-lista"></nav><article class="grimorio-verbete" id="g-verbete"></article></div></div>';
   const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar });
   const lista = painel.elemento.querySelector('#g-lista');
@@ -57,6 +56,7 @@ export function abrirGrimorio(app, idInicial, aoFechar) {
     app.marcarVerbeteLido(v.id);
     artigo.innerHTML = '<div class="categoria">' + escaparHtml(v.categoria) + '</div><h2>' + escaparHtml(v.titulo) + '</h2>' +
       htmlDoVerbete(v);
+    artigo.scrollTop = 0;
     desenharLista(v.id);
   }
 

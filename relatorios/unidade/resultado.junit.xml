@@ -1,313 +1,472 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
-	<testsuite name="pincel.js" time="38.555989" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="criarTela: tamanho multiplicado pela densidade, nunca menor que 1 pixel" time="0.001777" classname="test"/>
-		<testcase name="hashDoTexto e geradorComSemente: estáveis e reprodutíveis" time="0.000344" classname="test"/>
-		<testcase name="caminhos, degradês, texturas, sombras e brilho pintam a tela" time="38.544549" classname="test"/>
-		<testcase name="escreverComQuebra respeita a largura e &amp;quot;\n&amp;quot;; ajustarFonte encolhe até caber" time="0.007899" classname="test"/>
-		<testcase name="comAlfa e tonalizar" time="0.000186" classname="test"/>
+	<testsuite name="pincel.js" time="35.156067" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="criarTela: tamanho multiplicado pela densidade, nunca menor que 1 pixel" time="0.001684" classname="test"/>
+		<testcase name="hashDoTexto e geradorComSemente: estáveis e reprodutíveis" time="0.000383" classname="test"/>
+		<testcase name="caminhos, degradês, texturas, sombras e brilho pintam a tela" time="35.139774" classname="test"/>
+		<testcase name="escreverComQuebra respeita a largura e &amp;quot;\n&amp;quot;; ajustarFonte encolhe até caber" time="0.012414" classname="test"/>
+		<testcase name="comAlfa e tonalizar" time="0.000490" classname="test"/>
 	</testsuite>
-	<testsuite name="paleta.js" time="0.000335" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="medidas e cores por naipe" time="0.000239" classname="test"/>
+	<testsuite name="paleta.js" time="0.000341" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="medidas e cores por naipe" time="0.000209" classname="test"/>
 	</testsuite>
-	<testsuite name="moldura.js, emblemas.js, figuras.js e cenarios.js" time="0.110747" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="corpo da moldura (comum e lendária), placa e gema" time="0.039705" classname="test"/>
-		<testcase name="emblema de cada naipe, com e sem sombra" time="0.013041" classname="test"/>
-		<testcase name="coroa e figura de Valete, Dama e Rei de cada naipe" time="0.041543" classname="test"/>
-		<testcase name="cenários de cada naipe e peças de paisagem" time="0.016192" classname="test"/>
+	<testsuite name="moldura.js, emblemas.js, figuras.js e cenarios.js" time="0.137877" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="corpo da moldura (comum e lendária), placa e gema" time="0.054681" classname="test"/>
+		<testcase name="emblema de cada naipe, com e sem sombra" time="0.015272" classname="test"/>
+		<testcase name="coroa e figura de Valete, Dama e Rei de cada naipe" time="0.049346" classname="test"/>
+		<testcase name="cenários de cada naipe e peças de paisagem" time="0.017966" classname="test"/>
 	</testsuite>
-	<testsuite name="cartas.js" time="5.499705" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="vm">
-		<testcase name="dadosDaCarta: nome, pontos, tipo, regras, ambientação e raridade" time="0.000518" classname="test"/>
-		<testcase name="símbolo de coleção de cada raridade" time="0.003088" classname="test"/>
-		<testcase name="todas as 52 cartas do baralho classico (completa e da mesa)" time="1.085114" classname="test"/>
-		<testcase name="todas as 52 cartas do baralho truco (completa e da mesa)" time="1.104713" classname="test"/>
-		<testcase name="todas as 52 cartas do baralho fraternidade (completa e da mesa)" time="1.078948" classname="test"/>
-		<testcase name="todas as 52 cartas do baralho yinyang (completa e da mesa)" time="1.139446" classname="test"/>
-		<testcase name="todas as 52 cartas do baralho powerbi (completa e da mesa)" time="1.087468" classname="test"/>
+	<testsuite name="cartas.js" time="8.154859" disabled="0" errors="0" tests="9" failures="0" skipped="0" hostname="vm">
+		<testcase name="dadosDaCarta: nome, pontos, tipo, regras, ambientação e raridade" time="0.008767" classname="test"/>
+		<testcase name="símbolo de coleção de cada raridade" time="0.002739" classname="test"/>
+		<testcase name="todas as 52 cartas do baralho classico (completa e da mesa)" time="1.256412" classname="test"/>
+		<testcase name="todas as 52 cartas do baralho truco (completa e da mesa)" time="1.370340" classname="test"/>
+		<testcase name="todas as 52 cartas do baralho nobreza (completa e da mesa)" time="1.063995" classname="test"/>
+		<testcase name="todas as 52 cartas do baralho backprop (completa e da mesa)" time="1.076923" classname="test"/>
+		<testcase name="todas as 52 cartas do baralho fraternidade (completa e da mesa)" time="1.173050" classname="test"/>
+		<testcase name="todas as 52 cartas do baralho yinyang (completa e da mesa)" time="1.118416" classname="test"/>
+		<testcase name="todas as 52 cartas do baralho powerbi (completa e da mesa)" time="1.083555" classname="test"/>
 	</testsuite>
-	<testsuite name="versos, terrenos, avatares, mesas e botões" time="0.247945" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="verso de cada baralho nos dois formatos" time="0.086142" classname="test"/>
-		<testcase name="carta de cada terreno" time="0.088906" classname="test"/>
-		<testcase name="avatar de cada oponente e dos jogadores" time="0.009600" classname="test"/>
-		<testcase name="feltro e mesa de cada terreno" time="0.051525" classname="test"/>
-		<testcase name="faísca e botões em cada variante e estado" time="0.011436" classname="test"/>
+	<testsuite name="versos, terrenos, avatares, mesas e botões" time="0.322149" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="verso de cada baralho nos dois formatos" time="0.147902" classname="test"/>
+		<testcase name="carta de cada terreno" time="0.086094" classname="test"/>
+		<testcase name="avatar de cada oponente e dos jogadores" time="0.012310" classname="test"/>
+		<testcase name="feltro e mesa de cada terreno" time="0.061327" classname="test"/>
+		<testcase name="faísca e botões em cada variante e estado" time="0.014075" classname="test"/>
 	</testsuite>
-	<testsuite name="icones.js e retrato.js" time="0.056518" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="um ícone SVG válido para cada conquista, e o cadeado" time="0.038146" classname="test"/>
-		<testcase name="retrato do professor em moldura medieval" time="0.018135" classname="test"/>
+	<testsuite name="icones.js e retrato.js" time="0.100891" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="um ícone SVG válido para cada conquista, e o cadeado" time="0.061054" classname="test"/>
+		<testcase name="retrato do professor em moldura medieval" time="0.039532" classname="test"/>
 	</testsuite>
-	<testcase name="fora do navegador: resolução 1 e Canvas não forçado" time="0.000815" classname="test"/>
-	<testcase name="?res= é limitado a 3 e ?renderer=canvas força o Canvas" time="0.000806" classname="test"/>
-	<testcase name="resolução pela tela × densidade, densidades das texturas e sem forçar Canvas" time="0.001678" classname="test"/>
-	<testsuite name="grimorio.js" time="0.001782" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="verbetes com id único, título, categoria, conceito e &amp;quot;no jogo&amp;quot;" time="0.000888" classname="test"/>
+	<testsuite name="Nobreza e Backprop" time="0.158226" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="estão no menu, no motor e geram 52 cartas" time="0.001027" classname="test"/>
+		<testcase name="Nobreza: figuras valem 11 a 13 e figuras iguais vizinhas valem o dobro (8 + K + K = 60)" time="0.003858" classname="test"/>
+		<testcase name="Backprop: a rede vale a ativação da saída; cada neurônio mostra a ativação depois dele" time="0.001065" classname="test"/>
+		<testcase name="mãos inteiras com os dois baralhos terminam e pontuam todas as redes" time="0.080836" classname="test"/>
+		<testcase name="arte: versos próprios, legenda de ativação e peso no Backprop e texto das regras" time="0.068654" classname="test"/>
 	</testsuite>
-	<testsuite name="textos.js" time="0.000437" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="ambientação para cada valor e provocações para cada situação" time="0.000221" classname="test"/>
-		<testcase name="provocar: situação desconhecida devolve texto vazio" time="0.000113" classname="test"/>
+	<testsuite name="avatares extras" time="0.013177" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="cada avatar do jogador tem retrato desenhado" time="0.013050" classname="test"/>
 	</testsuite>
-	<testsuite name="conquistas.js" time="0.034567" disabled="0" errors="0" tests="29" failures="0" skipped="0" hostname="vm">
-		<testcase name="graduações com nome e cor" time="0.000391" classname="test"/>
-		<testcase name="toda conquista tem caso de teste, e VALEM_SEM_MAO_COMPLETA só cita conquistas existentes" time="0.000843" classname="test"/>
-		<testcase name="conquista &amp;quot;Primeira época&amp;quot; (primeira)" time="0.003144" classname="test"/>
-		<testcase name="conquista &amp;quot;Convergiu&amp;quot; (dez)" time="0.001232" classname="test"/>
-		<testcase name="conquista &amp;quot;Estado da arte&amp;quot; (cinquenta)" time="0.000751" classname="test"/>
-		<testcase name="conquista &amp;quot;Gato curioso&amp;quot; (gato10)" time="0.001209" classname="test"/>
-		<testcase name="conquista &amp;quot;Sete vidas não bastam&amp;quot; (gato100)" time="0.000970" classname="test"/>
-		<testcase name="conquista &amp;quot;Inferência pura&amp;quot; (zen)" time="0.001437" classname="test"/>
-		<testcase name="conquista &amp;quot;Monge do forward pass&amp;quot; (zen10)" time="0.000665" classname="test"/>
-		<testcase name="conquista &amp;quot;Desk rejection&amp;quot; (desk)" time="0.001289" classname="test"/>
-		<testcase name="conquista &amp;quot;Marcha dos patos&amp;quot; (patos)" time="0.000781" classname="test"/>
-		<testcase name="conquista &amp;quot;Contra tudo e contra todos&amp;quot; (contra)" time="0.000702" classname="test"/>
-		<testcase name="conquista &amp;quot;Artilheiro dos gols inúteis&amp;quot; (artilheiro)" time="0.000705" classname="test"/>
-		<testcase name="conquista &amp;quot;Pré-treinado&amp;quot; (transfer)" time="0.001162" classname="test"/>
-		<testcase name="conquista &amp;quot;Gradiente evaporado&amp;quot; (vanishing)" time="0.000861" classname="test"/>
-		<testcase name="conquista &amp;quot;Regularizador&amp;quot; (overfit)" time="0.001209" classname="test"/>
-		<testcase name="conquista &amp;quot;Paciência de validação&amp;quot; (earlystop)" time="0.000670" classname="test"/>
-		<testcase name="conquista &amp;quot;Segmentation fault&amp;quot; (overflow)" time="0.003773" classname="test"/>
-		<testcase name="conquista &amp;quot;Atenção multi-cabeça&amp;quot; (trio)" time="0.002419" classname="test"/>
-		<testcase name="conquista &amp;quot;Rede profunda&amp;quot; (sessenta)" time="0.000630" classname="test"/>
-		<testcase name="conquista &amp;quot;Truco, marreco!&amp;quot; (truco)" time="0.000493" classname="test"/>
-		<testcase name="conquista &amp;quot;Vale a partida&amp;quot; (doze)" time="0.000523" classname="test"/>
-		<testcase name="conquista &amp;quot;Corre que é cilada&amp;quot; (correu)" time="0.000514" classname="test"/>
-		<testcase name="conquista &amp;quot;Campeão da mesa&amp;quot; (campeao)" time="0.000441" classname="test"/>
-		<testcase name="conquista &amp;quot;Venceu a máquina&amp;quot; (maquina)" time="0.000544" classname="test"/>
-		<testcase name="conquista &amp;quot;Cartógrafo&amp;quot; (cartografo)" time="0.000831" classname="test"/>
-		<testcase name="conquista &amp;quot;Colecionador&amp;quot; (colecionador)" time="0.000457" classname="test"/>
-		<testcase name="conquista &amp;quot;Zap na saída&amp;quot; (zap)" time="0.000600" classname="test"/>
-		<testcase name="conquista &amp;quot;Bibliotecário&amp;quot; (biblio)" time="0.004270" classname="test"/>
+	<testsuite name="ícones das ações" time="0.000355" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="um SVG acessível para cada ação da barra e para o vanishing gradient" time="0.000264" classname="test"/>
 	</testsuite>
-	<testsuite name="dicasDeJogo.js" time="0.154917" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="dicas gerais ligadas a verbetes existentes" time="0.000211" classname="test"/>
-		<testcase name="só usa informação pública: sortear de novo o que está escondido não muda a dica" time="0.153021" classname="test"/>
-		<testcase name="cobre todos os tipos de dica em situações montadas à mão" time="0.001471" classname="test"/>
+	<testcase name="fora do navegador: resolução 1 e Canvas não forçado" time="0.000723" classname="test"/>
+	<testcase name="?res= é limitado a 3 e ?renderer=canvas força o Canvas" time="0.000609" classname="test"/>
+	<testcase name="resolução pela tela × densidade, densidades das texturas e sem forçar Canvas" time="0.001450" classname="test"/>
+	<testsuite name="grimorio.js" time="0.008944" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="verbetes com id único, título, categoria, conceito e &amp;quot;no jogo&amp;quot;" time="0.000811" classname="test"/>
+		<testcase name="verbetes de Ação: ideia do dia a dia e autoria; matemática em LaTeX balanceado quando houver" time="0.000938" classname="test"/>
+		<testcase name="Biblioteca de conceitos: todo verbete tem equação em MathML e &amp;quot;até onde vale a comparação&amp;quot;; as figuras existem" time="0.005873" classname="test"/>
+		<testcase name="textos revistos: as linhas não são pesos, stack overflow não é conceito de redes, a curva da mesa sobe" time="0.000184" classname="test"/>
+		<testcase name="ajuda das ações: cada ação da barra tem verbete na Biblioteca e regra no motor" time="0.000185" classname="test"/>
 	</testsuite>
-	<testsuite name="progresso.js" time="0.001655" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="sem nada salvo: progresso inicial com música ligada" time="0.000521" classname="test"/>
-		<testcase name="salvar e carregar de volta" time="0.000194" classname="test"/>
-		<testcase name="migra o formato da versão 1 (nomes em inglês)" time="0.000258" classname="test"/>
-		<testcase name="armazenamento quebrado ou ausente não derruba o jogo" time="0.000385" classname="test"/>
+	<testsuite name="avatares.js" time="0.000320" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="livres desde o início e os outros liberados pela conquista; o escolhido só vale se liberado" time="0.000250" classname="test"/>
 	</testsuite>
-	<testsuite name="versionar.js" time="0.181618" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="vm">
-		<testcase name="tipoDeMudanca: rótulos e título decidem maior, menor ou correção" time="0.000960" classname="test"/>
-		<testcase name="proximaVersao" time="0.000156" classname="test"/>
-		<testcase name="dataEmBrasilia: o dia no horário de Brasília, não em UTC" time="0.014839" classname="test"/>
-		<testcase name="--simular só mostra a próxima versão" time="0.049059" classname="test"/>
-		<testcase name="sobe a versão em package.json, package-lock, src/versao.js, README e CHANGELOG" time="0.042505" classname="test"/>
-		<testcase name="--atual publica a versão sem subir e não duplica a entrada do histórico" time="0.036925" classname="test"/>
-		<testcase name="sem PR nem título: correção, com &amp;quot;Atualização&amp;quot; no histórico" time="0.036312" classname="test"/>
+	<testsuite name="textos.js" time="0.000433" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="ambientação para cada valor e provocações para cada situação" time="0.000280" classname="test"/>
+		<testcase name="provocar: situação desconhecida devolve texto vazio" time="0.000069" classname="test"/>
 	</testsuite>
-	<testsuite name="empacotar.js" time="0.164968" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="gera o HTML completo e a versão para artifact, com CSS e JS embutidos" time="0.164756" classname="test"/>
+	<testsuite name="conquistas.js" time="0.154287" disabled="0" errors="0" tests="37" failures="0" skipped="0" hostname="vm">
+		<testcase name="graduações com nome e cor" time="0.000353" classname="test"/>
+		<testcase name="toda conquista tem caso de teste, e VALEM_SEM_MAO_COMPLETA só cita conquistas existentes" time="0.000114" classname="test"/>
+		<testcase name="conquista &amp;quot;Primeira época&amp;quot; (primeira)" time="0.008426" classname="test"/>
+		<testcase name="conquista &amp;quot;Convergiu&amp;quot; (dez)" time="0.003464" classname="test"/>
+		<testcase name="conquista &amp;quot;Estado da arte&amp;quot; (cinquenta)" time="0.004524" classname="test"/>
+		<testcase name="conquista &amp;quot;Gato curioso&amp;quot; (gato10)" time="0.005849" classname="test"/>
+		<testcase name="conquista &amp;quot;Sete vidas não bastam&amp;quot; (gato100)" time="0.003930" classname="test"/>
+		<testcase name="conquista &amp;quot;Inferência pura&amp;quot; (zen)" time="0.003982" classname="test"/>
+		<testcase name="conquista &amp;quot;Monge do forward pass&amp;quot; (zen10)" time="0.007190" classname="test"/>
+		<testcase name="conquista &amp;quot;Desk rejection&amp;quot; (desk)" time="0.006665" classname="test"/>
+		<testcase name="conquista &amp;quot;Marcha dos patos&amp;quot; (patos)" time="0.002957" classname="test"/>
+		<testcase name="conquista &amp;quot;Contra tudo e contra todos&amp;quot; (contra)" time="0.004355" classname="test"/>
+		<testcase name="conquista &amp;quot;Artilheiro dos gols inúteis&amp;quot; (artilheiro)" time="0.001917" classname="test"/>
+		<testcase name="conquista &amp;quot;Pré-treinado&amp;quot; (transfer)" time="0.005073" classname="test"/>
+		<testcase name="conquista &amp;quot;Gradiente evaporado&amp;quot; (vanishing)" time="0.009615" classname="test"/>
+		<testcase name="conquista &amp;quot;Regularizador&amp;quot; (overfit)" time="0.002655" classname="test"/>
+		<testcase name="conquista &amp;quot;Paciência de validação&amp;quot; (earlystop)" time="0.006033" classname="test"/>
+		<testcase name="conquista &amp;quot;Segmentation fault&amp;quot; (overflow)" time="0.008355" classname="test"/>
+		<testcase name="conquista &amp;quot;Atenção multi-cabeça&amp;quot; (trio)" time="0.007190" classname="test"/>
+		<testcase name="conquista &amp;quot;Rede profunda&amp;quot; (sessenta)" time="0.001967" classname="test"/>
+		<testcase name="conquista &amp;quot;Truco, marreco!&amp;quot; (truco)" time="0.005680" classname="test"/>
+		<testcase name="conquista &amp;quot;Vale a partida&amp;quot; (doze)" time="0.001818" classname="test"/>
+		<testcase name="conquista &amp;quot;Corre que é cilada&amp;quot; (correu)" time="0.001643" classname="test"/>
+		<testcase name="conquista &amp;quot;Campeão da mesa&amp;quot; (campeao)" time="0.003550" classname="test"/>
+		<testcase name="conquista &amp;quot;Venceu a máquina&amp;quot; (maquina)" time="0.002274" classname="test"/>
+		<testcase name="conquista &amp;quot;Cartógrafo&amp;quot; (cartografo)" time="0.004259" classname="test"/>
+		<testcase name="conquista &amp;quot;Colecionador&amp;quot; (colecionador)" time="0.001544" classname="test"/>
+		<testcase name="conquista &amp;quot;Zap na saída&amp;quot; (zap)" time="0.002285" classname="test"/>
+		<testcase name="conquista &amp;quot;Bibliotecário&amp;quot; (biblio)" time="0.002920" classname="test"/>
+		<testcase name="conquista &amp;quot;Sangue azul&amp;quot; (nobreza)" time="0.003405" classname="test"/>
+		<testcase name="conquista &amp;quot;Forward pass de ouro&amp;quot; (backprop)" time="0.007850" classname="test"/>
+		<testcase name="conquista &amp;quot;Ajuste fino&amp;quot; (tunador)" time="0.001634" classname="test"/>
+		<testcase name="conquista &amp;quot;Batch grande&amp;quot; (batch)" time="0.006086" classname="test"/>
+		<testcase name="conquista &amp;quot;Ensemble&amp;quot; (ensemble)" time="0.001564" classname="test"/>
+		<testcase name="conquista &amp;quot;Big data&amp;quot; (bigdata)" time="0.001564" classname="test"/>
+		<testcase name="conquista &amp;quot;Deep learning de verdade&amp;quot; (profunda)" time="0.006466" classname="test"/>
+		<testcase name="conquista &amp;quot;Arquiteto de redes&amp;quot; (arquiteto)" time="0.003621" classname="test"/>
 	</testsuite>
-	<testsuite name="documentar.js" time="0.049506" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="gera a referência com os módulos e as funções documentadas" time="0.049341" classname="test"/>
+	<testsuite name="dicasDeJogo.js" time="0.465782" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="dicas gerais ligadas a verbetes existentes" time="0.000162" classname="test"/>
+		<testcase name="só usa informação pública: sortear de novo o que está escondido não muda a dica" time="0.463343" classname="test"/>
+		<testcase name="cobre todos os tipos de dica em situações montadas à mão" time="0.002108" classname="test"/>
 	</testsuite>
-	<testsuite name="simular.js" time="0.106872" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="roda mãos entre dois oponentes e mostra o placar" time="0.106747" classname="test"/>
+	<testsuite name="progresso.js" time="0.001686" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="sem nada salvo: progresso inicial com música ligada" time="0.000466" classname="test"/>
+		<testcase name="salvar e carregar de volta" time="0.000598" classname="test"/>
+		<testcase name="migra o formato da versão 1 (nomes em inglês)" time="0.000206" classname="test"/>
+		<testcase name="armazenamento quebrado ou ausente não derruba o jogo" time="0.000260" classname="test"/>
 	</testsuite>
-	<testsuite name="paineis.js" time="0.168144" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="escaparHtml" time="0.009912" classname="test"/>
-		<testcase name="abrirPainel: fecha pelo botão data-fechar, por fora e por fecharTodos; chama aoFechar" time="0.050756" classname="test"/>
-		<testcase name="mostrarAviso e mostrarDicaDeJogo: um por vez, somem sozinhos ou com um toque" time="0.090184" classname="test"/>
-		<testcase name="confirmar: botões com ação, grito de truco e topo" time="0.011569" classname="test"/>
-		<testcase name="dica flutuante: à esquerda, acima ou abaixo do alvo conforme o espaço" time="0.004280" classname="test"/>
+	<testsuite name="versionar.js" time="0.225212" disabled="0" errors="0" tests="11" failures="0" skipped="0" hostname="vm">
+		<testcase name="tipoDeMudanca: rótulos e título decidem maior, menor ou correção" time="0.000809" classname="test"/>
+		<testcase name="proximaVersao" time="0.000132" classname="test"/>
+		<testcase name="dataEmBrasilia: o dia no horário de Brasília, não em UTC" time="0.011630" classname="test"/>
+		<testcase name="--simular só mostra a próxima versão" time="0.041085" classname="test"/>
+		<testcase name="sobe a versão em package.json, package-lock, src/versao.js, README e CHANGELOG" time="0.042527" classname="test"/>
+		<testcase name="--atual publica a versão sem subir e não duplica a entrada do histórico" time="0.040593" classname="test"/>
+		<testcase name="lerAutores: login e nome, sem robôs nem repetidos" time="0.001298" classname="test"/>
+		<testcase name="registrarAutores: acrescenta só quem falta e mantém as linhas escritas à mão" time="0.000276" classname="test"/>
+		<testcase name="creditos: um, dois ou mais autores" time="0.000130" classname="test"/>
+		<testcase name="pull request de outra pessoa: entra nos autores do README e nos créditos do histórico" time="0.044108" classname="test"/>
+		<testcase name="sem PR nem título: correção, com &amp;quot;Atualização&amp;quot; no histórico" time="0.041773" classname="test"/>
 	</testsuite>
-	<testsuite name="som.js e musica.js" time="7.398872" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="cada efeito sonoro agenda osciladores ou ruído; mudo não toca nada" time="0.013305" classname="test"/>
-		<testcase name="música: cada terreno agenda notas; trocar, repetir e parar" time="7.385190" classname="test"/>
+	<testsuite name="empacotar.js" time="0.222222" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="gera o HTML completo e a versão para artifact, com CSS e JS embutidos" time="0.222065" classname="test"/>
 	</testsuite>
-	<testsuite name="telas" time="0.703421" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="vm">
-		<testcase name="menu: mostra as escolhas, lê as mudanças, atualiza as miniaturas e abre cada tela" time="0.430757" classname="test"/>
-		<testcase name="regras: marca o tutorial como visto e chama aoFechar" time="0.045146" classname="test"/>
-		<testcase name="grimório: abre no verbete pedido, troca de verbete e marca como lido" time="0.019324" classname="test"/>
-		<testcase name="conquistas: medalhas bloqueadas e desbloqueadas, contagem e retrato" time="0.106072" classname="test"/>
-		<testcase name="sobre: versão, disciplina, professor e autores" time="0.016936" classname="test"/>
-		<testcase name="revisão: resumo, curva, linha do tempo comentada e placar da partida" time="0.084654" classname="test"/>
+	<testsuite name="documentar.js" time="0.049645" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="gera a referência com os módulos e as funções documentadas" time="0.049456" classname="test"/>
 	</testsuite>
-	<testsuite name="aplicacao.js" time="0.015944" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="iniciar: opções padrão, música ligada sem escolha e som conforme o progresso" time="0.001069" classname="test"/>
-		<testcase name="salvarOpcoes, alternarMusica (liga com terreno, desliga sem)" time="0.006671" classname="test"/>
-		<testcase name="jogar e irParaMenu trocam as cenas; modo imersivo pede tela cheia no toque" time="0.002677" classname="test"/>
-		<testcase name="registrarMao: contadores, conquistas novas (uma vez só) e mão encerrada por truco" time="0.001611" classname="test"/>
-		<testcase name="marcarVerbeteLido: conta cada verbete uma vez e concede &amp;quot;Bibliotecário&amp;quot; no fim" time="0.003594" classname="test"/>
+	<testsuite name="simular.js" time="0.063589" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="roda mãos entre dois oponentes e mostra o placar" time="0.063468" classname="test"/>
 	</testsuite>
-	<testsuite name="aleatorio.js" time="0.003631" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="sortear: reprodutível pela semente e sempre em [0, 1)" time="0.001831" classname="test"/>
-		<testcase name="sortearInteiro: inteiros em [0, n) que cobrem todos os valores" time="0.000415" classname="test"/>
-		<testcase name="embaralhar: mesma lista em outra ordem, sem perder nem repetir itens" time="0.000281" classname="test"/>
-		<testcase name="sementeNova: número inteiro" time="0.000106" classname="test"/>
+	<testsuite name="paineis.js" time="0.163742" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="escaparHtml" time="0.008302" classname="test"/>
+		<testcase name="abrirPainel: fecha pelo botão data-fechar, por fora e por fecharTodos; chama aoFechar" time="0.050376" classname="test"/>
+		<testcase name="mostrarAviso e mostrarDicaDeJogo: um por vez, somem sozinhos ou com um toque" time="0.090325" classname="test"/>
+		<testcase name="confirmar: botões com ação, grito de truco e topo" time="0.009882" classname="test"/>
+		<testcase name="dica flutuante: à esquerda, acima ou abaixo do alvo conforme o espaço" time="0.003675" classname="test"/>
 	</testsuite>
-	<testsuite name="cartas.js" time="0.001755" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="tabelas de valores e naipes" time="0.000275" classname="test"/>
-		<testcase name="ehFigura: só J, Q e K" time="0.000952" classname="test"/>
-		<testcase name="rotuloCarta: valor + símbolo do naipe" time="0.000140" classname="test"/>
-		<testcase name="baralhoPadrao: 52 cartas com ids únicos" time="0.000220" classname="test"/>
+	<testsuite name="som.js e musica.js" time="8.707328" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="cada efeito sonoro agenda osciladores ou ruído; mudo não toca nada" time="0.005738" classname="test"/>
+		<testcase name="trilhas: menu e os quatro terrenos, com tema composto que cabe nos compassos" time="0.051493" classname="test"/>
+		<testcase name="música: cada terreno agenda notas; trocar, repetir e parar" time="8.649736" classname="test"/>
 	</testsuite>
-	<testsuite name="rede.js" time="0.000655" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="formato 3-5-5-5-5-5-4 e mão de 5 cartas" time="0.000116" classname="test"/>
-		<testcase name="ehOculta: só as camadas 1 a 5" time="0.000158" classname="test"/>
-		<testcase name="nomeCamada: entrada, ocultas numeradas e saída" time="0.000266" classname="test"/>
+	<testsuite name="telas" time="1.686275" disabled="0" errors="0" tests="13" failures="0" skipped="0" hostname="vm">
+		<testcase name="menu: mostra as escolhas, lê as mudanças, atualiza as miniaturas e abre cada tela" time="0.439034" classname="test"/>
+		<testcase name="menu: configurações do NeuroDeck (jogadores, humanos, oponentes, arquitetura e baralhos)" time="0.160482" classname="test"/>
+		<testcase name="mods: tipos, exemplo comentado e o aviso de que a interface ainda não carrega mods" time="0.037644" classname="test"/>
+		<testcase name="regras: marca o tutorial como visto e chama aoFechar" time="0.054827" classname="test"/>
+		<testcase name="grimório: abre no verbete pedido, troca de verbete e marca como lido" time="0.034942" classname="test"/>
+		<testcase name="Biblioteca: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria" time="0.020949" classname="test"/>
+		<testcase name="fórmulas: KaTeX quando existe, LaTeX escapado como código quando não" time="0.001175" classname="test"/>
+		<testcase name="Biblioteca de conceitos: título novo, equação, figura e &amp;quot;até onde vale a comparação&amp;quot;" time="0.011694" classname="test"/>
+		<testcase name="regras em abas: troca de aba, ajuda das ações e &amp;quot;Ver o conceito&amp;quot; abrindo o verbete certo" time="0.572193" classname="test"/>
+		<testcase name="avatares: escolhe um liberado, ignora o bloqueado e avisa quem mudou" time="0.120655" classname="test"/>
+		<testcase name="conquistas: medalhas bloqueadas e desbloqueadas, contagem e retrato" time="0.136314" classname="test"/>
+		<testcase name="sobre: versão, os dois jogos, disciplina, professor e autores" time="0.025733" classname="test"/>
+		<testcase name="revisão: resumo, curva, linha do tempo comentada e placar da partida" time="0.069636" classname="test"/>
 	</testsuite>
-	<testsuite name="baralhos.js" time="0.000573" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="cada baralho monta 52 cartas e tem nome e resumo" time="0.000227" classname="test"/>
-		<testcase name="pontosDaCarta: Ás 11, figuras 0, números pelo valor; manilhas do truco" time="0.000115" classname="test"/>
-		<testcase name="nomeDaCarta e manilhaDaCarta" time="0.000134" classname="test"/>
+	<testsuite name="aplicacao.js" time="0.020604" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="iniciar: opções padrão, música ligada sem escolha e som conforme o progresso" time="0.001059" classname="test"/>
+		<testcase name="salvarOpcoes, alternarMusica (liga com terreno, desliga sem)" time="0.002467" classname="test"/>
+		<testcase name="jogar e irParaMenu trocam as cenas; modo imersivo pede tela cheia no toque" time="0.005945" classname="test"/>
+		<testcase name="registrarMao: contadores, conquistas novas (uma vez só) e mão encerrada por truco" time="0.009513" classname="test"/>
+		<testcase name="marcarVerbeteLido: conta cada verbete uma vez e concede &amp;quot;Bibliotecário&amp;quot; no fim" time="0.001366" classname="test"/>
 	</testsuite>
-	<testsuite name="terrenos.js" time="0.000200" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="quatro terrenos com nome e resumo" time="0.000112" classname="test"/>
+	<testsuite name="Mesa: arquiteturas, jogadores e baralhos" time="0.412230" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="vm">
+		<testcase name="a mesa tem os tamanhos da arquitetura, com um neurônio a mais por camada para cada jogador além de 2" time="0.006064" classname="test"/>
+		<testcase name="com 2 baralhos a mão tem 10 cartas e o limbo 20; com 3 baralhos, 15 e 30" time="0.000962" classname="test"/>
+		<testcase name="cartas repetidas (vários baralhos) têm ids diferentes na interface" time="0.000576" classname="test"/>
+		<testcase name="recusa arquitetura desconhecida e mesas com menos de 2 ou mais de 5 jogadores" time="0.000442" classname="test"/>
+		<testcase name="mãos completas com 3, 4 e 5 jogadores, em todas as arquiteturas: nenhuma carta some e toda mão termina" time="0.401821" classname="test"/>
+		<testcase name="com 3 jogadores, as fronteiras de todos os rivais aceitam ataque e o alvo é o dono do neurônio clicado" time="0.001320" classname="test"/>
 	</testsuite>
-	<testsuite name="novaMao" time="0.003976" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="monta a mesa 3-5-5-5-5-5-4, distribui 5 cartas e queima 10 no limbo" time="0.002073" classname="test"/>
-		<testcase name="início por sorteio já começa a fase de jogo e emite o evento" time="0.000222" classname="test"/>
-		<testcase name="oceano sorteia o vento; mesma semente, mesma mesa" time="0.000318" classname="test"/>
-		<testcase name="sem semente usa uma semente nova" time="0.000165" classname="test"/>
-		<testcase name="constantes de apoio" time="0.000078" classname="test"/>
+	<testsuite name="Truco com mais de 2 jogadores" time="0.000551" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="a partida vale tentos para cada jogador, mas ninguém pode trucar" time="0.000315" classname="test"/>
+		<testcase name="com 2 jogadores tudo continua como antes" time="0.000105" classname="test"/>
 	</testsuite>
-	<testsuite name="copiarMao" time="0.001634" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="cópia independente, sem eventos, em modo simulação" time="0.001553" classname="test"/>
+	<testsuite name="Dicas e revisão com mais de 2 jogadores" time="0.079237" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="a dica de ataque aponta para o rival que dá para atacar, mesmo que não seja o próximo" time="0.003319" classname="test"/>
+		<testcase name="a revisão mostra uma curva, um resumo e um placar para cada jogador" time="0.075742" classname="test"/>
 	</testsuite>
-	<testsuite name="consultas" time="0.002848" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="vm">
-		<testcase name="fronteira: null sem rede; depois o último neurônio do caminho" time="0.000335" classname="test"/>
-		<testcase name="alvosDeAtivacao: livres da próxima camada; vazio para rede finalizada" time="0.000149" classname="test"/>
-		<testcase name="alvosDeEmpilhamento: só fronteiras ocultas de redes em construção" time="0.000841" classname="test"/>
-		<testcase name="efeitoDoEmpilhamento: pela pilha final (2, 3, 4) e por quem é o dono" time="0.000161" classname="test"/>
-		<testcase name="podeEmpilhar: exige vez, alvo válido, mesma figura e pilha ≤ 4" time="0.000509" classname="test"/>
-		<testcase name="camadasDesfaziveis: camadas ocultas do caminho" time="0.000274" classname="test"/>
-		<testcase name="valorParaTransfer: quatro iguais na mão, uma vez por mão" time="0.000193" classname="test"/>
-		<testcase name="podePassar: só sem neurônio para ativar" time="0.000151" classname="test"/>
+	<testsuite name="Geometria do tabuleiro (layout.js)" time="0.001472" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="a mesa padrão fica exatamente onde ficava: colunas de 318 a 900, linhas a 95, cartas 62x87" time="0.000446" classname="test"/>
+		<testcase name="em todas as mesas possíveis as cartas cabem no tabuleiro e não se sobrepõem" time="0.000319" classname="test"/>
+		<testcase name="placar: 2 blocos grandes com 2 jogadores; blocos compactos que cabem acima da curva com 3 a 5" time="0.000389" classname="test"/>
+		<testcase name="cores diferentes para as 5 redes" time="0.000107" classname="test"/>
 	</testsuite>
-	<testsuite name="jogadasLegais" time="0.001083" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="fase de início: uma jogada por carta da mão" time="0.000178" classname="test"/>
-		<testcase name="fora da vez: nenhuma jogada" time="0.000156" classname="test"/>
-		<testcase name="inclui dropout só com a opção comDropout" time="0.000277" classname="test"/>
-		<testcase name="com manilhas de pontos diferentes, considera cada combinação de cartas" time="0.000337" classname="test"/>
+	<testsuite name="Opções da mesa (aplicacao.js)" time="0.000419" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="opções padrão: 2 jogadores, 1 humano, arquitetura padrão e 1 baralho" time="0.000121" classname="test"/>
+		<testcase name="o antigo &amp;quot;2 humanos no mesmo aparelho&amp;quot; vira 2 humanos; valores fora da faixa são corrigidos" time="0.000212" classname="test"/>
 	</testsuite>
-	<testsuite name="aplicarJogada" time="0.100921" disabled="0" errors="0" tests="11" failures="0" skipped="0" hostname="vm">
-		<testcase name="início &amp;quot;revela e volta&amp;quot;: a carta mais forte começa e volta para a mão" time="0.000400" classname="test"/>
-		<testcase name="início &amp;quot;revela e descarta&amp;quot;: as cartas vão para o cemitério; empate vai para o sorteio" time="0.000194" classname="test"/>
-		<testcase name="ativar: revela, liga à rede e passa a vez" time="0.000174" classname="test"/>
-		<testcase name="ativar na camada de saída conclui a rede" time="0.000770" classname="test"/>
-		<testcase name="tunagem, overfit, early stop e stack overflow" time="0.096724" classname="test"/>
-		<testcase name="dropout: desvira, paga com cartas e não gasta o turno" time="0.000785" classname="test"/>
-		<testcase name="transfer learning: troca quatro iguais por cartas do limbo" time="0.000300" classname="test"/>
-		<testcase name="Power BI troca a mão depois de uma ação" time="0.000201" classname="test"/>
-		<testcase name="passar: só sem neurônio livre; dois passes seguidos encerram a mão" time="0.000179" classname="test"/>
-		<testcase name="erros: fora da vez, mão não iniciada, jogada desconhecida, carta fora da mão" time="0.000427" classname="test"/>
-		<testcase name="rede travada antes da saída pode ser finalizada por early stop no próprio neurônio" time="0.000426" classname="test"/>
+	<testsuite name="Mod de exemplo (terreno Regularização L1)" time="0.080667" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="carrega pelo mesmo caminho de um mod de verdade e registra o terreno" time="0.003318" classname="test"/>
+		<testcase name="neurônios acima de 8 pontos perdem 1 ponto" time="0.002259" classname="test"/>
+		<testcase name="partidas inteiras no terreno do mod terminam normalmente" time="0.073584" classname="test"/>
 	</testsuite>
-	<testsuite name="fim da mão e desempates" time="0.004614" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="mão jogada até o fim tem vencedor, somas e motivo" time="0.003426" classname="test"/>
-		<testcase name="1º desempate: menos dropouts" time="0.000316" classname="test"/>
-		<testcase name="2º: quem ficou sem cartas perde" time="0.000156" classname="test"/>
-		<testcase name="3º: soma das melhores cartas da mão" time="0.000154" classname="test"/>
-		<testcase name="4º: carta mais alta; 5º: quem jogou primeiro" time="0.000284" classname="test"/>
+	<testsuite name="Motor do NeuroDeck: equivalência com o site publicado" time="0.001781" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="as 1.000 partidas têm o mesmo total de jogadas do site" time="0.000726" classname="test"/>
+		<testcase name="cada bloco de 100 partidas tem o mesmo resumo do site" time="0.000119" classname="test"/>
+		<testcase name="o resumo geral é idêntico ao do site" time="0.000110" classname="test"/>
 	</testsuite>
-	<testsuite name="pontuarRede" time="0.006133" disabled="0" errors="0" tests="9" failures="0" skipped="0" hostname="vm">
-		<testcase name="rede vazia vale 0" time="0.002152" classname="test"/>
-		<testcase name="exemplo do enunciado: 8-K-K-3 com tunagem num K soma 41 (trio + tunagem)" time="0.001503" classname="test"/>
-		<testcase name="par de figuras vizinhas vale +10" time="0.000210" classname="test"/>
-		<testcase name="quatro Reis vizinhos (contando os empilhados) zeram a rede: vanishing gradient" time="0.000224" classname="test"/>
-		<testcase name="tunagem numérica soma todas as cartas da pilha" time="0.000162" classname="test"/>
-		<testcase name="montanha: cada camada tira 1 ponto" time="0.000182" classname="test"/>
-		<testcase name="pântano: neurônio sem tunagem afunda 1 por rodada" time="0.000162" classname="test"/>
-		<testcase name="oceano: naipe do vento vale dobro" time="0.000133" classname="test"/>
-		<testcase name="fraternidade: vizinhos do mesmo naipe valem dobro" time="0.000220" classname="test"/>
+	<testsuite name="Quem começa" time="0.011871" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="opção (a), 'reveal': as cartas reveladas vão para o cemitério" time="0.003645" classname="test"/>
+		<testcase name="opção (b), 'reveal-keep': as cartas reveladas voltam para a mão" time="0.000252" classname="test"/>
+		<testcase name="nas duas opções começa quem revelou a carta mais forte (Ás > K > … > 2; naipe desempata)" time="0.006024" classname="test"/>
+		<testcase name="sorteio ('random'): não há fase de revelação" time="0.000258" classname="test"/>
+		<testcase name="os bots espertos revelam a carta mais forte quando ela volta para a mão, e a de menor valor quando é descartada" time="0.000778" classname="test"/>
 	</testsuite>
-	<testsuite name="mediaDePontos" time="0.000287" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="média dos pontos de uma lista de cartas (0 para lista vazia)" time="0.000216" classname="test"/>
+	<testsuite name="Monte Carlo: resultado das simulações" time="0.053045" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="monteCarloResults devolve cada jogada com taxa de vitória e margem, da melhor para a pior" time="0.021079" classname="test"/>
+		<testcase name="monteCarloMove escolhe a primeira jogada de monteCarloResults" time="0.031827" classname="test"/>
 	</testsuite>
-	<testsuite name="truco.js" time="0.003402" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="escada 1-3-6-9-12 e gritos" time="0.001464" classname="test"/>
-		<testcase name="novaPartida e proximaMao zeram o valor e o pedido" time="0.000212" classname="test"/>
-		<testcase name="podeTrucar: não em mão única, não com pedido aberto, não quem aumentou por último, não na mão de onze" time="0.000247" classname="test"/>
-		<testcase name="responderTruco: aceitar sobe o valor; aumentar devolve o pedido; correr entrega o valor atual" time="0.000129" classname="test"/>
-		<testcase name="marcarTentos, fim da partida e mão de onze" time="0.000117" classname="test"/>
+	<testsuite name="B1: desempate pela carta mais alta" time="0.004370" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="K vence J quando a soma das mãos empata" time="0.002455" classname="test"/>
+		<testcase name="Q vence J, e figura vence carta numérica" time="0.000325" classname="test"/>
+		<testcase name="Ás é a carta mais alta" time="0.000150" classname="test"/>
+		<testcase name="o naipe só decide quando a carta mais alta é a mesma" time="0.000156" classname="test"/>
+		<testcase name="no motor original (nd-2.0.0), K contra J era decidido pelo naipe" time="0.000310" classname="test"/>
 	</testsuite>
-	<testsuite name="oponentes/comum.js" time="0.008193" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="vm">
-		<testcase name="cartasOcultas: neurônios virados, mão do outro e limbo" time="0.000849" classname="test"/>
-		<testcase name="determinizar: mantém o que j vê e redistribui o resto" time="0.001413" classname="test"/>
-		<testcase name="pontosEsperadosPorCamada: um número positivo" time="0.000211" classname="test"/>
-		<testcase name="avaliar: ±1000 no fim, vantagem projetada durante a mão" time="0.000963" classname="test"/>
-		<testcase name="agruparEquivalentes e concretizar: ativações desconhecidas da mesma camada viram uma jogada com alternativas" time="0.000283" classname="test"/>
-		<testcase name="simularAteOFim e chanceDeVitoria" time="0.004187" classname="test"/>
+	<testsuite name="B2: o trio de figuras vale mais que o par" time="0.003247" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="par de figuras iguais vale 20 (10 por figura)" time="0.002126" classname="test"/>
+		<testcase name="trio de figuras iguais vale 30 (10 por figura)" time="0.000365" classname="test"/>
+		<testcase name="quadra de figuras iguais zera a rede (vanishing gradient)" time="0.000236" classname="test"/>
+		<testcase name="figura isolada continua valendo 0, e figuras diferentes não formam par" time="0.000183" classname="test"/>
+		<testcase name="no motor original (nd-2.0.0), o trio empatava com o par" time="0.000183" classname="test"/>
 	</testsuite>
-	<testsuite name="oponentes/estrategias.js" time="0.099185" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="jogadaAleatoria, jogadaGulosa e jogadaMonteCarlo devolvem jogadas legais" time="0.098818" classname="test"/>
-		<testcase name="Monte Carlo com uma jogada só devolve direto" time="0.000247" classname="test"/>
+	<testsuite name="R1: a carta empilhada conta na sequência de figuras" time="0.001169" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="vm">
+		<testcase name="exemplo do slide: 8-K-K-3 com um K tunado vale 41" time="0.000195" classname="test"/>
+		<testcase name="tunar os dois Ks de um par forma quadra e zera a rede" time="0.000164" classname="test"/>
+		<testcase name="figura isolada tunada com outra igual forma par e vale 20" time="0.000118" classname="test"/>
+		<testcase name="tunagem de carta numérica continua somando o valor da carta empilhada" time="0.000149" classname="test"/>
+		<testcase name="o detalhamento por neurônio soma o total" time="0.000169" classname="test"/>
+		<testcase name="no motor original (nd-2.0.0), a carta empilhada não entrava na sequência" time="0.000220" classname="test"/>
 	</testsuite>
-	<testsuite name="oponentes/index.js" time="0.261618" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="três perfis com nome, nível, método, avatar e estilo" time="0.000161" classname="test"/>
-		<testcase name="escolherJogada: carta de início por perfil e jogada por estratégia" time="0.000759" classname="test"/>
-		<testcase name="querTrucar e responderAoTruco: respostas válidas para cada perfil" time="0.260431" classname="test"/>
+	<testsuite name="R2: qualquer early stop libera o passar" time="0.003876" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="quem sofreu early stop do rival pode passar, mesmo com ataque possível" time="0.001637" classname="test"/>
+		<testcase name="quem aplicou early stop na própria rede também pode passar" time="0.000427" classname="test"/>
+		<testcase name="quem chegou à saída ou ficou sem neurônio livre é obrigado a jogar se puder" time="0.000895" classname="test"/>
+		<testcase name="com a rede aberta não se pode passar" time="0.000261" classname="test"/>
+		<testcase name="no motor original (nd-2.0.0), quem se aplicou early stop era obrigado a atacar" time="0.000319" classname="test"/>
 	</testsuite>
-	<testsuite name="Preparação da mesa" time="0.003181" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-01 mesa 3-5-5-5-5-5-4 virada, 5 cartas na mão de cada jogador e 10 no limbo (52 no total)" time="0.002288" classname="test"/>
+	<testsuite name="Conjuntos de regras" time="7.227673" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="o padrão é o conjunto da fusão, e o nome fica no estado" time="0.000326" classname="test"/>
+		<testcase name="refazendo as mesmas jogadas com as regras da fusão, só muda o resultado de partidas que tocam B1, B2 ou R1" time="7.227193" classname="test"/>
 	</testsuite>
-	<testsuite name="Quem começa" time="0.001288" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-02 opção (a): cada um revela uma carta, a maior começa e as cartas vão para o cemitério" time="0.000585" classname="test"/>
-		<testcase name="RN-03 opção (b): a maior começa e as cartas reveladas voltam para a mão" time="0.000204" classname="test"/>
-		<testcase name="RN-04 opção (c): par ou ímpar sorteia quem começa e a mão já está em jogo" time="0.000148" classname="test"/>
-		<testcase name="RN-05 força das cartas para começar: Ás > K > Q > J > 10 … 2" time="0.000188" classname="test"/>
+	<testsuite name="Decisões confirmadas pelo professor (o motor já fazia assim)" time="0.001902" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="dropout: o neurônio desfeito sai da mesa, vai para o cemitério e não gasta a vez" time="0.000719" classname="test"/>
+		<testcase name="camada sem neurônio livre: a rede é finalizada ali (&amp;quot;acabou o campo&amp;quot;)" time="0.000425" classname="test"/>
+		<testcase name="transfer learning não gasta a vez e só vale uma vez por partida" time="0.000559" classname="test"/>
 	</testsuite>
-	<testsuite name="Construção da rede" time="0.002736" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-06 um neurônio por camada, só na próxima camada, e cada neurônio tem um único dono" time="0.000824" classname="test"/>
-		<testcase name="RN-07 ao chegar à camada de saída a rede está concluída, com 7 neurônios" time="0.001801" classname="test"/>
+	<testsuite name="Regressão com as regras da fusão" time="0.281619" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="em 350 partidas aleatórias (7 baralhos, 4 terrenos, 2 a 4 jogadores) nenhuma carta some ou duplica e toda partida termina" time="0.281480" classname="test"/>
 	</testsuite>
-	<testsuite name="Pontuação (baralho clássico)" time="0.001937" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-08 números valem o valor, Ás vale 11 e figura isolada vale 0" time="0.000431" classname="test"/>
-		<testcase name="RN-09 par de figuras iguais em camadas vizinhas vale 10 no total" time="0.000159" classname="test"/>
-		<testcase name="RN-10 trio de figuras iguais vizinhas vale 20" time="0.000135" classname="test"/>
-		<testcase name="RN-11 figuras iguais não vizinhas, ou vizinhas e diferentes, não pontuam" time="0.000265" classname="test"/>
-		<testcase name="RN-12 quadra de figuras iguais vizinhas zera a rede inteira (vanishing gradient)" time="0.000205" classname="test"/>
-		<testcase name="RN-13 exemplo do enunciado: 8-K-K-3 vale 21; com tunagem num K vale 41" time="0.000181" classname="test"/>
-		<testcase name="RN-14 tunar os dois Reis de um par forma quadra e zera a rede" time="0.000117" classname="test"/>
-		<testcase name="RN-15 tunagem numérica soma o valor da carta empilhada; em figura isolada soma 10" time="0.000222" classname="test"/>
+	<testsuite name="aleatorio.js" time="0.002640" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="sortear: reprodutível pela semente e sempre em [0, 1)" time="0.001292" classname="test"/>
+		<testcase name="sortearInteiro: inteiros em [0, n) que cobrem todos os valores" time="0.000324" classname="test"/>
+		<testcase name="embaralhar: mesma lista em outra ordem, sem perder nem repetir itens" time="0.000195" classname="test"/>
+		<testcase name="sementeNova: número inteiro" time="0.000077" classname="test"/>
 	</testsuite>
-	<testsuite name="Ações com cartas da mão" time="0.003348" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-16 entrada e saída são imunes: só a fronteira em camada oculta aceita cartas" time="0.000406" classname="test"/>
-		<testcase name="RN-17 empilhar exige carta de mesmo valor; o naipe não importa" time="0.000369" classname="test"/>
-		<testcase name="RN-18 overfit: 1 carta no último neurônio do rival manda o neurônio ao cemitério e a rede dele recua" time="0.000587" classname="test"/>
-		<testcase name="RN-19 early stop: pilha de 3 cartas finaliza a rede do rival sem esse neurônio" time="0.000352" classname="test"/>
-		<testcase name="RN-20 neurônio já tunado (2 cartas) sofre early stop com uma única carta do rival" time="0.000311" classname="test"/>
-		<testcase name="RN-21 stack overflow: pilha de 4 finaliza a rede do rival e ele perde toda a mão" time="0.000290" classname="test"/>
-		<testcase name="RN-22 auto early stop e auto stack overflow: empilhar 2 ou 3 cartas na própria fronteira encerra a própria rede" time="0.000413" classname="test"/>
-		<testcase name="RN-23 rede finalizada não pode mais ser atacada" time="0.000359" classname="test"/>
+	<testsuite name="cartas.js" time="0.000618" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="tabelas de valores e naipes" time="0.000187" classname="test"/>
+		<testcase name="ehFigura: só J, Q e K" time="0.000103" classname="test"/>
+		<testcase name="rotuloCarta: valor + símbolo do naipe" time="0.000083" classname="test"/>
+		<testcase name="baralhoPadrao: 52 cartas com ids únicos" time="0.000116" classname="test"/>
 	</testsuite>
-	<testsuite name="Dropout (GatoNet) e transfer learning" time="0.002258" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-24 dropout custa uma carta por camada desfeita, não gasta o turno e conta no desempate" time="0.000424" classname="test"/>
-		<testcase name="RN-25 o neurônio desfeito volta virado e livre, com valor conhecido; as tunagens vão ao cemitério" time="0.000383" classname="test"/>
-		<testcase name="RN-26 dropout não desfaz a camada de entrada" time="0.000738" classname="test"/>
-		<testcase name="RN-27 transfer learning: quadra na mão troca por cartas do limbo, uma vez por mão, e gasta o turno" time="0.000328" classname="test"/>
-		<testcase name="RN-28 sem quadra na mão não há transfer learning" time="0.000145" classname="test"/>
+	<testsuite name="rede.js" time="0.000791" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="formato 3-5-5-5-5-5-4 e mão de 5 cartas" time="0.000136" classname="test"/>
+		<testcase name="ehOculta: só as camadas 1 a 5 na mesa padrão; numa mesa de 9 camadas, de 1 a 7" time="0.000089" classname="test"/>
+		<testcase name="tamanhosDaMesa: arquiteturas do NeuroDeck, com um neurônio a mais por camada para cada jogador além de 2" time="0.000225" classname="test"/>
+		<testcase name="nomeCamada: entrada, ocultas numeradas e saída" time="0.000234" classname="test"/>
 	</testsuite>
-	<testsuite name="Passar a vez e fim da mão" time="0.000840" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-29 com neurônio livre para ativar não é permitido passar" time="0.000182" classname="test"/>
-		<testcase name="RN-30 rede concluída pode passar mesmo tendo um ataque possível" time="0.000263" classname="test"/>
-		<testcase name="RN-31 rede travada (sem neurônio livre na próxima camada) continua aberta e conta a soma parcial" time="0.000294" classname="test"/>
+	<testsuite name="baralhos.js" time="0.001980" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="cada baralho monta as cartas do motor (52; o truco, 2 baralhos de 27) e tem nome e resumo" time="0.001507" classname="test"/>
+		<testcase name="pontosDaCarta: Ás 11, figuras 0, números pelo valor; no truco, manilhas e a ordem do truco" time="0.000193" classname="test"/>
+		<testcase name="nomeDaCarta e manilhaDaCarta" time="0.000173" classname="test"/>
 	</testsuite>
-	<testsuite name="Desempates (soma igual)" time="0.001296" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-32 1º critério: menos dropouts" time="0.000325" classname="test"/>
-		<testcase name="RN-33 2º critério: maior soma das N melhores cartas da mão (N = tamanho da menor mão)" time="0.000248" classname="test"/>
-		<testcase name="RN-34 quem ficou sem cartas na mão perde para quem tem pelo menos uma" time="0.000174" classname="test"/>
-		<testcase name="RN-35 3º critério: carta mais alta da mão, comparada pelos pontos e depois pela força" time="0.000269" classname="test"/>
-		<testcase name="RN-36 último critério: vence quem jogou primeiro" time="0.000140" classname="test"/>
+	<testsuite name="terrenos.js" time="0.000146" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="quatro terrenos com nome e resumo" time="0.000095" classname="test"/>
 	</testsuite>
-	<testsuite name="Camada de truco (partida até 12 tentos)" time="0.000789" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-37 escada TRUCO (3) → SEIS (6) → NOVE (9) → DOZE (12); correr entrega o valor atual" time="0.000329" classname="test"/>
-		<testcase name="RN-38 quem aumentou por último não pede de novo; mão única e mão de onze não têm truco" time="0.000163" classname="test"/>
-		<testcase name="RN-39 a partida termina quando alguém chega a 12 tentos" time="0.000110" classname="test"/>
+	<testsuite name="novaMao" time="0.008550" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="vm">
+		<testcase name="monta a mesa 3-5-5-5-5-5-4, distribui 5 cartas e separa 10 no limbo" time="0.004866" classname="test"/>
+		<testcase name="início por sorteio já começa a fase de jogo e emite o evento" time="0.001184" classname="test"/>
+		<testcase name="oceano sorteia o vento; mesma semente, mesma mesa" time="0.000530" classname="test"/>
+		<testcase name="sem semente usa uma semente nova" time="0.000235" classname="test"/>
+		<testcase name="baralho de truco: 2 baralhos, mão de 10 cartas e ids únicos" time="0.000435" classname="test"/>
+		<testcase name="opção desconhecida é recusada com mensagem clara" time="0.000363" classname="test"/>
+		<testcase name="constantes de apoio" time="0.000074" classname="test"/>
 	</testsuite>
-	<testsuite name="Invariantes em partidas aleatórias" time="0.181124" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
-		<testcase name="RN-40 em 200 mãos aleatórias (4 baralhos x 4 terrenos x 3 inícios) nenhuma carta some ou duplica, os donos batem com as redes e toda mão termina" time="0.181026" classname="test"/>
+	<testsuite name="visão da interface" time="0.017279" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="a visão acompanha o estado do motor a cada jogada" time="0.010916" classname="test"/>
+		<testcase name="atualizarVisao refaz a visão depois de uma mudança direta no estado do motor" time="0.005670" classname="test"/>
+		<testcase name="as cartas da interface mantêm valor, naipe e id ao longo da mão" time="0.000550" classname="test"/>
 	</testsuite>
-	<testcase name="sem WebAudio: efeitos e música não tocam e não quebram" time="0.001304" classname="test"/>
-	<!-- tests 210 -->
-	<!-- suites 46 -->
-	<!-- pass 210 -->
+	<testsuite name="copiarMao" time="0.001142" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="cópia independente, sem eventos, em modo simulação" time="0.001068" classname="test"/>
+	</testsuite>
+	<testsuite name="consultas" time="0.009550" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="vm">
+		<testcase name="fronteira: null sem rede; depois o último neurônio do caminho" time="0.000403" classname="test"/>
+		<testcase name="alvosDeAtivacao: livres da próxima camada; vazio para rede finalizada" time="0.000307" classname="test"/>
+		<testcase name="alvosDeEmpilhamento: só fronteiras ocultas de redes em construção" time="0.000853" classname="test"/>
+		<testcase name="efeitoDoEmpilhamento: pela pilha final (2, 3, 4) e por quem é o dono" time="0.000191" classname="test"/>
+		<testcase name="podeEmpilhar: exige vez, alvo válido, mesma figura e pilha ≤ 4" time="0.000921" classname="test"/>
+		<testcase name="camadasDesfaziveis: camadas ocultas do caminho" time="0.005077" classname="test"/>
+		<testcase name="valorParaTransfer: quatro iguais na mão, uma vez por mão" time="0.000654" classname="test"/>
+		<testcase name="podePassar: rede interrompida por early stop com cartas na mão, ou nenhuma outra jogada" time="0.000829" classname="test"/>
+	</testsuite>
+	<testsuite name="jogadasLegais" time="0.117718" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="fase de início: uma jogada por carta da mão, para quem ainda não escolheu" time="0.000483" classname="test"/>
+		<testcase name="fora da vez e depois do fim: nenhuma jogada" time="0.002460" classname="test"/>
+		<testcase name="inclui dropout só com a opção comDropout" time="0.000624" classname="test"/>
+		<testcase name="toda jogada listada é aceita, em mãos inteiras de todos os baralhos" time="0.113940" classname="test"/>
+	</testsuite>
+	<testsuite name="aplicarJogada" time="0.024510" disabled="0" errors="0" tests="13" failures="0" skipped="0" hostname="vm">
+		<testcase name="início &amp;quot;revela e descarta&amp;quot; (padrão): a carta mais forte começa e as cartas vão para o cemitério" time="0.001631" classname="test"/>
+		<testcase name="início &amp;quot;revela e volta&amp;quot;: as cartas voltam para a mão; empate vai para o sorteio" time="0.004874" classname="test"/>
+		<testcase name="ativar: revela, liga à rede e passa a vez" time="0.000735" classname="test"/>
+		<testcase name="ativar na camada de saída conclui a rede" time="0.004019" classname="test"/>
+		<testcase name="tunagem, overfit, early stop e stack overflow: eventos, estatísticas e registro" time="0.004477" classname="test"/>
+		<testcase name="dropout: os neurônios vão para o cemitério, paga com cartas e não gasta o turno" time="0.000930" classname="test"/>
+		<testcase name="transfer learning: troca quatro iguais por cartas do limbo e não gasta o turno" time="0.001228" classname="test"/>
+		<testcase name="Power BI embaralha a mão com o limbo depois de uma ação com cartas" time="0.000602" classname="test"/>
+		<testcase name="passar: recusado com a rede em construção; permitido depois de um early stop" time="0.000664" classname="test"/>
+		<testcase name="rede sem neurônio livre na camada seguinte é finalizada como travada" time="0.000929" classname="test"/>
+		<testcase name="oceano: a virada do vento a cada rodada vira evento" time="0.000986" classname="test"/>
+		<testcase name="erros: fora da vez, mão não iniciada, jogada desconhecida, carta fora da mão; o estado não muda" time="0.001775" classname="test"/>
+		<testcase name="early stop na própria rede: empilhar 2 cartas no próprio neurônio finaliza a rede" time="0.001004" classname="test"/>
+	</testsuite>
+	<testsuite name="fim da mão e desempates" time="0.008685" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="vm">
+		<testcase name="mão jogada até o fim tem vencedor, somas e motivo" time="0.002592" classname="test"/>
+		<testcase name="finalizarMao encerra a mão no ponto em que está" time="0.001330" classname="test"/>
+		<testcase name="sem empate: maior soma da rede" time="0.000863" classname="test"/>
+		<testcase name="1º desempate: menos dropouts" time="0.000724" classname="test"/>
+		<testcase name="2º: quem ficou sem cartas perde" time="0.000685" classname="test"/>
+		<testcase name="3º: soma das melhores cartas da mão" time="0.000673" classname="test"/>
+		<testcase name="4º: carta mais alta; 5º: naipe; 6º: quem jogou primeiro" time="0.001451" classname="test"/>
+	</testsuite>
+	<testsuite name="pontuarRede" time="0.015096" disabled="0" errors="0" tests="11" failures="0" skipped="0" hostname="vm">
+		<testcase name="rede vazia vale 0" time="0.004373" classname="test"/>
+		<testcase name="exemplo do enunciado: 8-K-K-3 com tunagem num K soma 41 (trio de Reis, contando o empilhado)" time="0.001871" classname="test"/>
+		<testcase name="par de figuras vizinhas vale 20 (10 por figura)" time="0.000398" classname="test"/>
+		<testcase name="figura isolada tunada com outra igual é um par dentro do mesmo neurônio" time="0.000346" classname="test"/>
+		<testcase name="quatro Reis vizinhos (contando os empilhados) zeram a rede: vanishing gradient" time="0.000335" classname="test"/>
+		<testcase name="tunagem numérica soma todas as cartas da pilha" time="0.000298" classname="test"/>
+		<testcase name="montanha: cada neurônio vale 1 ponto a mais por camada alcançada" time="0.000630" classname="test"/>
+		<testcase name="pântano: a cada rodada, neurônio sem tunagem afunda 1 ponto" time="0.003388" classname="test"/>
+		<testcase name="oceano: neurônio do naipe do vento revelado na rodada vale o dobro para sempre" time="0.000784" classname="test"/>
+		<testcase name="fraternidade: vizinhos do mesmo naipe valem dobro" time="0.000482" classname="test"/>
+		<testcase name="truco: as figuras valem pontos próprios e não formam par nem trio; a quadra ainda zera a rede" time="0.000679" classname="test"/>
+	</testsuite>
+	<testsuite name="mediaDePontos" time="0.001505" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="média dos pontos de uma lista de cartas (0 para lista vazia)" time="0.001420" classname="test"/>
+	</testsuite>
+	<testsuite name="situacaoDaRede" time="0.001152" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="todo motivo de fim de rede que o motor usa tem tradução" time="0.000884" classname="test"/>
+		<testcase name="motivo desconhecido vira &amp;quot;concluida&amp;quot; com um aviso só no console" time="0.000165" classname="test"/>
+	</testsuite>
+	<testsuite name="truco.js" time="0.003085" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="escada 1-3-6-9-12 e gritos" time="0.001438" classname="test"/>
+		<testcase name="novaPartida e proximaMao zeram o valor e o pedido" time="0.000210" classname="test"/>
+		<testcase name="podeTrucar: não em mão única, não com pedido aberto, não quem aumentou por último, não na mão de onze" time="0.000334" classname="test"/>
+		<testcase name="responderTruco: aceitar sobe o valor; aumentar devolve o pedido; correr entrega o valor atual" time="0.000128" classname="test"/>
+		<testcase name="marcarTentos, fim da partida e mão de onze" time="0.000109" classname="test"/>
+	</testsuite>
+	<testsuite name="oponentes/comum.js" time="0.023553" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="novoGerador: números em [0, 1), uma sequência por gerador" time="0.000229" classname="test"/>
+		<testcase name="determinizar: mantém o que j vê e redistribui o resto" time="0.006658" classname="test"/>
+		<testcase name="chanceDeVitoria: entre 0 e 1 durante a mão; 0,5 antes de começar; 0 ou 1 no fim" time="0.010814" classname="test"/>
+		<testcase name="chanceDeVitoria não altera a mão" time="0.005663" classname="test"/>
+	</testsuite>
+	<testsuite name="oponentes/estrategias.js" time="0.100155" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="jogadaAleatoria, jogadaGulosa e jogadaMonteCarlo devolvem jogadas legais" time="0.099159" classname="test"/>
+		<testcase name="Monte Carlo com uma jogada só devolve direto" time="0.000834" classname="test"/>
+	</testsuite>
+	<testsuite name="oponentes/index.js" time="0.369367" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="três perfis com nome, nível, método, avatar e estilo" time="0.000239" classname="test"/>
+		<testcase name="escolherJogada: carta de início por perfil e jogada por estratégia" time="0.025203" classname="test"/>
+		<testcase name="querTrucar e responderAoTruco: respostas válidas para cada perfil" time="0.343518" classname="test"/>
+	</testsuite>
+	<testsuite name="sala online" time="0.085548" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="vm">
+		<testcase name="código de sala sem letras ambíguas; anfitrião na cadeira 0, convidado na primeira vaga, o resto vira bot ao começar" time="0.005482" classname="test"/>
+		<testcase name="duas pessoas jogam uma mão inteira e terminam com o mesmo estado" time="0.006511" classname="test"/>
+		<testcase name="cinco jogadores (3 pessoas e 2 bots), mensagens entregues fora de ordem: todos convergem" time="0.046618" classname="test"/>
+		<testcase name="pedido em nome da cadeira de outro é ignorado pelo anfitrião" time="0.000802" classname="test"/>
+		<testcase name="truco entre duas telas: pedir, aumentar e aceitar chegam iguais aos dois lados" time="0.001036" classname="test"/>
+		<testcase name="quem cai vira oponente do computador no mesmo ponto em todas as telas, e a mão termina" time="0.009271" classname="test"/>
+		<testcase name="se o anfitrião sai, a menor cadeira presente assume e a numeração continua" time="0.010884" classname="test"/>
+		<testcase name="quem recarrega a aba (mesmo cliente) volta à cadeira e recebe as ações que perdeu" time="0.003733" classname="test"/>
+	</testsuite>
+	<testsuite name="contas: progresso mesclado entre o aparelho e a conta" time="0.000663" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="soma nada em dobro: contadores pelo maior, conquistas e verbetes pela união, avatar da conta" time="0.000537" classname="test"/>
+	</testsuite>
+	<testsuite name="Preparação da mesa" time="0.005904" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-01 mesa 3-5-5-5-5-5-4 virada, 5 cartas na mão de cada jogador e 10 no limbo (52 no total)" time="0.005008" classname="test"/>
+	</testsuite>
+	<testsuite name="Quem começa" time="0.003858" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-02 opção (a), o padrão: cada um revela uma carta, a maior começa e as cartas vão para o cemitério" time="0.002009" classname="test"/>
+		<testcase name="RN-03 opção (b): a maior começa e as cartas reveladas voltam para a mão" time="0.000565" classname="test"/>
+		<testcase name="RN-04 opção (c): par ou ímpar sorteia quem começa e a mão já está em jogo" time="0.000342" classname="test"/>
+		<testcase name="RN-05 força das cartas para começar: Ás > K > Q > J > 10 … 2" time="0.000752" classname="test"/>
+	</testsuite>
+	<testsuite name="Construção da rede" time="0.004439" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-06 um neurônio por camada, só na próxima camada, e cada neurônio tem um único dono" time="0.001805" classname="test"/>
+		<testcase name="RN-07 ao chegar à camada de saída a rede está concluída, com 7 neurônios" time="0.002505" classname="test"/>
+	</testsuite>
+	<testsuite name="Pontuação (baralho clássico)" time="0.004867" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-08 números valem o valor, Ás vale 11 e figura isolada vale 0" time="0.001743" classname="test"/>
+		<testcase name="RN-09 par de figuras iguais em camadas vizinhas vale 20 (10 por figura)" time="0.000514" classname="test"/>
+		<testcase name="RN-10 trio de figuras iguais vizinhas vale 30 (10 por figura)" time="0.000271" classname="test"/>
+		<testcase name="RN-11 figuras iguais não vizinhas, ou vizinhas e diferentes, não pontuam" time="0.000430" classname="test"/>
+		<testcase name="RN-12 quadra de figuras iguais vizinhas zera a rede inteira (vanishing gradient)" time="0.000419" classname="test"/>
+		<testcase name="RN-13 exemplo do enunciado: 8-K-K-3 vale 31; com tunagem num K vale 41" time="0.000395" classname="test"/>
+		<testcase name="RN-14 tunar os dois Reis de um par forma quadra e zera a rede" time="0.000308" classname="test"/>
+		<testcase name="RN-15 tunagem numérica soma o valor da carta empilhada; figura isolada tunada forma par" time="0.000537" classname="test"/>
+	</testsuite>
+	<testsuite name="Ações com cartas da mão" time="0.011564" disabled="0" errors="0" tests="8" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-16 entrada e saída são imunes: só a fronteira em camada oculta aceita cartas" time="0.000881" classname="test"/>
+		<testcase name="RN-17 empilhar exige carta de mesmo valor; o naipe não importa" time="0.000837" classname="test"/>
+		<testcase name="RN-18 overfit: 1 carta no último neurônio do rival manda o neurônio ao cemitério e a rede dele recua" time="0.001489" classname="test"/>
+		<testcase name="RN-19 early stop: pilha de 3 cartas finaliza a rede do rival sem esse neurônio" time="0.000798" classname="test"/>
+		<testcase name="RN-20 neurônio já tunado (2 cartas) sofre early stop com uma única carta do rival" time="0.000979" classname="test"/>
+		<testcase name="RN-21 stack overflow: pilha de 4 finaliza a rede do rival e ele perde toda a mão" time="0.000629" classname="test"/>
+		<testcase name="RN-22 auto early stop e auto stack overflow: empilhar 2 ou 3 cartas na própria fronteira encerra a própria rede" time="0.004471" classname="test"/>
+		<testcase name="RN-23 rede finalizada não pode mais ser atacada" time="0.000644" classname="test"/>
+	</testsuite>
+	<testsuite name="Dropout (GatoNet) e transfer learning" time="0.005202" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-24 dropout custa uma carta por camada desfeita, não gasta o turno e conta no desempate" time="0.001562" classname="test"/>
+		<testcase name="RN-25 o neurônio desfeito sai da mesa e vai para o cemitério, com as tunagens" time="0.001203" classname="test"/>
+		<testcase name="RN-26 dropout não desfaz a camada de entrada" time="0.000911" classname="test"/>
+		<testcase name="RN-27 transfer learning: quadra na mão troca por cartas do limbo, uma vez por mão, e não gasta o turno" time="0.000924" classname="test"/>
+		<testcase name="RN-28 sem quadra na mão não há transfer learning" time="0.000373" classname="test"/>
+	</testsuite>
+	<testsuite name="Passar a vez e fim da mão" time="0.005156" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-29 com a rede em construção não é permitido passar" time="0.000561" classname="test"/>
+		<testcase name="RN-30 só passa quem teve a rede interrompida por early stop; rede concluída com ataque possível é obrigada a jogar" time="0.002568" classname="test"/>
+		<testcase name="RN-31 rede sem neurônio livre na próxima camada é finalizada ali e conta a soma parcial" time="0.001855" classname="test"/>
+	</testsuite>
+	<testsuite name="Desempates (soma igual)" time="0.003892" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-32 1º critério: menos dropouts" time="0.000831" classname="test"/>
+		<testcase name="RN-33 2º critério: maior soma das N melhores cartas da mão (N = tamanho da menor mão)" time="0.000601" classname="test"/>
+		<testcase name="RN-34 quem ficou sem cartas na mão perde para quem tem pelo menos uma" time="0.000433" classname="test"/>
+		<testcase name="RN-35 3º critério: carta mais alta da mão (Ás > K > Q > J > 10 … 2); o naipe só decide entre cartas iguais" time="0.001204" classname="test"/>
+		<testcase name="RN-36 último critério: vence quem jogou primeiro" time="0.000548" classname="test"/>
+	</testsuite>
+	<testsuite name="Camada de truco (partida até 12 tentos)" time="0.000997" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-37 escada TRUCO (3) → SEIS (6) → NOVE (9) → DOZE (12); correr entrega o valor atual" time="0.000551" classname="test"/>
+		<testcase name="RN-38 quem aumentou por último não pede de novo; mão única e mão de onze não têm truco" time="0.000150" classname="test"/>
+		<testcase name="RN-39 a partida termina quando alguém chega a 12 tentos" time="0.000163" classname="test"/>
+	</testsuite>
+	<testsuite name="Invariantes em partidas aleatórias" time="0.665926" disabled="0" errors="0" tests="1" failures="0" skipped="0" hostname="vm">
+		<testcase name="RN-40 em 300 mãos aleatórias (5 baralhos x 4 terrenos x 3 inícios) nenhuma carta some ou duplica, os donos batem com as redes e toda mão termina" time="0.665804" classname="test"/>
+	</testsuite>
+	<testcase name="sem WebAudio: efeitos e música não tocam e não quebram" time="0.001210" classname="test"/>
+	<!-- tests 321 -->
+	<!-- suites 70 -->
+	<!-- pass 321 -->
 	<!-- fail 0 -->
 	<!-- cancelled 0 -->
 	<!-- skipped 0 -->
 	<!-- todo 0 -->
-	<!-- duration_ms 45692.053668 -->
+	<!-- duration_ms 45224.13496 -->
 </testsuites>

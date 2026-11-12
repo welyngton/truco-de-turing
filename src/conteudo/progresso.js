@@ -1,6 +1,6 @@
 /**
  * @file Progresso do jogador guardado no navegador (localStorage): contadores, conquistas,
- * verbetes lidos, opções do menu e preferência de som.
+ * verbetes lidos, avatar escolhido, opções do menu e preferência de som.
  *
  * O armazenamento pode falhar (janela anônima, armazenamento bloqueado); por isso toda leitura e
  * escrita é protegida e o jogo funciona normalmente sem ele.
@@ -13,7 +13,7 @@ const CHAVE_ANTIGA = 'truco-de-turing:v1';
 function progressoInicial() {
   return {
     vitorias: 0, maos: 0, dropouts: 0, vitoriasZen: 0,
-    verbetesLidos: 0, lidos: {}, terrenos: {}, baralhos: {}, desbloqueadas: {},
+    verbetesLidos: 0, lidos: {}, terrenos: {}, baralhos: {}, arquiteturas: {}, desbloqueadas: {}, avatar: 'p1',
     mudo: false, musica: true, musicaEscolhida: false, tutorialVisto: false, opcoes: null,
   };
 }

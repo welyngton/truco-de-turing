@@ -1,78 +1,39 @@
 /**
- * @file As três estratégias de jogo, uma por nível de dificuldade.
+ * @file As três estratégias de jogo, uma por nível de dificuldade. São os bots do NeuroDeck
+ * (`src/motor/bot.js`); aqui a jogada escolhida é só traduzida para o formato da interface.
  *
- *  - aleatória (Zé do Ruído): sorteia qualquer jogada válida;
- *  - gulosa (Gradiente Guloso): avalia cada jogada um turno à frente pelo valor esperado;
+ *  - aleatória (Zé do Ruído): sorteia uma jogada válida, com leve preferência por ataques;
+ *  - gulosa (Gradiente Guloso): escolhe a jogada de melhor ganho imediato, sem olhar adiante;
  *  - Monte Carlo (Mestre Monte Carlo): simula partidas inteiras para cada jogada e escolhe a que mais venceu.
  */
-import { jogadasLegais, aplicarJogada, copiarMao } from '../partida.js';
-import {
-  determinizar, avaliar, agruparEquivalentes, concretizar, simularAteOFim, pontosEsperadosPorCamada,
-} from './comum.js';
+import * as ND from '../../motor/engine.js';
+import { randomPolicy, greedyMove, monteCarloMove, monteCarloResults, defaultRollouts } from '../../motor/bot.js';
+import { jogadaParaTT } from '../partida.js';
+import { novoGerador } from './comum.js';
 
-/** Estratégia aleatória: prefere ativar neurônios (70%) para a mão andar. */
+/** Estratégia aleatória. */
 export function jogadaAleatoria(mao, j) {
-  const jogadas = jogadasLegais(mao, j);
-  const ativacoes = jogadas.filter((x) => x.tipo === 'ativar');
-  if (ativacoes.length && Math.random() < 0.7) return ativacoes[Math.floor(Math.random() * ativacoes.length)];
-  return jogadas[Math.floor(Math.random() * jogadas.length)];
+  return jogadaParaTT(mao, j, randomPolicy(mao.nd, j, novoGerador()));
 }
 
-/**
- * Estratégia gulosa: aplica cada jogada numa cópia e escolhe a de melhor avaliação.
- * Ativações de neurônios desconhecidos são testadas com 8 sorteios do que pode estar embaixo.
- */
+/** Estratégia gulosa: avalia cada jogada um passo à frente (ativações pelo valor esperado). */
 export function jogadaGulosa(mao, j) {
-  const esperado = pontosEsperadosPorCamada(mao, j);
-  const jogadas = agruparEquivalentes(mao, jogadasLegais(mao, j, { comDropout: true }));
-  let melhor = null, notaMelhor = -Infinity;
-  for (const jogada of jogadas) {
-    const amostras = jogada.tipo === 'ativar' && jogada.alternativas ? 8 : 1;
-    let soma = 0;
-    for (let i = 0; i < amostras; i++) {
-      const copia = amostras > 1 ? determinizar(mao, j) : copiarMao(mao);
-      aplicarJogada(copia, concretizar(jogada));
-      soma += avaliar(copia, j, esperado);
-    }
-    let nota = soma / amostras + Math.random() * 0.3;
-    if (jogada.tipo === 'dropout') nota -= 1.5; /* evita gastar cartas em dropouts marginais */
-    if (nota > notaMelhor) { notaMelhor = nota; melhor = jogada; }
-  }
-  return concretizar(melhor);
+  return jogadaParaTT(mao, j, greedyMove(mao.nd, j, novoGerador()));
 }
 
 /**
  * Estratégia de Monte Carlo: para cada jogada, sorteia o que está escondido, joga até o fim e conta
- * vitórias. Repete até gastar o tempo `orcamentoMs`. A jogada escolhida leva `simulacao` com a taxa
- * de vitória e o total de partidas simuladas, que a interface mostra.
+ * vitórias. A jogada escolhida leva `simulacao` com a taxa de vitória e o total de partidas
+ * simuladas, que a interface mostra.
+ * @param {number} [simulacoesPorJogada] Por padrão, o número do motor (40 com 2 jogadores).
  */
-export function jogadaMonteCarlo(mao, j, orcamentoMs = 380) {
-  const jogadas = agruparEquivalentes(mao, jogadasLegais(mao, j, { comDropout: true }));
-  if (jogadas.length === 1) return concretizar(jogadas[0]);
-  const placar = jogadas.map(() => ({ vitorias: 0, partidas: 0, saldo: 0 }));
-  const inicio = Date.now();
-  let rodadas = 0;
-  while ((Date.now() - inicio < orcamentoMs || rodadas < 6) && rodadas < 400) {
-    jogadas.forEach((jogada, i) => {
-      const copia = determinizar(mao, j);
-      aplicarJogada(copia, concretizar(jogada));
-      simularAteOFim(copia);
-      const p = placar[i];
-      p.partidas++;
-      if (copia.resultado) {
-        if (copia.resultado.vencedor === j) p.vitorias++;
-        p.saldo += copia.resultado.somas[j] - copia.resultado.somas[1 - j];
-      }
-    });
-    rodadas++;
-  }
-  let melhor = 0, notaMelhor = -Infinity;
-  placar.forEach((p, i) => {
-    let nota = p.vitorias / p.partidas + 0.002 * (p.saldo / p.partidas);
-    if (jogadas[i].tipo === 'dropout') nota -= 0.02;
-    if (nota > notaMelhor) { notaMelhor = nota; melhor = i; }
-  });
-  const escolhida = concretizar(jogadas[melhor]);
-  escolhida.simulacao = { taxaDeVitoria: placar[melhor].vitorias / placar[melhor].partidas, partidas: rodadas * jogadas.length };
-  return escolhida;
+export function jogadaMonteCarlo(mao, j, simulacoesPorJogada) {
+  const nd = mao.nd, gerador = novoGerador();
+  const movimentos = ND.legalMoves(nd, j, { maxDropout: 1 });
+  if (movimentos.length <= 1 || movimentos[0].type === 'reveal') return jogadaParaTT(mao, j, monteCarloMove(nd, j, gerador));
+  const simulacoes = simulacoesPorJogada || defaultRollouts(nd);
+  const melhor = monteCarloResults(nd, j, gerador, simulacoes, movimentos)[0];
+  const jogada = jogadaParaTT(mao, j, melhor.move);
+  jogada.simulacao = { taxaDeVitoria: melhor.winRate, partidas: simulacoes * movimentos.length };
+  return jogada;
 }

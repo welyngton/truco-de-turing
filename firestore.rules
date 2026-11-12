@@ -1,0 +1,20 @@
+rules_version = '2';
+// Regras do Firestore do Truco de Turing (contas e salas online). Publique no console do Firebase
+// (Firestore > Regras) ou com `firebase deploy --only firestore:rules`.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    // Progresso: cada conta lê e grava só o próprio documento.
+    match /contas/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // Salas: quem está logado lê as mensagens e cria mensagens novas, sem editar nem apagar as
+    // dos outros. A validação das jogadas é feita pelas regras do jogo em cada aparelho.
+    match /salas/{codigo}/mensagens/{id} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.de is string
+        && request.resource.data.tipo in ['sala', 'ola', 'pedido', 'acao', 'vivo', 'tchau'];
+      allow update, delete: if false;
+    }
+  }
+}

@@ -1,17 +1,23 @@
 /**
- * @file Soma da rede de um jogador (o "forward pass" do jogo).
+ * @file Soma da rede de um jogador (o "forward pass" do jogo), calculada pelo motor do NeuroDeck.
  *
- * Regras da especificação:
+ * Regras da fusão (ver `src/motor/engine/decks.js`):
  *  - 2 a 10 valem o número, Ás 11, figuras 0;
- *  - figuras iguais em camadas vizinhas: par +10, trio +20; quadra zera a rede (vanishing gradient);
- *  - tunagem soma a carta empilhada; em figura, +10 por carta empilhada.
+ *  - figuras iguais em camadas vizinhas formam uma sequência, e a figura empilhada por tunagem
+ *    conta nela. Cada figura da sequência vale 10: par 20, trio 30; quadra zera a rede (vanishing
+ *    gradient);
+ *  - tunagem de carta numérica soma o valor da carta empilhada.
  *
- * Leitura adotada para o exemplo do enunciado ("8-K-K-3" com tunagem num K = 41): as cartas de figura
- * empilhadas contam para o combo. K(2 cartas) + K(1) = três Reis vizinhos = trio (20) + tunagem (10),
- * logo 8 + 20 + 10 + 3 = 41.
+ * Exemplo do enunciado: "8-K-K-3" com tunagem num K tem três Reis (trio), logo 8 + 30 + 3 = 41.
+ *
+ * Este arquivo só reorganiza o resultado do motor no formato que as telas usam: os pontos de cada
+ * neurônio, e as sequências de figuras ("combos") à parte, de modo que a soma dos neurônios mais
+ * a soma dos combos dá o total.
  */
+import * as ND from '../motor/engine.js';
 import { ehFigura, PLURAL_FIGURA } from './cartas.js';
 import { BARALHOS, pontosDaCarta } from './baralhos.js';
+import { idDoNeuronio } from './traducao.js';
 
 /**
  * @typedef {object} NeuronioPontuado
@@ -20,8 +26,8 @@ import { BARALHOS, pontosDaCarta } from './baralhos.js';
  * @property {object} carta     Carta de cima da pilha.
  * @property {number} pilha     Quantas cartas estão empilhadas.
  * @property {boolean} figura
- * @property {number} pontos    Pontos depois de terreno e baralho.
- * @property {string[]} notas   Explicações exibidas na interface ("tunagem +10").
+ * @property {number} pontos    Pontos depois de terreno e baralho, fora o que vem das sequências de figuras.
+ * @property {string[]} notas   Explicações exibidas na interface ("tunado ×2", "+3 altitude").
  */
 
 /**
@@ -32,103 +38,71 @@ import { BARALHOS, pontosDaCarta } from './baralhos.js';
  * @property {boolean} vanishing  Verdadeiro se uma quadra zerou a rede.
  */
 
-/**
- * Pontos de cada neurônio do caminho, com efeitos de tunagem e terreno.
- * @param {object} mao Estado da mão (ver partida.js).
- * @param {number} j Índice do jogador.
- */
-function pontuarNeuronios(mao, j) {
-  const jogador = mao.jogadores[j];
-  /* Redes finalizadas congelam rodada e vento no momento em que pararam */
-  const momento = jogador.congelada || { rodada: mao.rodada, vento: mao.vento };
-  const { baralho, terreno } = mao.config;
-  return jogador.caminho.map((id, camada) => {
-    const neuronio = mao.neuronios[id];
-    const carta = neuronio.cartas[0];
-    const pilha = neuronio.cartas.length;
-    const figura = ehFigura(carta);
-    const notas = [];
-    let pontos = 0;
-    if (figura) {
-      pontos = 10 * (pilha - 1);
-      if (pilha > 1) notas.push('tunagem +' + pontos);
-    } else {
-      for (const c of neuronio.cartas) pontos += pontosDaCarta(c, baralho);
-      if (pilha > 1) notas.push('tunado x' + pilha);
-    }
-    if (terreno === 'montanha' && pontos > 0) {
-      const novo = Math.max(0, pontos - camada);
-      if (novo !== pontos) notas.push('montanha -' + (pontos - novo));
-      pontos = novo;
-    } else if (terreno === 'pantano' && pilha === 1 && pontos > 0) {
-      const afundou = Math.max(0, momento.rodada - neuronio.rodadaRevelada);
-      const novo = Math.max(0, pontos - afundou);
-      if (novo !== pontos) notas.push('afundou -' + (pontos - novo));
-      pontos = novo;
-    } else if (terreno === 'oceano' && carta.naipe === momento.vento && pontos > 0) {
-      notas.push('vento x2');
-      pontos *= 2;
-    }
-    return { neuronio, camada, carta, pilha, figura, pontos, notas };
-  });
-}
-
-/** Baralho da fraternidade: dobra neurônios com vizinho do mesmo naipe. */
-function aplicarFraternidade(neuronios) {
-  neuronios.forEach((n, i) => {
-    const anterior = neuronios[i - 1];
-    const proximo = neuronios[i + 1];
-    if ((anterior && anterior.carta.naipe === n.carta.naipe) || (proximo && proximo.carta.naipe === n.carta.naipe)) {
-      if (n.pontos > 0) { n.pontos *= 2; n.notas.push('fraternidade x2'); }
-    }
-  });
-}
-
-/** Encontra sequências de figuras iguais em camadas vizinhas e calcula o bônus de cada uma. */
-function encontrarCombos(neuronios) {
-  const combos = [];
-  let vanishing = false;
-  let k = 0;
-  while (k < neuronios.length) {
-    const inicio = k;
-    if (neuronios[k].figura) {
-      while (k + 1 < neuronios.length && neuronios[k + 1].figura && neuronios[k + 1].carta.valor === neuronios[inicio].carta.valor) k++;
-    }
-    if (k > inicio) {
-      let quantidade = 0;
-      for (let i = inicio; i <= k; i++) quantidade += neuronios[i].pilha;
-      const valor = neuronios[inicio].carta.valor;
-      if (quantidade >= 4) {
-        vanishing = true;
-        combos.push({ de: inicio, ate: k, valor, quantidade, pontos: 0, rotulo: 'Quadra de ' + PLURAL_FIGURA[valor] + ': vanishing gradient' });
-      } else {
-        const pontos = 10 * (quantidade - 1);
-        combos.push({ de: inicio, ate: k, valor, quantidade, pontos, rotulo: (quantidade === 2 ? 'Par' : 'Trio') + ' de ' + PLURAL_FIGURA[valor] + ' +' + pontos });
-      }
-    }
-    k++;
-  }
-  return { combos, vanishing };
-}
+const arredondar = (x) => Math.round(x * 100) / 100;
 
 /**
  * Calcula a soma da rede do jogador `j`.
- * @param {object} mao Estado da mão.
+ * @param {object} mao Estado da mão (ver partida.js).
  * @param {number} j Índice do jogador.
  * @returns {Pontuacao}
  */
 export function pontuarRede(mao, j) {
-  const neuronios = pontuarNeuronios(mao, j);
-  if (BARALHOS[mao.config.baralho].fraternidade) aplicarFraternidade(neuronios);
-  const { combos, vanishing } = encontrarCombos(neuronios);
-  let total = 0;
-  for (const n of neuronios) total += n.pontos;
-  for (const c of combos) total += c.pontos;
-  if (vanishing) total = 0;
-  return { total, neuronios, combos, vanishing };
+  const resultado = ND.score(mao.nd, j);
+  if (resultado.kind === 'forward') return pontuarForward(mao, resultado);
+  /* no baralho de truco as figuras valem pontos próprios e não formam par nem trio */
+  const figurasValem = !!BARALHOS[mao.config.baralho].figurasValem;
+  const neuronios = resultado.items.map((item, camada) => {
+    const carta = mao.indiceDeCartas.tt.get(item.card.id);
+    const figura = ehFigura(carta), pilha = 1 + item.stack;
+    const naSequencia = figura && !figurasValem;
+    const notas = item.notes.filter((nota) => !/^(par|trio)\b/.test(nota));
+    if (!naSequencia && pilha > 1) notas.unshift('tunado ×' + pilha);
+    return {
+      neuronio: mao.neuronios[idDoNeuronio(item.slot.layer, item.slot.slotIndex)], camada, carta, pilha, figura,
+      pontos: naSequencia ? arredondar(item.subtotal - item.base - item.tune) : item.subtotal, notas,
+    };
+  });
+  /* sequências de figuras iguais em camadas vizinhas, contando as empilhadas */
+  const combos = [];
+  for (let k = 0; k < neuronios.length; k++) {
+    const inicio = k;
+    if (!neuronios[k].figura) continue;
+    while (k + 1 < neuronios.length && neuronios[k + 1].figura && neuronios[k + 1].carta.valor === neuronios[inicio].carta.valor) k++;
+    let quantidade = 0, pontos = 0;
+    for (let i = inicio; i <= k; i++) { quantidade += neuronios[i].pilha; pontos += resultado.items[i].base + resultado.items[i].tune; }
+    const valor = neuronios[inicio].carta.valor;
+    if (quantidade >= 4) combos.push({ de: inicio, ate: k, valor, quantidade, pontos: 0, rotulo: 'Quadra de ' + PLURAL_FIGURA[valor] + ': vanishing gradient' });
+    else if (quantidade >= 2 && !figurasValem) combos.push({ de: inicio, ate: k, valor, quantidade, pontos, rotulo: (quantidade === 2 ? 'Par' : 'Trio') + ' de ' + PLURAL_FIGURA[valor] + ' +' + pontos });
+  }
+  return { total: resultado.total, neuronios, combos, vanishing: !!resultado.vanishing };
 }
 
-/** Média de pontos de um conjunto de cartas (usada pelos oponentes para estimar camadas futuras). */
+/** Número com vírgula decimal e no máximo 2 casas ("1,2", "23,45"). */
+const decimal = (x) => String(arredondar(x)).replace('.', ',');
+
+/**
+ * Baralho Backprop: a rede vale a ativação da saída. Cada neurônio mostra a ativação depois da
+ * camada dele (`pontos`) e, nas notas, o peso do naipe, o viés e a função de ativação. Não há
+ * combos de figuras: o vanishing gradient é a saída baixa depois de uma ativação não linear.
+ */
+function pontuarForward(mao, resultado) {
+  const neuronios = resultado.items.map((item, camada) => {
+    const carta = mao.indiceDeCartas.tt.get(item.card.id);
+    const notas = [(camada ? 'w ' + decimal(item.w) + ' · ' : '') + 'b ' + decimal(item.bias) + ' · ' + item.fn];
+    if (item.stack) notas.push('tunado ×' + (1 + item.stack));
+    notas.push(...item.notes);
+    return {
+      neuronio: mao.neuronios[idDoNeuronio(item.slot.layer, item.slot.slotIndex)], camada, carta, pilha: 1 + item.stack,
+      figura: ehFigura(carta), pontos: arredondar(item.a), notas,
+    };
+  });
+  const combos = resultado.vanishing && neuronios.length
+    ? [{ de: 0, ate: neuronios.length - 1, valor: '', quantidade: neuronios.length, pontos: 0, rotulo: 'Saída baixa depois de ativações: vanishing gradient' }]
+    : [];
+  return { total: resultado.total, neuronios, combos, vanishing: !!resultado.vanishing };
+}
+
+/** Média de pontos de um conjunto de cartas. */
 export function mediaDePontos(mao, cartas) {
   if (!cartas.length) return 0;
   let soma = 0;

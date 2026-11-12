@@ -2,12 +2,12 @@
  * @file Parte da CenaMesa: o modo "dicas".
  *
  * Com as dicas ligadas, o jogador recebe:
- * - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo do Grimório: uma
+ * - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo da Biblioteca de conceitos: uma
  *   oportunidade, um risco ou uma estratégia geral, sempre com o conceito de redes neurais por trás.
  *   As dicas usam só informação pública e nunca apontam qual neurônio oculto ativar;
  * - **dicas flutuantes** nos botões de ação (Dropout, Transfer, Passar e TRUCO): ao passar o mouse
  *   ou, no celular, ao segurar o botão. Explicam a ação, o que vale fazer agora (no truco, a chance
- *   estimada por simulação) e o conceito do Grimório;
+ *   estimada por simulação) e o conceito da Biblioteca de conceitos;
  * - a chance estimada de vitória também na caixa de resposta ao truco.
  *
  * Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas
@@ -109,10 +109,10 @@ export const metodosDeDicas = {
     if (chave === 'dropout') {
       const n = camadasDesfaziveis(mao, eu);
       return {
-        titulo: 'Grimório · Dropout (GatoNet)',
-        corpo: 'Desvira os últimos neurônios ocultos da sua rede, até a camada que você escolher. Custa 1 carta da mão por camada e não gasta o turno.',
+        titulo: 'Biblioteca · Dropout (GatoNet)',
+        corpo: 'Desfaz os últimos neurônios ocultos da sua rede, até a camada que você escolher. Eles vão para o cemitério e você continua da camada anterior. Custa 1 carta da mão por camada e não gasta o turno.',
         agora: !minhaVez ? naoEhAVez : n === 0 ? 'Agora: indisponível, não há neurônio oculto para desfazer.'
-          : 'Agora: dá para desfazer até ' + Math.min(n, jogador.mao.length) + ' camada(s). Vale a pena quando a rede pegou neurônios fracos ou está perto de formar uma quadra de figuras.',
+          : 'Agora: dá para desfazer até ' + Math.min(n, jogador.mao.length) + ' camada(s). Vale a pena quando a rede pegou neurônios fracos ou está perto de formar uma quadra de figuras. Cuidado: se não sobrar neurônio livre na camada, a rede é finalizada.',
         conceito: conceitoCurto('dropout'),
       };
     }
@@ -122,8 +122,8 @@ export const metodosDeDicas = {
       for (const c of jogador.mao) conta[c.valor] = (conta[c.valor] || 0) + 1;
       const maior = Object.entries(conta).sort((a, b) => b[1] - a[1])[0];
       return {
-        titulo: 'Grimório · Transfer learning',
-        corpo: 'Troca quatro cartas de mesmo valor da mão por cartas do limbo. Uma vez por mão; gasta o turno.',
+        titulo: 'Biblioteca · Transfer learning',
+        corpo: 'Troca quatro cartas de mesmo valor da mão por cartas do limbo. Uma vez por mão; não gasta o turno.',
         agora: jogador.transferUsado ? 'Agora: você já usou o transfer nesta mão.'
           : valor ? 'Agora: você tem quatro ' + valor + '. Troque se eles não servem para tunar nem atacar.'
             : 'Agora: precisa de quatro cartas iguais; seu maior grupo é ' + (maior ? maior[1] + '× ' + maior[0] : 'nenhum') + '.',
@@ -134,9 +134,10 @@ export const metodosDeDicas = {
       const livres = alvosDeAtivacao(mao, eu).length;
       return {
         titulo: 'Passar a vez',
-        corpo: 'Só é permitido quando não há neurônio livre para ativar: sua rede chegou ao fim ou ficou travada. Se todos passarem em sequência, a mão termina.',
+        corpo: 'Só passa a vez quem teve a rede interrompida por early stop e ainda tem cartas na mão: atacar não é obrigatório. Fora isso, só quando não há nenhuma outra jogada. Quem não pode jogar é pulado automaticamente.',
         agora: !minhaVez ? naoEhAVez : podePassar(mao, eu) ? 'Agora: pode passar. Antes, veja se algum ataque com as cartas da mão ainda vale a pena.'
-          : 'Agora: ainda há ' + livres + ' neurônio(s) livre(s) para ativar, então não dá para passar.',
+          : livres ? 'Agora: ainda há ' + livres + ' neurônio(s) livre(s) para ativar, então não dá para passar.'
+            : 'Agora: sua rede não foi interrompida por early stop e você tem uma jogada possível, então não dá para passar.',
         conceito: conceitoCurto('camadas'),
       };
     }
@@ -152,7 +153,7 @@ export const metodosDeDicas = {
         (chance >= 65 ? 'Bom momento para pedir ' + GRITO_TRUCO[proximo] : chance >= 40 ? 'Arriscado: só como blefe.' : 'Melhor não trucar agora.');
     }
     return {
-      titulo: 'Grimório · Truco',
+      titulo: 'Biblioteca · Truco',
       corpo: 'Aumenta o valor da mão: 1 → 3 → 6 → 9 → 12 tentos. Quem recebe o pedido aceita, corre (e entrega o valor atual) ou pede mais.',
       agora,
       conceito: conceitoCurto('truco'),
