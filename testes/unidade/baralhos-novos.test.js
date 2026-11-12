@@ -79,9 +79,13 @@ describe('avatares extras', () => {
 });
 
 describe('ícones das ações', () => {
-  it('um SVG acessível para cada ação da barra e para o vanishing gradient', () => {
-    for (const id of ['tunagem', 'overfit', 'earlystop', 'stackoverflow', 'dropout', 'transfer', 'passar', 'vanishing']) {
+  it('um SVG acessível para cada ação da barra, para Avançar e para o vanishing gradient', () => {
+    for (const id of ['avancar', 'tunagem', 'overfit', 'earlystop', 'stackoverflow', 'dropout', 'transfer', 'passar', 'vanishing']) {
       assert.match(ICONES_DAS_ACOES[id], /^<svg viewBox="0 0 48 48"[^>]*>.*<\/svg>$/s, id);
     }
+  });
+  it('toda jogada da ajuda das ações tem ícone (#42)', async () => {
+    const { ACOES_DA_AJUDA } = await import('../../src/interface/telas/ajudaDasAcoes.js');
+    for (const a of ACOES_DA_AJUDA) assert.ok(ICONES_DAS_ACOES[a.id], a.id + ' sem ícone');
   });
 });

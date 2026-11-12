@@ -1,6 +1,7 @@
 /**
  * @file Ícones em SVG (nítidos em qualquer tamanho): conquistas, cadeado das bloqueadas e um ícone
- * para cada ação da mesa (faixa no centro da mesa e ajuda das ações).
+ * para cada ação da mesa (faixa no centro da mesa e ajuda das ações). Avançar, a jogada comum de
+ * revelar um neurônio, não abre faixa: o ícone dele aparece na ajuda das ações.
  */
 /** Cor do traço dos ícones. */
 const I = '#24140a';
@@ -58,8 +59,15 @@ export const ICONES_CONQUISTAS = {
 /** Cadeado das conquistas bloqueadas. */
 export const ICONE_CADEADO = svg('<rect x="12" y="21" width="24" height="19" rx="3" fill="#6b5a40" stroke="' + I + '" stroke-width="2"/><path d="M17 21v-5a7 7 0 0114 0v5" fill="none" stroke="' + I + '" stroke-width="3"/><circle cx="24" cy="30" r="2.6" fill="#24140a"/>');
 
-/** Ícone SVG de cada ação da mesa, pelo id da barra de ações (mais `vanishing`). */
+/** Ícone SVG de cada ação da mesa, pelo id da barra de ações (mais `avancar` e `vanishing`). */
 export const ICONES_DAS_ACOES = {
+  /* seta da camada atual para o neurônio destacado da próxima camada */
+  avancar: svg('<path d="M13 14L31 24M13 34L31 24" stroke="#f6dc8f" stroke-width="1.6" opacity=".6"/>' +
+    '<circle cx="37" cy="24" r="10" fill="#f6dc8f" opacity=".4"/>' +
+    '<g fill="#fff6dc" stroke="' + I + '" stroke-width="2"><circle cx="9" cy="14" r="4.5"/><circle cx="9" cy="34" r="4.5"/></g>' +
+    '<circle cx="37" cy="24" r="6.5" fill="#ffb347" stroke="' + I + '" stroke-width="2"/>' +
+    '<path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="' + I + '" stroke-width="6"/>' +
+    '<path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="#fff6dc" stroke-width="3"/>'),
   /* raio sobre duas cartas empilhadas */
   tunagem: svg('<rect x="9" y="12" width="20" height="28" rx="3" fill="#fff6dc" stroke="' + I + '" stroke-width="2" transform="rotate(-8 19 26)"/><rect x="15" y="9" width="20" height="28" rx="3" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M29 4l-9 18h7l-4 20 15-24h-8l5-14z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.8"/>'),
   /* curva que decora o ruído, passando por todos os pontos */

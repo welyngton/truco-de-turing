@@ -97,7 +97,7 @@ Retratos das figuras (Rei, Dama e Valete) no estilo do baralho espanhol. Conven�
 
 ## `src/arte/icones.js`
 
-Ícones em SVG (nítidos em qualquer tamanho): conquistas, cadeado das bloqueadas e um ícone para cada ação da mesa (faixa no centro da mesa e ajuda das ações).
+Ícones em SVG (nítidos em qualquer tamanho): conquistas, cadeado das bloqueadas e um ícone para cada ação da mesa (faixa no centro da mesa e ajuda das ações). Avançar, a jogada comum de revelar um neurônio, não abre faixa: o ícone dele aparece na ajuda das ações.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -106,7 +106,7 @@ Retratos das figuras (Rei, Dama e Valete) no estilo do baralho espanhol. Conven�
 | `gato` | constante | Gato do GatoNet (dropout), base de duas conquistas. |
 | `ICONES_CONQUISTAS` | constante (exportada) | Ícone SVG de cada conquista, pelo id. |
 | `ICONE_CADEADO` | constante (exportada) | Cadeado das conquistas bloqueadas. |
-| `ICONES_DAS_ACOES` | constante (exportada) | Ícone SVG de cada ação da mesa, pelo id da barra de ações (mais `vanishing`). |
+| `ICONES_DAS_ACOES` | constante (exportada) | Ícone SVG de cada ação da mesa, pelo id da barra de ações (mais `avancar` e `vanishing`). |
 
 ## `src/arte/mesas.js`
 
@@ -249,6 +249,7 @@ Parte da CenaMesa: elementos fixos da tela (molduras dos painéis, colunas das c
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `COR_ROTULO` | constante | Cor do rótulo de cada variante de botão. |
+| `TEMPO_DE_SEGURAR` | constante | Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. |
 | `desenharCenarioFixo()` | método | Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. |
 | `criarBotao(x, y, l, a, rotulo, acao, opcoes = {})` | método | Cria um botão com textura própria e rótulo que se ajusta à largura. O objeto devolvido ganha `definirRotulo(texto)` e `habilitar(sim)`. Com `opcoes.dica`, o botão mostra uma dica flutuante (modo "dicas" ligado): ao passar o mouse, ou, no celular, ao segurar o botão apertado. Soltar depois de segurar não executa a ação, para que dê para ler a dica sem jogar sem querer. A ação roda ao soltar o toque/clique. `explicar`, quando dado, devolve o texto que aparece no quadro de instruções (painel esquerdo) enquanto o cursor está sobre o botão: o que a ação faria agora, antes de confirmar. |
 | `criarPaineis()` | método | Cria os textos, imagens e botões dos painéis. Ficam em `this.painel`. |

@@ -300,7 +300,7 @@ describe('ações da mesa', () => {
     } finally { await jogo.fechar(); }
   });
 
-  it('celular: segurar um botão mostra a dica sem executar a ação; toque rápido executa', async () => {
+  it('celular: segurar um botão mostra a dica sem executar a ação; toque rápido executa (também com a página ocupada)', async () => {
     const jogo = await abrirJogo(servidor.url, { dispositivo: 'Pixel 7', deitado: true, consulta: '?res=1' });
     const { pagina, contexto } = jogo;
     try {
@@ -311,15 +311,27 @@ describe('ações da mesa', () => {
         const b = cena.painel.truco, canvas = jogo.canvas, r = canvas.getBoundingClientRect(), cam = cena.cameras.main, k = r.width / canvas.width;
         return [r.left + (b.x - cam.worldView.x) * cam.zoom * k, r.top + (b.y - cam.worldView.y) * cam.zoom * k];`);
       const cdp = await contexto.newCDPSession(pagina);
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
-      await pagina.waitForTimeout(800);
-      assert.ok(await pagina.$('.dica-flutuante'), 'dica aparece ao segurar');
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      /* Cada toque leva o carimbo de tempo do dedo (como num celular de verdade): o botão decide entre
+         segurar e tocar pela duração real, mesmo que a página processe os eventos atrasada. */
+      const tocar = async (duracao, { ocupada = false, durante = null } = {}) => {
+        const inicio = Date.now() / 1000;
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }], timestamp: inicio });
+        /* página ocupada durante o toque (como nas simulações da dica do truco): o temporizador de
+           "segurar" e o fim do toque chegam juntos e fora de ordem */
+        const trabalho = ocupada ? pagina.evaluate((ms) => { const t = performance.now(); while (performance.now() - t < ms); }, duracao + 500) : null;
+        await pagina.waitForTimeout(duracao);
+        if (durante) await durante();
+        await Promise.all([cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [], timestamp: inicio + duracao / 1000 }), trabalho]);
+      };
+      await tocar(800, { durante: async () => assert.ok(await pagina.$('.dica-flutuante'), 'dica aparece ao segurar') });
       await pagina.waitForTimeout(300);
       assert.equal(await naCena(pagina, 'return cena.partida.valor > 1 || !!cena.partida.pedido'), false, 'segurar não truca');
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
-      await pagina.waitForTimeout(60);
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await pagina.waitForTimeout(2400); /* a dica some */
+      await tocar(800, { ocupada: true });
+      await pagina.waitForTimeout(400);
+      assert.equal(await naCena(pagina, 'return cena.partida.valor > 1 || !!cena.partida.pedido'), false, 'segurar com a página ocupada não truca');
+      await pagina.waitForTimeout(2400);
+      await tocar(60, { ocupada: true });
       await esperarCena(pagina, 'return cena.partida.valor > 1 || !!cena.partida.pedido || cena.encerrada');
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
