@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.3.0 — 2026-11-12
+
+- feat: animação dos terrenos visível durante a partida, mais forte e com efeitos novos ([#46](https://github.com/welyngton/truco-de-turing/pull/46), por [@welyngton](https://github.com/welyngton))
+
 ## 2.2.0 — 2026-11-12
 
 - feat: ícone de Avançar e guia visual das cartas; fix: segurar ou tocar no celular ([#44](https://github.com/welyngton/truco-de-turing/pull/44), por [@welyngton](https://github.com/welyngton))
