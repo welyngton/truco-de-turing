@@ -230,17 +230,24 @@ Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os mé
 
 ## `src/cenas/mesa/ambiente.js`
 
-Parte da CenaMesa: ambiente animado de cada terreno, por cima do fundo e por baixo das cartas. Deixa claro onde a partida acontece sem competir com a mesa: - mesa neutra: poeira dourada flutuando na luz do abajur; - montanha: neve caindo, nuvens passando e o sol do entardecer pulsando; - pântano: neblina que se arrasta, vaga-lumes piscando e bolhas subindo; - oceano: ondas que correm na mesa, espuma e rajadas de vento. Tudo é desenhado por código (texturas pequenas geradas na hora). Com "reduzir movimento" no sistema, o ambiente fica parado (só as camadas de luz e cor).
+Parte da CenaMesa: ambiente animado de cada terreno. Tem duas camadas: - **fundo** (profundidade 0,5): por cima da pintura do terreno e por baixo de tudo; aparece nas bordas, entre as colunas e através dos painéis translúcidos; - **frente** (profundidade 4,5): por cima das cartas da mesa e por baixo dos destaques, dos painéis e da mão. É transparente o bastante para não atrapalhar a leitura das cartas, mas é o que faz o terreno "viver" durante a partida. | Terreno | Fundo | Frente | |----------|---------------------------------------------------|--------------------------------------------------------------| | Planície | luz quente que respira, pólen dourado | sombras de nuvens passando, sementes de dente-de-leão, raios de sol | | Montanha | sol do entardecer, nuvens, neve grossa | neve fina, rajadas de vento que varrem a neve, névoa rasteira | | Pântano | neblina, bolhas subindo | neblina sobre a mesa, vaga-lumes com halo, fogo-fátuo que vagueia | | Oceano | ondas que correm, espuma | cáusticas (a luz dançando no fundo do mar), brilhos e vento | Em todos, a pintura do terreno se aproxima e se afasta devagar. Tudo é desenhado por código (texturas pequenas geradas na hora). Com "reduzir movimento" no sistema, o ambiente fica parado: só as camadas de luz e cor.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
+| `FUNDO` | constante | Profundidade da camada de fundo (por cima da pintura do terreno). |
+| `FRENTE` | constante | Profundidade da camada da frente (por cima das cartas da mesa, por baixo dos destaques). |
+| `MESA` | constante | Área da mesa entre os dois painéis. |
 | `reduzirMovimento()` | função | Sistema pediu menos movimento? |
 | `criarAmbiente(terreno)` | método | Cria o ambiente do terreno da partida. |
+| `respirarFundo()` | método | A pintura do terreno se aproxima e se afasta devagar (dá vida até às bordas da tela). |
 | `criarTexturasDoAmbiente()` | método | Texturas pequenas das partículas (uma vez por jogo). |
+| `criarTexturaDeCausticas()` | método | Cáusticas: rede de linhas claras e onduladas que emenda nas bordas (a textura se repete sem costura quando rola). Cada linha é uma senoide com número inteiro de ondas na largura. |
+| `guardar(...objetos)` | método | Guarda um objeto do ambiente (para os testes contarem e para destruir junto com a mesa). |
 | `luzDoTerreno(cor, alfa, cx = MUNDO.largura / 2, cy = MUNDO.altura * 0.4)` | método | Luz colorida por cima do fundo, para o terreno ficar mais claro e reconhecível. |
-| `nuvemEmLaco(nuvem, duracao)` | método | Nuvem que volta para a esquerda e atravessa a mesa de novo, para sempre. |
-| `desenharOndas(tempo)` | método | Ondas do oceano: seis linhas que correm devagar, mais claras perto do centro. |
-| `atualizarAmbiente(tempo)` | método | A cada quadro (CenaMesa.update): ondas do oceano. |
+| `atravessar(objeto, duracao, desde = objeto.x)` | método | Nuvem (ou sombra, ou neblina) que atravessa a tela da esquerda para a direita, para sempre. |
+| `fogoFatuo()` | método | Fogo-fátuo: uma luz azulada que aparece, vagueia pela mesa deixando rastro e some. |
+| `desenharOndas(tempo)` | método | Ondas do oceano: nove linhas que correm devagar. |
+| `atualizarAmbiente(tempo)` | método | A cada quadro (CenaMesa.update): ondas e cáusticas do oceano. |
 
 ## `src/cenas/mesa/cenario.js`
 
