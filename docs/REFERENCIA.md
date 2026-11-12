@@ -97,7 +97,7 @@ Retratos das figuras (Rei, Dama e Valete) no estilo do baralho espanhol. Conven�
 
 ## `src/arte/icones.js`
 
-Ícones em SVG (nítidos em qualquer tamanho): conquistas, cadeado das bloqueadas e um ícone para cada ação da mesa (faixa no centro da mesa e ajuda das ações).
+Ícones em SVG (nítidos em qualquer tamanho): conquistas, cadeado das bloqueadas e um ícone para cada ação da mesa (faixa no centro da mesa e ajuda das ações). Avançar, a jogada comum de revelar um neurônio, não abre faixa: o ícone dele aparece na ajuda das ações.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -106,7 +106,7 @@ Retratos das figuras (Rei, Dama e Valete) no estilo do baralho espanhol. Conven�
 | `gato` | constante | Gato do GatoNet (dropout), base de duas conquistas. |
 | `ICONES_CONQUISTAS` | constante (exportada) | Ícone SVG de cada conquista, pelo id. |
 | `ICONE_CADEADO` | constante (exportada) | Cadeado das conquistas bloqueadas. |
-| `ICONES_DAS_ACOES` | constante (exportada) | Ícone SVG de cada ação da mesa, pelo id da barra de ações (mais `vanishing`). |
+| `ICONES_DAS_ACOES` | constante (exportada) | Ícone SVG de cada ação da mesa, pelo id da barra de ações (mais `avancar` e `vanishing`). |
 
 ## `src/arte/mesas.js`
 
