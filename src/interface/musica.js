@@ -3,7 +3,7 @@
  *
  * | Trilha              | Estilo                                                        | Andamento    |
  * |---------------------|---------------------------------------------------------------|--------------|
- * | menu                | canção de ninar em Fá: harpa, caixinha de música e um coro suave | 76 bpm     |
+ * | menu                | baião em Sol: sanfona, zabumba, triângulo e palmas; refrão que convida a jogar | 118 bpm |
  * | neutro (Planície)   | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm     |
  * | oceano              | valsa em Sol: marimba ao fundo, coro que preenche os repousos | 63 bpm (3/4) |
  * | montanha            | épica em Lá menor: trompa, harpa ao fundo e tambores nos repousos | 84 bpm   |
@@ -145,6 +145,32 @@ function pizzicato(saida, tempo, midi, volume = 0.08) {
   voz(saida, tempo, midi, 0.03, { forma: 'triangle', volume, ataque: 0.004, liberacao: 0.22, filtro: 1000 });
 }
 
+/** Triângulo do forró: barra de metal aguda; fechado é um toque curto, aberto soa mais. */
+function triangulo(saida, tempo, aberto, volume = 0.02) {
+  const dur = aberto ? 0.35 : 0.06;
+  for (const [freq, peso] of [[2637, 1], [6900, 0.45], [9100, 0.25]]) {
+    const a = saida.context, osc = a.createOscillator(), ganho = a.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq;
+    ganho.gain.setValueAtTime(0.0001, tempo);
+    ganho.gain.exponentialRampToValueAtTime(volume * peso * (aberto ? 1 : 0.6), tempo + 0.002);
+    ganho.gain.exponentialRampToValueAtTime(0.0001, tempo + dur);
+    osc.connect(ganho); ganho.connect(saida);
+    osc.start(tempo); osc.stop(tempo + dur + 0.05);
+  }
+}
+
+/** Palmas: estalo de ruído em banda média, com um eco curtinho. */
+function palmas(saida, tempo, volume = 0.05) {
+  chiado(saida, tempo, 0.09, { volume, filtro: 1400, tipo: 'bandpass' });
+  chiado(saida, tempo + 0.012, 0.07, { volume: volume * 0.6, filtro: 1800, tipo: 'bandpass' });
+}
+
+/** Sanfona: duas palhetas levemente desafinadas (o "batimento" da sanfona), fole com vibrato. */
+function sanfona(saida, tempo, midi, duracao, volume = 0.03) {
+  voz(saida, tempo, midi, duracao, { forma: 'sawtooth', volume, ataque: 0.015, liberacao: 0.08, filtro: 2400, vibrato: 6, desafinar: -7 });
+  voz(saida, tempo, midi, duracao, { forma: 'square', volume: volume * 0.55, ataque: 0.015, liberacao: 0.08, filtro: 1900, desafinar: 7 });
+}
+
 /** Coro (pad): acorde de senoides que entra e sai devagar e passa um pouco do compasso. */
 function coro(saida, tempo, notas, duracao, volume = 0.018) {
   for (const n of notas) voz(saida, tempo, n, duracao, { forma: 'sine', volume, ataque: duracao * 0.3, liberacao: duracao * 0.35, vibrato: 3 });
@@ -164,24 +190,55 @@ function melodia(tabela, compasso, passo, tocarNota, d) {
  * chamada a cada passo.
  */
 export const MUSICAS = {
-  /* Menu: canção de ninar em Fá (F Dm B♭ C F Am B♭ C), harpa em arpejo, coro e caixinha de música */
+  /* Menu: baião em Sol (com o Fá natural do mixolídio na parte B), para chamar para a mesa.
+     A: G G C D G Em D G · B: C D G Em C D F D. Zabumba no 3+3+2 do baião, baixo junto, triângulo
+     em semicolcheias (aberto nos contratempos), palmas no 2 e no 4, acordes de sanfona curtinhos nos
+     contratempos e o refrão na sanfona, com síncopes que grudam no ouvido. */
   menu: {
-    bpm: 76, tempos: 4, subdivisao: 2, balanco: 0,
-    acordes: [[41, 53, 57, 60], [38, 53, 57, 62], [34, 53, 58, 62], [36, 52, 55, 60], [41, 53, 57, 60], [33, 52, 57, 60], [34, 53, 58, 62], [36, 52, 55, 58]],
+    bpm: 118, tempos: 4, subdivisao: 4, balanco: 0.08,
+    acordes: [
+      [43, 59, 62, 67], [43, 59, 62, 67], [48, 60, 64, 67], [50, 57, 62, 66],
+      [43, 59, 62, 67], [40, 59, 64, 67], [50, 57, 62, 66], [43, 59, 62, 67],
+      [48, 60, 64, 67], [50, 57, 62, 66], [43, 59, 62, 67], [40, 59, 64, 67],
+      [48, 60, 64, 67], [50, 57, 62, 66], [41, 57, 60, 65], [50, 57, 62, 66],
+    ],
     tema: [
-      [[0, 72, 3], [3, 69, 1], [4, 72, 2], [6, 74, 2]], [[0, 77, 4], [4, 76, 2], [6, 74, 2]],
-      [[0, 74, 3], [3, 70, 1], [4, 74, 2], [6, 77, 2]], [[0, 76, 6], [6, 72, 2]],
-      [[0, 72, 3], [3, 69, 1], [4, 72, 2], [6, 77, 2]], [[0, 76, 4], [4, 72, 2], [6, 69, 2]],
-      [[0, 70, 3], [3, 74, 1], [4, 72, 2], [6, 70, 2]], [[0, 67, 4], [4, 72, 4]],
+      /* A */
+      [[0, 67, 3], [3, 71, 3], [6, 74, 2], [8, 74, 2], [10, 76, 2], [12, 74, 4]],
+      [[0, 71, 3], [3, 74, 3], [6, 79, 2], [8, 78, 4], [12, 74, 4]],
+      [[0, 76, 3], [3, 76, 3], [6, 79, 2], [8, 76, 2], [10, 74, 2], [12, 72, 4]],
+      [[0, 74, 3], [3, 72, 3], [6, 71, 2], [8, 69, 4], [12, 66, 2], [14, 69, 2]],
+      [[0, 67, 3], [3, 71, 3], [6, 74, 2], [8, 74, 2], [10, 76, 2], [12, 74, 4]],
+      [[0, 71, 3], [3, 74, 3], [6, 79, 2], [8, 83, 4], [12, 79, 4]],
+      [[0, 81, 3], [3, 79, 3], [6, 78, 2], [8, 76, 2], [10, 74, 2], [12, 72, 2], [14, 69, 2]],
+      [[0, 71, 3], [3, 74, 3], [6, 67, 6], [14, 74, 2]],
+      /* B: o refrão, mais agudo e com o Fá natural no penúltimo compasso */
+      [[0, 79, 2], [2, 79, 2], [4, 79, 2], [6, 76, 2], [8, 79, 4], [12, 84, 4]],
+      [[0, 83, 3], [3, 81, 3], [6, 78, 2], [8, 81, 6], [14, 78, 2]],
+      [[0, 79, 3], [3, 74, 3], [6, 71, 2], [8, 74, 4], [12, 79, 4]],
+      [[0, 76, 3], [3, 79, 3], [6, 83, 2], [8, 81, 4], [12, 79, 4]],
+      [[0, 79, 2], [2, 79, 2], [4, 79, 2], [6, 76, 2], [8, 79, 4], [12, 84, 4]],
+      [[0, 86, 3], [3, 84, 3], [6, 83, 2], [8, 81, 4], [12, 78, 4]],
+      [[0, 84, 3], [3, 81, 3], [6, 77, 2], [8, 81, 2], [10, 84, 2], [12, 81, 4]],
+      [[0, 78, 3], [3, 81, 3], [6, 86, 4], [10, 84, 2], [12, 81, 2], [14, 78, 2]],
     ],
     tocar(s, t, compasso, passo, acorde, sortear, d) {
       const [r, a, b, c] = acorde;
-      harpa(s, t, [a, b, c, a + 12, b + 12, c + 12, b + 12, a + 12][passo], 0.03);
-      if (passo === 0) { voz(s, t, r, d * 7.6, { forma: 'sine', volume: 0.12, ataque: 0.05, liberacao: 0.8 }); coro(s, t, [a, b, c], d * 8.5, 0.012); }
-      melodia(this.tema, compasso, passo, (nota, dur) => {
-        glockenspiel(s, t, nota + 12, 0.035);
-        voz(s, t, nota, dur * 0.95, { forma: 'sine', volume: 0.045, ataque: 0.03, liberacao: 0.4, vibrato: 4 });
-      }, d);
+      const meio = passo % 8;
+      /* zabumba e baixo no 3+3+2 do baião: tum (0), tum (3), tá (6) em cada metade do compasso */
+      if (meio === 0) { tambor(s, t, { volume: 0.3, de: 105, para: 45, duracao: 0.35 }); voz(s, t, r, d * 2.6, { forma: 'triangle', volume: 0.15, ataque: 0.01, liberacao: 0.08 }); }
+      if (meio === 3) { tambor(s, t, { volume: 0.18, de: 95, para: 45, duracao: 0.25 }); voz(s, t, r, d * 2.6, { forma: 'triangle', volume: 0.12, ataque: 0.01, liberacao: 0.08 }); }
+      if (meio === 6) voz(s, t, passo < 8 ? r + 7 : r + 12, d * 1.8, { forma: 'triangle', volume: 0.12, ataque: 0.01, liberacao: 0.06 });
+      /* triângulo em semicolcheias: fechado, aberto nos contratempos */
+      triangulo(s, t, passo % 4 === 2, passo % 4 === 0 ? 0.022 : 0.016);
+      /* palmas no 2 e no 4 */
+      if (passo === 4 || passo === 12) palmas(s, t, 0.05);
+      /* acordes de sanfona curtinhos nos contratempos */
+      if (passo % 4 === 2) for (const n of [a, b, c]) voz(s, t, n, d * 0.8, { forma: 'sawtooth', volume: 0.012, ataque: 0.005, liberacao: 0.05, filtro: 1600 });
+      /* virada da zabumba antes de recomeçar cada parte */
+      if (compasso % 8 === 7 && passo >= 12) tambor(s, t, { volume: 0.12 + (passo - 12) * 0.04, de: 160 - (passo - 12) * 15, para: 70, duracao: 0.18 });
+      if (compasso % 8 === 0 && passo === 0) chiado(s, t, 1.4, { volume: 0.03, filtro: 6000 }); /* prato na volta */
+      melodia(this.tema, compasso, passo, (nota, dur) => sanfona(s, t, nota, dur * 0.9, 0.034), d);
     },
   },
 
