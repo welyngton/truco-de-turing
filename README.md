@@ -1,7 +1,7 @@
 # Truco de Turing
 
 <!-- versao -->
-**Versão 1.3.1** (2026-11-10) · [histórico de versões](CHANGELOG.md)
+**Versão 2.0.0** (2026-11-12) · [histórico de versões](CHANGELOG.md)
 <!-- /versao -->
 
 Jogo de cartas para navegador, feito em **Phaser 3**, para ensinar redes neurais e deep learning jogando.
@@ -193,6 +193,7 @@ Autores:
 - Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações na Biblioteca de conceitos
 - Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções da fusão
 - Francisco Lima: NeuroDeck (regras, motor, oponentes e mods)
+- Claude ([@claude](https://github.com/claude))
 <!-- /autores -->
 
 Regras originais: Peng Yaohao - FPO-UNB - 2026-2
