@@ -315,6 +315,8 @@ cliques durante animações) e `this.encerrada`.
 - Toda arte é **procedural**: cada função de `arte/` desenha em coordenadas-base e recebe a densidade
   `S`. As texturas são geradas sob demanda com chaves descritivas (`'carta-mesa:truco:4P'`,
   `'verso-mao@yinyang'`) e as cartas da mão são liberadas a cada mão para poupar memória.
+- O redesenho das cartas segue o [guia visual](GUIA-VISUAL-CARTAS.md): o que sai e o que fica na carta, a
+  ordem de leitura e o símbolo central escolhido (medalhão com o naipe francês).
 - Botões e faíscas são texturas (e não gráficos com degradê ou `tint`) para ficarem iguais nos
   renderizadores WebGL e Canvas. `?renderer=canvas` força o Canvas e `?res=2` força a resolução.
 
