@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.2.0 — 2026-11-12
+
+- feat: ícone de Avançar e guia visual das cartas; fix: segurar ou tocar no celular ([#44](https://github.com/welyngton/truco-de-turing/pull/44), por [@welyngton](https://github.com/welyngton))
+
 ## 2.1.0 — 2026-11-12
 
 - feat: trilha do menu vira um baião animado; Mods com link para o manual ([#39](https://github.com/welyngton/truco-de-turing/pull/39), por [@welyngton](https://github.com/welyngton) e [@claude](https://github.com/claude))
