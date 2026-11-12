@@ -129,6 +129,21 @@ describe('som.js e musica.js', () => {
       }
     }
   });
+  it('trilha do menu: baião animado (andamento, percussão em todo tempo, refrão em duas partes)', () => {
+    const m = MUSICAS.menu, passos = m.tempos * m.subdivisao;
+    assert.ok(m.bpm >= 110, 'andamento animado');
+    assert.equal(m.acordes.length, 16, 'partes A e B de 8 compassos');
+    assert.ok(m.acordes.some(([r]) => r % 12 === 5), 'o Fá natural do mixolídio na parte B');
+    /* todo tempo do compasso tem percussão (zabumba, palmas ou triângulo) */
+    for (let passo = 0; passo < passos; passo += m.subdivisao) {
+      limparRegistroDeAudio();
+      const saida = contextoDeAudio().createGain();
+      m.tocar(saida, 1, 1, passo, m.acordes[1], () => 0.5, 0.12);
+      assert.ok(registroDeAudio.osciladores.length + registroDeAudio.fontes.length >= 3, 'tempo ' + passo / m.subdivisao);
+    }
+    /* a melodia cobre quase todo o compasso (o refrão não fica parado) */
+    for (const compasso of m.tema) assert.ok(compasso.reduce((soma, [, , dur]) => soma + dur, 0) >= passos - 2);
+  });
   it('música: cada terreno agenda notas; trocar, repetir e parar', async (t) => {
     for (const terreno of ['menu', 'neutro', 'oceano', 'montanha', 'pantano', 'desconhecido']) {
       limparRegistroDeAudio();
@@ -214,6 +229,8 @@ describe('telas', () => {
     clicar($('#mods-copiar'));
     await esperar(20);
     assert.ok($('#mods-copiado').textContent.length > 0);
+    const links = [...$$('.mods a')].map((a) => a.getAttribute('href'));
+    assert.ok(links.some((h) => h.endsWith('docs/MANUAL.md')), 'link para o manual do código');
   });
   it('regras: marca o tutorial como visto e chama aoFechar', () => {
     const app = appFalso();

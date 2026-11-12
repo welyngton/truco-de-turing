@@ -47,6 +47,7 @@ export function abrirMods() {
     '<li><b>No repositório:</b> o motor roda no Node. Importe <code>src/motor/engine.js</code> e o mod, chame a função do mod com <code>NeuroDeck</code> e jogue partidas com <code>newGame</code> e <code>applyMove</code> (o teste <code>testes/unidade/mods.test.js</code> faz isso com o exemplo acima).</li>' +
     '</ul>' +
     '<p class="aviso-mods"><b>Ainda não no jogo unificado:</b> o motor já aceita mods, mas a interface do Truco de Turing ainda não os carrega, porque cada baralho, terreno e ação precisa de arte, textos e animação próprios. Por enquanto, use o NeuroDeck original ou o Node para testar.</p>' +
+    '<p>Para ir além: o <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/MANUAL.md" target="_blank" rel="noopener">manual do código</a> explica como acrescentar baralho, terreno, oponente, conquista ou verbete no Truco de Turing, e a <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/REFERENCIA.md" target="_blank" rel="noopener">referência</a> lista cada função.</p>' +
     '<div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
   const painel = abrirPainel(html, { fechaAoClicarFora: true });
   const copiado = painel.elemento.querySelector('#mods-copiado');
