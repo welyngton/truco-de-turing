@@ -188,6 +188,28 @@ describe('telas', () => {
     assert.equal(app.jogou, 1);
   });
 
+  it('menu: cada botão e cada escolha viram eventos das estatísticas (com a medição ligada)', async () => {
+    const { JSDOM } = await import('jsdom');
+    const analise = await import('../../src/interface/analise.js');
+    const { BOTOES_DO_MENU } = await import('../../src/interface/menu.js');
+    /* uma janela "no site publicado", com consentimento, só para receber os eventos */
+    const site = new JSDOM('<!doctype html><head></head><body></body>', { url: 'https://welyngton.github.io/truco-de-turing/' }).window;
+    site.localStorage.setItem(analise.CHAVE_DO_CONSENTIMENTO, 'sim');
+    analise.reiniciarAnalise();
+    analise.iniciarAnalise(site);
+    try {
+      const app = appFalso();
+      abrirMenu(app);
+      $('#m-baralho').value = 'backprop';
+      $('#m-baralho').dispatchEvent(new window.Event('change'));
+      for (const id of Object.keys(BOTOES_DO_MENU)) { if (id !== 'm-online') clicar($('#' + id)); if (!$('#m-jogar')) abrirMenu(app); }
+      const eventos = site.dataLayer.map((a) => Array.from(a)).filter((c) => c[0] === 'event');
+      assert.deepEqual(eventos[0], ['event', 'menu_opcao', { campo: 'baralho', valor: 'backprop' }]);
+      const botoes = eventos.filter((e) => e[1] === 'menu_clique').map((e) => e[2].botao);
+      assert.deepEqual(botoes.sort(), ['avatar', 'como_jogar', 'conquistas', 'glossario', 'jogar', 'mods', 'sobre']);
+    } finally { analise.reiniciarAnalise(); }
+  });
+
   it('menu: configurações do NeuroDeck (jogadores, humanos, oponentes, arquitetura e baralhos)', () => {
     const app = appFalso();
     abrirMenu(app);

@@ -14,6 +14,7 @@ import { mostrarAviso, confirmar } from '../../interface/paineis.js';
 import { liberarCartasDaMao, texturaDoVerso } from '../recursos.js';
 import { colunaX, linhaY, ajustarCartaDaMesa, ajustarBloco, cartaDaMesa, PAINEL_ESQ } from './layout.js';
 import { FONTES } from '../../configuracao.js';
+import { registrarEvento, EVENTOS } from '../../interface/analise.js';
 
 export const metodosDeTurnos = {
   /* ------------------------------------------------------------------ consultas rápidas */
@@ -153,11 +154,28 @@ export const metodosDeTurnos = {
     this.acaoEscolhida = null;
     if (this.modo !== 'inicio') this.modo = 'livre';
     const eventos = this.mao.eventos.splice(0);
+    this.registrarJogadaNasEstatisticas(jogada, eventos);
     this.ocupada = true;
     this.redesenhar();
     this.anotarNaLinhaDoTempo(jogada, eventos);
     const espera = this.animarEventos(eventos, jogada);
     this.time.delayedCall(espera, () => this.avancar());
+  },
+
+  /**
+   * Estatísticas de uso: a jogada de quem está neste aparelho vira o evento `acao_jogada`. Empilhar
+   * vira o efeito que a pilha teve (tunagem, overfit, early stop ou stack overflow).
+   */
+  registrarJogadaNasEstatisticas(jogada, eventos) {
+    const j = jogada.jogador;
+    const doAparelho = this.online ? j === this.cadeiraOnline() : this.mao.jogadores[j] && this.mao.jogadores[j].tipo === 'humano';
+    if (!doAparelho) return;
+    const efeito = jogada.tipo === 'empilhar' && eventos.find((e) => ['tunagem', 'overfit', 'earlystop', 'stackoverflow'].includes(e.tipo));
+    const config = this.mao.config;
+    registrarEvento(EVENTOS.acaoJogada, {
+      acao: efeito ? efeito.tipo : jogada.tipo, baralho: config.baralho, terreno: config.terreno,
+      camada: Math.max(0, this.mao.jogadores[j].caminho.length - 1), mao: this.partida.numeroMao + 1,
+    });
   },
 
   /** Decide o próximo passo: fim da mão, escolha de quem começa, vez do humano ou do oponente. */

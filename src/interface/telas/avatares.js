@@ -7,6 +7,7 @@ import { CORES_CSS } from '../../configuracao.js';
 import { desenharAvatar } from '../../arte/avatares.js';
 import { ICONE_CADEADO } from '../../arte/icones.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
+import { registrarEvento, EVENTOS } from '../analise.js';
 
 /** Retratos já desenhados (data URL), por id. */
 const retratos = {};
@@ -42,6 +43,8 @@ export function abrirAvatares(app, aoMudar) {
     if (!avatarLiberado(avatar, app.progresso)) return;
     app.progresso.avatar = avatar.id;
     app.salvar();
+    registrarEvento(EVENTOS.avatar, { avatar: avatar.id });
+    if (app.atualizarJogadorNasEstatisticas) app.atualizarJogadorNasEstatisticas();
     painel.elemento.querySelectorAll('.avatar-opcao').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     if (aoMudar) aoMudar(avatar.id);
   }));

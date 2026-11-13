@@ -14,6 +14,7 @@ import { mesclarProgresso, progressoDaConta } from '../../online/contas.js';
 import { firebaseConfigurado, entrarComGoogle, entrarComEmail, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta, transporteFirebase } from '../../online/firebase.js';
 import { avatarDoJogador } from '../../conteudo/avatares.js';
 import { abrirPainel, escaparHtml, mostrarAviso } from '../paineis.js';
+import { registrarEvento, definirConta, EVENTOS } from '../analise.js';
 
 /** Identificador deste aparelho, o mesmo depois de recarregar a aba (para voltar à cadeira). */
 function clienteDaAba() {
@@ -30,8 +31,9 @@ function clienteDaAba() {
 let contaAtual = null;
 
 /** Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. */
-async function usarConta(app, conta) {
+async function usarConta(app, conta, metodo) {
   contaAtual = conta;
+  definirConta(conta.uid, metodo);
   const naConta = await carregarProgressoDaConta(conta.uid);
   app.progresso = mesclarProgresso(app.progresso, naConta);
   app.progresso.nomeOnline = app.progresso.nomeOnline || conta.nome;
@@ -121,6 +123,7 @@ export function abrirOnline(app) {
     const codigo = codigoDeSala();
     const s = new Sala(await transporte(codigo), eu());
     s.criar(codigo, { ...app.opcoes }, Number($('o-pessoas').value), Math.floor(Math.random() * 2 ** 31));
+    registrarEvento(EVENTOS.salaOnline, { acao: 'criar', pessoas: Number($('o-pessoas').value), conta: contaAtual ? 1 : 0 });
     esperar(s);
   });
   $('o-entrar').addEventListener('click', async () => {
@@ -131,8 +134,9 @@ export function abrirOnline(app) {
     $('o-espera-nota').textContent = 'Procurando a sala ' + codigo + '…';
     $('o-codigo-sala').textContent = codigo;
     s.entrar();
+    registrarEvento(EVENTOS.salaOnline, { acao: 'entrar', conta: contaAtual ? 1 : 0 });
   });
-  $('o-comecar').addEventListener('click', () => sala && sala.comecar());
+  $('o-comecar').addEventListener('click', () => { if (!sala) return; registrarEvento(EVENTOS.salaOnline, { acao: 'comecar' }); sala.comecar(); });
   $('o-desistir').addEventListener('click', () => { if (sala) sala.sair(); sala = null; $('o-escolha').hidden = false; $('o-espera').hidden = true; });
 
   if (nuvem) {
@@ -141,13 +145,13 @@ export function abrirOnline(app) {
       $('o-sair').hidden = !contaAtual;
       if (contaAtual && !$('o-nome').value) $('o-nome').value = contaAtual.nome;
     };
-    const tentar = (acao) => async () => {
-      try { await usarConta(app, await acao()); mostrarConta(); } catch (e) { mostrarAviso('Conta', e.message || String(e)); }
+    const tentar = (acao, metodo) => async () => {
+      try { await usarConta(app, await acao(), metodo); mostrarConta(); } catch (e) { mostrarAviso('Conta', e.message || String(e)); }
     };
-    $('o-google').addEventListener('click', tentar(() => entrarComGoogle()));
-    $('o-email-entrar').addEventListener('click', tentar(() => entrarComEmail($('o-email').value, $('o-senha').value)));
-    $('o-email-criar').addEventListener('click', tentar(() => entrarComEmail($('o-email').value, $('o-senha').value, true)));
-    $('o-sair').addEventListener('click', async () => { await sairDaConta(); contaAtual = null; mostrarConta(); });
+    $('o-google').addEventListener('click', tentar(() => entrarComGoogle(), 'google'));
+    $('o-email-entrar').addEventListener('click', tentar(() => entrarComEmail($('o-email').value, $('o-senha').value), 'email'));
+    $('o-email-criar').addEventListener('click', tentar(() => entrarComEmail($('o-email').value, $('o-senha').value, true), 'email_novo'));
+    $('o-sair').addEventListener('click', async () => { await sairDaConta(); contaAtual = null; definirConta(null); mostrarConta(); });
   }
   return painel;
 }

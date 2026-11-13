@@ -203,9 +203,10 @@ export const metodosDoResultado = {
       '<button class="botao" id="r-revisar">Revisar ' + (partidaAcabou && this.historicoDaPartida.length > 1 ? 'a partida' : 'a mão') + '</button>' +
       '<button class="botao vinho" id="r-proxima">' + (partidaAcabou ? 'Nova partida' : 'Próxima mão') + '</button></div></div>';
     const painel = abrirPainel(html);
-    painel.elemento.querySelector('#r-menu').addEventListener('click', () => { painel.fechar(); this.app.irParaMenu(); });
+    painel.elemento.querySelector('#r-menu').addEventListener('click', () => { painel.fechar(); if (!partidaAcabou) this.registrarAbandono(); this.app.irParaMenu(); });
     painel.elemento.querySelector('#r-revisar').addEventListener('click', () => {
       painel.fechar();
+      registrarEvento(EVENTOS.revisao, { escopo: partidaAcabou && this.historicoDaPartida.length > 1 ? 'partida' : 'mao' });
       abrirRevisao({
         mao, linhaDoTempo: this.linhaDoTempo, partida, historicoDaPartida: this.historicoDaPartida,
         numeroDaMao: partida.numeroMao + 1, aoFechar: () => this.mostrarResultado(),

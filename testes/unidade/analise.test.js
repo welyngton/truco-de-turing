@@ -13,7 +13,9 @@ import { JSDOM } from 'jsdom';
 import {
   ID_GOOGLE_ANALYTICS, CHAVE_DO_CONSENTIMENTO, podeMedir, consentimento, definirConsentimento,
   iniciarAnalise, registrarEvento, medindo, reiniciarAnalise, EVENTOS,
+  CHAVE_DO_JOGADOR, atualizarJogador, definirConta, idDoJogador,
 } from '../../src/interface/analise.js';
+import { faixaDeExperiencia } from '../../src/aplicacao.js';
 import { instalarNavegadorFalso } from '../apoio/ambiente.js';
 
 const SITE = 'https://welyngton.github.io/truco-de-turing/';
@@ -158,5 +160,91 @@ describe('eventos do jogo', () => {
     assert.deepEqual(eventos().slice(4).map((e) => e[0]), ['fim_mao', 'jogo_finalizado', 'derrota_jogador']);
     assert.equal(eventos()[5][1].venceu, 0);
     assert.equal(eventos()[6][1].tentos, 7);
+  });
+});
+
+describe('jogadores diferentes', () => {
+  beforeEach(() => reiniciarAnalise());
+  const propriedades = (w) => comandos(w).filter((c) => c[0] === 'set' && c[1] === 'user_properties').map((c) => c[2]);
+  const userIds = (w) => comandos(w).filter((c) => c[0] === 'set' && typeof c[1] === 'object' && 'user_id' in c[1]).map((c) => c[1].user_id);
+
+  it('cada aparelho ganha um código anônimo, guardado e enviado antes do config (vale já para o page_view)', () => {
+    const w = janela(SITE, { escolha: 'sim' });
+    atualizarJogador({ experiencia: 'iniciante', conquistas: 2, avatar: 'monge', nome: 'Fulano' });
+    iniciarAnalise(w);
+    const id = w.localStorage.getItem(CHAVE_DO_JOGADOR);
+    assert.match(id, /^[0-9a-f-]{20,}$/);
+    const [props] = propriedades(w);
+    assert.deepEqual(props, { experiencia: 'iniciante', conquistas: 2, avatar: 'monge', id_jogador: 'a-' + id, tipo_conta: 'local' });
+    assert.ok(!('nome' in props), 'só as propriedades conhecidas');
+    const ordem = comandos(w).map((c) => c[0] + (c[0] === 'set' ? ':' + (typeof c[1] === 'string' ? c[1] : 'user_id') : ''));
+    assert.ok(ordem.indexOf('set:user_properties') < ordem.indexOf('config'));
+    /* o mesmo aparelho continua com o mesmo código */
+    reiniciarAnalise();
+    const outraVisita = janela(SITE, { escolha: 'sim' });
+    outraVisita.localStorage.setItem(CHAVE_DO_JOGADOR, id);
+    iniciarAnalise(outraVisita);
+    assert.equal(propriedades(outraVisita)[0].id_jogador, 'a-' + id);
+  });
+
+  it('com conta: id_jogador c-<uid>, user_id e evento login; ao sair volta ao código do aparelho', () => {
+    const w = janela(SITE, { escolha: 'sim' });
+    iniciarAnalise(w);
+    definirConta('uidFirebase123', 'google');
+    assert.equal(idDoJogador(w), 'c-uidFirebase123');
+    assert.deepEqual(propriedades(w).at(-1), { id_jogador: 'c-uidFirebase123', tipo_conta: 'google' });
+    assert.equal(userIds(w).at(-1), 'uidFirebase123');
+    assert.deepEqual(comandos(w).at(-1), ['event', 'login', { method: 'google' }]);
+    definirConta(null);
+    assert.equal(userIds(w).at(-1), null);
+    assert.match(propriedades(w).at(-1).id_jogador, /^a-/);
+    assert.equal(propriedades(w).at(-1).tipo_conta, 'local');
+    assert.ok(comandos(w).some((c) => c[0] === 'event' && c[1] === 'logout'));
+  });
+
+  it('conta de e-mail fica como tipo_conta "email"; atualizar o jogador reenvia as propriedades', () => {
+    const w = janela(SITE, { escolha: 'sim' });
+    iniciarAnalise(w);
+    definirConta('abc', 'email_novo');
+    atualizarJogador({ conquistas: 5 });
+    assert.deepEqual(propriedades(w).at(-1), { tipo_conta: 'email', conquistas: 5, id_jogador: 'c-abc' });
+  });
+
+  it('recusar apaga o código do aparelho', () => {
+    const w = janela(SITE, { escolha: 'sim' });
+    iniciarAnalise(w);
+    assert.ok(w.localStorage.getItem(CHAVE_DO_JOGADOR));
+    definirConsentimento('nao', w);
+    assert.equal(w.localStorage.getItem(CHAVE_DO_JOGADOR), null);
+  });
+
+  it('faixas de experiência pelo número de mãos', () => {
+    assert.deepEqual([0, 1, 9, 10, 49, 50, 300].map(faixaDeExperiencia), ['novato', 'iniciante', 'iniciante', 'intermediario', 'intermediario', 'veterano', 'veterano']);
+  });
+});
+
+describe('jogadas e abandono', () => {
+  beforeEach(() => reiniciarAnalise());
+
+  it('acao_jogada: só as jogadas de quem está no aparelho, com o efeito da pilha; jogo_abandonado', async () => {
+    instalarNavegadorFalso();
+    const { metodosDeTurnos } = await import('../../src/cenas/mesa/turnos.js');
+    const { metodosDeEntrada } = await import('../../src/cenas/mesa/entrada.js');
+    const w = janela(SITE, { escolha: 'sim' });
+    iniciarAnalise(w);
+    const cena = {
+      mao: { config: { baralho: 'classico', terreno: 'pantano' }, jogadores: [{ tipo: 'humano', caminho: [1, 2, 3] }, { tipo: 'oponente', caminho: [1] }] },
+      partida: { numeroMao: 2, tentos: [4, 6] }, opcoes: { oponente: 'guloso' }, online: null,
+    };
+    const eventos = () => comandos(w).filter((c) => c[0] === 'event').map((c) => [c[1], c[2]]);
+    metodosDeTurnos.registrarJogadaNasEstatisticas.call(cena, { tipo: 'empilhar', jogador: 0 }, [{ tipo: 'overfit' }]);
+    metodosDeTurnos.registrarJogadaNasEstatisticas.call(cena, { tipo: 'ativar', jogador: 1 }, []);
+    metodosDeTurnos.registrarJogadaNasEstatisticas.call(cena, { tipo: 'dropout', jogador: 0 }, []);
+    assert.deepEqual(eventos(), [
+      ['acao_jogada', { acao: 'overfit', baralho: 'classico', terreno: 'pantano', camada: 2, mao: 3 }],
+      ['acao_jogada', { acao: 'dropout', baralho: 'classico', terreno: 'pantano', camada: 2, mao: 3 }],
+    ]);
+    metodosDeEntrada.registrarAbandono.call(cena);
+    assert.deepEqual(eventos().at(-1), ['jogo_abandonado', { baralho: 'classico', terreno: 'pantano', oponente: 'guloso', maos: 3, tentos: 4, online: 0 }]);
   });
 });

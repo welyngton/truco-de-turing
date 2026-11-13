@@ -344,7 +344,10 @@ Netlify Drop ou Cloudflare Pages.
 `https://welyngton.github.io` e só depois do "Aceitar" na faixa de consentimento (a escolha fica no
 `localStorage` e muda na tela Sobre). Para um evento novo, chame `registrarEvento('nome', { ... })`:
 ele não faz nada fora do site publicado, sem consentimento ou nos testes (navegador automatizado).
-Quem publicar o jogo em outro endereço deve trocar `ID_GOOGLE_ANALYTICS` e `HOSTS_MEDIDOS`.
+Quem publicar o jogo em outro endereço deve trocar `ID_GOOGLE_ANALYTICS` e `HOSTS_MEDIDOS`. Para
+separar jogadores, `atualizarJogador({...})` muda as propriedades do usuário (só as de
+`PROPRIEDADES_DO_JOGADOR`) e `definirConta(uid, metodo)` liga ou desliga o `user_id` da conta; nome e
+e-mail nunca vão para o Google.
 
 ### Versões
 

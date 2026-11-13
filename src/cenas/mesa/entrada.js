@@ -15,6 +15,7 @@ import { abrirRegras } from '../../interface/telas/regras.js';
 import { abrirGrimorio } from '../../interface/telas/grimorio.js';
 import { abrirAjudaDasAcoes } from '../../interface/telas/ajudaDasAcoes.js';
 import { texturaDeInspecao } from '../recursos.js';
+import { registrarEvento, EVENTOS } from '../../interface/analise.js';
 import { colunaX, linhaY, NOME_DA_ACAO, cartaDaMesa } from './layout.js';
 
 /** Ação do motor do NeuroDeck correspondente a cada botão (para o texto da regra). */
@@ -235,6 +236,7 @@ export const metodosDeEntrada = {
    */
   abrirRegrasDaMesa() {
     const dicas = this.app.dicasLigadas;
+    registrarEvento(EVENTOS.mesaClique, { botao: 'regras' });
     const painel = abrirPainel(
       '<div class="folha estreita janela-da-mesa"><h2>Regras</h2>' +
       '<p>Consulte as regras, a ajuda de cada ação, os conceitos de redes neurais da Biblioteca ou ligue as dicas durante a partida.</p>' +
@@ -253,6 +255,7 @@ export const metodosDeEntrada = {
     };
     painel.elemento.querySelectorAll('[data-opcao]').forEach((b) => b.addEventListener('click', () => {
       painel.fechar();
+      registrarEvento(EVENTOS.mesaClique, { botao: 'regras_' + b.dataset.opcao });
       acoes[b.dataset.opcao]();
     }));
     return painel;
@@ -268,6 +271,7 @@ export const metodosDeEntrada = {
    * ou abandonar a partida.
    */
   abrirMenuDaMesa() {
+    registrarEvento(EVENTOS.mesaClique, { botao: 'menu' });
     const painel = abrirPainel(
       '<div class="folha estreita janela-da-mesa"><h2>Menu</h2>' +
       '<div class="grade-de-botoes">' +
@@ -284,10 +288,20 @@ export const metodosDeEntrada = {
     return painel;
   },
 
+  /** Estatísticas de uso: saiu da partida antes do fim (`jogo_abandonado`). */
+  registrarAbandono() {
+    const config = this.mao ? this.mao.config : {}, eu = this.online ? this.cadeiraOnline() : 0;
+    registrarEvento(EVENTOS.jogoAbandonado, {
+      baralho: config.baralho, terreno: config.terreno, oponente: this.opcoes ? this.opcoes.oponente : '',
+      maos: this.partida ? this.partida.numeroMao + 1 : 0, tentos: this.partida ? this.partida.tentos[eu] || 0 : 0,
+      online: this.online ? 1 : 0,
+    });
+  },
+
   perguntarSeVoltaAoMenu() {
     confirmar('Abandonar a partida?', 'O placar de tentos desta partida será perdido. Conquistas já desbloqueadas ficam salvas.', [
       { rotulo: 'Continuar jogando', classe: 'discreto' },
-      { rotulo: 'Voltar ao menu', classe: 'vinho', acao: () => this.app.irParaMenu() },
+      { rotulo: 'Voltar ao menu', classe: 'vinho', acao: () => { this.registrarAbandono(); this.app.irParaMenu(); } },
     ]);
   },
 };

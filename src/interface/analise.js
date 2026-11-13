@@ -12,6 +12,12 @@
  *
  * Os eventos do jogo (ver `EVENTOS`) passam por `registrarEvento`, que não faz nada enquanto a
  * medição estiver desligada.
+ *
+ * Jogadores diferentes: cada aparelho recebe um código anônimo e aleatório (`a-…`, guardado no
+ * `localStorage`); quem entra numa conta passa a ser `c-<uid da conta>` e o uid vai também como
+ * `user_id`, para o Google juntar os aparelhos da mesma pessoa. O código vai na propriedade do
+ * usuário `id_jogador`, junto com o tipo de conta, a experiência, as conquistas e o avatar (ver
+ * `PROPRIEDADES_DO_JOGADOR`). Nome, e-mail e nome na mesa nunca são enviados.
  */
 
 /** ID da métrica do fluxo da Web no Google Analytics. */
@@ -37,11 +43,80 @@ export const EVENTOS = {
   fimDaMao: 'fim_mao',
   truco: 'truco',
   verbeteLido: 'verbete_lido',
-  conquista: 'conquista',
+  conquista: 'conquista', // conquista desbloqueada (id, nome, graduação, quantas a pessoa já tem)
+  menuClique: 'menu_clique', // botões do menu inicial (botao: jogar, jogar_online, como_jogar…)
+  menuOpcao: 'menu_opcao', // mudança numa escolha do menu (campo, valor)
+  mesaClique: 'mesa_clique', // botões REGRAS e MENU da mesa e as opções das janelas deles
+  acaoJogada: 'acao_jogada', // jogada de quem está neste aparelho (acao: ativar, tunagem, overfit…)
+  jogoAbandonado: 'jogo_abandonado', // saiu da partida antes do fim
+  dicas: 'dicas', // ligou ou desligou as dicas (ligadas: 1 ou 0)
+  revisao: 'revisao_aberta', // abriu a revisão da mão ou da partida
+  avatar: 'avatar_escolhido',
+  audio: 'audio_alterado', // som ou música ligados/desligados
+  login: 'login', // evento recomendado do GA4 (method: google, email, email_novo)
+  logout: 'logout',
+  salaOnline: 'sala_online', // criar, entrar ou começar uma sala
 };
 
+/**
+ * Propriedades do usuário (no Google Analytics: dimensões personalizadas com escopo "Usuário").
+ * `id_jogador` separa os jogadores; as outras ajudam a comparar grupos.
+ */
+export const PROPRIEDADES_DO_JOGADOR = ['id_jogador', 'tipo_conta', 'experiencia', 'conquistas', 'avatar', 'verbetes_lidos'];
+
+/** Chave do código anônimo do aparelho no `localStorage`. */
+export const CHAVE_DO_JOGADOR = 'truco-de-turing:id-jogador';
+
 /** Estado do módulo: a janela onde o Analytics foi ligado (ou null). */
-const estado = { janela: null, carregado: false };
+const estado = { janela: null, carregado: false, conta: null, perfil: {} };
+
+/** Código anônimo deste aparelho (criado na primeira vez que a medição liga). */
+export function idDoAparelho(janela = globalThis) {
+  try {
+    const salvo = janela.localStorage.getItem(CHAVE_DO_JOGADOR);
+    if (salvo) return salvo;
+  } catch (e) { /* sem armazenamento: código só desta visita */ }
+  const cripto = janela.crypto;
+  const novo = cripto && cripto.randomUUID ? cripto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+  try { janela.localStorage.setItem(CHAVE_DO_JOGADOR, novo); } catch (e) { /* idem */ }
+  return novo;
+}
+
+/** Código do jogador enviado ao Google: `c-<uid>` com conta, `a-<código do aparelho>` sem. */
+export function idDoJogador(janela = globalThis) {
+  return estado.conta ? 'c-' + estado.conta : 'a-' + idDoAparelho(janela);
+}
+
+/** Envia ao gtag o `user_id` e as propriedades do jogador. */
+function enviarJogador(janela) {
+  janela.gtag('set', { user_id: estado.conta || null });
+  janela.gtag('set', 'user_properties', { ...estado.perfil, id_jogador: idDoJogador(janela), tipo_conta: estado.perfil.tipo_conta || (estado.conta ? 'conta' : 'local') });
+}
+
+/**
+ * Atualiza as propriedades do jogador (experiência, conquistas, avatar…). Guarda mesmo com a
+ * medição desligada, para valer assim que ela ligar.
+ * @param {object} dados Só os nomes de `PROPRIEDADES_DO_JOGADOR` são usados.
+ */
+export function atualizarJogador(dados) {
+  for (const [k, v] of Object.entries(dados || {})) if (PROPRIEDADES_DO_JOGADOR.includes(k) && k !== 'id_jogador') estado.perfil[k] = v;
+  if (medindo()) enviarJogador(estado.janela);
+}
+
+/**
+ * Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e
+ * não identifica a pessoa fora do jogo; nome e e-mail não são enviados.
+ * @param {string|null} uid
+ * @param {string} [metodo] 'google', 'email' ou 'email_novo'
+ */
+export function definirConta(uid, metodo) {
+  const antes = estado.conta;
+  estado.conta = uid || null;
+  estado.perfil.tipo_conta = uid ? (metodo && metodo.startsWith('email') ? 'email' : metodo || 'conta') : 'local';
+  if (!medindo()) return;
+  if (uid) { enviarJogador(estado.janela); registrarEvento(EVENTOS.login, { method: metodo || 'conta' }); }
+  else if (antes) { registrarEvento(EVENTOS.logout); enviarJogador(estado.janela); }
+}
 
 /**
  * O jogo está no site publicado, num navegador comum (não automatizado)?
@@ -72,6 +147,7 @@ function carregar(janela) {
   janela.gtag = janela.gtag || function gtag() { janela.dataLayer.push(arguments); };
   janela.gtag('consent', 'default', { analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
   janela.gtag('js', new Date());
+  enviarJogador(janela);
   janela.gtag('config', ID_GOOGLE_ANALYTICS, { allow_google_signals: false, allow_ad_personalization_signals: false });
   const script = janela.document.createElement('script');
   script.async = true;
@@ -110,11 +186,12 @@ export function definirConsentimento(escolha, janela = globalThis) {
     if (estado.carregado) janela.gtag('consent', 'update', { analytics_storage: 'denied' });
     estado.janela = null;
     apagarCookies(janela);
+    try { janela.localStorage.removeItem(CHAVE_DO_JOGADOR); } catch (e) { /* sem armazenamento */ }
   }
 }
 
 /** Texto da faixa de consentimento (também usado na tela "Sobre"). */
-export const TEXTO_DAS_ESTATISTICAS = 'O Truco de Turing usa o Google Analytics para contar partidas, baralhos, verbetes lidos e conquistas e, assim, melhorar o jogo. Ele guarda um cookie neste aparelho e não usa nada para publicidade.';
+export const TEXTO_DAS_ESTATISTICAS = 'O Truco de Turing usa o Google Analytics para entender como o jogo é jogado (partidas, jogadas, botões, verbetes lidos e conquistas) e, assim, melhorá-lo. Cada jogador é contado por um código anônimo, deste aparelho ou da conta; nome e e-mail não são enviados. Ele guarda um cookie neste aparelho e não usa nada para publicidade.';
 
 /** Mostra a faixa de consentimento no rodapé da página. */
 function mostrarFaixa(janela) {
@@ -160,4 +237,4 @@ export function registrarEvento(nome, dados = {}) {
 }
 
 /** Volta ao estado inicial (para os testes). */
-export function reiniciarAnalise() { estado.janela = null; estado.carregado = false; }
+export function reiniciarAnalise() { estado.janela = null; estado.carregado = false; estado.conta = null; estado.perfil = {}; }

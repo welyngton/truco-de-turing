@@ -9,8 +9,10 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `OPCOES_PADRAO` | constante (exportada) | Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles jogam no mesmo aparelho (os outros são oponentes do perfil `oponente`), `arquitetura` é uma das arquiteturas do NeuroDeck e `baralhos` quantos baralhos entram na partida. |
+| `faixaDeExperiencia(maos)` | função (exportada) | Faixa de experiência do jogador pelo número de mãos jogadas (propriedade `experiencia`). |
 | `normalizarOpcoes(opcoes)` | função (exportada) | Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. |
 | `iniciar()` | método | Carrega opções e preferência de som. |
+| `atualizarJogadorNasEstatisticas()` | método | Passa às estatísticas de uso a experiência, as conquistas, o avatar e os verbetes lidos. |
 | `salvar()` | método | Grava o progresso. |
 | `salvarOpcoes()` | método | Grava as escolhas do menu para a próxima visita. |
 | `alternarSom()` | método | Liga ou desliga o som e lembra a escolha. |
@@ -370,6 +372,7 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Biblioteca de conceitos e a chave das dicas, numa janela só. |
 | `abrirAjudaDaMesa()` | método | Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. |
 | `abrirMenuDaMesa()` | método | Botão MENU da mesa: som e música (a janela fica aberta para ligar e desligar), voltar ao jogo ou abandonar a partida. |
+| `registrarAbandono()` | método | Estatísticas de uso: saiu da partida antes do fim (`jogo_abandonado`). |
 
 ## `src/cenas/mesa/layout.js`
 
@@ -472,6 +475,7 @@ Parte da CenaMesa: o fluxo da mão. Começar a mão, executar jogadas, decidir q
 | `iniciarMao()` | método | Distribui uma mão nova: cria o estado, os neurônios na tela e começa o fluxo. |
 | `criarNeuronios()` | método | Cria uma imagem clicável para cada neurônio, com a animação de distribuição. |
 | `executarJogada(jogada, daRede = false)` | método | Aplica uma jogada (de qualquer jogador), anima os eventos e segue o fluxo. |
+| `registrarJogadaNasEstatisticas(jogada, eventos)` | método | Estatísticas de uso: a jogada de quem está neste aparelho vira o evento `acao_jogada`. Empilhar vira o efeito que a pilha teve (tunagem, overfit, early stop ou stack overflow). |
 | `avancar()` | método | Decide o próximo passo: fim da mão, escolha de quem começa, vez do humano ou do oponente. |
 | `anotarNaLinhaDoTempo(jogada, eventos, texto)` | método | Guarda um passo da mão para a revisão didática do fim (interface/telas/revisao.js): quem jogou, o que aconteceu (texto do registro e tipos de evento) e as somas depois da jogada. |
 | `avancarNoInicio()` | método | Fase de início: oponentes escolhem a carta; humanos escolhem um de cada vez. |
@@ -608,7 +612,7 @@ Textos de ambientação das cartas e falas dos oponentes.
 
 ## `src/interface/analise.js`
 
-Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWSGVWJK6Q). Regras: - Só mede no site publicado (`https://welyngton.github.io`). Em localhost, no arquivo único aberto por `file://`, em forks publicados em outro endereço e nos testes automatizados (navegador controlado por WebDriver/Playwright) nada é carregado nem enviado. - Só mede com consentimento. Na primeira visita aparece uma faixa com "Aceitar" e "Recusar"; a escolha fica neste aparelho (`localStorage`) e pode ser mudada na tela "Sobre". O script do Google só é baixado depois do "Aceitar". - Sem sinais de publicidade (Google Signals e personalização de anúncios desligados). Os eventos do jogo (ver `EVENTOS`) passam por `registrarEvento`, que não faz nada enquanto a medição estiver desligada.
+Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWSGVWJK6Q). Regras: - Só mede no site publicado (`https://welyngton.github.io`). Em localhost, no arquivo único aberto por `file://`, em forks publicados em outro endereço e nos testes automatizados (navegador controlado por WebDriver/Playwright) nada é carregado nem enviado. - Só mede com consentimento. Na primeira visita aparece uma faixa com "Aceitar" e "Recusar"; a escolha fica neste aparelho (`localStorage`) e pode ser mudada na tela "Sobre". O script do Google só é baixado depois do "Aceitar". - Sem sinais de publicidade (Google Signals e personalização de anúncios desligados). Os eventos do jogo (ver `EVENTOS`) passam por `registrarEvento`, que não faz nada enquanto a medição estiver desligada. Jogadores diferentes: cada aparelho recebe um código anônimo e aleatório (`a-…`, guardado no `localStorage`); quem entra numa conta passa a ser `c-<uid da conta>` e o uid vai também como `user_id`, para o Google juntar os aparelhos da mesma pessoa. O código vai na propriedade do usuário `id_jogador`, junto com o tipo de conta, a experiência, as conquistas e o avatar (ver `PROPRIEDADES_DO_JOGADOR`). Nome, e-mail e nome na mesa nunca são enviados.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -616,7 +620,14 @@ Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWS
 | `HOSTS_MEDIDOS` | constante (exportada) | Endereços onde o jogo publicado mede (o do fluxo de dados no Google Analytics). |
 | `CHAVE_DO_CONSENTIMENTO` | constante (exportada) | Chave do consentimento no `localStorage`: 'sim', 'nao' ou ausente (ainda não perguntado). |
 | `EVENTOS` | constante (exportada) | Nomes dos eventos enviados. `jogoIniciado`, `jogoFinalizado`, `vitoria` e `derrota` têm os nomes cadastrados em "Criar eventos" no Google Analytics (jogo_iniciado, jogo_finalizado, vitoria_do_jogador, derrota_jogador). O jogo envia esses nomes direto, então lá não é preciso regra nenhuma: uma regra que recria um evento com o próprio nome o conta em dobro. |
+| `PROPRIEDADES_DO_JOGADOR` | constante (exportada) | Propriedades do usuário (no Google Analytics: dimensões personalizadas com escopo "Usuário"). `id_jogador` separa os jogadores; as outras ajudam a comparar grupos. |
+| `CHAVE_DO_JOGADOR` | constante (exportada) | Chave do código anônimo do aparelho no `localStorage`. |
 | `estado` | constante | Estado do módulo: a janela onde o Analytics foi ligado (ou null). |
+| `idDoAparelho(janela = globalThis)` | função (exportada) | Código anônimo deste aparelho (criado na primeira vez que a medição liga). |
+| `idDoJogador(janela = globalThis)` | função (exportada) | Código do jogador enviado ao Google: `c-<uid>` com conta, `a-<código do aparelho>` sem. |
+| `enviarJogador(janela)` | função | Envia ao gtag o `user_id` e as propriedades do jogador. |
+| `atualizarJogador(dados)` | função (exportada) | Atualiza as propriedades do jogador (experiência, conquistas, avatar…). Guarda mesmo com a medição desligada, para valer assim que ela ligar. |
+| `definirConta(uid, metodo)` | função (exportada) | Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e não identifica a pessoa fora do jogo; nome e e-mail não são enviados. |
 | `podeMedir(janela = globalThis)` | função (exportada) | O jogo está no site publicado, num navegador comum (não automatizado)? |
 | `consentimento(janela = globalThis)` | função (exportada) | Lê a escolha guardada: 'sim', 'nao' ou null. |
 | `medindo()` | função (exportada) | A medição está ligada agora (site publicado, consentimento dado e script carregado)? |
@@ -652,6 +663,7 @@ Menu principal: apresentação do jogo, botões das telas e configuração da me
 | `miniaturas` | constante | Miniaturas do verso e da mesa já desenhadas (evita redesenhar a cada troca). |
 | `mostrarMiniatura(elemento, chave, desenhar)` | função | Mostra a miniatura `chave` dentro do elemento, desenhando-a na primeira vez com `desenhar()`. |
 | `opcoesHtml(rotulos, selecionado)` | função | Gera as `<option>` de uma lista. `rotulos` mapeia valor → texto (ou objeto com `nome`). |
+| `BOTOES_DO_MENU` | constante (exportada) | Botões do menu inicial e o nome de cada um nas estatísticas de uso (evento `menu_clique`). |
 | `htmlDoMenu(opcoes)` | função | HTML do menu. |
 | `abrirMenu(app)` | função (exportada) | Abre o menu principal. |
 | `atualizarDicas()` | função | Atualiza descrições, listas dependentes e miniaturas conforme as escolhas. |
@@ -778,7 +790,7 @@ Tela "Jogar online": conta e sala. - Conta: com o projeto Firebase configurado (
 |---|---|---|
 | `clienteDaAba()` | função | Identificador deste aparelho, o mesmo depois de recarregar a aba (para voltar à cadeira). |
 | `contaAtual` | constante | Conta atual nesta sessão (Firebase), ou null. |
-| `usarConta(app, conta)` | função | Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. |
+| `usarConta(app, conta, metodo)` | função | Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. |
 | `transporte(codigo)` | função | Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. |
 | `abrirOnline(app)` | função (exportada) | Abre a tela "Jogar online". |
 | `esperar(novaSala)` | função | Mostra a espera da sala e acompanha as cadeiras até a partida começar. |
