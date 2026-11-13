@@ -12,7 +12,7 @@ import { abrirPainel, escaparHtml } from '../../interface/paineis.js';
 import { medalhaHtml } from '../../interface/telas/conquistas.js';
 import { avataresDaConquista } from '../../conteudo/avatares.js';
 import { abrirRevisao } from '../../interface/telas/revisao.js';
-import { registrarEvento } from '../../interface/analise.js';
+import { registrarEvento, EVENTOS } from '../../interface/analise.js';
 import { COR_JOGADOR_CSS, NOME_SITUACAO } from './layout.js';
 
 /** Troféu desenhado em SVG para a tela de vitória. */
@@ -53,19 +53,36 @@ export const metodosDoResultado = {
     this.oponenteCorreu = false;
     const humanoVenceu = mao.jogadores[vencedor].tipo === 'humano';
     const venceuAPartida = humanoVenceu && partida.encerrada && partida.alvo > 1;
-    const config = mao.config, eu = this.quemVe >= 0 ? this.quemVe : 0;
-    const resumo = { baralho: config.baralho, terreno: config.terreno, oponente: this.opcoes ? this.opcoes.oponente : '', jogadores: mao.jogadores.length };
-    registrarEvento('fim_mao', {
-      ...resumo, venceu: humanoVenceu ? 1 : 0, completa: completa ? 1 : 0, valor: valorDaMao,
-      soma: this.pontuacoes[eu] ? this.pontuacoes[eu].total : 0, dicas: this.dicasNaMao ? 1 : 0,
-    });
-    if (partida.encerrada) registrarEvento('fim_partida', { ...resumo, venceu: humanoVenceu ? 1 : 0, alvo: partida.alvo, maos: partida.numeroMao + 1 });
+    this.registrarEstatisticas(vencedor, humanoVenceu, completa, valorDaMao);
     let espera = completa ? 1100 : 300;
     if (humanoVenceu) espera = this.comemorar(venceuAPartida ? 'partida' : 'mao', mao.jogadores[vencedor].nome);
     else { Som.derrota(); this.falar(provocar('venceu'), vencedor); }
     if (humanoVenceu && !this.variosHumanos) this.time.delayedCall(400, () => this.falar(provocar('perdeu')));
     this.ultimoResultado = { vencedor, ganho, completa, novas, valeConquistas, humanoVenceu };
     this.time.delayedCall(espera, () => this.mostrarResultado());
+  },
+
+  /**
+   * Estatísticas de uso do fim da mão (interface/analise.js): `fim_mao` sempre e, se a partida
+   * acabou, `jogo_finalizado` mais `vitoria_do_jogador` ou `derrota_jogador`. "Jogador" é quem joga
+   * neste aparelho: a cadeira dele na partida online, ou qualquer humano no jogo local.
+   */
+  registrarEstatisticas(vencedor, humanoVenceu, completa, valorDaMao) {
+    const mao = this.mao, partida = this.partida, config = mao.config;
+    const eu = this.online ? this.cadeiraOnline() : this.quemVe >= 0 ? this.quemVe : 0;
+    const venceu = this.online ? vencedor === eu : humanoVenceu;
+    const resumo = {
+      baralho: config.baralho, terreno: config.terreno, oponente: this.opcoes ? this.opcoes.oponente : '',
+      jogadores: mao.jogadores.length, online: this.online ? 1 : 0,
+    };
+    registrarEvento(EVENTOS.fimDaMao, {
+      ...resumo, venceu: venceu ? 1 : 0, completa: completa ? 1 : 0, valor: valorDaMao,
+      soma: this.pontuacoes[eu] ? this.pontuacoes[eu].total : 0, dicas: this.dicasNaMao ? 1 : 0,
+    });
+    if (!partida.encerrada) return;
+    const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0 };
+    registrarEvento(EVENTOS.jogoFinalizado, { ...final, venceu: venceu ? 1 : 0 });
+    registrarEvento(venceu ? EVENTOS.vitoria : EVENTOS.derrota, final);
   },
 
   /**

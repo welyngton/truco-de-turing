@@ -169,9 +169,12 @@ escolha pode ser mudada na tela "Sobre". Sinais de publicidade ficam desligados.
 arquivo único (`file://`), em forks publicados em outro endereço e nos testes automatizados nada é
 carregado.
 
-Eventos: `inicio_partida`, `fim_mao`, `fim_partida`, `truco`, `verbete_lido` e `conquista`, com
-parâmetros como baralho, terreno, oponente e resultado. Para vê-los como dimensões nos relatórios,
-cadastre os parâmetros em Administrador → Definições personalizadas no Google Analytics.
+Eventos (`EVENTOS` em `analise.js`): `jogo_iniciado`, `jogo_finalizado`, `vitoria_do_jogador`,
+`derrota_jogador`, `fim_mao`, `truco`, `verbete_lido` e `conquista`, com parâmetros como baralho,
+terreno, oponente e resultado. O jogo envia esses nomes direto: no Google Analytics não é preciso
+regra em "Criar eventos" (uma regra que recria um evento com o próprio nome o conta em dobro). Para
+ver os parâmetros como dimensões nos relatórios, cadastre-os em Administrador → Definições
+personalizadas.
 
 ## Jogar online
 

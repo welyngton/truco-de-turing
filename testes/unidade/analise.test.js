@@ -12,8 +12,9 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import {
   ID_GOOGLE_ANALYTICS, CHAVE_DO_CONSENTIMENTO, podeMedir, consentimento, definirConsentimento,
-  iniciarAnalise, registrarEvento, medindo, reiniciarAnalise,
+  iniciarAnalise, registrarEvento, medindo, reiniciarAnalise, EVENTOS,
 } from '../../src/interface/analise.js';
+import { instalarNavegadorFalso } from '../apoio/ambiente.js';
 
 const SITE = 'https://welyngton.github.io/truco-de-turing/';
 
@@ -116,5 +117,46 @@ describe('analise.js', () => {
     }
     assert.equal(medindo(), false);
     assert.doesNotThrow(() => registrarEvento('inicio_partida'));
+  });
+});
+
+describe('eventos do jogo', () => {
+  beforeEach(() => reiniciarAnalise());
+
+  it('usam os nomes cadastrados no Google Analytics', () => {
+    assert.equal(EVENTOS.jogoIniciado, 'jogo_iniciado');
+    assert.equal(EVENTOS.jogoFinalizado, 'jogo_finalizado');
+    assert.equal(EVENTOS.vitoria, 'vitoria_do_jogador');
+    assert.equal(EVENTOS.derrota, 'derrota_jogador');
+    for (const nome of Object.values(EVENTOS)) assert.match(nome, /^[a-z][a-z_]{0,39}$/, nome);
+  });
+
+  it('fim da mão: fim_mao sempre; no fim da partida, jogo_finalizado e vitória ou derrota de quem joga no aparelho', async () => {
+    instalarNavegadorFalso();
+    const { metodosDoResultado } = await import('../../src/cenas/mesa/resultado.js');
+    const w = janela(SITE, { escolha: 'sim' });
+    iniciarAnalise(w);
+    const cena = (encerrada, online = null) => ({
+      mao: { config: { baralho: 'backprop', terreno: 'oceano' }, jogadores: [{}, {}] },
+      partida: { encerrada, alvo: 12, numeroMao: 4, tentos: [12, 7] },
+      opcoes: { oponente: 'montecarlo' }, pontuacoes: [{ total: 42 }, { total: 30 }],
+      quemVe: 0, dicasNaMao: false, online, cadeiraOnline: () => 1,
+    });
+    const eventos = () => comandos(w).filter((c) => c[0] === 'event').map((c) => [c[1], c[2]]);
+
+    metodosDoResultado.registrarEstatisticas.call(cena(false), 0, true, true, 3);
+    assert.deepEqual(eventos().map((e) => e[0]), ['fim_mao']);
+    assert.deepEqual(eventos()[0][1], { baralho: 'backprop', terreno: 'oceano', oponente: 'montecarlo', jogadores: 2, online: 0, venceu: 1, completa: 1, valor: 3, soma: 42, dicas: 0 });
+
+    metodosDoResultado.registrarEstatisticas.call(cena(true), 0, true, true, 3);
+    assert.deepEqual(eventos().slice(1).map((e) => e[0]), ['fim_mao', 'jogo_finalizado', 'vitoria_do_jogador']);
+    assert.equal(eventos()[2][1].venceu, 1);
+    assert.equal(eventos()[3][1].tentos, 12);
+
+    /* online: quem joga neste aparelho está na cadeira 1, e a cadeira 0 venceu */
+    metodosDoResultado.registrarEstatisticas.call(cena(true, { sala: {} }), 0, true, true, 1);
+    assert.deepEqual(eventos().slice(4).map((e) => e[0]), ['fim_mao', 'jogo_finalizado', 'derrota_jogador']);
+    assert.equal(eventos()[5][1].venceu, 0);
+    assert.equal(eventos()[6][1].tentos, 7);
   });
 });

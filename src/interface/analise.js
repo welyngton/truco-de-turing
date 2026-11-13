@@ -10,8 +10,8 @@
  *   Google só é baixado depois do "Aceitar".
  * - Sem sinais de publicidade (Google Signals e personalização de anúncios desligados).
  *
- * Os eventos do jogo (início de partida, fim de mão e de partida, truco, verbete lido, conquista)
- * passam por `registrarEvento`, que não faz nada enquanto a medição estiver desligada.
+ * Os eventos do jogo (ver `EVENTOS`) passam por `registrarEvento`, que não faz nada enquanto a
+ * medição estiver desligada.
  */
 
 /** ID da métrica do fluxo da Web no Google Analytics. */
@@ -22,6 +22,23 @@ export const HOSTS_MEDIDOS = ['welyngton.github.io'];
 
 /** Chave do consentimento no `localStorage`: 'sim', 'nao' ou ausente (ainda não perguntado). */
 export const CHAVE_DO_CONSENTIMENTO = 'truco-de-turing:estatisticas';
+
+/**
+ * Nomes dos eventos enviados. `jogoIniciado`, `jogoFinalizado`, `vitoria` e `derrota` têm os nomes
+ * cadastrados em "Criar eventos" no Google Analytics (jogo_iniciado, jogo_finalizado,
+ * vitoria_do_jogador, derrota_jogador). O jogo envia esses nomes direto, então lá não é preciso
+ * regra nenhuma: uma regra que recria um evento com o próprio nome o conta em dobro.
+ */
+export const EVENTOS = {
+  jogoIniciado: 'jogo_iniciado', // botão Jogar ou partida online
+  jogoFinalizado: 'jogo_finalizado', // partida encerrada (alguém chegou aos tentos)
+  vitoria: 'vitoria_do_jogador', // partida vencida por quem joga neste aparelho
+  derrota: 'derrota_jogador', // partida perdida por quem joga neste aparelho
+  fimDaMao: 'fim_mao',
+  truco: 'truco',
+  verbeteLido: 'verbete_lido',
+  conquista: 'conquista',
+};
 
 /** Estado do módulo: a janela onde o Analytics foi ligado (ou null). */
 const estado = { janela: null, carregado: false };

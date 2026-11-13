@@ -438,6 +438,7 @@ Parte da CenaMesa: fim da mão. Marca os tentos, registra conquistas e mostra a 
 |---|---|---|
 | `TROFEU` | constante | Troféu desenhado em SVG para a tela de vitória. |
 | `encerrarMao(corrida)` | método | Encerra a mão. truco, ou null quando a mão foi jogada até o fim. |
+| `registrarEstatisticas(vencedor, humanoVenceu, completa, valorDaMao)` | método | Estatísticas de uso do fim da mão (interface/analise.js): `fim_mao` sempre e, se a partida acabou, `jogo_finalizado` mais `vitoria_do_jogador` ou `derrota_jogador`. "Jogador" é quem joga neste aparelho: a cadeira dele na partida online, ou qualquer humano no jogo local. |
 | `comemorar(nivel, nome)` | método | Comemoração da vitória: fanfarra, clarão dourado, faixa grande, fogos e chuva de confete. |
 | `faixaDeVitoria(titulo, subtitulo, duracao)` | método | Faixa dourada de vitória com título e subtítulo, que cresce e pulsa. |
 | `chuvaDeConfete(duracao)` | método | Confete colorido caindo do alto da tela. |
@@ -607,13 +608,14 @@ Textos de ambientação das cartas e falas dos oponentes.
 
 ## `src/interface/analise.js`
 
-Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWSGVWJK6Q). Regras: - Só mede no site publicado (`https://welyngton.github.io`). Em localhost, no arquivo único aberto por `file://`, em forks publicados em outro endereço e nos testes automatizados (navegador controlado por WebDriver/Playwright) nada é carregado nem enviado. - Só mede com consentimento. Na primeira visita aparece uma faixa com "Aceitar" e "Recusar"; a escolha fica neste aparelho (`localStorage`) e pode ser mudada na tela "Sobre". O script do Google só é baixado depois do "Aceitar". - Sem sinais de publicidade (Google Signals e personalização de anúncios desligados). Os eventos do jogo (início de partida, fim de mão e de partida, truco, verbete lido, conquista) passam por `registrarEvento`, que não faz nada enquanto a medição estiver desligada.
+Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWSGVWJK6Q). Regras: - Só mede no site publicado (`https://welyngton.github.io`). Em localhost, no arquivo único aberto por `file://`, em forks publicados em outro endereço e nos testes automatizados (navegador controlado por WebDriver/Playwright) nada é carregado nem enviado. - Só mede com consentimento. Na primeira visita aparece uma faixa com "Aceitar" e "Recusar"; a escolha fica neste aparelho (`localStorage`) e pode ser mudada na tela "Sobre". O script do Google só é baixado depois do "Aceitar". - Sem sinais de publicidade (Google Signals e personalização de anúncios desligados). Os eventos do jogo (ver `EVENTOS`) passam por `registrarEvento`, que não faz nada enquanto a medição estiver desligada.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `ID_GOOGLE_ANALYTICS` | constante (exportada) | ID da métrica do fluxo da Web no Google Analytics. |
 | `HOSTS_MEDIDOS` | constante (exportada) | Endereços onde o jogo publicado mede (o do fluxo de dados no Google Analytics). |
 | `CHAVE_DO_CONSENTIMENTO` | constante (exportada) | Chave do consentimento no `localStorage`: 'sim', 'nao' ou ausente (ainda não perguntado). |
+| `EVENTOS` | constante (exportada) | Nomes dos eventos enviados. `jogoIniciado`, `jogoFinalizado`, `vitoria` e `derrota` têm os nomes cadastrados em "Criar eventos" no Google Analytics (jogo_iniciado, jogo_finalizado, vitoria_do_jogador, derrota_jogador). O jogo envia esses nomes direto, então lá não é preciso regra nenhuma: uma regra que recria um evento com o próprio nome o conta em dobro. |
 | `estado` | constante | Estado do módulo: a janela onde o Analytics foi ligado (ou null). |
 | `podeMedir(janela = globalThis)` | função (exportada) | O jogo está no site publicado, num navegador comum (não automatizado)? |
 | `consentimento(janela = globalThis)` | função (exportada) | Lê a escolha guardada: 'sim', 'nao' ou null. |
