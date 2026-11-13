@@ -5,7 +5,9 @@
  *  - **frente** (profundidade 4,5): por cima das cartas da mesa e por baixo dos destaques, dos
  *    painéis e da mão. Só leva **partículas pequenas** (flocos, sementes, bolhas, brilhos, riscos
  *    de vento, vaga-lumes), poucas e já adiantadas (`advance`), para a mesa parecer viva desde o
- *    primeiro quadro sem poluir as cartas: elas continuam opacas em relação ao fundo. Véus que cobrem uma
+ *    primeiro quadro sem poluir as cartas: elas continuam opacas em relação ao fundo. Numa tela
+ *    pequena (celular) essas partículas crescem até 1,8× (`escalaDaTela`), para terem na tela o
+ *    tamanho que têm no desktop em vez de sumirem. Véus que cobrem uma
  *    área grande (neblina, sombras de nuvem, raios de sol, cáusticas, halos) ficam sempre no fundo,
  *    por trás das cartas — por cima delas, deixavam o terreno "aparecer através" das cartas.
  *
@@ -35,14 +37,44 @@ function reduzirMovimento() {
   try { return !!(globalThis.matchMedia && globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; }
 }
 
+/** Maior ampliação das partículas da frente numa tela pequena. */
+const AMPLIACAO_MAXIMA = 1.8;
+
+/**
+ * Quanto ampliar as partículas da frente para que tenham, na tela, o tamanho que têm no desktop:
+ * no celular a mesa de 1280 é exibida com 650–850 px de largura e flocos, bolhas e riscos encolhiam
+ * até quase sumir. 1 no desktop; até 1,8 num celular deitado.
+ */
+export function escalaDaTela(cena) {
+  const largura = (cena.scale && cena.scale.displaySize && cena.scale.displaySize.width) || MUNDO.largura;
+  return Math.max(1, Math.min(AMPLIACAO_MAXIMA, MUNDO.largura / largura));
+}
+
+/** Copia a configuração de um emissor multiplicando o tamanho das partículas por `k`. */
+export function ampliarParticulas(config, k) {
+  if (k === 1) return config;
+  const vezes = (v) => (typeof v === 'number' ? v * k
+    : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([c, x]) => [c, ['min', 'max', 'start', 'end'].includes(c) && typeof x === 'number' ? x * k : x])) : v);
+  const novo = { ...config };
+  for (const c of ['scale', 'scaleX', 'scaleY']) if (c in novo) novo[c] = vezes(novo[c]);
+  /* riscos só com scaleX: a espessura também cresce */
+  if ('scaleX' in novo && !('scaleY' in novo) && !('scale' in novo)) novo.scaleY = k;
+  return novo;
+}
+
 export const metodosDoAmbiente = {
   /** Cria o ambiente do terreno da partida. */
   criarAmbiente(terreno) {
-    this.ambiente = { terreno, objetos: [], ondas: null, causticas: [], parado: reduzirMovimento() };
+    this.ambiente = { terreno, objetos: [], ondas: null, causticas: [], parado: reduzirMovimento(), escala: escalaDaTela(this) };
     this.criarTexturasDoAmbiente();
     const criar = { neutro: this.ambienteNeutro, montanha: this.ambienteMontanha, pantano: this.ambientePantano, oceano: this.ambienteOceano }[terreno];
     if (criar) criar.call(this);
     if (!this.ambiente.parado) this.respirarFundo();
+  },
+
+  /** Emissor da camada da frente (por cima das cartas), com as partículas ampliadas em tela pequena. */
+  particulasDaFrente(x, y, textura, config) {
+    return this.add.particles(x, y, textura, ampliarParticulas(config, this.ambiente.escala)).setDepth(FRENTE);
   },
 
   /** A pintura do terreno se aproxima e se afasta devagar (dá vida até às bordas da tela). */
@@ -165,16 +197,16 @@ export const metodosDoAmbiente = {
       speedX: { min: -10, max: 14 }, speedY: { min: -14, max: -3 }, scale: { min: 0.25, max: 0.6 },
       alpha: { start: 0, end: 0.85, ease: 'Sine.inOut', yoyo: true }, tint: 0xffe08a, blendMode: 'ADD',
     }).setDepth(FUNDO);
-    const sementes = this.add.particles(-10, 0, 'amb-semente', {
+    const sementes = this.particulasDaFrente(-10, 0, 'amb-semente', {
       y: { min: 40, max: MUNDO.altura - 60 }, lifespan: 16000, frequency: 1140, advance: 12000,
       speedX: { min: 60, max: 110 }, speedY: { min: -18, max: 10 }, scale: { min: 1, max: 1.8 }, rotate: { start: -20, end: 40 },
       alpha: { start: 0.95, end: 0.6 },
-    }).setDepth(FRENTE);
-    const polenFino = this.add.particles(0, 0, 'amb-ponto', {
+    });
+    const polenFino = this.particulasDaFrente(0, 0, 'amb-ponto', {
       x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: 6000, frequency: 240, advance: 4000,
       speedX: { min: -10, max: 16 }, speedY: { min: -16, max: -3 }, scale: { min: 0.22, max: 0.45 },
       alpha: { start: 0, end: 0.95, ease: 'Sine.inOut', yoyo: true }, tint: 0xffe08a, blendMode: 'ADD',
-    }).setDepth(FRENTE);
+    });
     this.guardar(polen, sementes, polenFino);
   },
 
@@ -202,17 +234,17 @@ export const metodosDoAmbiente = {
       speedY: { min: 30, max: 60 }, speedX: { min: -20, max: 6 }, scale: { min: 0.35, max: 0.75 },
       alpha: { start: 0.95, end: 0.2 },
     }).setDepth(FUNDO);
-    const neveFina = this.add.particles(0, -10, 'amb-ponto', {
+    const neveFina = this.particulasDaFrente(0, -10, 'amb-ponto', {
       x: { min: MESA.x - 100, max: MESA.x + MESA.l + 100 }, lifespan: 11000, frequency: 165, advance: 8000,
       speedY: { min: 45, max: 95 }, speedX: { min: -30, max: 8 }, scale: { min: 0.2, max: 0.45 },
       alpha: { start: 0.95, end: 0.25 },
-    }).setDepth(FRENTE);
+    });
     this.guardar(neve, neveFina);
     /* rajadas: de tempos em tempos o vento varre a neve para o lado, com riscos brancos */
-    const riscos = this.guardar(this.add.particles(0, 0, 'amb-risco', {
+    const riscos = this.guardar(this.particulasDaFrente(0, 0, 'amb-risco', {
       x: -40, y: { min: 30, max: MUNDO.altura - 30 }, lifespan: 1800, speedX: { min: 700, max: 1000 }, scaleX: { min: 1, max: 3 },
       alpha: { start: 0.55, end: 0 }, emitting: false,
-    }).setDepth(FRENTE));
+    }));
     const rajada = () => {
       riscos.explode(26);
       /* a gravidade lateral empurra também os flocos que já estão na tela, e depois some */
@@ -244,17 +276,17 @@ export const metodosDoAmbiente = {
       speedX: { min: -16, max: 16 }, speedY: { min: -14, max: 14 }, scale: escala,
       alpha: { start: 0, end: alfa, ease: 'Sine.inOut', yoyo: true }, tint: [0xd8ff6a, 0xfff38a, 0xa8ff9a], blendMode: 'ADD',
     });
-    const vagalumes = this.add.particles(0, 0, 'amb-ponto', config({ min: 0.4, max: 0.75 }, 1)).setDepth(FRENTE);
+    const vagalumes = this.particulasDaFrente(0, 0, 'amb-ponto', config({ min: 0.4, max: 0.75 }, 1));
     const halos = this.add.particles(0, 0, 'amb-halo', config({ min: 0.5, max: 0.9 }, 0.6)).setDepth(FUNDO);
     const bolhas = this.add.particles(0, MUNDO.altura + 10, 'amb-bolha', {
       x: { min: 0, max: MUNDO.largura }, lifespan: 7000, frequency: 380,
       speedY: { min: -50, max: -25 }, speedX: { min: -6, max: 6 }, scale: { min: 0.8, max: 1.7 }, alpha: { start: 0.8, end: 0 },
     }).setDepth(FUNDO);
     /* bolhas sobem também por cima da mesa, nascendo em qualquer altura */
-    const bolhasDaMesa = this.add.particles(0, 0, 'amb-bolha', {
+    const bolhasDaMesa = this.particulasDaFrente(0, 0, 'amb-bolha', {
       x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 120, max: MUNDO.altura }, lifespan: 4500, frequency: 450, advance: 3000,
       speedY: { min: -70, max: -35 }, speedX: { min: -8, max: 8 }, scale: { min: 0.8, max: 1.5 }, alpha: { start: 0, end: 0.9, ease: 'Sine.out', yoyo: true },
-    }).setDepth(FRENTE);
+    });
     this.guardar(vagalumes, halos, bolhas, bolhasDaMesa);
     this.fogoFatuo();
   },
@@ -262,10 +294,10 @@ export const metodosDoAmbiente = {
   /** Fogo-fátuo: uma luz azulada que aparece, vagueia pela mesa deixando rastro e some (o halo fica por trás das cartas). */
   fogoFatuo() {
     const luz = this.guardar(this.add.image(MESA.x + 80, 300, 'amb-halo').setDepth(FUNDO).setTint(0x8ff0ff).setBlendMode(Phaser.BlendModes.ADD).setScale(1.6).setAlpha(0));
-    const nucleo = this.guardar(this.add.image(luz.x, luz.y, 'amb-ponto').setDepth(FRENTE).setTint(0xe6ffff).setBlendMode(Phaser.BlendModes.ADD).setScale(0.9).setAlpha(0));
-    const rastro = this.guardar(this.add.particles(0, 0, 'amb-ponto', {
+    const nucleo = this.guardar(this.add.image(luz.x, luz.y, 'amb-ponto').setDepth(FRENTE).setTint(0xe6ffff).setBlendMode(Phaser.BlendModes.ADD).setScale(0.9 * this.ambiente.escala).setAlpha(0));
+    const rastro = this.guardar(this.particulasDaFrente(0, 0, 'amb-ponto', {
       follow: nucleo, lifespan: 900, frequency: 40, scale: { start: 0.45, end: 0 }, alpha: { start: 0.6, end: 0 }, tint: 0x9ff4ff, blendMode: 'ADD', emitting: false,
-    }).setDepth(FRENTE));
+    }));
     const passeio = () => {
       if (!luz.active) return;
       const pontos = Array.from({ length: 4 }, () => ({ x: MESA.x + 40 + Math.random() * (MESA.l - 80), y: 110 + Math.random() * 420 }));
@@ -299,25 +331,25 @@ export const metodosDoAmbiente = {
       x: { min: 0, max: MUNDO.largura }, y: { min: 0, max: MUNDO.altura }, lifespan: 2600, frequency: 90,
       speedX: { min: 20, max: 45 }, scale: { min: 0.15, max: 0.35 }, alpha: { start: 0, end: 0.8, ease: 'Sine.inOut', yoyo: true }, tint: 0xe8f8ff,
     }).setDepth(FUNDO);
-    const brilhos = this.add.particles(0, 0, 'amb-brilho', {
+    const brilhos = this.particulasDaFrente(0, 0, 'amb-brilho', {
       x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: { min: 700, max: 1400 }, frequency: 165, advance: 1400,
       scale: { min: 0.5, max: 1.1 }, rotate: { min: 0, max: 45 }, alpha: { start: 0, end: 0.85, ease: 'Sine.inOut', yoyo: true }, tint: 0xffffff, blendMode: 'ADD',
-    }).setDepth(FRENTE);
-    this.ambiente.vento = this.add.particles(0, 0, 'amb-risco', {
+    });
+    this.ambiente.vento = this.particulasDaFrente(0, 0, 'amb-risco', {
       x: -40, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: 2400, frequency: 900, advance: 2400,
       speedX: { min: 520, max: 760 }, scaleX: { min: 0.8, max: 2.2 }, alpha: { start: 0.5, end: 0 },
-    }).setDepth(FRENTE);
+    });
     /* riscos de corrente: traços claros que nascem em qualquer ponto da mesa e derivam com a água */
-    const correntes = this.add.particles(0, 0, 'amb-risco', {
+    const correntes = this.particulasDaFrente(0, 0, 'amb-risco', {
       x: { min: MESA.x - 60, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: { min: 2600, max: 4200 }, frequency: 210, advance: 3000,
       speedX: { min: 110, max: 230 }, speedY: { min: -6, max: 6 }, scaleX: { min: 0.8, max: 2.4 }, scaleY: { min: 0.8, max: 1.3 },
       alpha: { start: 0, end: 0.6, ease: 'Sine.inOut', yoyo: true },
-    }).setDepth(FRENTE);
+    });
     /* bolhas do mar subindo por cima das cartas */
-    const bolhasDoMar = this.add.particles(0, 0, 'amb-bolha-mar', {
+    const bolhasDoMar = this.particulasDaFrente(0, 0, 'amb-bolha-mar', {
       x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 120, max: MUNDO.altura }, lifespan: 4200, frequency: 510, advance: 3000,
       speedY: { min: -80, max: -40 }, speedX: { min: 10, max: 35 }, scale: { min: 0.6, max: 1.3 }, alpha: { start: 0, end: 0.9, ease: 'Sine.out', yoyo: true },
-    }).setDepth(FRENTE);
+    });
     this.guardar(espuma, brilhos, this.ambiente.vento, correntes, bolhasDoMar);
   },
 

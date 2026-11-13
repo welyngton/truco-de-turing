@@ -52,6 +52,26 @@ describe('ambiente dos terrenos', () => {
     });
   }
 
+  it('celular deitado: as partículas por cima das cartas crescem para não sumir na tela pequena', async () => {
+    const jogo = await abrirJogo(servidor.url, { dispositivo: 'Pixel 7', deitado: true, consulta: '?res=1&renderer=canvas' });
+    const { pagina } = jogo;
+    try {
+      await comecarPartida(pagina, { oponente: 'aleatorio', baralho: 'classico', terreno: 'oceano', inicio: 'sorteio' });
+      await pagina.waitForTimeout(2500);
+      const r = await naCena(pagina, `
+        const frente = cena.ambiente.objetos.filter((o) => o.depth > 4 && o.depth < 5 && o.getAliveParticleCount);
+        const bolhas = frente.find((o) => o.texture.key === 'amb-bolha-mar');
+        const tamanhos = bolhas.alive.map((p) => p.scaleX);
+        return { escala: cena.ambiente.escala, parado: cena.ambiente.parado, particulas: frente.reduce((n, o) => n + o.getAliveParticleCount(), 0), maior: Math.max(...tamanhos) };`);
+      assert.equal(r.parado, false);
+      assert.ok(r.escala > 1.4, 'escala ' + r.escala + ' num celular deitado');
+      assert.ok(r.particulas >= 20, 'só ' + r.particulas + ' partículas por cima das cartas');
+      assert.ok(r.maior > 1.3, 'bolhas do mar não cresceram (maior escala ' + r.maior + ')');
+      await capturar(pagina, '31-ambiente-celular');
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
   it('com "reduzir movimento" o ambiente fica parado (só luz e cor)', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1&renderer=canvas' });
     const { pagina } = jogo;
