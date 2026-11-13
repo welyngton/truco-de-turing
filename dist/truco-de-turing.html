@@ -8176,7 +8176,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.3.2";
+  var VERSAO = "2.3.3";
   var DATA_DA_VERSAO = "2026-11-13";
 
   // src/interface/telas/sobre.js
@@ -11449,7 +11449,7 @@ export default function (NeuroDeck) {
       const sementes = this.add.particles(-10, 0, "amb-semente", {
         y: { min: 40, max: MUNDO.altura - 60 },
         lifespan: 16e3,
-        frequency: 380,
+        frequency: 1140,
         advance: 12e3,
         speedX: { min: 60, max: 110 },
         speedY: { min: -18, max: 10 },
@@ -11461,7 +11461,7 @@ export default function (NeuroDeck) {
         x: { min: MESA.x, max: MESA.x + MESA.l },
         y: { min: 40, max: MUNDO.altura - 40 },
         lifespan: 6e3,
-        frequency: 80,
+        frequency: 240,
         advance: 4e3,
         speedX: { min: -10, max: 16 },
         speedY: { min: -16, max: -3 },
@@ -11500,7 +11500,7 @@ export default function (NeuroDeck) {
       const neveFina = this.add.particles(0, -10, "amb-ponto", {
         x: { min: MESA.x - 100, max: MESA.x + MESA.l + 100 },
         lifespan: 11e3,
-        frequency: 55,
+        frequency: 165,
         advance: 8e3,
         speedY: { min: 45, max: 95 },
         speedX: { min: -30, max: 8 },
@@ -11523,7 +11523,7 @@ export default function (NeuroDeck) {
           this.tweens.add({ targets: e, gravityX: 220, duration: 500, yoyo: true, hold: 900, ease: "Sine.inOut" });
         }
       };
-      this.ambiente.rajada = this.time.addEvent({ delay: 6e3, loop: true, callback: rajada });
+      this.ambiente.rajada = this.time.addEvent({ delay: 9e3, loop: true, callback: rajada });
     },
     /* ------------------------------------------------------------------ Pântano */
     ambientePantano() {
@@ -11543,7 +11543,7 @@ export default function (NeuroDeck) {
         x: { min: MESA.x - 40, max: MESA.x + MESA.l + 40 },
         y: { min: 60, max: MUNDO.altura - 40 },
         lifespan: { min: 3500, max: 6500 },
-        frequency: 90,
+        frequency: 270,
         advance: 5e3,
         speedX: { min: -16, max: 16 },
         speedY: { min: -14, max: 14 },
@@ -11567,7 +11567,7 @@ export default function (NeuroDeck) {
         x: { min: MESA.x, max: MESA.x + MESA.l },
         y: { min: 120, max: MUNDO.altura },
         lifespan: 4500,
-        frequency: 150,
+        frequency: 450,
         advance: 3e3,
         speedY: { min: -70, max: -35 },
         speedX: { min: -8, max: 8 },
@@ -11634,7 +11634,7 @@ export default function (NeuroDeck) {
         x: { min: MESA.x, max: MESA.x + MESA.l },
         y: { min: 40, max: MUNDO.altura - 40 },
         lifespan: { min: 700, max: 1400 },
-        frequency: 55,
+        frequency: 165,
         advance: 1400,
         scale: { min: 0.5, max: 1.1 },
         rotate: { min: 0, max: 45 },
@@ -11646,7 +11646,7 @@ export default function (NeuroDeck) {
         x: -40,
         y: { min: 40, max: MUNDO.altura - 40 },
         lifespan: 2400,
-        frequency: 300,
+        frequency: 900,
         advance: 2400,
         speedX: { min: 520, max: 760 },
         scaleX: { min: 0.8, max: 2.2 },
@@ -11656,7 +11656,7 @@ export default function (NeuroDeck) {
         x: { min: MESA.x - 60, max: MESA.x + MESA.l },
         y: { min: 40, max: MUNDO.altura - 40 },
         lifespan: { min: 2600, max: 4200 },
-        frequency: 70,
+        frequency: 210,
         advance: 3e3,
         speedX: { min: 110, max: 230 },
         speedY: { min: -6, max: 6 },
@@ -11668,7 +11668,7 @@ export default function (NeuroDeck) {
         x: { min: MESA.x, max: MESA.x + MESA.l },
         y: { min: 120, max: MUNDO.altura },
         lifespan: 4200,
-        frequency: 170,
+        frequency: 510,
         advance: 3e3,
         speedY: { min: -80, max: -40 },
         speedX: { min: 10, max: 35 },
