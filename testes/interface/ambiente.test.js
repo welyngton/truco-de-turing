@@ -18,6 +18,8 @@ const RETRATO = `
   return {
     parado: a.parado,
     frente: a.objetos.filter((o) => o.depth > 4 && o.depth < 5).length,
+    /* partículas vivas por cima das cartas: precisam ser muitas para a mesa parecer viva */
+    particulas: a.objetos.filter((o) => o.depth > 4 && o.depth < 5 && o.getAliveParticleCount).reduce((n, o) => n + o.getAliveParticleCount(), 0),
     /* véus na frente: qualquer coisa que não seja partícula e cubra mais que um ponto (32×32) */
     veus: a.objetos.filter((o) => o.depth > 4 && o.depth < 5 && !o.getAliveParticleCount && (o.displayWidth || 0) * (o.displayHeight || 0) > 32 * 32)
       .map((o) => o.type + ' ' + (o.texture && o.texture.key)),
@@ -37,6 +39,7 @@ describe('ambiente dos terrenos', () => {
         const antes = await naCena(pagina, RETRATO);
         assert.equal(antes.parado, false);
         assert.ok(antes.frente >= 2, terreno + ': ' + antes.frente + ' efeitos na frente');
+        assert.ok(antes.particulas >= 60, terreno + ': só ' + antes.particulas + ' partículas por cima das cartas (a mesa parece parada)');
         assert.deepEqual(antes.veus, [], terreno + ': véus por cima das cartas deixam o fundo aparecer através delas');
         await pagina.waitForTimeout(1500);
         const depois = await naCena(pagina, RETRATO);
