@@ -240,7 +240,7 @@ export const metodosDoAmbiente = {
     }
     /* vaga-lumes: o ponto aceso passa por cima da mesa; o halo, largo, fica por trás das cartas */
     const config = (escala, alfa) => ({
-      x: { min: MESA.x - 40, max: MESA.x + MESA.l + 40 }, y: { min: 60, max: MUNDO.altura - 40 }, lifespan: { min: 3500, max: 6500 }, frequency: 90,
+      x: { min: MESA.x - 40, max: MESA.x + MESA.l + 40 }, y: { min: 60, max: MUNDO.altura - 40 }, lifespan: { min: 3500, max: 6500 }, frequency: 90, advance: 5000,
       speedX: { min: -16, max: 16 }, speedY: { min: -14, max: 14 }, scale: escala,
       alpha: { start: 0, end: alfa, ease: 'Sine.inOut', yoyo: true }, tint: [0xd8ff6a, 0xfff38a, 0xa8ff9a], blendMode: 'ADD',
     });
@@ -300,11 +300,11 @@ export const metodosDoAmbiente = {
       speedX: { min: 20, max: 45 }, scale: { min: 0.15, max: 0.35 }, alpha: { start: 0, end: 0.8, ease: 'Sine.inOut', yoyo: true }, tint: 0xe8f8ff,
     }).setDepth(FUNDO);
     const brilhos = this.add.particles(0, 0, 'amb-brilho', {
-      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: { min: 700, max: 1400 }, frequency: 55,
+      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: { min: 700, max: 1400 }, frequency: 55, advance: 1400,
       scale: { min: 0.5, max: 1.1 }, rotate: { min: 0, max: 45 }, alpha: { start: 0, end: 0.85, ease: 'Sine.inOut', yoyo: true }, tint: 0xffffff, blendMode: 'ADD',
     }).setDepth(FRENTE);
     this.ambiente.vento = this.add.particles(0, 0, 'amb-risco', {
-      x: -40, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: 2400, frequency: 300,
+      x: -40, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: 2400, frequency: 300, advance: 2400,
       speedX: { min: 520, max: 760 }, scaleX: { min: 0.8, max: 2.2 }, alpha: { start: 0.5, end: 0 },
     }).setDepth(FRENTE);
     /* riscos de corrente: traços claros que nascem em qualquer ponto da mesa e derivam com a água */
