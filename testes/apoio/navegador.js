@@ -16,14 +16,16 @@ import { chromium, devices } from 'playwright';
 export const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PHASER = readFileSync(join(RAIZ, 'node_modules/phaser/dist/phaser.min.js'));
 const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf' };
-const KATEX = join(RAIZ, 'node_modules/katex/dist');
 
-/** Sobe um servidor de arquivos estáticos na raiz do projeto, numa porta livre. */
-export async function subirServidor() {
+/**
+ * Sobe um servidor de arquivos estáticos numa porta livre.
+ * @param {string} [raiz] Pasta servida (padrão: a do projeto; os testes do arquivo único servem uma cópia empacotada).
+ */
+export async function subirServidor(raiz = RAIZ) {
   const servidor = createServer(async (pedido, resposta) => {
     const caminho = decodeURIComponent(new URL(pedido.url, 'http://x').pathname);
     try {
-      const conteudo = await readFile(join(RAIZ, caminho === '/' ? 'index.html' : caminho));
+      const conteudo = await readFile(join(raiz, caminho === '/' ? 'index.html' : caminho));
       resposta.writeHead(200, { 'content-type': TIPOS[extname(caminho)] || 'application/octet-stream', 'cache-control': 'no-store' });
       resposta.end(conteudo);
     } catch (e) { resposta.writeHead(404); resposta.end(); }
@@ -37,9 +39,11 @@ let contadorDeCobertura = 0;
 /**
  * Abre o jogo numa página nova.
  * @param {string} base URL do servidor.
- * @param {{dispositivo?: string, consulta?: string, deitado?: boolean, viewport?: object}} [opcoes]
+ * @param {{dispositivo?: string, consulta?: string, deitado?: boolean, viewport?: object, pagina?: string, semRede?: boolean}} [opcoes]
  *   `dispositivo`: nome de aparelho do Playwright (ex.: 'iPhone 13'); `deitado`: já na horizontal;
- *   `consulta`: parâmetros da URL (ex.: '?renderer=canvas').
+ *   `consulta`: parâmetros da URL (ex.: '?renderer=canvas'); `pagina`: arquivo aberto (padrão
+ *   '/index.html'); `semRede`: recusa todo pedido para fora do servidor local, menos o Phaser e as
+ *   fontes, que continuam servidos pelo teste.
  * @returns {Promise<{navegador, contexto, pagina, erros: string[], fechar: () => Promise<void>}>}
  */
 export async function abrirJogo(base, opcoes = {}) {
@@ -55,16 +59,13 @@ export async function abrirJogo(base, opcoes = {}) {
   const erros = [];
   pagina.on('pageerror', (e) => erros.push(String(e && e.stack || e)));
   pagina.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) erros.push(m.text()); });
+  /* sem rede: registrado antes, então as rotas abaixo (registradas depois) têm a preferência */
+  if (opcoes.semRede) await pagina.route((url) => url.hostname !== '127.0.0.1', (r) => r.abort('internetdisconnected'));
   await pagina.route(/cdnjs\.cloudflare\.com/, (r) => r.fulfill({ body: PHASER, contentType: 'text/javascript' }));
   await pagina.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: '', contentType: 'text/css' }));
-  /* KaTeX (fórmulas do Grimório) vem do node_modules, sem depender da rede */
-  await pagina.route(/cdn\.jsdelivr\.net\/npm\/katex@[^/]+\/dist\//, async (r) => {
-    const arquivo = new URL(r.request().url()).pathname.replace(/^.*\/dist\//, '');
-    try { await r.fulfill({ body: await readFile(join(KATEX, arquivo)), contentType: TIPOS[extname(arquivo)] || 'application/octet-stream' }); } catch (e) { await r.fulfill({ status: 404, body: '' }); }
-  });
   const medirCobertura = !!process.env.NODE_V8_COVERAGE;
   if (medirCobertura) await pagina.coverage.startJSCoverage({ resetOnNavigation: false, reportAnonymousFunctions: true });
-  await pagina.goto(base + '/index.html' + (opcoes.consulta || ''));
+  await pagina.goto(base + (opcoes.pagina || '/index.html') + (opcoes.consulta || ''));
   return {
     navegador, contexto, pagina, erros,
     async fechar() {

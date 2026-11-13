@@ -4,7 +4,11 @@
  */
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { subirServidor, abrirJogo, esperarMenu, naCena, capturar, comecarPartida, esperarCena } from '../apoio/navegador.js';
+import { subirServidor, abrirJogo, esperarMenu, naCena, capturar, comecarPartida, esperarCena, RAIZ } from '../apoio/navegador.js';
+import { execFileSync } from 'node:child_process';
+import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 let servidor;
 before(async () => { servidor = await subirServidor(); });
@@ -71,8 +75,9 @@ describe('menu e telas', () => {
           await pagina.click('#g-lista button >> nth=3');
           assert.equal(await pagina.locator('#g-lista .lido').count(), 3); /* dropout (lido pela ajuda das ações), o primeiro e o quarto */
           await pagina.click('#g-lista button[data-id="overfit"]');
-          await pagina.waitForSelector('#g-verbete .katex-display');
+          await pagina.waitForSelector('#g-verbete .aprofundar .formula math');
           assert.match(await pagina.locator('#g-verbete').textContent(), /Para se aprofundar/);
+          assert.ok(await pagina.locator('#g-verbete .aprofundar .formula math').evaluate((m) => m.getBoundingClientRect().height > 20));
           await capturar(pagina, '01b-grimorio-formulas');
         }
         if (botao === '#m-conquistas') { await pagina.waitForSelector('#c-retrato canvas'); await capturar(pagina, '02-conquistas'); }
@@ -128,5 +133,35 @@ describe('menu e telas', () => {
       assert.equal(await naCena(pagina, 'return jogo.config.width'), 1920);
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
+  });
+
+  it('arquivo único sem rede: as fórmulas do "Para se aprofundar" aparecem desenhadas (#43)', async () => {
+    /* empacota uma cópia do projeto e abre dist/truco-de-turing.html recusando tudo que vem de fora (menos o Phaser) */
+    const copia = mkdtempSync(join(tmpdir(), 'truco-offline-'));
+    for (const item of ['src', 'index.html', 'package.json']) cpSync(join(RAIZ, item), join(copia, item), { recursive: true });
+    execFileSync(process.execPath, [join(RAIZ, 'ferramentas/empacotar.js')], { env: { ...process.env, TRUCO_RAIZ: copia } });
+    const local = await subirServidor(copia);
+    const jogo = await abrirJogo(local.url, { pagina: '/dist/truco-de-turing.html', semRede: true });
+    const { pagina } = jogo;
+    const recusados = [];
+    pagina.on('requestfailed', (r) => recusados.push(new URL(r.url()).hostname));
+    try {
+      await esperarMenu(pagina);
+      await pagina.click('#m-grimorio');
+      for (const id of ['overfit', 'stackoverflow', 'transfer']) {
+        await pagina.click('#g-lista button[data-id="' + id + '"]');
+        await pagina.waitForSelector('#g-verbete .aprofundar .formula math');
+        const medidas = await pagina.locator('#g-verbete .aprofundar math').evaluateAll((ms) => ms.map((m) => {
+          const r = m.getBoundingClientRect();
+          return { bloco: m.getAttribute('display') === 'block', altura: r.height, largura: r.width };
+        }));
+        assert.ok(medidas.some((m) => m.bloco && m.altura > 12 && m.largura > 60), id + ': fórmula em destaque desenhada');
+        assert.ok(medidas.some((m) => !m.bloco && m.largura > 0), id + ': fórmula na linha desenhada');
+        assert.doesNotMatch(await pagina.locator('#g-verbete').textContent(), /\\[a-z]+|\$/, id + ': sobrou LaTeX cru');
+      }
+      await capturar(pagina, '01c-grimorio-formulas-sem-rede');
+      assert.ok(!recusados.some((h) => /jsdelivr/.test(h)), 'não pediu nada ao CDN do KaTeX');
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); await local.fechar(); rmSync(copia, { recursive: true, force: true }); }
   });
 });

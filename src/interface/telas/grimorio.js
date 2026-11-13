@@ -6,12 +6,11 @@
 import { VERBETES, NOME_DA_BIBLIOTECA } from '../../conteudo/grimorio.js';
 import { figuraDaBiblioteca } from '../../conteudo/figurasDaBiblioteca.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
-import { textoComFormulas } from '../formulas.js';
 
 /**
  * Corpo do verbete: a ideia do dia a dia (verbetes de Ação), o conceito, a equação, a figura, como
  * aparece no jogo, até onde a comparação vale, a matemática para se aprofundar, a fonte e a autoria.
- * Equação (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador.
+ * Equação, "aprofundar" e fórmula (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador.
  * @param {object} v Verbete de `VERBETES`.
  * @returns {string}
  */
@@ -22,8 +21,8 @@ export function htmlDoVerbete(v) {
     (v.figura ? '<figure class="figura">' + figuraDaBiblioteca(v.figura) + '</figure>' : '') +
     '<p class="no-jogo"><b>No jogo:</b> ' + escaparHtml(v.noJogo) + '</p>' +
     (v.limite ? '<p class="limite"><b>Até onde vale a comparação:</b> ' + escaparHtml(v.limite) + '</p>' : '') +
-    (v.aprofundar ? '<div class="aprofundar"><h3>Para se aprofundar</h3><p>' + textoComFormulas(v.aprofundar) + '</p>' +
-      (v.formula ? textoComFormulas('$$' + v.formula + '$$') : '') + '</div>' : '') +
+    (v.aprofundar ? '<div class="aprofundar"><h3>Para se aprofundar</h3><p>' + v.aprofundar + '</p>' +
+      (v.formula ? '<div class="formula">' + v.formula + '</div>' : '') + '</div>' : '') +
     (v.fonte ? '<p class="fonte">Fonte: ' + escaparHtml(v.fonte) + '</p>' : '') +
     (v.autoria ? '<p class="autoria">Colaboração de ' + escaparHtml(v.autoria) + '.</p>' : '');
 }

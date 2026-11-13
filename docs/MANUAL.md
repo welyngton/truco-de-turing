@@ -404,10 +404,11 @@ MathML montada com os auxiliares do topo do arquivo. Para
 o aviso aparecer durante a partida, chame `this.avisarVerbete('id')` no ponto certo de `efeitos.js`.
 
 Opcionalmente, acrescente `ideia` (comparação do dia a dia, mostrada como "A ideia"), `autoria` e, para
-uma segunda matemática além da equação, `aprofundar` (texto; `$...$` vira fórmula na linha) com `formula`
-(LaTeX em destaque, sem cifrões), que aparecem em "Para se aprofundar". Use `String.raw` nos campos com
-LaTeX, para não precisar dobrar as barras. Essas fórmulas são desenhadas pelo KaTeX (carregado do CDN em
-`index.html`); sem rede, aparecem como código LaTeX. O verbete de Overfitting é um bom modelo.
+uma segunda matemática além da equação, `aprofundar` (texto com fórmulas na linha, montadas com `na(...)`)
+com `formula` (fórmula em destaque, montada com `bloco(...)`), que aparecem em "Para se aprofundar". Como a
+equação, essas fórmulas são MathML, desenhado pelo próprio navegador: funcionam sem rede e no arquivo
+único, sem biblioteca externa. Fora das fórmulas, `aprofundar` é texto puro (sem `<`, `>` nem `&`). O
+verbete de Overfitting é um bom modelo.
 
 ## 9. Testes e relatórios
 
