@@ -10,6 +10,7 @@ import { VERBETES } from './conteudo/grimorio.js';
 import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, mostrarAviso } from './interface/paineis.js';
+import { registrarEvento, atualizarJogador, EVENTOS } from './interface/analise.js';
 
 /**
  * Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles
@@ -20,6 +21,12 @@ export const OPCOES_PADRAO = {
   oponente: 'guloso', baralho: 'classico', terreno: 'neutro', inicio: 'revela-descarta', alvo: 12,
   jogadores: 2, humanos: 1, arquitetura: 'padrao', baralhos: 1,
 };
+
+/** Faixa de experiência do jogador pelo número de mãos jogadas (propriedade `experiencia`). */
+export function faixaDeExperiencia(maos) {
+  const n = Number(maos) || 0;
+  return n === 0 ? 'novato' : n < 10 ? 'iniciante' : n < 50 ? 'intermediario' : 'veterano';
+}
 
 /**
  * Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte
@@ -54,6 +61,16 @@ export const Aplicacao = {
     if (!this.progresso.musicaEscolhida) this.progresso.musica = true;
     this.opcoes = normalizarOpcoes(this.progresso.opcoes);
     Som.definirMudo(!!this.progresso.mudo);
+    this.atualizarJogadorNasEstatisticas();
+  },
+
+  /** Passa às estatísticas de uso a experiência, as conquistas, o avatar e os verbetes lidos. */
+  atualizarJogadorNasEstatisticas() {
+    const p = this.progresso;
+    atualizarJogador({
+      experiencia: faixaDeExperiencia(p.maos), conquistas: Object.keys(p.desbloqueadas || {}).length,
+      avatar: p.avatar || 'padrao', verbetes_lidos: p.verbetesLidos || 0,
+    });
   },
 
   /** Grava o progresso. */
@@ -67,6 +84,7 @@ export const Aplicacao = {
     this.progresso.mudo = !Som.estaMudo();
     Som.definirMudo(this.progresso.mudo);
     this.salvar();
+    registrarEvento(EVENTOS.audio, { tipo: 'som', ligado: this.progresso.mudo ? 0 : 1 });
   },
 
   /**
@@ -77,11 +95,17 @@ export const Aplicacao = {
     this.progresso.musica = !this.progresso.musica;
     this.progresso.musicaEscolhida = true;
     this.salvar();
+    registrarEvento(EVENTOS.audio, { tipo: 'musica', ligado: this.progresso.musica ? 1 : 0 });
     if (this.progresso.musica && terreno) Musica.tocar(terreno); else Musica.parar();
   },
 
   /** Sai do menu e abre a mesa. */
   jogar() {
+    const o = this.opcoes || OPCOES_PADRAO;
+    registrarEvento(EVENTOS.jogoIniciado, {
+      baralho: o.baralho, terreno: o.terreno, oponente: o.oponente, arquitetura: o.arquitetura,
+      jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: this.online ? 1 : 0,
+    });
     fecharTodos();
     this.modoImersivo();
     document.body.classList.add('em-partida');
@@ -144,6 +168,9 @@ export const Aplicacao = {
     }
     this.salvar();
     if (novas.length) Som.medalha();
+    const total = Object.keys(p.desbloqueadas).length;
+    for (const conquista of novas) registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total, maos: p.maos });
+    this.atualizarJogadorNasEstatisticas();
     return novas;
   },
 
@@ -153,12 +180,15 @@ export const Aplicacao = {
     if (p.lidos[id]) return;
     p.lidos[id] = true;
     p.verbetesLidos = Object.keys(p.lidos).length;
+    registrarEvento(EVENTOS.verbeteLido, { verbete: id, lidos: p.verbetesLidos });
     if (!p.desbloqueadas.biblio && p.verbetesLidos >= VERBETES.length) {
       p.desbloqueadas.biblio = Date.now();
       const conquista = CONQUISTAS.find((c) => c.id === 'biblio');
       mostrarAviso('Conquista: ' + conquista.nome, conquista.descricao, 'medalha-aviso');
       Som.medalha();
+      registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total: Object.keys(p.desbloqueadas).length, maos: p.maos });
     }
     this.salvar();
+    this.atualizarJogadorNasEstatisticas();
   },
 };

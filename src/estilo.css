@@ -506,3 +506,15 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .cadeiras li { margin: 4px 0; font-weight: 700; }
 .cadeiras li.vaga { color: #9a8c6c; font-style: italic; font-weight: 400; }
 .cadeiras li.oponente { color: #5a4630; font-weight: 400; }
+
+/* faixa de consentimento das estatísticas de uso (interface/analise.js) */
+.faixa-estatisticas {
+  position: fixed; left: 50%; bottom: max(10px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 15;
+  width: min(760px, calc(100vw - 20px)); display: flex; align-items: center; gap: 14px;
+  background: #f3e6c8; color: #2b1608; border: 2px solid #0d0a08; border-radius: 12px; padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); font-family: var(--fonte-texto); font-size: 14px; line-height: 1.35;
+}
+.faixa-estatisticas p { margin: 0; flex: 1; }
+.faixa-estatisticas-botoes { display: flex; gap: 6px; flex: none; }
+@media (max-width: 560px) { .faixa-estatisticas { flex-direction: column; align-items: stretch; } }
+.estatisticas-situacao { font-weight: 600; }

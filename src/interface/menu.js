@@ -15,6 +15,7 @@ import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
 import { abrirPainel, escaparHtml } from './paineis.js';
 import { Som } from './som.js';
+import { registrarEvento, EVENTOS } from './analise.js';
 import { abrirRegras } from './telas/regras.js';
 import { abrirGrimorio } from './telas/grimorio.js';
 import { abrirConquistas } from './telas/conquistas.js';
@@ -67,6 +68,12 @@ function opcoesHtml(rotulos, selecionado) {
     return '<option value="' + valor + '"' + (valor === String(selecionado) ? ' selected' : '') + '>' + escaparHtml(rotulo) + '</option>';
   }).join('');
 }
+
+/** Botões do menu inicial e o nome de cada um nas estatísticas de uso (evento `menu_clique`). */
+export const BOTOES_DO_MENU = {
+  'm-jogar': 'jogar', 'm-online': 'jogar_online', 'm-regras': 'como_jogar', 'm-grimorio': 'glossario',
+  'm-conquistas': 'conquistas', 'm-avatar': 'avatar', 'm-mods': 'mods', 'm-sobre': 'sobre',
+};
 
 /** HTML do menu. */
 function htmlDoMenu(opcoes) {
@@ -158,7 +165,14 @@ export function abrirMenu(app) {
     app.salvarOpcoes();
   }
 
-  elemento.querySelectorAll('select').forEach((s) => s.addEventListener('change', atualizarDicas));
+  elemento.querySelectorAll('select').forEach((s) => s.addEventListener('change', () => {
+    atualizarDicas();
+    registrarEvento(EVENTOS.menuOpcao, { campo: s.id.replace(/^m-/, ''), valor: s.value });
+  }));
+  /* estatísticas de uso: qual botão do menu foi clicado (antes da ação de cada um) */
+  for (const [id, botao] of Object.entries(BOTOES_DO_MENU)) {
+    campo(id).addEventListener('click', () => registrarEvento(EVENTOS.menuClique, { botao }), { capture: true });
+  }
   atualizarDicas();
   campo('m-jogar').addEventListener('click', () => { Som.desbloquear(); lerEscolhas(); painel.fechar(); app.jogar(); });
   campo('m-regras').addEventListener('click', () => { lerEscolhas(); abrirRegras(app); });

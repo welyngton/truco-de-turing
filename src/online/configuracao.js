@@ -15,7 +15,7 @@ export const FIREBASE = {
   storageBucket: 'truco-e26e8.firebasestorage.app',
   messagingSenderId: '932294943078',
   appId: '1:932294943078:web:e5d0edf14d5a44de45a8a7',
-  /* sem measurementId: o jogo não usa o Google Analytics */
+  /* sem measurementId: o Google Analytics é carregado à parte, com consentimento (interface/analise.js) */
 };
 
 /** Versão do SDK do Firebase carregada do CDN oficial. */

@@ -22,6 +22,7 @@ import {
   confirmar, mostrarAviso, mostrarDicaDeJogo, mostrarDicaFlutuante, esconderDicaFlutuante, escaparHtml,
 } from '../../interface/paineis.js';
 import { retanguloNaTela } from '../recursos.js';
+import { registrarEvento, EVENTOS } from '../../interface/analise.js';
 
 /** Simulações usadas para estimar a chance de vitória mostrada nas dicas. */
 const SIMULACOES_DA_DICA = 40;
@@ -39,6 +40,7 @@ export const metodosDeDicas = {
   alternarDicas() {
     if (this.app.dicasLigadas) {
       this.app.dicasLigadas = false;
+      registrarEvento(EVENTOS.dicas, { ligadas: 0 });
       this.dicaAtual = null;
       esconderDicaFlutuante();
       this.atualizarChaves();
@@ -56,6 +58,7 @@ export const metodosDeDicas = {
         { rotulo: 'Ativar dicas', classe: 'vinho', acao: () => {
           this.app.dicasLigadas = true;
           this.dicasNaMao = true;
+          registrarEvento(EVENTOS.dicas, { ligadas: 1 });
           this.atualizarChaves();
           if (this.mao) { this.darDicaDoTurno(); this.redesenhar(); }
           else mostrarAviso('Dicas ligadas', 'Esta mão não vale conquistas.', null, 4000);

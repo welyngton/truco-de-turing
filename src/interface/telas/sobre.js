@@ -1,9 +1,17 @@
 /**
  * @file Tela "Sobre": versão, o jogo unificado (NeuroDeck + Truco de Turing), a disciplina, as regras
- * originais, o professor, os autores e a licença.
+ * originais, o professor, os autores, as estatísticas de uso (ligar e desligar) e a licença.
  */
 import { abrirPainel } from '../paineis.js';
 import { VERSAO, DATA_DA_VERSAO } from '../../versao.js';
+import { podeMedir, consentimento, definirConsentimento, TEXTO_DAS_ESTATISTICAS } from '../analise.js';
+
+/** Situação das estatísticas de uso neste aparelho, em texto. */
+function situacaoDasEstatisticas() {
+  if (!podeMedir()) return 'Nesta cópia do jogo (fora do site publicado) nada é medido.';
+  const escolha = consentimento();
+  return escolha === 'sim' ? 'Neste aparelho: ligadas.' : escolha === 'nao' ? 'Neste aparelho: desligadas.' : 'Neste aparelho: ainda sem escolha.';
+}
 
 /** Abre a tela "Sobre". */
 export function abrirSobre() {
@@ -41,8 +49,20 @@ export function abrirSobre() {
       '<li><b>Suzy Arcanjo</b>: verbetes das ações no Glossário.</li>' +
       '</ul>' +
       '<p class="contribuicoes">Contribuições são bem-vindas: o código está aberto no repositório.</p>' +
+      '<h3>Estatísticas de uso</h3>' +
+      '<p>' + TEXTO_DAS_ESTATISTICAS + '</p>' +
+      '<p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + '</p>' +
+      (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : '') +
       '<h3>Créditos e licença</h3>' +
       '<p>Código aberto sob a licença <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no repositório <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras é o do NeuroDeck, incluído com a concordância do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas é gerada por código; fontes Cinzel e Spectral.</p>' +
       '<div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
-  return abrirPainel(html, { fechaAoClicarFora: true });
+  const painel = abrirPainel(html, { fechaAoClicarFora: true });
+  for (const escolha of ['sim', 'nao']) {
+    const botao = painel.elemento.querySelector('#s-estatisticas-' + escolha);
+    if (botao) botao.addEventListener('click', () => {
+      definirConsentimento(escolha);
+      painel.elemento.querySelector('#s-estatisticas').textContent = situacaoDasEstatisticas();
+    });
+  }
+  return painel;
 }

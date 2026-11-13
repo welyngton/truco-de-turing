@@ -161,6 +161,50 @@ learning, ruído, Monte Carlo, mudança de distribuição (terrenos como weight 
 incerteza (truco). Cada verbete traz a equação, uma figura quando ajuda, como aparece no jogo e até onde a comparação
 vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Ver o conceito".
 
+## Estatísticas de uso
+
+O site publicado (`https://welyngton.github.io/truco-de-turing/`) usa o **Google Analytics 4**
+(ID `G-VWSGVWJK6Q`) para contar partidas, mãos, pedidos de truco, verbetes lidos e conquistas
+(`src/interface/analise.js`). Só mede depois que a pessoa aceita na faixa de consentimento, e a
+escolha pode ser mudada na tela "Sobre". Sinais de publicidade ficam desligados. Em `localhost`, no
+arquivo único (`file://`), em forks publicados em outro endereço e nos testes automatizados nada é
+carregado.
+
+Eventos (`EVENTOS` em `analise.js`):
+
+| Evento | Quando | Parâmetros |
+|---|---|---|
+| `jogo_iniciado` | botão Jogar ou partida online | baralho, terreno, oponente, arquitetura, jogadores, humanos, baralhos, alvo, online |
+| `jogo_finalizado` | partida encerrada | baralho, terreno, oponente, jogadores, online, alvo, maos, tentos, venceu |
+| `vitoria_do_jogador` / `derrota_jogador` | fim da partida, para quem joga no aparelho | os de `jogo_finalizado`, sem venceu |
+| `jogo_abandonado` | saiu da partida antes do fim | baralho, terreno, oponente, maos, tentos, online |
+| `fim_mao` | fim de cada mão | baralho, terreno, oponente, jogadores, online, venceu, completa, valor, soma, dicas |
+| `acao_jogada` | cada jogada de quem está no aparelho | acao (inicio, ativar, tunagem, overfit, earlystop, stackoverflow, dropout, transfer, passar), baralho, terreno, camada, mao |
+| `truco` | pedido de truco | valor, quem |
+| `menu_clique` | botões do menu inicial | botao (jogar, jogar_online, como_jogar, glossario, conquistas, avatar, mods, sobre) |
+| `menu_opcao` | mudança numa escolha do menu | campo, valor |
+| `mesa_clique` | REGRAS e MENU da mesa e as opções deles | botao |
+| `dicas` | ligou ou desligou as dicas | ligadas |
+| `revisao_aberta` | revisão da mão ou da partida | escopo |
+| `verbete_lido` | primeira leitura de cada verbete | verbete, lidos |
+| `conquista` | conquista desbloqueada | conquista, nome, graduacao, total, maos |
+| `avatar_escolhido` | troca de avatar | avatar |
+| `audio_alterado` | som ou música | tipo, ligado |
+| `login` / `logout` | entrar ou sair da conta | method |
+| `sala_online` | criar, entrar ou começar uma sala | acao, pessoas, conta |
+
+**Jogadores diferentes.** Cada aparelho recebe um código anônimo (`a-…`); quem entra numa conta vira
+`c-<uid da conta>` e o uid vai também como `user_id`. O código e o perfil vão como propriedades do
+usuário: `id_jogador`, `tipo_conta` (local, google, email), `experiencia` (novato, iniciante,
+intermediario, veterano), `conquistas`, `avatar` e `verbetes_lidos`. Nome, e-mail e nome na mesa não
+são enviados.
+
+O jogo envia esses nomes direto: no Google Analytics não é preciso regra em "Criar eventos" (uma
+regra que recria um evento com o próprio nome o conta em dobro). Para separar os dados por jogador,
+baralho etc., cadastre em Administrador → Definições personalizadas as propriedades do usuário
+(escopo **Usuário**) e os parâmetros que interessarem (escopo **Evento**) e use Explorar → Forma
+livre, com "ID do jogador" nas linhas.
+
 ## Jogar online
 
 Botão **Jogar online** no menu:
