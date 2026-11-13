@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.3.1 — 2026-11-12
+
+- fix: cartas da mesa opacas em relação ao fundo do terreno ([#47](https://github.com/welyngton/truco-de-turing/pull/47), por [@welyngton](https://github.com/welyngton))
+
 ## 2.3.0 — 2026-11-12
 
 - feat: animação dos terrenos visível durante a partida, mais forte e com efeitos novos ([#46](https://github.com/welyngton/truco-de-turing/pull/46), por [@welyngton](https://github.com/welyngton))

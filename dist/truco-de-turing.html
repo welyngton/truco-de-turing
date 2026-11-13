@@ -8176,7 +8176,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.3.0";
+  var VERSAO = "2.3.1";
   var DATA_DA_VERSAO = "2026-11-12";
 
   // src/interface/telas/sobre.js
@@ -11419,12 +11419,12 @@ export default function (NeuroDeck) {
       if (this.ambiente.parado) return;
       this.tweens.add({ targets: luz, alpha: 0.2, duration: 3500, yoyo: true, repeat: -1, ease: "Sine.inOut" });
       for (let k = 0; k < 3; k++) {
-        const raio = this.add.image(120 + k * 210, -120, "amb-raio").setOrigin(0.5, 0).setAngle(-28 + k * 4).setDepth(FRENTE).setBlendMode(Phaser.BlendModes.ADD).setTint(16770728).setAlpha(0.18).setScale(1 + k * 0.4, 1);
+        const raio = this.add.image(120 + k * 210, -120, "amb-raio").setOrigin(0.5, 0).setAngle(-28 + k * 4).setDepth(FUNDO).setBlendMode(Phaser.BlendModes.ADD).setTint(16770728).setAlpha(0.18).setScale(1 + k * 0.4, 1);
         this.tweens.add({ targets: raio, angle: raio.angle + 6, alpha: 0.3, duration: 6e3 + k * 1700, yoyo: true, repeat: -1, ease: "Sine.inOut" });
         this.guardar(raio);
       }
       for (let k = 0; k < 3; k++) {
-        const sombra = this.add.image(MESA.x + k * 380, 140 + k * 210, "amb-sombra").setDepth(FRENTE).setAlpha(0.9).setScale(3.4, 2.4);
+        const sombra = this.add.image(MESA.x + k * 380, 140 + k * 210, "amb-sombra").setDepth(FUNDO).setAlpha(0.9).setScale(3.4, 2.4);
         this.atravessar(sombra, 46e3 + k * 9e3);
         this.guardar(sombra);
       }
@@ -11450,7 +11450,19 @@ export default function (NeuroDeck) {
         rotate: { start: -20, end: 40 },
         alpha: { start: 0.85, end: 0.5 }
       }).setDepth(FRENTE);
-      this.guardar(polen, sementes);
+      const polenFino = this.add.particles(0, 0, "amb-ponto", {
+        x: { min: MESA.x, max: MESA.x + MESA.l },
+        y: { min: 40, max: MUNDO.altura - 40 },
+        lifespan: 6e3,
+        frequency: 260,
+        speedX: { min: -8, max: 12 },
+        speedY: { min: -12, max: -2 },
+        scale: { min: 0.14, max: 0.3 },
+        alpha: { start: 0, end: 0.75, ease: "Sine.inOut", yoyo: true },
+        tint: 16769162,
+        blendMode: "ADD"
+      }).setDepth(FRENTE);
+      this.guardar(polen, sementes, polenFino);
     },
     /* ------------------------------------------------------------------ Montanha */
     ambienteMontanha() {
@@ -11464,7 +11476,7 @@ export default function (NeuroDeck) {
         this.guardar(nuvem);
       }
       for (let k = 0; k < 2; k++) {
-        const nevoa = this.add.image(MESA.x + k * 520, MUNDO.altura - 150 + k * 40, "amb-nuvem").setDepth(FRENTE).setAlpha(0.55).setScale(3.2, 1.5).setTint(16052479);
+        const nevoa = this.add.image(MESA.x + k * 520, MUNDO.altura - 150 + k * 40, "amb-nuvem").setDepth(FUNDO).setAlpha(0.55).setScale(3.2, 1.5).setTint(16052479);
         this.atravessar(nevoa, 52e3 + k * 12e3);
         this.guardar(nevoa);
       }
@@ -11514,7 +11526,7 @@ export default function (NeuroDeck) {
         this.guardar(n);
       }
       for (let k = 0; k < 3; k++) {
-        const n = this.add.image(MESA.x + 120 + k * 260, 200 + k * 170, "amb-nuvem").setDepth(FRENTE).setScale(2.4, 1.3).setAlpha(0.5).setTint(14087632);
+        const n = this.add.image(MESA.x + 120 + k * 260, 200 + k * 170, "amb-nuvem").setDepth(FUNDO).setScale(2.4, 1.3).setAlpha(0.5).setTint(14087632);
         this.tweens.add({ targets: n, x: n.x + (k % 2 ? 240 : -240), alpha: 0.22, duration: 11e3 + k * 2500, yoyo: true, repeat: -1, ease: "Sine.inOut" });
         this.guardar(n);
       }
@@ -11531,7 +11543,7 @@ export default function (NeuroDeck) {
         blendMode: "ADD"
       });
       const vagalumes = this.add.particles(0, 0, "amb-ponto", config({ min: 0.3, max: 0.6 }, 1)).setDepth(FRENTE);
-      const halos = this.add.particles(0, 0, "amb-halo", config({ min: 0.5, max: 0.9 }, 0.6)).setDepth(FRENTE);
+      const halos = this.add.particles(0, 0, "amb-halo", config({ min: 0.5, max: 0.9 }, 0.6)).setDepth(FUNDO);
       const bolhas = this.add.particles(0, MUNDO.altura + 10, "amb-bolha", {
         x: { min: 0, max: MUNDO.largura },
         lifespan: 7e3,
@@ -11541,12 +11553,21 @@ export default function (NeuroDeck) {
         scale: { min: 0.8, max: 1.7 },
         alpha: { start: 0.8, end: 0 }
       }).setDepth(FUNDO);
-      this.guardar(vagalumes, halos, bolhas);
+      const bolhasDaMesa = this.add.particles(0, MUNDO.altura + 10, "amb-bolha", {
+        x: { min: MESA.x, max: MESA.x + MESA.l },
+        lifespan: 6500,
+        frequency: 900,
+        speedY: { min: -60, max: -30 },
+        speedX: { min: -6, max: 6 },
+        scale: { min: 0.6, max: 1.1 },
+        alpha: { start: 0.7, end: 0 }
+      }).setDepth(FRENTE);
+      this.guardar(vagalumes, halos, bolhas, bolhasDaMesa);
       this.fogoFatuo();
     },
-    /** Fogo-fátuo: uma luz azulada que aparece, vagueia pela mesa deixando rastro e some. */
+    /** Fogo-fátuo: uma luz azulada que aparece, vagueia pela mesa deixando rastro e some (o halo fica por trás das cartas). */
     fogoFatuo() {
-      const luz = this.guardar(this.add.image(MESA.x + 80, 300, "amb-halo").setDepth(FRENTE).setTint(9433343).setBlendMode(Phaser.BlendModes.ADD).setScale(1.6).setAlpha(0));
+      const luz = this.guardar(this.add.image(MESA.x + 80, 300, "amb-halo").setDepth(FUNDO).setTint(9433343).setBlendMode(Phaser.BlendModes.ADD).setScale(1.6).setAlpha(0));
       const nucleo = this.guardar(this.add.image(luz.x, luz.y, "amb-ponto").setDepth(FRENTE).setTint(15138815).setBlendMode(Phaser.BlendModes.ADD).setScale(0.9).setAlpha(0));
       const rastro = this.guardar(this.add.particles(0, 0, "amb-ponto", {
         follow: nucleo,
@@ -11583,7 +11604,7 @@ export default function (NeuroDeck) {
       this.desenharOndas(0);
       if (this.ambiente.parado) return;
       for (const [alfa, escala] of [[0.16, 1.6], [0.11, 2.3]]) {
-        const c = this.add.tileSprite(MESA.x + MESA.l / 2, MUNDO.altura / 2, MESA.l, MUNDO.altura, "amb-causticas").setDepth(FRENTE).setBlendMode(Phaser.BlendModes.ADD).setAlpha(alfa).setTint(12577535).setTileScale(escala, escala);
+        const c = this.add.tileSprite(MESA.x + MESA.l / 2, MUNDO.altura / 2, MESA.l, MUNDO.altura, "amb-causticas").setDepth(FUNDO).setBlendMode(Phaser.BlendModes.ADD).setAlpha(alfa).setTint(12577535).setTileScale(escala, escala);
         this.ambiente.causticas.push(c);
         this.guardar(c);
       }

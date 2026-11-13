@@ -230,12 +230,12 @@ Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os mé
 
 ## `src/cenas/mesa/ambiente.js`
 
-Parte da CenaMesa: ambiente animado de cada terreno. Tem duas camadas: - **fundo** (profundidade 0,5): por cima da pintura do terreno e por baixo de tudo; aparece nas bordas, entre as colunas e através dos painéis translúcidos; - **frente** (profundidade 4,5): por cima das cartas da mesa e por baixo dos destaques, dos painéis e da mão. É transparente o bastante para não atrapalhar a leitura das cartas, mas é o que faz o terreno "viver" durante a partida. | Terreno | Fundo | Frente | |----------|---------------------------------------------------|--------------------------------------------------------------| | Planície | luz quente que respira, pólen dourado | sombras de nuvens passando, sementes de dente-de-leão, raios de sol | | Montanha | sol do entardecer, nuvens, neve grossa | neve fina, rajadas de vento que varrem a neve, névoa rasteira | | Pântano | neblina, bolhas subindo | neblina sobre a mesa, vaga-lumes com halo, fogo-fátuo que vagueia | | Oceano | ondas que correm, espuma | cáusticas (a luz dançando no fundo do mar), brilhos e vento | Em todos, a pintura do terreno se aproxima e se afasta devagar. Tudo é desenhado por código (texturas pequenas geradas na hora). Com "reduzir movimento" no sistema, o ambiente fica parado: só as camadas de luz e cor.
+Parte da CenaMesa: ambiente animado de cada terreno. Tem duas camadas: - **fundo** (profundidade 0,5): por cima da pintura do terreno e por baixo de tudo; aparece nas bordas, entre as colunas e através dos painéis translúcidos; - **frente** (profundidade 4,5): por cima das cartas da mesa e por baixo dos destaques, dos painéis e da mão. Só leva **partículas pequenas** (flocos, sementes, bolhas, brilhos, riscos de vento, vaga-lumes): as cartas continuam opacas em relação ao fundo. Véus que cobrem uma área grande (neblina, sombras de nuvem, raios de sol, cáusticas, halos) ficam sempre no fundo, por trás das cartas — por cima delas, deixavam o terreno "aparecer através" das cartas. | Terreno | Fundo | Frente | |----------|------------------------------------------------------------------|------------------------------------------| | Planície | luz quente que respira, raios de sol, sombras de nuvens, pólen | sementes de dente-de-leão, pólen fino | | Montanha | sol do entardecer, nuvens, névoa rasteira, neve grossa | neve fina, rajadas de vento | | Pântano | neblina, halos dos vaga-lumes e do fogo-fátuo, bolhas subindo | vaga-lumes, bolhas, fogo-fátuo que vagueia | | Oceano | ondas que correm, cáusticas (a luz dançando no fundo do mar), espuma | brilhos e vento | Em todos, a pintura do terreno se aproxima e se afasta devagar. Tudo é desenhado por código (texturas pequenas geradas na hora). Com "reduzir movimento" no sistema, o ambiente fica parado: só as camadas de luz e cor.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `FUNDO` | constante | Profundidade da camada de fundo (por cima da pintura do terreno). |
-| `FRENTE` | constante | Profundidade da camada da frente (por cima das cartas da mesa, por baixo dos destaques). |
+| `FRENTE` | constante | Profundidade da camada da frente (por cima das cartas da mesa, por baixo dos destaques): só partículas pequenas. |
 | `MESA` | constante | Área da mesa entre os dois painéis. |
 | `reduzirMovimento()` | função | Sistema pediu menos movimento? |
 | `criarAmbiente(terreno)` | método | Cria o ambiente do terreno da partida. |
@@ -245,7 +245,7 @@ Parte da CenaMesa: ambiente animado de cada terreno. Tem duas camadas: - **fundo
 | `guardar(...objetos)` | método | Guarda um objeto do ambiente (para os testes contarem e para destruir junto com a mesa). |
 | `luzDoTerreno(cor, alfa, cx = MUNDO.largura / 2, cy = MUNDO.altura * 0.4)` | método | Luz colorida por cima do fundo, para o terreno ficar mais claro e reconhecível. |
 | `atravessar(objeto, duracao, desde = objeto.x)` | método | Nuvem (ou sombra, ou neblina) que atravessa a tela da esquerda para a direita, para sempre. |
-| `fogoFatuo()` | método | Fogo-fátuo: uma luz azulada que aparece, vagueia pela mesa deixando rastro e some. |
+| `fogoFatuo()` | método | Fogo-fátuo: uma luz azulada que aparece, vagueia pela mesa deixando rastro e some (o halo fica por trás das cartas). |
 | `desenharOndas(tempo)` | método | Ondas do oceano: nove linhas que correm devagar. |
 | `atualizarAmbiente(tempo)` | método | A cada quadro (CenaMesa.update): ondas e cáusticas do oceano. |
 

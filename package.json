@@ -1,6 +1,6 @@
 {
   "name": "truco-de-turing",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Jogo de cartas em Phaser para ensinar redes neurais e deep learning (FPO 2026/2, tema 4).",
   "main": "index.html",
   "scripts": {
