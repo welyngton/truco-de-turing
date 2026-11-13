@@ -170,8 +170,11 @@ html, body { overscroll-behavior: none; }
 .ponto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
 .menu-acoes { display: grid; gap: 10px; margin-top: 6px; max-width: 520px; }
 .menu-acoes .botao.jogar { font-size: 20px; padding: 12px 20px; letter-spacing: 0.12em; }
-.menu-mais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.menu-mais .botao { font-size: 13px; padding: 9px 6px; white-space: nowrap; }
+.menu-mais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 8px; }
+/* os seis botões têm o mesmo tamanho: colunas e linhas iguais, conteúdo centrado, e o retrato do
+   Avatar não aumenta a altura do botão (margem negativa compensa o tamanho dele) */
+.menu-mais .botao { font-size: 13px; padding: 9px 6px; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.menu-mais .botao-avatar img { width: 1.9em; height: 1.9em; margin-block: -0.5em; flex: none; }
 @media (max-width: 520px) { .menu-mais { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .menu-painel { padding: 22px 24px; }
 .campo { display: grid; gap: 4px; margin-bottom: 12px; }
@@ -265,6 +268,9 @@ html, body { overscroll-behavior: none; }
 .tipo-de-mod .campos { font-size: 13px; color: #5a4630; }
 .codigo-mod { background: #1c140c; color: #f3e6c4; border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; line-height: 1.45; max-height: 320px; }
 .mods-copiado { margin-left: 10px; font-size: 14px; color: #3f6b2e; }
+.arquivos-de-mods li { margin-bottom: 4px; }
+.mods a { color: #1d4f7a; }
+.mods a code { color: inherit; }
 .aviso-mods { background: #f9eeda; border-left: 4px solid #c99a3a; padding: 8px 12px; border-radius: 4px; }
 @media (max-width: 760px) { .tipos-de-mod { grid-template-columns: minmax(0, 1fr); } }
 
@@ -442,7 +448,7 @@ html, body { overscroll-behavior: none; }
   .camada, .folha, .aviso, .trofeu, .folha.vitoria { animation: none; }
 }
 
-/* Biblioteca de conceitos: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
+/* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
 .grimorio-verbete .aprofundar { margin-top: 14px; border-top: 1px solid rgba(43, 22, 8, 0.2); padding-top: 4px; }
 .grimorio-verbete .aprofundar h3 { margin: 8px 0 4px; }
 .grimorio-verbete .katex-display { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
@@ -1936,6 +1942,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return { total: resultado.total, neuronios, combos, vanishing: !!resultado.vanishing };
   }
   var decimal = (x) => String(arredondar(x)).replace(".", ",");
+  var ROTULO_SAIDA_SATURADA = "Sa\xEDda saturada depois das ativa\xE7\xF5es";
   function pontuarForward(mao, resultado) {
     const neuronios = resultado.items.map((item, camada2) => {
       const carta = mao.indiceDeCartas.tt.get(item.card.id);
@@ -1952,8 +1959,9 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         notas
       };
     });
-    const combos = resultado.vanishing && neuronios.length ? [{ de: 0, ate: neuronios.length - 1, valor: "", quantidade: neuronios.length, pontos: 0, rotulo: "Sa\xEDda baixa depois de ativa\xE7\xF5es: vanishing gradient" }] : [];
-    return { total: resultado.total, neuronios, combos, vanishing: !!resultado.vanishing };
+    const saturada = !!resultado.vanishing && neuronios.length > 0;
+    const combos = saturada ? [{ de: 0, ate: neuronios.length - 1, valor: "", quantidade: neuronios.length, pontos: 0, rotulo: ROTULO_SAIDA_SATURADA }] : [];
+    return { total: resultado.total, neuronios, combos, vanishing: false, saturada };
   }
 
   // src/nucleo/terrenos.js
@@ -1965,7 +1973,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   };
 
   // src/conteudo/grimorio.js
-  var NOME_DA_BIBLIOTECA = "Biblioteca de conceitos";
+  var NOME_DA_BIBLIOTECA = "Gloss\xE1rio";
   var bloco = (...partes) => '<math display="block">' + partes.join("") + "</math>";
   var mi = (x) => "<mi>" + x + "</mi>";
   var mo = (x) => "<mo>" + x + "</mo>";
@@ -1999,11 +2007,20 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       id: "ativacao",
       titulo: "Fun\xE7\xE3o de ativa\xE7\xE3o",
       categoria: "Fundamento",
-      conceito: "A ativa\xE7\xE3o \xE9 a n\xE3o linearidade aplicada depois da soma ponderada. Sem ela, empilhar camadas daria o mesmo que uma \xFAnica camada linear. ReLU \xE9 a mais usada hoje; sigmoide e tangente hiperb\xF3lica saturam nos extremos, e isso alimenta o vanishing gradient.",
+      conceito: "A ativa\xE7\xE3o \xE9 a n\xE3o linearidade aplicada depois da soma ponderada. Sem ela, empilhar camadas daria o mesmo que uma \xFAnica camada linear. ReLU \xE9 a mais usada hoje; sigmoide e tangente hiperb\xF3lica saturam nos extremos (ver Satura\xE7\xE3o da ativa\xE7\xE3o), e isso alimenta o vanishing gradient.",
       equacao: bloco(mt("ReLU"), par(mi("z")), mo("="), mi("max"), par(mn("0"), mo(","), mi("z"))) + bloco(mi("\u03C3"), par(mi("z")), mo("="), frac(mn("1"), linha(mn("1"), mo("+"), sup(mi("e"), linha(mo("\u2212"), mi("z")))))) + bloco(mi("tanh"), par(mi("z")), mo("="), frac(linha(sup(mi("e"), mi("z")), mo("\u2212"), sup(mi("e"), linha(mo("\u2212"), mi("z")))), linha(sup(mi("e"), mi("z")), mo("+"), sup(mi("e"), linha(mo("\u2212"), mi("z")))))),
       figura: "ativacoes",
-      noJogo: 'As cartas de figura (J, Q, K) valem 0 sozinhas, como um neur\xF4nio que a ReLU desligou. S\xF3 "acendem" em sequ\xEAncia de figuras iguais.',
-      limite: "\xC9 s\xF3 uma lembran\xE7a visual: nenhuma carta aplica uma fun\xE7\xE3o de ativa\xE7\xE3o de verdade."
+      noJogo: 'No baralho Cl\xE1ssico as figuras (J, Q, K) valem 0 sozinhas, como um neur\xF4nio que a ReLU desligou, e s\xF3 "acendem" em sequ\xEAncia de figuras iguais. No baralho Backprop elas s\xE3o ativa\xE7\xF5es de verdade: J ReLU, Q sigmoide e K tanh.',
+      limite: "No Cl\xE1ssico \xE9 s\xF3 uma lembran\xE7a visual. No Backprop a conta \xE9 real, mas a sigmoide e a tanh foram esticadas para ir at\xE9 20 (20\xB7\u03C3(z/10) e 20\xB7tanh(z/20)), e n\xE3o at\xE9 1, para os pontos ficarem na escala das cartas."
+    },
+    {
+      id: "saturacao",
+      titulo: "Satura\xE7\xE3o da ativa\xE7\xE3o",
+      categoria: "Fundamento",
+      conceito: "Sigmoide e tangente hiperb\xF3lica s\xE3o limitadas: a sigmoide fica entre 0 e 1, a tanh entre \u22121 e 1. Quando a entrada z \xE9 grande em m\xF3dulo, a sa\xEDda gruda perto do teto ou do piso e mudar z quase n\xE3o muda a sa\xEDda: o neur\xF4nio est\xE1 saturado. Isso \xE9 um fen\xF4meno do forward pass. Como a derivada tamb\xE9m fica perto de zero, um neur\xF4nio saturado devolve pouco gradiente no backward e \xE9 uma das causas do vanishing gradient, mas as duas coisas n\xE3o s\xE3o a mesma.",
+      equacao: bloco(sup(mi("\u03C3"), mo("\u2032")), par(mi("z")), mo("="), mi("\u03C3"), par(mi("z")), par(mn("1"), mo("\u2212"), mi("\u03C3"), par(mi("z"))), mo("\u2264"), frac(mn("1"), mn("4")), mo(","), mspace(), sup(mi("\u03C3"), mo("\u2032")), par(mi("z")), mo("\u2192"), mn("0"), mt(" quando "), abs(mi("z")), mo("\u2192"), mi("\u221E")) + bloco(mt("no Backprop:"), mspace(), mi("a"), mo("="), mn("20"), mo("\xB7"), mi("\u03C3"), par(frac(mi("z"), mn("10"))), mo("&lt;"), mn("20"), mo(","), mspace(), mi("a"), mo("="), mn("20"), mo("\xB7"), mi("tanh"), par(frac(mi("z"), mn("20"))), mo("&lt;"), mn("20")),
+      noJogo: 'No baralho Backprop a sigmoide (Q) e a tanh (K) nunca passam de 20, e a ReLU (J) zera o que for negativo. Uma rede de 3 ou mais neur\xF4nios que passou por alguma dessas ativa\xE7\xF5es e terminou abaixo de 20 recebe o aviso "Sa\xEDda saturada depois das ativa\xE7\xF5es": o sinal ficou preso no teto das ativa\xE7\xF5es em vez de crescer. Para fugir disso, deixe as camadas finais lineares (cartas de 2 a 10 e \xC1s) e use naipes de peso alto.',
+      limite: "O aviso \xE9 uma conven\xE7\xE3o do jogo: ele olha s\xF3 se a sa\xEDda ficou abaixo de 20 depois de alguma ativa\xE7\xE3o n\xE3o linear, sem medir a derivada de cada neur\xF4nio. Uma ReLU seguida de camadas lineares, por exemplo, recebe o aviso sem estar num plat\xF4. E o baralho s\xF3 calcula o forward pass, ent\xE3o ele n\xE3o mostra o gradiente sumindo, s\xF3 a sa\xEDda que n\xE3o sobe."
     },
     {
       id: "camadas",
@@ -2021,8 +2038,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       categoria: "Treino",
       conceito: "No forward pass o sinal atravessa a rede da entrada at\xE9 a sa\xEDda, camada por camada. Cada camada s\xF3 recebe o que a anterior produziu, ent\xE3o a rede inteira \xE9 uma composi\xE7\xE3o de fun\xE7\xF5es.",
       equacao: bloco(chapeu("y"), mo("="), sup(mi("f"), linha(mo("("), mi("L"), mo(")"))), par(mo("\u22EF"), sup(mi("f"), linha(mo("("), mn("2"), mo(")"))), par(sup(mi("f"), linha(mo("("), mn("1"), mo(")"))), par(negrito("x"))))),
-      noJogo: "Voc\xEA constr\xF3i a rede um neur\xF4nio por camada, sempre avan\xE7ando para a camada seguinte. A soma das cartas desse caminho \xE9 a sa\xEDda da sua rede.",
-      limite: "No jogo os valores se somam; numa rede de verdade cada camada transforma o que recebe."
+      noJogo: "Voc\xEA constr\xF3i a rede um neur\xF4nio por camada, sempre avan\xE7ando para a camada seguinte. A soma das cartas desse caminho \xE9 a sa\xEDda da sua rede. No baralho Backprop a conta \xE9 a do forward pass de verdade: cada camada calcula a = f(w\xB7a + b) com o que recebeu da anterior.",
+      limite: "Na maioria dos baralhos os valores s\xF3 se somam; numa rede de verdade, como no Backprop, cada camada transforma o que recebe."
     },
     {
       id: "pesos",
@@ -2049,8 +2066,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       categoria: "Treino",
       conceito: "Para treinar, a rede calcula o quanto cada peso contribuiu para o erro, da sa\xEDda para a entrada, aplicando a regra da cadeia camada por camada. O gradiente que chega a uma camada \xE9 o produto das derivadas de todas as camadas depois dela.",
       equacao: bloco(parc(mi("L"), camada(negrito("h"))), mo("="), parc(mi("L"), sup(negrito("h"), linha(mo("("), mi("L"), mo(")")))), prod(linha(mi("k"), mo("="), mi("l"), mo("+"), mn("1")), mi("L")), parc(camada(negrito("h"), "k"), sup(negrito("h"), linha(mo("("), mi("k"), mo("\u2212"), mn("1"), mo(")"))))),
-      noJogo: "O jogo n\xE3o tem treino de verdade, mas a quadra de figuras (vanishing gradient) e as a\xE7\xF5es que desfazem camadas lembram o sinal que volta da sa\xEDda para tr\xE1s.",
-      limite: "Nenhuma jogada calcula gradiente: \xE9 a ideia, n\xE3o a conta."
+      noJogo: "O jogo n\xE3o tem treino de verdade, mas a quadra de figuras (vanishing gradient) e as a\xE7\xF5es que desfazem camadas lembram o sinal que volta da sa\xEDda para tr\xE1s. O baralho Backprop leva o nome porque cada carta \xE9 uma pe\xE7a que a retropropaga\xE7\xE3o ajustaria (o naipe \xE9 o peso w, o valor \xE9 o vi\xE9s b, a figura \xE9 a ativa\xE7\xE3o), mas ele s\xF3 faz a primeira metade de um passo de treino: o forward pass, que calcula a sa\xEDda. N\xE3o h\xE1 perda, derivada nem atualiza\xE7\xE3o de pesos; o nome aponta para o que viria depois.",
+      limite: "Nenhuma jogada calcula gradiente, nem no baralho Backprop: \xE9 a ideia, n\xE3o a conta."
     },
     {
       id: "tunagem",
@@ -2242,7 +2259,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       const carta = c.mao.neuronios[id].cartas[0];
       return carta.valor === "4" && carta.naipe === "P";
     }) },
-    { id: "biblio", nome: "Bibliotec\xE1rio", descricao: "Leia todos os verbetes da Biblioteca de conceitos.", graduacao: "prata", teste: (c) => c.progresso.verbetesLidos >= VERBETES.length },
+    { id: "biblio", nome: "Bibliotec\xE1rio", descricao: "Leia todos os verbetes do Gloss\xE1rio.", graduacao: "prata", teste: (c) => c.progresso.verbetesLidos >= VERBETES.length },
     /* conquistas da fusão: baralhos, mesas e arquiteturas do NeuroDeck */
     { id: "nobreza", nome: "Sangue azul", descricao: "Ven\xE7a uma m\xE3o do baralho Nobreza com figuras iguais vizinhas na sua rede.", graduacao: "prata", teste: (c) => c.venceu && c.mao.config.baralho === "nobreza" && pontuarRede(c.mao, c.eu).neuronios.some((n) => n.notas.includes("\xD72 figura")) },
     { id: "backprop", nome: "Forward pass de ouro", descricao: "Termine uma m\xE3o do baralho Backprop com a sa\xEDda da sua rede em 45 ou mais.", graduacao: "ouro", teste: (c) => c.mao.config.baralho === "backprop" && c.mao.resultado.somas[c.eu] >= 45 },
@@ -2945,7 +2962,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     progresso: carregarProgresso(),
     /** Escolhas do menu: oponente, baralho, terreno, inicio, alvo, jogadores, humanos, arquitetura, baralhos. */
     opcoes: null,
-    /** Verbetes da Biblioteca de conceitos já mostrados como aviso nesta sessão. */
+    /** Verbetes do Glossário já mostrados como aviso nesta sessão. */
     verbetesAvisados: {},
     /** Instância do Phaser.Game (definida em principal.js). */
     jogo: null,
@@ -7910,7 +7927,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
   function abrirRegras(app, aoFechar, abaInicial = "jogar") {
     const conteudo = { jogar: COMO_JOGAR, acoes: abaDeAcoes(), pontuacao: PONTUACAO, extensoes: abaDeExtensoes(), dicas: DICAS };
-    const html = '<div class="folha regras"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Regras</h2><nav class="abas" role="tablist">' + ABAS_DAS_REGRAS.map(([id, nome]) => '<button role="tab" data-aba="' + id + '" aria-selected="' + (id === abaInicial) + '">' + nome + "</button>").join("") + "</nav>" + ABAS_DAS_REGRAS.map(([id]) => '<section class="aba" role="tabpanel" data-aba="' + id + '"' + (id === abaInicial ? "" : " hidden") + ">" + conteudo[id] + "</section>").join("") + '<p class="nota-regras">Os conceitos de redes neurais por tr\xE1s de cada jogada est\xE3o na ' + NOME_DA_BIBLIOTECA + '.</p><div class="linha fim" style="margin-top:14px"><button class="botao discreto" id="r-biblioteca">' + NOME_DA_BIBLIOTECA + '</button><button class="botao" data-fechar>Entendi</button></div></div>';
+    const html = '<div class="folha regras"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Regras</h2><nav class="abas" role="tablist">' + ABAS_DAS_REGRAS.map(([id, nome]) => '<button role="tab" data-aba="' + id + '" aria-selected="' + (id === abaInicial) + '">' + nome + "</button>").join("") + "</nav>" + ABAS_DAS_REGRAS.map(([id]) => '<section class="aba" role="tabpanel" data-aba="' + id + '"' + (id === abaInicial ? "" : " hidden") + ">" + conteudo[id] + "</section>").join("") + '<p class="nota-regras">Os conceitos de redes neurais por tr\xE1s de cada jogada est\xE3o no ' + NOME_DA_BIBLIOTECA + '.</p><div class="linha fim" style="margin-top:14px"><button class="botao discreto" id="r-biblioteca">' + NOME_DA_BIBLIOTECA + '</button><button class="botao" data-fechar>Entendi</button></div></div>';
     if (app) {
       app.progresso.tutorialVisto = true;
       app.salvar();
@@ -8176,12 +8193,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.3.4";
+  var VERSAO = "2.4.0";
   var DATA_DA_VERSAO = "2026-11-13";
 
   // src/interface/telas/sobre.js
   function abrirSobre() {
-    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>Dois jogos que viraram um</h3><p>A turma fez dois jogos para o mesmo tema, e o professor decidiu juntar o melhor de cada um:</p><ul><li><b>NeuroDeck</b> (<a href="https://neurodeck-fpo.web.app/" target="_blank" rel="noopener">neurodeck-fpo.web.app</a>): as <b>regras</b>. O motor do NeuroDeck decide tudo o que acontece na mesa: jogadas, pontua\xE7\xE3o, terrenos, desempates, as arquiteturas de rede, de 2 a 5 jogadores, os oponentes do computador e a API de mods.</li><li><b>Truco de Turing</b>: a <b>interface</b>. Arte das cartas, menu, mesa, efeitos, sons, m\xFAsica, avatares, conquistas, a Biblioteca de conceitos e o modo truco.</li></ul><p>O motor do NeuroDeck foi copiado para o projeto sem altera\xE7\xF5es e conferido contra o site publicado em 1.000 partidas; depois recebeu as decis\xF5es de regra do professor e do grupo, registradas no reposit\xF3rio.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><h3>Autores</h3><ul class="autores"><li><b>Francisco Lima</b>: NeuroDeck (regras, motor, oponentes e mods).</li><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes, valida\xE7\xE3o das regras e fus\xE3o dos dois jogos.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es da fus\xE3o.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es na Biblioteca de conceitos.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras \xE9 o do NeuroDeck, inclu\xEDdo com a concord\xE2ncia do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>Dois jogos que viraram um</h3><p>A turma fez dois jogos para o mesmo tema, e o professor decidiu juntar o melhor de cada um:</p><ul><li><b>NeuroDeck</b> (<a href="https://neurodeck-fpo.web.app/" target="_blank" rel="noopener">neurodeck-fpo.web.app</a>): as <b>regras</b>. O motor do NeuroDeck decide tudo o que acontece na mesa: jogadas, pontua\xE7\xE3o, terrenos, desempates, as arquiteturas de rede, de 2 a 5 jogadores, os oponentes do computador e a API de mods.</li><li><b>Truco de Turing</b>: a <b>interface</b>. Arte das cartas, menu, mesa, efeitos, sons, m\xFAsica, avatares, conquistas, o Gloss\xE1rio e o modo truco.</li></ul><p>O motor do NeuroDeck foi copiado para o projeto sem altera\xE7\xF5es e conferido contra o site publicado em 1.000 partidas; depois recebeu as decis\xF5es de regra do professor e do grupo, registradas no reposit\xF3rio.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><h3>Autores</h3><ul class="autores"><li><b>Francisco Lima</b>: NeuroDeck (regras, motor, oponentes e mods).</li><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes, valida\xE7\xE3o das regras e fus\xE3o dos dois jogos.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es da fus\xE3o.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras \xE9 o do NeuroDeck, inclu\xEDdo com a concord\xE2ncia do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
     return abrirPainel(html, { fechaAoClicarFora: true });
   }
 
@@ -8215,28 +8232,43 @@ export default function (NeuroDeck) {
 `;
 
   // src/interface/telas/mods.js
+  var REPOSITORIO = "https://github.com/welyngton/truco-de-turing/blob/main/";
+  var linkDoArquivo = (caminho) => '<a href="' + REPOSITORIO + caminho + '" target="_blank" rel="noopener"><code>' + escaparHtml(caminho) + "</code></a>";
+  var ARQUIVOS_DE_MODS = [
+    { caminho: "src/conteudo/modExemplo.js", texto: 'o mod de exemplo desta tela (terreno "Regulariza\xE7\xE3o L1"), pronto para copiar.' },
+    { caminho: "testes/unidade/mods.test.js", texto: "carrega o exemplo como um mod de verdade e joga partidas com ele no Node: um bom modelo para testar o seu." },
+    { caminho: "src/motor/engine/registry.js", texto: "a API de mods: registerDeck, registerTerrain, registerAction, apiVersion e os campos de cada tipo." },
+    { caminho: "src/motor/engine/index.js", texto: "registra os baralhos, terrenos e a\xE7\xF5es nativos e carrega mods externos (loadMod)." },
+    { caminho: "src/motor/engine/decks.js", texto: "os 7 baralhos do jogo, cada um registrado como mod (Cl\xE1ssico, Truco, Nobreza, Backprop\u2026)." },
+    { caminho: "src/motor/engine/terrains.js", texto: "os terrenos Montanha, P\xE2ntano e Oceano, com os ganchos do turno." },
+    { caminho: "src/motor/engine/actions.js", texto: "as a\xE7\xF5es (tunagem, overfit, early stop, dropout, transfer learning\u2026) com generate, isValid e execute." },
+    { caminho: "src/motor/ORIGEM.md", texto: "de onde veio o motor do NeuroDeck e o que mudou na fus\xE3o." }
+  ];
   var TIPOS = [
     {
       nome: "Baralho",
       funcao: "registerDeck",
       obrigatorios: "id, name, score",
+      exemplos: "src/motor/engine/decks.js",
       texto: "Define como a rede \xE9 pontuada. Pode montar as pr\xF3prias cartas (build), mudar o valor de cada carta na mesa (cardValue) e das cartas empilhadas (stackValue), e reagir depois de cada a\xE7\xE3o (onAfterAction)."
     },
     {
       nome: "Terreno",
       funcao: "registerTerrain",
       obrigatorios: "id, name",
+      exemplos: "src/motor/engine/terrains.js",
       texto: "Muda o jogo inteiro por ganchos no ciclo do turno: no come\xE7o da partida, no come\xE7o e no fim de cada vez, no fim de cada rodada e quando um neur\xF4nio \xE9 revelado. Tamb\xE9m pode ajustar os pontos de cada neur\xF4nio (neuronBonus) ou da rede inteira (modifyScore)."
     },
     {
       nome: "A\xE7\xE3o",
       funcao: "registerAction",
       obrigatorios: "id, name, generate, isValid, execute",
+      exemplos: "src/motor/engine/actions.js",
       texto: "Uma jogada nova. generate lista as jogadas poss\xEDveis, isValid confere uma jogada e execute aplica no estado. Pode n\xE3o gastar a vez (consumesTurn: false) e trazer os textos da regra (rule) e do conceito de ML (ml)."
     }
   ];
   function abrirMods() {
-    const html = '<div class="folha mods"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Mods</h2><p>As regras do jogo v\xEAm do motor do NeuroDeck, que foi feito para receber <b>mods</b>: pequenos m\xF3dulos JavaScript que acrescentam baralhos, terrenos e a\xE7\xF5es sem mexer no c\xF3digo do jogo. Tudo o que varia no jogo entra por um registro, e os baralhos, terrenos e a\xE7\xF5es que j\xE1 existem s\xE3o registrados do mesmo jeito.</p><h3>O que um mod pode criar</h3><div class="tipos-de-mod">' + TIPOS.map((t) => '<div class="tipo-de-mod"><h4>' + t.nome + "</h4><p>" + escaparHtml(t.texto) + '</p><p class="campos"><code>NeuroDeck.' + t.funcao + "({ \u2026 })</code><br>Campos obrigat\xF3rios: <code>" + t.obrigatorios + "</code></p></div>").join("") + '</div><h3>Como um mod \xE9 feito</h3><ol><li>Um arquivo <code>.js</code> que exporta <code>apiVersion = 2</code> e uma fun\xE7\xE3o padr\xE3o.</li><li>A fun\xE7\xE3o recebe o registro do motor (<code>NeuroDeck</code>) e chama <code>registerDeck</code>, <code>registerTerrain</code> ou <code>registerAction</code>.</li><li>O estado da partida \xE9 um objeto simples: mesa (<code>state.layers</code>), m\xE3os, limbo, cemit\xE9rio e a rede de cada jogador (<code>state.nets</code>). Para sortear, use <code>NeuroDeck.rand(state)</code>, que mant\xE9m a partida reproduz\xEDvel.</li></ol><h3>Exemplo comentado: terreno "Regulariza\xE7\xE3o L1"</h3><pre class="codigo-mod"><code>' + escaparHtml(CODIGO_DO_MOD_DE_EXEMPLO) + '</code></pre><div class="linha"><button class="botao" id="mods-copiar">Copiar o exemplo</button><span class="mods-copiado" id="mods-copiado" aria-live="polite"></span></div><h3>Como testar um mod</h3><ul><li><b>No NeuroDeck original:</b> publique o arquivo num endere\xE7o p\xFAblico e abra <code>https://neurodeck-fpo.web.app/?mod=</code> seguido do endere\xE7o do arquivo.</li><li><b>No reposit\xF3rio:</b> o motor roda no Node. Importe <code>src/motor/engine.js</code> e o mod, chame a fun\xE7\xE3o do mod com <code>NeuroDeck</code> e jogue partidas com <code>newGame</code> e <code>applyMove</code> (o teste <code>testes/unidade/mods.test.js</code> faz isso com o exemplo acima).</li></ul><p class="aviso-mods"><b>Ainda n\xE3o no jogo unificado:</b> o motor j\xE1 aceita mods, mas a interface do Truco de Turing ainda n\xE3o os carrega, porque cada baralho, terreno e a\xE7\xE3o precisa de arte, textos e anima\xE7\xE3o pr\xF3prios. Por enquanto, use o NeuroDeck original ou o Node para testar.</p><p>Para ir al\xE9m: o <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/MANUAL.md" target="_blank" rel="noopener">manual do c\xF3digo</a> explica como acrescentar baralho, terreno, oponente, conquista ou verbete no Truco de Turing, e a <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/REFERENCIA.md" target="_blank" rel="noopener">refer\xEAncia</a> lista cada fun\xE7\xE3o.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const html = '<div class="folha mods"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Mods</h2><p>As regras do jogo v\xEAm do motor do NeuroDeck, que foi feito para receber <b>mods</b>: pequenos m\xF3dulos JavaScript que acrescentam baralhos, terrenos e a\xE7\xF5es sem mexer no c\xF3digo do jogo. Tudo o que varia no jogo entra por um registro, e os baralhos, terrenos e a\xE7\xF5es que j\xE1 existem s\xE3o registrados do mesmo jeito.</p><h3>O que um mod pode criar</h3><div class="tipos-de-mod">' + TIPOS.map((t) => '<div class="tipo-de-mod"><h4>' + t.nome + "</h4><p>" + escaparHtml(t.texto) + '</p><p class="campos"><code>NeuroDeck.' + t.funcao + "({ \u2026 })</code><br>Campos obrigat\xF3rios: <code>" + t.obrigatorios + "</code><br>Exemplos no reposit\xF3rio: " + linkDoArquivo(t.exemplos) + "</p></div>").join("") + '</div><h3>Como um mod \xE9 feito</h3><ol><li>Um arquivo <code>.js</code> que exporta <code>apiVersion = 2</code> e uma fun\xE7\xE3o padr\xE3o.</li><li>A fun\xE7\xE3o recebe o registro do motor (<code>NeuroDeck</code>) e chama <code>registerDeck</code>, <code>registerTerrain</code> ou <code>registerAction</code>.</li><li>O estado da partida \xE9 um objeto simples: mesa (<code>state.layers</code>), m\xE3os, limbo, cemit\xE9rio e a rede de cada jogador (<code>state.nets</code>). Para sortear, use <code>NeuroDeck.rand(state)</code>, que mant\xE9m a partida reproduz\xEDvel.</li></ol><h3>Exemplo comentado: terreno "Regulariza\xE7\xE3o L1"</h3><p class="campos">Arquivo no reposit\xF3rio: ' + linkDoArquivo("src/conteudo/modExemplo.js") + '</p><pre class="codigo-mod"><code>' + escaparHtml(CODIGO_DO_MOD_DE_EXEMPLO) + '</code></pre><div class="linha"><button class="botao" id="mods-copiar">Copiar o exemplo</button><span class="mods-copiado" id="mods-copiado" aria-live="polite"></span></div><h3>Como testar um mod</h3><ul><li><b>No NeuroDeck original:</b> publique o arquivo num endere\xE7o p\xFAblico e abra <code>https://neurodeck-fpo.web.app/?mod=</code> seguido do endere\xE7o do arquivo.</li><li><b>No reposit\xF3rio:</b> o motor roda no Node. Importe <code>src/motor/engine.js</code> e o mod, chame a fun\xE7\xE3o do mod com <code>NeuroDeck</code> e jogue partidas com <code>newGame</code> e <code>applyMove</code> (o teste ' + linkDoArquivo("testes/unidade/mods.test.js") + ' faz isso com o exemplo acima).</li></ul><p class="aviso-mods"><b>Ainda n\xE3o no jogo unificado:</b> o motor j\xE1 aceita mods, mas a interface do Truco de Turing ainda n\xE3o os carrega, porque cada baralho, terreno e a\xE7\xE3o precisa de arte, textos e anima\xE7\xE3o pr\xF3prios. Por enquanto, use o NeuroDeck original ou o Node para testar.</p><h3>Arquivos e exemplos no reposit\xF3rio</h3><ul class="arquivos-de-mods">' + ARQUIVOS_DE_MODS.map((a) => "<li>" + linkDoArquivo(a.caminho) + ": " + escaparHtml(a.texto) + "</li>").join("") + '</ul><p>Para ir al\xE9m: o <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/MANUAL.md" target="_blank" rel="noopener">manual do c\xF3digo</a> explica como acrescentar baralho, terreno, oponente, conquista ou verbete no Truco de Turing, e a <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/REFERENCIA.md" target="_blank" rel="noopener">refer\xEAncia</a> lista cada fun\xE7\xE3o.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
     const copiado = painel.elemento.querySelector("#mods-copiado");
     painel.elemento.querySelector("#mods-copiar").addEventListener("click", async () => {
@@ -8762,7 +8794,7 @@ export default function (NeuroDeck) {
     }).join("");
   }
   function htmlDoMenu(opcoes) {
-    return '<div class="menu"><section class="menu-capa"><h1>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Biblioteca de conceitos</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Regras do NeuroDeck com a interface do Truco de Turing. Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
+    return '<div class="menu"><section class="menu-capa"><h1>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Regras do NeuroDeck com a interface do Truco de Turing. Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
   }
   function abrirMenu(app) {
     app.opcoes = normalizarOpcoes(app.opcoes);
@@ -9369,6 +9401,7 @@ export default function (NeuroDeck) {
   };
 
   // src/cenas/mesa/desenho.js
+  var corDaSoma = (pontuacao) => pontuacao.vanishing ? "#ff7b88" : pontuacao.saturada ? "#ffc58a" : "#f6ecd6";
   var metodosDeDesenho = {
     /** Mostra uma textura na inspeção, com uma nota explicativa embaixo. */
     inspecionar(textura, nota2) {
@@ -9581,7 +9614,7 @@ export default function (NeuroDeck) {
         ajustarLinha(b.tentos, partida.tentos[j] + (partida.tentos[j] === 1 ? " tento" : " tentos"), 11, 70, 8.5);
       } else b.tentos.setVisible(false);
       const pontuacao = this.pontuacoes[j];
-      ajustarLinha(b.soma.setColor(pontuacao.vanishing ? "#ff7b88" : "#f6ecd6"), String(pontuacao.total), 34, 60, 18);
+      ajustarLinha(b.soma.setColor(corDaSoma(pontuacao)), String(pontuacao.total), 34, 60, 18);
     },
     /** Situação da rede do jogador e a camada em que está: "em construção · camada 3/6". */
     textoDaSituacao(j) {
@@ -9610,7 +9643,7 @@ export default function (NeuroDeck) {
       const tentos = this.partida.alvo > 1 ? " \xB7 " + this.partida.tentos[j] + " t" : "";
       ajustarLinha(b.situacao, (this.textoDaSituacao(j) + " \xB7 m\xE3o " + jogador.mao.length + (jogador.dropouts ? " \xB7 dropouts " + jogador.dropouts : "") + tentos).toUpperCase(), 9, largura, 7);
       const pontuacao = this.pontuacoes[j];
-      ajustarLinha(b.soma.setColor(pontuacao.vanishing ? "#ff7b88" : "#f6ecd6"), String(pontuacao.total), Math.min(26, b.a * 0.62), 46, 12);
+      ajustarLinha(b.soma.setColor(corDaSoma(pontuacao)), String(pontuacao.total), Math.min(26, b.a * 0.62), 46, 12);
     },
     /** O jogador `j` está na vez (e a mão está em andamento)? */
     estaNaVez(j) {
@@ -10031,12 +10064,12 @@ export default function (NeuroDeck) {
     },
     /** Botão Menu: confirma antes de abandonar a partida. */
     /**
-     * Botão REGRAS da mesa: como jogar, Biblioteca de conceitos e a chave das dicas, numa janela só.
+     * Botão REGRAS da mesa: como jogar, Glossário e a chave das dicas, numa janela só.
      */
     abrirRegrasDaMesa() {
       const dicas = this.app.dicasLigadas;
       const painel = abrirPainel(
-        '<div class="folha estreita janela-da-mesa"><h2>Regras</h2><p>Consulte as regras, a ajuda de cada a\xE7\xE3o, os conceitos de redes neurais da Biblioteca ou ligue as dicas durante a partida.</p><div class="grade-de-botoes"><button class="botao" data-opcao="regras">Como jogar</button><button class="botao" data-opcao="ajuda">Ajuda das a\xE7\xF5es</button><button class="botao" data-opcao="grimorio">Biblioteca de conceitos</button><button class="botao ' + (dicas ? "discreto" : "vinho") + '" data-opcao="dicas" data-chave="dicas">' + (dicas ? "Desligar dicas" : "Ativar dicas") + '</button><button class="botao discreto" data-fechar>Voltar ao jogo</button></div></div>',
+        '<div class="folha estreita janela-da-mesa"><h2>Regras</h2><p>Consulte as regras, a ajuda de cada a\xE7\xE3o, os conceitos de redes neurais do Gloss\xE1rio ou ligue as dicas durante a partida.</p><div class="grade-de-botoes"><button class="botao" data-opcao="regras">Como jogar</button><button class="botao" data-opcao="ajuda">Ajuda das a\xE7\xF5es</button><button class="botao" data-opcao="grimorio">Gloss\xE1rio</button><button class="botao ' + (dicas ? "discreto" : "vinho") + '" data-opcao="dicas" data-chave="dicas">' + (dicas ? "Desligar dicas" : "Ativar dicas") + '</button><button class="botao discreto" data-fechar>Voltar ao jogo</button></div></div>',
         { fechaAoClicarFora: true }
       );
       const acoes = {
@@ -10619,7 +10652,11 @@ export default function (NeuroDeck) {
       this.time.delayedCall(700, () => this.faixa(nome + " come\xE7a" + (evento.empate ? " (empate: sorteio)" : ""), cor, 36));
       return 2100;
     },
-    /** Avisa quando uma rede acaba de formar uma quadra de figuras (vanishing gradient). */
+    /**
+     * Avisa quando uma rede acaba de formar uma quadra de figuras (vanishing gradient) ou, no
+     * baralho Backprop, quando a saída fica saturada depois das ativações (saturação no forward
+     * pass, com verbete próprio).
+     */
     verificarVanishing() {
       let espera = 0;
       this.mao.jogadores.forEach((_, j) => {
@@ -10633,8 +10670,13 @@ export default function (NeuroDeck) {
           });
           this.avisarVerbete("vanishing");
           espera = 1400;
-        } else if (!pontuacao.vanishing) this.vanishingAvisado[j] = false;
-        if (pontuacao.combos.length) this.avisarVerbete("vanishing");
+        } else if (pontuacao.saturada && !this.vanishingAvisado[j]) {
+          this.vanishingAvisado[j] = true;
+          this.time.delayedCall(500, () => this.faixa("SA\xCDDA SATURADA", "#ffb36b", 44));
+          this.avisarVerbete("saturacao");
+          espera = 1e3;
+        } else if (!pontuacao.vanishing && !pontuacao.saturada) this.vanishingAvisado[j] = false;
+        if (pontuacao.combos.length) this.avisarVerbete(pontuacao.saturada ? "saturacao" : "vanishing");
       });
       return espera;
     },
@@ -10733,13 +10775,13 @@ export default function (NeuroDeck) {
       camera.shake(600 + forca * 80, 0.016 + forca * 4e-3);
       camera.flash(180, 255, 210, 120);
     },
-    /** Mostra uma vez por sessão o resumo do verbete da Biblioteca de conceitos ligado ao que aconteceu. */
+    /** Mostra uma vez por sessão o resumo do verbete do Glossário ligado ao que aconteceu. */
     avisarVerbete(id) {
       const avisados = this.app.verbetesAvisados;
       if (avisados[id]) return;
       avisados[id] = true;
       const verbete = VERBETES.find((v) => v.id === id);
-      if (verbete) mostrarAviso("Biblioteca \xB7 " + verbete.titulo, verbete.noJogo, null, 6500);
+      if (verbete) mostrarAviso(NOME_DA_BIBLIOTECA + " \xB7 " + verbete.titulo, verbete.noJogo, null, 6500);
     }
   };
 
@@ -11166,7 +11208,7 @@ export default function (NeuroDeck) {
       if (chave === "dropout") {
         const n = camadasDesfaziveis(mao, eu);
         return {
-          titulo: "Biblioteca \xB7 Dropout (GatoNet)",
+          titulo: "Gloss\xE1rio \xB7 Dropout (GatoNet)",
           corpo: "Desfaz os \xFAltimos neur\xF4nios ocultos da sua rede, at\xE9 a camada que voc\xEA escolher. Eles v\xE3o para o cemit\xE9rio e voc\xEA continua da camada anterior. Custa 1 carta da m\xE3o por camada e n\xE3o gasta o turno.",
           agora: !minhaVez ? naoEhAVez : n === 0 ? "Agora: indispon\xEDvel, n\xE3o h\xE1 neur\xF4nio oculto para desfazer." : "Agora: d\xE1 para desfazer at\xE9 " + Math.min(n, jogador.mao.length) + " camada(s). Vale a pena quando a rede pegou neur\xF4nios fracos ou est\xE1 perto de formar uma quadra de figuras. Cuidado: se n\xE3o sobrar neur\xF4nio livre na camada, a rede \xE9 finalizada.",
           conceito: conceitoCurto("dropout")
@@ -11178,7 +11220,7 @@ export default function (NeuroDeck) {
         for (const c of jogador.mao) conta2[c.valor] = (conta2[c.valor] || 0) + 1;
         const maior = Object.entries(conta2).sort((a, b) => b[1] - a[1])[0];
         return {
-          titulo: "Biblioteca \xB7 Transfer learning",
+          titulo: "Gloss\xE1rio \xB7 Transfer learning",
           corpo: "Troca quatro cartas de mesmo valor da m\xE3o por cartas do limbo. Uma vez por m\xE3o; n\xE3o gasta o turno.",
           agora: jogador.transferUsado ? "Agora: voc\xEA j\xE1 usou o transfer nesta m\xE3o." : valor ? "Agora: voc\xEA tem quatro " + valor + ". Troque se eles n\xE3o servem para tunar nem atacar." : "Agora: precisa de quatro cartas iguais; seu maior grupo \xE9 " + (maior ? maior[1] + "\xD7 " + maior[0] : "nenhum") + ".",
           conceito: conceitoCurto("transfer")
@@ -11203,7 +11245,7 @@ export default function (NeuroDeck) {
         agora = "Agora: sua chance estimada de vencer esta m\xE3o \xE9 " + chance + "% (" + SIMULACOES_DA_DICA + " simula\xE7\xF5es de Monte Carlo). " + (chance >= 65 ? "Bom momento para pedir " + GRITO_TRUCO[proximo] : chance >= 40 ? "Arriscado: s\xF3 como blefe." : "Melhor n\xE3o trucar agora.");
       }
       return {
-        titulo: "Biblioteca \xB7 Truco",
+        titulo: "Gloss\xE1rio \xB7 Truco",
         corpo: "Aumenta o valor da m\xE3o: 1 \u2192 3 \u2192 6 \u2192 9 \u2192 12 tentos. Quem recebe o pedido aceita, corre (e entrega o valor atual) ou pede mais.",
         agora,
         conceito: conceitoCurto("truco")
@@ -11246,7 +11288,7 @@ export default function (NeuroDeck) {
         }).join("") + "</tr>";
       }
       html += '<tr class="soma"><td>Combos</td>' + pontuacoes.map((p) => "<td>" + (p.combos.length ? p.combos.map((k) => escaparHtml(k.rotulo)).join("<br>") : "\u2014") + "</td>").join("") + "</tr>";
-      html += '<tr class="soma"><td>Soma</td>' + pontuacoes.map((p) => "<td><b>" + p.total + "</b>" + (p.vanishing ? " <small>(vanishing gradient)</small>" : "") + "</td>").join("") + "</tr>";
+      html += '<tr class="soma"><td>Soma</td>' + pontuacoes.map((p) => "<td><b>" + p.total + "</b>" + (p.vanishing ? " <small>(vanishing gradient)</small>" : p.saturada ? " <small>(sa\xEDda saturada)</small>" : "") + "</td>").join("") + "</tr>";
       html += "</tbody></table>" + rodape;
       return abrirPainel(html, { fechaAoClicarFora: true });
     },
