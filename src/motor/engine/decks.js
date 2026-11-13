@@ -105,7 +105,9 @@ export const backprop = {
       a = out;
     });
     const total = round2(a);
-    // convencao do jogo: saida baixa depois de passar por funcao nao linear
+    // convencao do jogo: saida baixa depois de passar por funcao nao linear.
+    // O campo se chama `vanishing` desde o NeuroDeck, mas o que ele marca e saturacao da ativacao
+    // no forward pass (sigmoide e tanh vao no maximo ate 20); a interface mostra "saida saturada".
     const vanishing = items.length >= 3 && items.some(it => it.fn !== 'Linear') && total < 20;
     return { total, items, vanishing, kind: 'forward', terrainDelta };
   },

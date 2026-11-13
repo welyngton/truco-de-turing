@@ -36,6 +36,7 @@ import { idDoNeuronio } from './traducao.js';
  * @property {NeuronioPontuado[]} neuronios
  * @property {{de:number, ate:number, valor:string, quantidade:number, pontos:number, rotulo:string}[]} combos
  * @property {boolean} vanishing  Verdadeiro se uma quadra zerou a rede.
+ * @property {boolean} [saturada] Backprop: saída abaixo de 20 depois das ativações (saturação, não vanishing).
  */
 
 const arredondar = (x) => Math.round(x * 100) / 100;
@@ -80,10 +81,19 @@ export function pontuarRede(mao, j) {
 /** Número com vírgula decimal e no máximo 2 casas ("1,2", "23,45"). */
 const decimal = (x) => String(arredondar(x)).replace('.', ',');
 
+/** Rótulo do aviso do baralho Backprop (ver `pontuarForward`). */
+export const ROTULO_SAIDA_SATURADA = 'Saída saturada depois das ativações';
+
 /**
  * Baralho Backprop: a rede vale a ativação da saída. Cada neurônio mostra a ativação depois da
  * camada dele (`pontos`) e, nas notas, o peso do naipe, o viés e a função de ativação. Não há
- * combos de figuras: o vanishing gradient é a saída baixa depois de uma ativação não linear.
+ * combos de figuras.
+ *
+ * O motor marca (no campo `vanishing`, nome que vem do NeuroDeck) a rede de 3 ou mais neurônios
+ * que passou por alguma ativação não linear e terminou abaixo de 20. Sigmoide e tanh do baralho
+ * vão no máximo até 20, então isso é saturação da ativação no forward pass, e não vanishing
+ * gradient, que acontece no backward e que este baralho não calcula. Aqui o aviso vira
+ * `saturada`, e `vanishing` fica falso: nenhum texto do Backprop fala em vanishing gradient.
  */
 function pontuarForward(mao, resultado) {
   const neuronios = resultado.items.map((item, camada) => {
@@ -96,10 +106,11 @@ function pontuarForward(mao, resultado) {
       figura: ehFigura(carta), pontos: arredondar(item.a), notas,
     };
   });
-  const combos = resultado.vanishing && neuronios.length
-    ? [{ de: 0, ate: neuronios.length - 1, valor: '', quantidade: neuronios.length, pontos: 0, rotulo: 'Saída baixa depois de ativações: vanishing gradient' }]
+  const saturada = !!resultado.vanishing && neuronios.length > 0;
+  const combos = saturada
+    ? [{ de: 0, ate: neuronios.length - 1, valor: '', quantidade: neuronios.length, pontos: 0, rotulo: ROTULO_SAIDA_SATURADA }]
     : [];
-  return { total: resultado.total, neuronios, combos, vanishing: !!resultado.vanishing };
+  return { total: resultado.total, neuronios, combos, vanishing: false, saturada };
 }
 
 /** Média de pontos de um conjunto de cartas. */

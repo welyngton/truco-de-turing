@@ -1,7 +1,7 @@
 /**
  * @file Ajuda das ações, como o botão "?" do NeuroDeck: um cartão por jogada com a regra (texto do
  * próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão
- * "Ver o conceito" que abre o verbete certo da Biblioteca de conceitos.
+ * "Ver o conceito" que abre o verbete certo do Glossário.
  */
 import { NeuroDeck } from '../../motor/engine.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
@@ -10,7 +10,7 @@ import { ICONES_DAS_ACOES } from '../../arte/icones.js';
 
 /**
  * Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no NeuroDeck (de onde vêm a
- * regra e o conceito); `verbete` é o verbete da Biblioteca de conceitos.
+ * regra e o conceito); `verbete` é o verbete do Glossário.
  */
 export const ACOES_DA_AJUDA = [
   { id: 'avancar', nome: 'Avançar', motor: 'advance', verbete: 'forward',
@@ -46,7 +46,7 @@ function doMotor(id) {
 
 /**
  * Abre a ajuda das ações.
- * @param {object} app Aplicação (guarda os verbetes lidos quando abre a Biblioteca).
+ * @param {object} app Aplicação (guarda os verbetes lidos quando abre o Glossário).
  * @param {string} [idInicial] Ação destacada e rolada até a vista (ids de ACOES_DA_AJUDA).
  */
 export function abrirAjudaDasAcoes(app, idInicial) {

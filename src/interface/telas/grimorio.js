@@ -1,5 +1,5 @@
 /**
- * @file Tela da Biblioteca de conceitos (antes "Grimório"): lista de verbetes à esquerda e o
+ * @file Tela do Glossário (antes "Biblioteca de conceitos" e "Grimório"): lista de verbetes à esquerda e o
  * verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até
  * onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
  */
@@ -29,7 +29,7 @@ export function htmlDoVerbete(v) {
 }
 
 /**
- * Abre a Biblioteca de conceitos.
+ * Abre o Glossário.
  * @param {object} app Aplicação (guarda os verbetes lidos).
  * @param {string} [idInicial] Verbete aberto de início.
  * @param {() => void} [aoFechar]

@@ -22,6 +22,9 @@ import {
   ajustarCartaDaMesa, ajustarLinha, ajustarBloco, cartaDaMesa, NOME_DA_ACAO,
 } from './layout.js';
 
+/** Cor da soma no placar: vermelha se uma quadra zerou a rede, laranja se a saída do Backprop saturou. */
+const corDaSoma = (pontuacao) => (pontuacao.vanishing ? '#ff7b88' : pontuacao.saturada ? '#ffc58a' : '#f6ecd6');
+
 export const metodosDeDesenho = {
   /** Mostra uma textura na inspeção, com uma nota explicativa embaixo. */
   inspecionar(textura, nota) {
@@ -225,7 +228,7 @@ export const metodosDeDesenho = {
       ajustarLinha(b.tentos, partida.tentos[j] + (partida.tentos[j] === 1 ? ' tento' : ' tentos'), 11, 70, 8.5);
     } else b.tentos.setVisible(false);
     const pontuacao = this.pontuacoes[j];
-    ajustarLinha(b.soma.setColor(pontuacao.vanishing ? '#ff7b88' : '#f6ecd6'), String(pontuacao.total), 34, 60, 18);
+    ajustarLinha(b.soma.setColor(corDaSoma(pontuacao)), String(pontuacao.total), 34, 60, 18);
   },
 
   /** Situação da rede do jogador e a camada em que está: "em construção · camada 3/6". */
@@ -250,7 +253,7 @@ export const metodosDeDesenho = {
     const tentos = this.partida.alvo > 1 ? ' \u00b7 ' + this.partida.tentos[j] + ' t' : '';
     ajustarLinha(b.situacao, (this.textoDaSituacao(j) + ' \u00b7 mão ' + jogador.mao.length + (jogador.dropouts ? ' \u00b7 dropouts ' + jogador.dropouts : '') + tentos).toUpperCase(), 9, largura, 7);
     const pontuacao = this.pontuacoes[j];
-    ajustarLinha(b.soma.setColor(pontuacao.vanishing ? '#ff7b88' : '#f6ecd6'), String(pontuacao.total), Math.min(26, b.a * 0.62), 46, 12);
+    ajustarLinha(b.soma.setColor(corDaSoma(pontuacao)), String(pontuacao.total), Math.min(26, b.a * 0.62), 46, 12);
   },
 
   /** O jogador `j` está na vez (e a mão está em andamento)? */

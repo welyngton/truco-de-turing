@@ -72,7 +72,7 @@ export function mostrarAviso(titulo, texto, tipo, duracaoMs = 5200) {
 }
 
 /**
- * Dica de jogo do modo "dicas", no estilo da Biblioteca de conceitos: título, conselho e o conceito de redes
+ * Dica de jogo do modo "dicas", no estilo do Glossário: título, conselho e o conceito de redes
  * neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha).
  */
 export function mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito) {
@@ -117,7 +117,7 @@ export function confirmar(titulo, texto, botoes, opcoes = {}) {
 let dicaFlutuante = null;
 
 /**
- * Mostra uma dica no estilo da Biblioteca de conceitos ao lado de um elemento da mesa (botão, carta).
+ * Mostra uma dica no estilo do Glossário ao lado de um elemento da mesa (botão, carta).
  * Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo.
  * @param {string} titulo
  * @param {string} html Corpo da dica (já escapado por quem chama).

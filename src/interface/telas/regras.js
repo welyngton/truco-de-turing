@@ -120,7 +120,7 @@ export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
       '<nav class="abas" role="tablist">' + ABAS_DAS_REGRAS.map(([id, nome]) =>
         '<button role="tab" data-aba="' + id + '" aria-selected="' + (id === abaInicial) + '">' + nome + '</button>').join('') + '</nav>' +
       ABAS_DAS_REGRAS.map(([id]) => '<section class="aba" role="tabpanel" data-aba="' + id + '"' + (id === abaInicial ? '' : ' hidden') + '>' + conteudo[id] + '</section>').join('') +
-      '<p class="nota-regras">Os conceitos de redes neurais por trás de cada jogada estão na ' + NOME_DA_BIBLIOTECA + '.</p>' +
+      '<p class="nota-regras">Os conceitos de redes neurais por trás de cada jogada estão no ' + NOME_DA_BIBLIOTECA + '.</p>' +
       '<div class="linha fim" style="margin-top:14px"><button class="botao discreto" id="r-biblioteca">' + NOME_DA_BIBLIOTECA + '</button><button class="botao" data-fechar>Entendi</button></div></div>';
   if (app) { app.progresso.tutorialVisto = true; app.salvar(); }
   const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar });
@@ -132,7 +132,7 @@ export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
   };
   raiz.querySelectorAll('.abas [data-aba]').forEach((b) => b.addEventListener('click', () => mostrarAba(b.dataset.aba)));
   mostrarAba(abaInicial);
-  /* a Biblioteca e a ajuda abrem por cima; as regras continuam abertas embaixo */
+  /* o Glossário e a ajuda abrem por cima; as regras continuam abertas embaixo */
   const appDaBiblioteca = app || { progresso: { lidos: {} }, marcarVerbeteLido() {} };
   raiz.querySelector('#r-ajuda-acoes').addEventListener('click', () => abrirAjudaDasAcoes(appDaBiblioteca));
   raiz.querySelector('#r-biblioteca').addEventListener('click', () => abrirGrimorio(appDaBiblioteca));

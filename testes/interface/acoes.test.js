@@ -206,6 +206,31 @@ describe('ações da mesa', () => {
     } finally { await jogo.fechar(); }
   });
 
+  it('baralho Backprop: saída baixa depois das ativações avisa "saída saturada", e não vanishing gradient', async () => {
+    const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
+    const { pagina } = jogo;
+    try {
+      await comecarPartida(pagina, { oponente: 'aleatorio', baralho: 'backprop', terreno: 'neutro', inicio: 'revela-descarta' });
+      await carregarMontagem(pagina);
+      await esperarMinhaVez(pagina);
+      /* 8 → J♥ (ReLU) 8 → 5♦ (linear) 9,8: abaixo de 20 depois de uma ativação não linear */
+      await naCena(pagina, `
+        M.montarRede(cena.mao, 0, [['8E'], ['JC'], ['5O']]);
+        cena.redesenhar(); cena.animarEventos([]);`);
+      const p = await naCena(pagina, 'const p = cena.pontuacoes[0]; return { total: p.total, saturada: p.saturada, vanishing: p.vanishing, rotulo: p.combos[0] && p.combos[0].rotulo };');
+      assert.deepEqual(p, { total: 9.8, saturada: true, vanishing: false, rotulo: 'Saída saturada depois das ativações' });
+      assert.equal(await naCena(pagina, 'return cena.vanishingAvisado[0]'), true);
+      assert.equal(await naCena(pagina, 'return !!cena.app.verbetesAvisados.saturacao && !cena.app.verbetesAvisados.vanishing'), true);
+      /* placar por camada: a soma traz "(saída saturada)" e nenhum texto fala em vanishing gradient */
+      await naCena(pagina, 'cena.abrirPlacarPorCamada();');
+      await pagina.waitForSelector('.placar-camadas');
+      const placar = await pagina.locator('.placar-camadas').textContent();
+      assert.match(placar, /saída saturada/);
+      assert.doesNotMatch(placar, /vanishing/i);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
   it('truco: pedir, responder (aumentar, aceitar, correr) e a mão terminada por corrida', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
@@ -388,7 +413,7 @@ describe('ações da mesa', () => {
       await capturar(pagina, '19-vitoria');
       await naCena(pagina, 'cena.comemorar("partida", "Você");');
       await pagina.waitForTimeout(300);
-      /* regras, ajuda das ações e Biblioteca pelos botões da mesa */
+      /* regras, ajuda das ações e Glossário pelos botões da mesa */
       await naJanela(pagina, 'botaoRegras', '[data-opcao="regras"]');
       await pagina.locator('.camada [data-fechar] >> nth=0').click();
       await naJanela(pagina, 'botaoRegras', '[data-opcao="ajuda"]');

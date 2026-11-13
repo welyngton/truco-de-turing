@@ -5,6 +5,7 @@
  */
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { instalarNavegadorFalso, registroDeAudio, limparRegistroDeAudio, esperar } from '../apoio/ambiente.js';
 
 instalarNavegadorFalso({ toque: true });
@@ -18,7 +19,7 @@ const { abrirGrimorio, htmlDoVerbete } = await import('../../src/interface/telas
 const { textoComFormulas, formulaHtml } = await import('../../src/interface/formulas.js');
 const { abrirConquistas, medalhaHtml } = await import('../../src/interface/telas/conquistas.js');
 const { abrirSobre } = await import('../../src/interface/telas/sobre.js');
-const { abrirMods } = await import('../../src/interface/telas/mods.js');
+const { abrirMods, REPOSITORIO, ARQUIVOS_DE_MODS } = await import('../../src/interface/telas/mods.js');
 const { abrirRevisao } = await import('../../src/interface/telas/revisao.js');
 const { Aplicacao } = await import('../../src/aplicacao.js');
 const { VERSAO } = await import('../../src/versao.js');
@@ -231,6 +232,14 @@ describe('telas', () => {
     assert.ok($('#mods-copiado').textContent.length > 0);
     const links = [...$$('.mods a')].map((a) => a.getAttribute('href'));
     assert.ok(links.some((h) => h.endsWith('docs/MANUAL.md')), 'link para o manual do código');
+    /* links para os arquivos e exemplos no repositório: o exemplo, o teste, a API e os nativos de cada tipo */
+    for (const caminho of ['src/conteudo/modExemplo.js', 'testes/unidade/mods.test.js', 'src/motor/engine/registry.js', 'src/motor/engine/decks.js', 'src/motor/engine/terrains.js', 'src/motor/engine/actions.js']) {
+      assert.ok(links.includes(REPOSITORIO + caminho), caminho);
+    }
+    assert.equal($$('.tipo-de-mod a').length, 3, 'cada tipo de mod aponta para os exemplos nativos');
+    for (const a of $$('.mods a')) assert.equal(a.getAttribute('target'), '_blank');
+    /* todo arquivo citado existe no repositório */
+    for (const { caminho } of ARQUIVOS_DE_MODS) assert.ok(existsSync(new URL('../../' + caminho, import.meta.url)), caminho);
   });
   it('regras: marca o tutorial como visto e chama aoFechar', () => {
     const app = appFalso();
@@ -252,7 +261,7 @@ describe('telas', () => {
     assert.ok($$('#g-lista .lido').length >= 2);
     abrirGrimorio(app, 'nao-existe');
   });
-  it('Biblioteca: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
+  it('Glossário: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
     abrirGrimorio(appFalso(), 'overfit');
     const texto = $('#g-verbete').textContent;
     for (const trecho of ['A ideia', 'No jogo', 'Até onde vale a comparação', 'Para se aprofundar', 'Suzy Arcanjo']) assert.match(texto, new RegExp(trecho));
@@ -269,9 +278,9 @@ describe('telas', () => {
     assert.match(formulaHtml('c', false, { renderToString: () => { throw new Error('ruim'); } }), /formula-tex/);
     assert.equal(textoComFormulas('sem fórmula <b>', null), 'sem fórmula &lt;b&gt;');
   });
-  it('Biblioteca de conceitos: título novo, equação, figura e "até onde vale a comparação"', () => {
+  it('Glossário: título novo, equação, figura e "até onde vale a comparação"', () => {
     abrirGrimorio(appFalso(), 'dropout');
-    assert.match($('.camada h2').textContent, /Biblioteca de conceitos/);
+    assert.match($('.camada h2').textContent, /Glossário/);
     assert.ok($('#g-verbete .equacao math'));
     assert.ok($('#g-verbete .figura svg'));
     assert.match($('#g-verbete .limite').textContent, /Até onde vale/);

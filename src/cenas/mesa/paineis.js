@@ -43,7 +43,7 @@ export const metodosDosPaineis = {
     }
     html += '<tr class="soma"><td>Combos</td>' + pontuacoes.map((p) => '<td>' +
       (p.combos.length ? p.combos.map((k) => escaparHtml(k.rotulo)).join('<br>') : '—') + '</td>').join('') + '</tr>';
-    html += '<tr class="soma"><td>Soma</td>' + pontuacoes.map((p) => '<td><b>' + p.total + '</b>' + (p.vanishing ? ' <small>(vanishing gradient)</small>' : '') + '</td>').join('') + '</tr>';
+    html += '<tr class="soma"><td>Soma</td>' + pontuacoes.map((p) => '<td><b>' + p.total + '</b>' + (p.vanishing ? ' <small>(vanishing gradient)</small>' : p.saturada ? ' <small>(saída saturada)</small>' : '') + '</td>').join('') + '</tr>';
     html += '</tbody></table>' + rodape;
     return abrirPainel(html, { fechaAoClicarFora: true });
   },

@@ -10,7 +10,8 @@ import { instalarNavegadorFalso, pixelsPintados } from '../apoio/ambiente.js';
 import { redeCom, maoAteOFim } from '../apoio/estados.js';
 import { BARALHOS } from '../../src/nucleo/baralhos.js';
 import { BARALHO_ND } from '../../src/nucleo/traducao.js';
-import { pontuarRede } from '../../src/nucleo/pontuacao.js';
+import { pontuarRede, ROTULO_SAIDA_SATURADA } from '../../src/nucleo/pontuacao.js';
+import { VERBETES } from '../../src/conteudo/grimorio.js';
 import { ICONES_DAS_ACOES } from '../../src/arte/icones.js';
 
 let arte;
@@ -36,7 +37,7 @@ describe('Nobreza e Backprop', () => {
     assert.equal(p.combos.length, 0);
   });
 
-  it('Backprop: a rede vale a ativação da saída; cada neurônio mostra a ativação depois dele', () => {
+  it('Backprop: 8 → 8 → 9,8 com saída saturada; cada neurônio mostra a ativação depois dele', () => {
     /* a0 = 8; J♥ (w 1,0, ReLU) dá 8; 5♦ (w 0,6, b 5) dá 0,6·8 + 5 = 9,8 */
     const mao = redeCom([['8'], ['JC'], ['5O']], { baralho: 'backprop' });
     const p = pontuarRede(mao, 0);
@@ -44,9 +45,37 @@ describe('Nobreza e Backprop', () => {
     assert.deepEqual(p.neuronios.map((n) => n.pontos), [8, 8, 9.8]);
     assert.match(p.neuronios[1].notas[0], /w 1 · b 0 · ReLU/);
     assert.match(p.neuronios[2].notas[0], /w 0,6 · b 5 · Linear/);
-    /* saída baixa depois de uma ativação não linear: o motor marca vanishing gradient */
-    assert.equal(p.vanishing, true);
-    assert.match(p.combos[0].rotulo, /vanishing gradient/);
+    /* saída abaixo de 20 depois de uma ativação não linear: é saturação no forward pass, não vanishing gradient */
+    assert.equal(p.saturada, true);
+    assert.equal(p.vanishing, false);
+    assert.equal(p.combos[0].rotulo, ROTULO_SAIDA_SATURADA);
+    assert.doesNotMatch(p.combos[0].rotulo, /vanishing/i);
+  });
+
+  it('Backprop: a sigmoide não passa de 20, e camadas lineares depois dela tiram a rede da saturação', () => {
+    /* a0 = 10; Q♠ (sigmoide): 20·σ((1,2·10 + 0)/10) = 20·σ(1,2) ≈ 15,37, abaixo do teto de 20 */
+    const saturada = pontuarRede(redeCom([['10'], ['QE'], ['2C']], { baralho: 'backprop' }), 0);
+    assert.ok(saturada.neuronios[1].pontos < 20);
+    assert.ok(saturada.total < 20);
+    assert.equal(saturada.saturada, true);
+    assert.equal(saturada.vanishing, false);
+    /* 9♠ e 10♠ lineares depois dela: 1,2·a + b leva a saída acima de 20 e o aviso some */
+    const livre = pontuarRede(redeCom([['10'], ['QE'], ['9E'], ['10E']], { baralho: 'backprop' }), 0);
+    assert.ok(livre.total >= 20, String(livre.total));
+    assert.equal(livre.saturada, false);
+    assert.equal(livre.combos.length, 0);
+  });
+
+  it('Backprop: o aviso leva ao verbete de saturação, e o verbete de retropropagação explica o nome do baralho', () => {
+    const v = Object.fromEntries(VERBETES.map((x) => [x.id, x]));
+    assert.ok(v.saturacao, 'verbete saturacao');
+    assert.match(v.saturacao.noJogo, /Saída saturada depois das ativações/);
+    assert.match(v.saturacao.conceito, /forward pass/);
+    assert.match(v.backprop.noJogo, /baralho Backprop leva o nome/);
+    assert.match(v.backprop.noJogo, /forward pass/);
+    /* nenhum texto sobre o baralho Backprop chama a saturação de vanishing gradient */
+    assert.doesNotMatch(v.saturacao.noJogo, /vanishing/i);
+    assert.doesNotMatch(BARALHOS.backprop.resumo, /vanishing/i);
   });
 
   it('mãos inteiras com os dois baralhos terminam e pontuam todas as redes', () => {
