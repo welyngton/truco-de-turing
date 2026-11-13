@@ -3,7 +3,8 @@
  *  - **fundo** (profundidade 0,5): por cima da pintura do terreno e por baixo de tudo; aparece nas
  *    bordas, entre as colunas e através dos painéis translúcidos;
  *  - **frente** (profundidade 4,5): por cima das cartas da mesa e por baixo dos destaques, dos
- *    painéis e da mão. Só leva **partículas pequenas** (flocos, sementes, bolhas, brilhos, riscos
+ *    painéis e da mão. Só leva **partículas pequenas**, em quantidade e já adiantadas (`advance`)
+ *    para a mesa parecer viva desde o primeiro quadro (flocos, sementes, bolhas, brilhos, riscos
  *    de vento, vaga-lumes): as cartas continuam opacas em relação ao fundo. Véus que cobrem uma
  *    área grande (neblina, sombras de nuvem, raios de sol, cáusticas, halos) ficam sempre no fundo,
  *    por trás das cartas — por cima delas, deixavam o terreno "aparecer através" das cartas.
@@ -13,7 +14,7 @@
  * | Planície | luz quente que respira, raios de sol, sombras de nuvens, pólen   | sementes de dente-de-leão, pólen fino    |
  * | Montanha | sol do entardecer, nuvens, névoa rasteira, neve grossa           | neve fina, rajadas de vento              |
  * | Pântano  | neblina, halos dos vaga-lumes e do fogo-fátuo, bolhas subindo    | vaga-lumes, bolhas, fogo-fátuo que vagueia |
- * | Oceano   | ondas que correm, cáusticas (a luz dançando no fundo do mar), espuma | brilhos e vento                      |
+ * | Oceano   | ondas que correm, cáusticas (a luz dançando no fundo do mar), espuma | brilhos, riscos de corrente, bolhas, vento |
  *
  * Em todos, a pintura do terreno se aproxima e se afasta devagar. Tudo é desenhado por código
  * (texturas pequenas geradas na hora). Com "reduzir movimento" no sistema, o ambiente fica parado:
@@ -64,6 +65,9 @@ export const metodosDoAmbiente = {
     /* bolha: anel com brilho */
     g.lineStyle(1.5, 0xd8ffd0, 0.9); g.strokeCircle(8, 8, 6.5); g.fillStyle(0xffffff, 0.8); g.fillCircle(5.5, 5.5, 1.6);
     g.generateTexture('amb-bolha', 16, 16); g.clear();
+    /* bolha do mar: anel azulado (o Canvas não tinge texturas, então é outra textura) */
+    g.lineStyle(1.5, 0xe2f6ff, 0.95); g.strokeCircle(8, 8, 6.5); g.fillStyle(0xffffff, 0.85); g.fillCircle(5.5, 5.5, 1.6);
+    g.generateTexture('amb-bolha-mar', 16, 16); g.clear();
     /* risco de vento */
     g.fillStyle(0xffffff, 1); g.fillRoundedRect(0, 0, 40, 2, 1);
     g.generateTexture('amb-risco', 40, 2); g.clear();
@@ -162,14 +166,14 @@ export const metodosDoAmbiente = {
       alpha: { start: 0, end: 0.85, ease: 'Sine.inOut', yoyo: true }, tint: 0xffe08a, blendMode: 'ADD',
     }).setDepth(FUNDO);
     const sementes = this.add.particles(-10, 0, 'amb-semente', {
-      y: { min: 40, max: MUNDO.altura - 60 }, lifespan: 16000, frequency: 1100,
-      speedX: { min: 60, max: 110 }, speedY: { min: -18, max: 10 }, scale: { min: 0.9, max: 1.6 }, rotate: { start: -20, end: 40 },
-      alpha: { start: 0.85, end: 0.5 },
+      y: { min: 40, max: MUNDO.altura - 60 }, lifespan: 16000, frequency: 380, advance: 12000,
+      speedX: { min: 60, max: 110 }, speedY: { min: -18, max: 10 }, scale: { min: 1, max: 1.8 }, rotate: { start: -20, end: 40 },
+      alpha: { start: 0.95, end: 0.6 },
     }).setDepth(FRENTE);
     const polenFino = this.add.particles(0, 0, 'amb-ponto', {
-      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: 6000, frequency: 260,
-      speedX: { min: -8, max: 12 }, speedY: { min: -12, max: -2 }, scale: { min: 0.14, max: 0.3 },
-      alpha: { start: 0, end: 0.75, ease: 'Sine.inOut', yoyo: true }, tint: 0xffe08a, blendMode: 'ADD',
+      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: 6000, frequency: 80, advance: 4000,
+      speedX: { min: -10, max: 16 }, speedY: { min: -16, max: -3 }, scale: { min: 0.22, max: 0.45 },
+      alpha: { start: 0, end: 0.95, ease: 'Sine.inOut', yoyo: true }, tint: 0xffe08a, blendMode: 'ADD',
     }).setDepth(FRENTE);
     this.guardar(polen, sementes, polenFino);
   },
@@ -199,9 +203,9 @@ export const metodosDoAmbiente = {
       alpha: { start: 0.95, end: 0.2 },
     }).setDepth(FUNDO);
     const neveFina = this.add.particles(0, -10, 'amb-ponto', {
-      x: { min: MESA.x - 100, max: MESA.x + MESA.l + 100 }, lifespan: 11000, frequency: 75,
-      speedY: { min: 45, max: 95 }, speedX: { min: -30, max: 8 }, scale: { min: 0.14, max: 0.32 },
-      alpha: { start: 0.8, end: 0.15 },
+      x: { min: MESA.x - 100, max: MESA.x + MESA.l + 100 }, lifespan: 11000, frequency: 55, advance: 8000,
+      speedY: { min: 45, max: 95 }, speedX: { min: -30, max: 8 }, scale: { min: 0.2, max: 0.45 },
+      alpha: { start: 0.95, end: 0.25 },
     }).setDepth(FRENTE);
     this.guardar(neve, neveFina);
     /* rajadas: de tempos em tempos o vento varre a neve para o lado, com riscos brancos */
@@ -216,7 +220,7 @@ export const metodosDoAmbiente = {
         this.tweens.add({ targets: e, gravityX: 220, duration: 500, yoyo: true, hold: 900, ease: 'Sine.inOut' });
       }
     };
-    this.ambiente.rajada = this.time.addEvent({ delay: 8000, loop: true, callback: rajada });
+    this.ambiente.rajada = this.time.addEvent({ delay: 6000, loop: true, callback: rajada });
   },
 
   /* ------------------------------------------------------------------ Pântano */
@@ -236,20 +240,20 @@ export const metodosDoAmbiente = {
     }
     /* vaga-lumes: o ponto aceso passa por cima da mesa; o halo, largo, fica por trás das cartas */
     const config = (escala, alfa) => ({
-      x: { min: MESA.x - 40, max: MESA.x + MESA.l + 40 }, y: { min: 60, max: MUNDO.altura - 40 }, lifespan: { min: 3500, max: 6500 }, frequency: 170,
+      x: { min: MESA.x - 40, max: MESA.x + MESA.l + 40 }, y: { min: 60, max: MUNDO.altura - 40 }, lifespan: { min: 3500, max: 6500 }, frequency: 90,
       speedX: { min: -16, max: 16 }, speedY: { min: -14, max: 14 }, scale: escala,
       alpha: { start: 0, end: alfa, ease: 'Sine.inOut', yoyo: true }, tint: [0xd8ff6a, 0xfff38a, 0xa8ff9a], blendMode: 'ADD',
     });
-    const vagalumes = this.add.particles(0, 0, 'amb-ponto', config({ min: 0.3, max: 0.6 }, 1)).setDepth(FRENTE);
+    const vagalumes = this.add.particles(0, 0, 'amb-ponto', config({ min: 0.4, max: 0.75 }, 1)).setDepth(FRENTE);
     const halos = this.add.particles(0, 0, 'amb-halo', config({ min: 0.5, max: 0.9 }, 0.6)).setDepth(FUNDO);
     const bolhas = this.add.particles(0, MUNDO.altura + 10, 'amb-bolha', {
       x: { min: 0, max: MUNDO.largura }, lifespan: 7000, frequency: 380,
       speedY: { min: -50, max: -25 }, speedX: { min: -6, max: 6 }, scale: { min: 0.8, max: 1.7 }, alpha: { start: 0.8, end: 0 },
     }).setDepth(FUNDO);
-    /* algumas bolhas pequenas sobem também por cima da mesa */
-    const bolhasDaMesa = this.add.particles(0, MUNDO.altura + 10, 'amb-bolha', {
-      x: { min: MESA.x, max: MESA.x + MESA.l }, lifespan: 6500, frequency: 900,
-      speedY: { min: -60, max: -30 }, speedX: { min: -6, max: 6 }, scale: { min: 0.6, max: 1.1 }, alpha: { start: 0.7, end: 0 },
+    /* bolhas sobem também por cima da mesa, nascendo em qualquer altura */
+    const bolhasDaMesa = this.add.particles(0, 0, 'amb-bolha', {
+      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 120, max: MUNDO.altura }, lifespan: 4500, frequency: 150, advance: 3000,
+      speedY: { min: -70, max: -35 }, speedX: { min: -8, max: 8 }, scale: { min: 0.8, max: 1.5 }, alpha: { start: 0, end: 0.9, ease: 'Sine.out', yoyo: true },
     }).setDepth(FRENTE);
     this.guardar(vagalumes, halos, bolhas, bolhasDaMesa);
     this.fogoFatuo();
@@ -296,14 +300,25 @@ export const metodosDoAmbiente = {
       speedX: { min: 20, max: 45 }, scale: { min: 0.15, max: 0.35 }, alpha: { start: 0, end: 0.8, ease: 'Sine.inOut', yoyo: true }, tint: 0xe8f8ff,
     }).setDepth(FUNDO);
     const brilhos = this.add.particles(0, 0, 'amb-brilho', {
-      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: { min: 700, max: 1400 }, frequency: 110,
-      scale: { min: 0.4, max: 0.9 }, rotate: { min: 0, max: 45 }, alpha: { start: 0, end: 0.85, ease: 'Sine.inOut', yoyo: true }, tint: 0xffffff, blendMode: 'ADD',
+      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: { min: 700, max: 1400 }, frequency: 55,
+      scale: { min: 0.5, max: 1.1 }, rotate: { min: 0, max: 45 }, alpha: { start: 0, end: 0.85, ease: 'Sine.inOut', yoyo: true }, tint: 0xffffff, blendMode: 'ADD',
     }).setDepth(FRENTE);
     this.ambiente.vento = this.add.particles(0, 0, 'amb-risco', {
       x: -40, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: 2400, frequency: 300,
       speedX: { min: 520, max: 760 }, scaleX: { min: 0.8, max: 2.2 }, alpha: { start: 0.5, end: 0 },
     }).setDepth(FRENTE);
-    this.guardar(espuma, brilhos, this.ambiente.vento);
+    /* riscos de corrente: traços claros que nascem em qualquer ponto da mesa e derivam com a água */
+    const correntes = this.add.particles(0, 0, 'amb-risco', {
+      x: { min: MESA.x - 60, max: MESA.x + MESA.l }, y: { min: 40, max: MUNDO.altura - 40 }, lifespan: { min: 2600, max: 4200 }, frequency: 70, advance: 3000,
+      speedX: { min: 110, max: 230 }, speedY: { min: -6, max: 6 }, scaleX: { min: 0.8, max: 2.4 }, scaleY: { min: 0.8, max: 1.3 },
+      alpha: { start: 0, end: 0.6, ease: 'Sine.inOut', yoyo: true },
+    }).setDepth(FRENTE);
+    /* bolhas do mar subindo por cima das cartas */
+    const bolhasDoMar = this.add.particles(0, 0, 'amb-bolha-mar', {
+      x: { min: MESA.x, max: MESA.x + MESA.l }, y: { min: 120, max: MUNDO.altura }, lifespan: 4200, frequency: 170, advance: 3000,
+      speedY: { min: -80, max: -40 }, speedX: { min: 10, max: 35 }, scale: { min: 0.6, max: 1.3 }, alpha: { start: 0, end: 0.9, ease: 'Sine.out', yoyo: true },
+    }).setDepth(FRENTE);
+    this.guardar(espuma, brilhos, this.ambiente.vento, correntes, bolhasDoMar);
   },
 
   /** Ondas do oceano: nove linhas que correm devagar. */
