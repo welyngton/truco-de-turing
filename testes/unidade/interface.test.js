@@ -326,6 +326,11 @@ describe('telas', () => {
     assert.ok(texto.includes('Versão ' + VERSAO));
     assert.match(texto, /Peng Yaohao/);
     for (const termo of ['NeuroDeck', 'Truco de Turing', 'Francisco Lima', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo', 'neurodeck-fpo.web.app']) assert.ok(texto.includes(termo), termo);
+    /* estatísticas de uso: o texto sempre aparece; fora do site publicado não há botões e nada é medido */
+    assert.match(texto, /Estatísticas de uso/);
+    assert.match(texto, /Google Analytics/);
+    assert.match($('#s-estatisticas').textContent, /fora do site publicado/);
+    assert.equal($('#s-estatisticas-sim'), null);
   });
   it('revisão: resumo, curva, linha do tempo comentada e placar da partida', () => {
     const mao = maoAteOFim({ terreno: 'pantano' });

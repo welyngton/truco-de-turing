@@ -10,6 +10,7 @@ import { VERBETES } from './conteudo/grimorio.js';
 import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, mostrarAviso } from './interface/paineis.js';
+import { registrarEvento } from './interface/analise.js';
 
 /**
  * Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles
@@ -82,6 +83,11 @@ export const Aplicacao = {
 
   /** Sai do menu e abre a mesa. */
   jogar() {
+    const o = this.opcoes || OPCOES_PADRAO;
+    registrarEvento('inicio_partida', {
+      baralho: o.baralho, terreno: o.terreno, oponente: o.oponente, arquitetura: o.arquitetura,
+      jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: this.online ? 1 : 0,
+    });
     fecharTodos();
     this.modoImersivo();
     document.body.classList.add('em-partida');
@@ -144,6 +150,7 @@ export const Aplicacao = {
     }
     this.salvar();
     if (novas.length) Som.medalha();
+    for (const conquista of novas) registrarEvento('conquista', { conquista: conquista.id, graduacao: conquista.graduacao });
     return novas;
   },
 
@@ -153,11 +160,13 @@ export const Aplicacao = {
     if (p.lidos[id]) return;
     p.lidos[id] = true;
     p.verbetesLidos = Object.keys(p.lidos).length;
+    registrarEvento('verbete_lido', { verbete: id, lidos: p.verbetesLidos });
     if (!p.desbloqueadas.biblio && p.verbetesLidos >= VERBETES.length) {
       p.desbloqueadas.biblio = Date.now();
       const conquista = CONQUISTAS.find((c) => c.id === 'biblio');
       mostrarAviso('Conquista: ' + conquista.nome, conquista.descricao, 'medalha-aviso');
       Som.medalha();
+      registrarEvento('conquista', { conquista: conquista.id, graduacao: conquista.graduacao });
     }
     this.salvar();
   },

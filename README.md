@@ -160,6 +160,19 @@ learning, ruído, Monte Carlo, mudança de distribuição (terrenos como weight 
 incerteza (truco). Cada verbete traz a equação, uma figura quando ajuda, como aparece no jogo e até onde a comparação
 vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Ver o conceito".
 
+## Estatísticas de uso
+
+O site publicado (`https://welyngton.github.io/truco-de-turing/`) usa o **Google Analytics 4**
+(ID `G-VWSGVWJK6Q`) para contar partidas, mãos, pedidos de truco, verbetes lidos e conquistas
+(`src/interface/analise.js`). Só mede depois que a pessoa aceita na faixa de consentimento, e a
+escolha pode ser mudada na tela "Sobre". Sinais de publicidade ficam desligados. Em `localhost`, no
+arquivo único (`file://`), em forks publicados em outro endereço e nos testes automatizados nada é
+carregado.
+
+Eventos: `inicio_partida`, `fim_mao`, `fim_partida`, `truco`, `verbete_lido` e `conquista`, com
+parâmetros como baralho, terreno, oponente e resultado. Para vê-los como dimensões nos relatórios,
+cadastre os parâmetros em Administrador → Definições personalizadas no Google Analytics.
+
 ## Jogar online
 
 Botão **Jogar online** no menu:

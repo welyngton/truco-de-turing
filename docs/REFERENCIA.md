@@ -605,6 +605,28 @@ Textos de ambientação das cartas e falas dos oponentes.
 | `PROVOCACOES` | constante (exportada) | Falas dos oponentes por situação. |
 | `provocar(situacao)` | função (exportada) | Sorteia uma fala da situação. |
 
+## `src/interface/analise.js`
+
+Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWSGVWJK6Q). Regras: - Só mede no site publicado (`https://welyngton.github.io`). Em localhost, no arquivo único aberto por `file://`, em forks publicados em outro endereço e nos testes automatizados (navegador controlado por WebDriver/Playwright) nada é carregado nem enviado. - Só mede com consentimento. Na primeira visita aparece uma faixa com "Aceitar" e "Recusar"; a escolha fica neste aparelho (`localStorage`) e pode ser mudada na tela "Sobre". O script do Google só é baixado depois do "Aceitar". - Sem sinais de publicidade (Google Signals e personalização de anúncios desligados). Os eventos do jogo (início de partida, fim de mão e de partida, truco, verbete lido, conquista) passam por `registrarEvento`, que não faz nada enquanto a medição estiver desligada.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `ID_GOOGLE_ANALYTICS` | constante (exportada) | ID da métrica do fluxo da Web no Google Analytics. |
+| `HOSTS_MEDIDOS` | constante (exportada) | Endereços onde o jogo publicado mede (o do fluxo de dados no Google Analytics). |
+| `CHAVE_DO_CONSENTIMENTO` | constante (exportada) | Chave do consentimento no `localStorage`: 'sim', 'nao' ou ausente (ainda não perguntado). |
+| `estado` | constante | Estado do módulo: a janela onde o Analytics foi ligado (ou null). |
+| `podeMedir(janela = globalThis)` | função (exportada) | O jogo está no site publicado, num navegador comum (não automatizado)? |
+| `consentimento(janela = globalThis)` | função (exportada) | Lê a escolha guardada: 'sim', 'nao' ou null. |
+| `medindo()` | função (exportada) | A medição está ligada agora (site publicado, consentimento dado e script carregado)? |
+| `carregar(janela)` | função | Carrega o gtag.js e configura o fluxo, sem sinais de publicidade. |
+| `apagarCookies(janela)` | função | Apaga os cookies do Google Analytics (`_ga`, `_ga_…`) deste site. |
+| `definirConsentimento(escolha, janela = globalThis)` | função (exportada) | Guarda a escolha da pessoa e liga ou desliga a medição na hora. |
+| `TEXTO_DAS_ESTATISTICAS` | constante (exportada) | Texto da faixa de consentimento (também usado na tela "Sobre"). |
+| `mostrarFaixa(janela)` | função | Mostra a faixa de consentimento no rodapé da página. |
+| `iniciarAnalise(janela = globalThis)` | função (exportada) | Liga a medição se a pessoa já aceitou; na primeira visita, pergunta. Fora do site publicado, não faz nada. |
+| `registrarEvento(nome, dados = {})` | função (exportada) | Envia um evento do jogo ao Google Analytics (se a medição estiver ligada). |
+| `reiniciarAnalise()` | função (exportada) | Volta ao estado inicial (para os testes). |
+
 ## `src/interface/formulas.js`
 
 Texto com fórmulas em LaTeX para os painéis HTML: `$...$` no meio da frase e `$$...$$` em destaque. Usa o KaTeX carregado pela página (global `katex`); sem ele, mostra o LaTeX como código, para o texto continuar legível offline.
@@ -793,10 +815,11 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre": versão, o jogo unificado (NeuroDeck + Truco de Turing), a disciplina, as regras originais, o professor, os autores e a licença.
+Tela "Sobre": versão, o jogo unificado (NeuroDeck + Truco de Turing), a disciplina, as regras originais, o professor, os autores, as estatísticas de uso (ligar e desligar) e a licença.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
+| `situacaoDasEstatisticas()` | função | Situação das estatísticas de uso neste aparelho, em texto. |
 | `abrirSobre()` | função (exportada) | Abre a tela "Sobre". |
 
 ## `src/motor/bot.js`
