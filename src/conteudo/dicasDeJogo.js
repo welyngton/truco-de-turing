@@ -6,7 +6,7 @@
  * nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica.
  *
  * `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos
- * primeiro), ou uma dica geral de estratégia ligada a um verbete da Biblioteca de conceitos. Não depende do Phaser:
+ * primeiro), ou uma dica geral de estratégia ligada a um verbete do Glossário. Não depende do Phaser:
  * roda também no Node (testes).
  */
 import { ehFigura, PLURAL_FIGURA, NAIPE } from '../nucleo/cartas.js';
@@ -18,7 +18,7 @@ import { podeTrucar } from '../nucleo/truco.js';
 
 /**
  * Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma
- * boa prática do jogo a um verbete da Biblioteca de conceitos (`verbete`).
+ * boa prática do jogo a um verbete do Glossário (`verbete`).
  */
 export const DICAS_GERAIS = [
   { id: 'geral-mao', verbete: 'pesos', titulo: 'Sua mão é o seu orçamento',

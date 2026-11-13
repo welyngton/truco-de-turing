@@ -11,7 +11,7 @@
  * | entrada.js    | cliques e toques do jogador                                        |
  * | turnos.js     | fluxo da mão: iniciar, executar jogada, vez de cada jogador         |
  * | truco.js      | pedir, anunciar e responder truco                                  |
- * | efeitos.js    | animações dos eventos, faíscas, faixas, balão e avisos da Biblioteca de conceitos  |
+ * | efeitos.js    | animações dos eventos, faíscas, faixas, balão e avisos do Glossário  |
  * | ambiente.js   | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento)  |
  * | paineis.js    | painéis de leitura: placar por camada, registro completo, cemitério  |
  * | online.js     | partida online: ações pela sala, fila, vez dos outros aparelhos      |

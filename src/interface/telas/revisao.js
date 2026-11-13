@@ -4,7 +4,7 @@
  * Mostra, a partir da linha do tempo guardada pela mesa (cenas/mesa/turnos.js):
  * - um resumo com os momentos-chave (maior salto, golpe mais duro, a virada) e o que cada um fez;
  * - a curva de treino das duas redes, passo a passo, com marcas nas ações importantes;
- * - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais da Biblioteca de conceitos;
+ * - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais do Glossário;
  * - na partida com várias mãos, o placar mão a mão.
  */
 import { CORES_JOGADORES_CSS } from '../../configuracao.js';
@@ -38,7 +38,7 @@ function tipoDoPasso(passo) {
   return passo.tipo === 'ativar' ? 'ativacao' : passo.tipo;
 }
 
-/** Verbete da Biblioteca de conceitos ligado a cada tipo de passo. */
+/** Verbete do Glossário ligado a cada tipo de passo. */
 const VERBETE_DO_TIPO = {
   ativacao: 'forward', tunagem: 'tunagem', overfit: 'overfit', earlystop: 'earlystop', stackoverflow: 'stackoverflow',
   dropout: 'dropout', transfer: 'transfer', truco: 'truco', completa: 'camadas', inicio: 'neuronio',

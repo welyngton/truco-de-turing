@@ -1,12 +1,12 @@
 /**
  * @file Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js)
  * em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do
- * oponente e avisos da Biblioteca de conceitos.
+ * oponente e avisos do Glossário.
  */
 import { MUNDO, RESOLUCAO, FONTES, TAMANHO_CARTA } from '../../configuracao.js';
 import { NAIPE, ehFigura } from '../../nucleo/cartas.js';
 import { pontosDaCarta, nomeDaCarta } from '../../nucleo/baralhos.js';
-import { VERBETES } from '../../conteudo/grimorio.js';
+import { VERBETES, NOME_DA_BIBLIOTECA } from '../../conteudo/grimorio.js';
 import { provocar } from '../../conteudo/textos.js';
 import { desenharFaisca } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
@@ -205,7 +205,11 @@ export const metodosDeEfeitos = {
     return 2100;
   },
 
-  /** Avisa quando uma rede acaba de formar uma quadra de figuras (vanishing gradient). */
+  /**
+   * Avisa quando uma rede acaba de formar uma quadra de figuras (vanishing gradient) ou, no
+   * baralho Backprop, quando a saída fica saturada depois das ativações (saturação no forward
+   * pass, com verbete próprio).
+   */
   verificarVanishing() {
     let espera = 0;
     this.mao.jogadores.forEach((_, j) => {
@@ -215,8 +219,13 @@ export const metodosDeEfeitos = {
         this.time.delayedCall(500, () => { Som.explosao(); this.faixa('VANISHING GRADIENT', '#ff6b7a', 52, 'vanishing'); this.falar(provocar('vanishing'), j); });
         this.avisarVerbete('vanishing');
         espera = 1400;
-      } else if (!pontuacao.vanishing) this.vanishingAvisado[j] = false;
-      if (pontuacao.combos.length) this.avisarVerbete('vanishing');
+      } else if (pontuacao.saturada && !this.vanishingAvisado[j]) {
+        this.vanishingAvisado[j] = true;
+        this.time.delayedCall(500, () => this.faixa('SAÍDA SATURADA', '#ffb36b', 44));
+        this.avisarVerbete('saturacao');
+        espera = 1000;
+      } else if (!pontuacao.vanishing && !pontuacao.saturada) this.vanishingAvisado[j] = false;
+      if (pontuacao.combos.length) this.avisarVerbete(pontuacao.saturada ? 'saturacao' : 'vanishing');
     });
     return espera;
   },
@@ -308,12 +317,12 @@ export const metodosDeEfeitos = {
     camera.flash(180, 255, 210, 120);
   },
 
-  /** Mostra uma vez por sessão o resumo do verbete da Biblioteca de conceitos ligado ao que aconteceu. */
+  /** Mostra uma vez por sessão o resumo do verbete do Glossário ligado ao que aconteceu. */
   avisarVerbete(id) {
     const avisados = this.app.verbetesAvisados;
     if (avisados[id]) return;
     avisados[id] = true;
     const verbete = VERBETES.find((v) => v.id === id);
-    if (verbete) mostrarAviso('Biblioteca · ' + verbete.titulo, verbete.noJogo, null, 6500);
+    if (verbete) mostrarAviso(NOME_DA_BIBLIOTECA + ' · ' + verbete.titulo, verbete.noJogo, null, 6500);
   },
 };

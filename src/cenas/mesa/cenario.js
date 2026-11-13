@@ -185,7 +185,7 @@ export const metodosDoCenario = {
     });
     p.dica = this.criarTexto(PAINEL_ESQ.x + 14, ESQ.dica, '', { fontSize: '13.5px', color: '#efe3c6', wordWrap: { width: PAINEL_ESQ.l - 28 }, lineSpacing: 1 });
 
-    /* só dois botões no rodapé: REGRAS (como jogar, Biblioteca de conceitos e dicas) e MENU (som, música, sair) */
+    /* só dois botões no rodapé: REGRAS (como jogar, Glossário e dicas) e MENU (som, música, sair) */
     const lb = (PAINEL_ESQ.l - 28 - 10) / 2, pedra = { tamanho: 17, variante: 'pedra' };
     p.botaoRegras = this.criarBotao(PAINEL_ESQ.x + 14 + lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, 'REGRAS', () => this.abrirRegrasDaMesa(), pedra);
     p.botaoMenu = this.criarBotao(PAINEL_ESQ.x + PAINEL_ESQ.l - 14 - lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, 'MENU', () => this.abrirMenuDaMesa(), pedra);

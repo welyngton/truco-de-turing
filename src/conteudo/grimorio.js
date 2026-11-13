@@ -1,7 +1,7 @@
 /**
- * @file Biblioteca de conceitos (antes "Grimório"): cada mecânica do jogo explicada como conceito
- * de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os
- * verbetes já lidos (conquista "Bibliotecário") salvos no navegador.
+ * @file Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do
+ * jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome
+ * antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador.
  *
  * Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em
  * bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa),
@@ -14,7 +14,7 @@
  */
 
 /** Nome da tela, num lugar só. */
-export const NOME_DA_BIBLIOTECA = 'Biblioteca de conceitos';
+export const NOME_DA_BIBLIOTECA = 'Glossário';
 
 /* ---------- pedacinhos de MathML ---------- */
 const bloco = (...partes) => '<math display="block">' + partes.join('') + '</math>';
@@ -44,13 +44,19 @@ export const VERBETES = [
     noJogo: 'Cada carta na mesa é um neurônio. O valor da carta faz o papel da saída já ativada: é quanto aquele neurônio contribui para a soma da rede.',
     limite: 'O jogo pula a conta: a carta já traz o número pronto. Não há entradas, pesos nem viés a ajustar.' },
   { id: 'ativacao', titulo: 'Função de ativação', categoria: 'Fundamento',
-    conceito: 'A ativação é a não linearidade aplicada depois da soma ponderada. Sem ela, empilhar camadas daria o mesmo que uma única camada linear. ReLU é a mais usada hoje; sigmoide e tangente hiperbólica saturam nos extremos, e isso alimenta o vanishing gradient.',
+    conceito: 'A ativação é a não linearidade aplicada depois da soma ponderada. Sem ela, empilhar camadas daria o mesmo que uma única camada linear. ReLU é a mais usada hoje; sigmoide e tangente hiperbólica saturam nos extremos (ver Saturação da ativação), e isso alimenta o vanishing gradient.',
     equacao: bloco(mt('ReLU'), par(mi('z')), mo('='), mi('max'), par(mn('0'), mo(','), mi('z'))) +
       bloco(mi('σ'), par(mi('z')), mo('='), frac(mn('1'), linha(mn('1'), mo('+'), sup(mi('e'), linha(mo('−'), mi('z')))))) +
       bloco(mi('tanh'), par(mi('z')), mo('='), frac(linha(sup(mi('e'), mi('z')), mo('−'), sup(mi('e'), linha(mo('−'), mi('z')))), linha(sup(mi('e'), mi('z')), mo('+'), sup(mi('e'), linha(mo('−'), mi('z')))))),
     figura: 'ativacoes',
-    noJogo: 'As cartas de figura (J, Q, K) valem 0 sozinhas, como um neurônio que a ReLU desligou. Só "acendem" em sequência de figuras iguais.',
-    limite: 'É só uma lembrança visual: nenhuma carta aplica uma função de ativação de verdade.' },
+    noJogo: 'No baralho Clássico as figuras (J, Q, K) valem 0 sozinhas, como um neurônio que a ReLU desligou, e só "acendem" em sequência de figuras iguais. No baralho Backprop elas são ativações de verdade: J ReLU, Q sigmoide e K tanh.',
+    limite: 'No Clássico é só uma lembrança visual. No Backprop a conta é real, mas a sigmoide e a tanh foram esticadas para ir até 20 (20·σ(z/10) e 20·tanh(z/20)), e não até 1, para os pontos ficarem na escala das cartas.' },
+  { id: 'saturacao', titulo: 'Saturação da ativação', categoria: 'Fundamento',
+    conceito: 'Sigmoide e tangente hiperbólica são limitadas: a sigmoide fica entre 0 e 1, a tanh entre −1 e 1. Quando a entrada z é grande em módulo, a saída gruda perto do teto ou do piso e mudar z quase não muda a saída: o neurônio está saturado. Isso é um fenômeno do forward pass. Como a derivada também fica perto de zero, um neurônio saturado devolve pouco gradiente no backward e é uma das causas do vanishing gradient, mas as duas coisas não são a mesma.',
+    equacao: bloco(sup(mi('σ'), mo('′')), par(mi('z')), mo('='), mi('σ'), par(mi('z')), par(mn('1'), mo('−'), mi('σ'), par(mi('z'))), mo('≤'), frac(mn('1'), mn('4')), mo(','), mspace(), sup(mi('σ'), mo('′')), par(mi('z')), mo('→'), mn('0'), mt(' quando '), abs(mi('z')), mo('→'), mi('∞')) +
+      bloco(mt('no Backprop:'), mspace(), mi('a'), mo('='), mn('20'), mo('·'), mi('σ'), par(frac(mi('z'), mn('10'))), mo('&lt;'), mn('20'), mo(','), mspace(), mi('a'), mo('='), mn('20'), mo('·'), mi('tanh'), par(frac(mi('z'), mn('20'))), mo('&lt;'), mn('20')),
+    noJogo: 'No baralho Backprop a sigmoide (Q) e a tanh (K) nunca passam de 20, e a ReLU (J) zera o que for negativo. Uma rede de 3 ou mais neurônios que passou por alguma dessas ativações e terminou abaixo de 20 recebe o aviso "Saída saturada depois das ativações": o sinal ficou preso no teto das ativações em vez de crescer. Para fugir disso, deixe as camadas finais lineares (cartas de 2 a 10 e Ás) e use naipes de peso alto.',
+    limite: 'O aviso é uma convenção do jogo: ele olha só se a saída ficou abaixo de 20 depois de alguma ativação não linear, sem medir a derivada de cada neurônio. Uma ReLU seguida de camadas lineares, por exemplo, recebe o aviso sem estar num platô. E o baralho só calcula o forward pass, então ele não mostra o gradiente sumindo, só a saída que não sobe.' },
   { id: 'camadas', titulo: 'Camadas e arquiteturas', categoria: 'Arquitetura',
     conceito: 'Redes densas organizam neurônios em camadas: a de entrada recebe os dados, as ocultas aprendem representações intermediárias e a de saída entrega a predição. A arquitetura é a escolha de quantas camadas e quantos neurônios em cada uma.',
     equacao: bloco(camada(negrito('h')), mo('='), mi('φ'), par(camada(negrito('W')), sup(negrito('h'), linha(mo('('), mi('l'), mo('−'), mn('1'), mo(')'))), mo('+'), camada(negrito('b')))),
@@ -60,8 +66,8 @@ export const VERBETES = [
   { id: 'forward', titulo: 'Propagação direta', categoria: 'Treino',
     conceito: 'No forward pass o sinal atravessa a rede da entrada até a saída, camada por camada. Cada camada só recebe o que a anterior produziu, então a rede inteira é uma composição de funções.',
     equacao: bloco(chapeu('y'), mo('='), sup(mi('f'), linha(mo('('), mi('L'), mo(')'))), par(mo('⋯'), sup(mi('f'), linha(mo('('), mn('2'), mo(')'))), par(sup(mi('f'), linha(mo('('), mn('1'), mo(')'))), par(negrito('x'))))),
-    noJogo: 'Você constrói a rede um neurônio por camada, sempre avançando para a camada seguinte. A soma das cartas desse caminho é a saída da sua rede.',
-    limite: 'No jogo os valores se somam; numa rede de verdade cada camada transforma o que recebe.' },
+    noJogo: 'Você constrói a rede um neurônio por camada, sempre avançando para a camada seguinte. A soma das cartas desse caminho é a saída da sua rede. No baralho Backprop a conta é a do forward pass de verdade: cada camada calcula a = f(w·a + b) com o que recebeu da anterior.',
+    limite: 'Na maioria dos baralhos os valores só se somam; numa rede de verdade, como no Backprop, cada camada transforma o que recebe.' },
   { id: 'pesos', titulo: 'Pesos e conexões', categoria: 'Fundamento',
     conceito: 'Os pesos dizem quanto cada conexão importa. Eles são os parâmetros que o treino ajusta: a cada passo, a descida do gradiente move cada peso um pouco na direção que mais reduz a perda. No TensorFlow Playground, a espessura de uma linha mostra o tamanho do peso e a cor mostra o sinal.',
     equacao: bloco(mi('w'), mo('←'), mi('w'), mo('−'), mi('η'), parc(mi('L'), mi('w'))),
@@ -76,8 +82,8 @@ export const VERBETES = [
   { id: 'backprop', titulo: 'Retropropagação', categoria: 'Treino',
     conceito: 'Para treinar, a rede calcula o quanto cada peso contribuiu para o erro, da saída para a entrada, aplicando a regra da cadeia camada por camada. O gradiente que chega a uma camada é o produto das derivadas de todas as camadas depois dela.',
     equacao: bloco(parc(mi('L'), camada(negrito('h'))), mo('='), parc(mi('L'), sup(negrito('h'), linha(mo('('), mi('L'), mo(')')))), prod(linha(mi('k'), mo('='), mi('l'), mo('+'), mn('1')), mi('L')), parc(camada(negrito('h'), 'k'), sup(negrito('h'), linha(mo('('), mi('k'), mo('−'), mn('1'), mo(')'))))),
-    noJogo: 'O jogo não tem treino de verdade, mas a quadra de figuras (vanishing gradient) e as ações que desfazem camadas lembram o sinal que volta da saída para trás.',
-    limite: 'Nenhuma jogada calcula gradiente: é a ideia, não a conta.' },
+    noJogo: 'O jogo não tem treino de verdade, mas a quadra de figuras (vanishing gradient) e as ações que desfazem camadas lembram o sinal que volta da saída para trás. O baralho Backprop leva o nome porque cada carta é uma peça que a retropropagação ajustaria (o naipe é o peso w, o valor é o viés b, a figura é a ativação), mas ele só faz a primeira metade de um passo de treino: o forward pass, que calcula a saída. Não há perda, derivada nem atualização de pesos; o nome aponta para o que viria depois.',
+    limite: 'Nenhuma jogada calcula gradiente, nem no baralho Backprop: é a ideia, não a conta.' },
   { id: 'tunagem', titulo: 'Tunagem (ajuste fino)', categoria: 'Ação', autoria: 'Suzy Arcanjo',
     ideia: 'Um músico que já toca bem e passa a ensaiar só uma música específica para um show. Ele não reaprende a tocar: só ajusta o que já sabe.',
     conceito: 'Fine-tuning é continuar treinando um modelo já treinado, com poucos dados novos e uma taxa de aprendizado pequena, para reforçar o que ele faz numa tarefa específica. Ajustar demais, porém, deixa o modelo frágil e especializado.',

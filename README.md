@@ -84,7 +84,7 @@ src/motor/                 motor de regras do NeuroDeck (do colega Francisco): e
 src/nucleo/                camada de tradução (sem Phaser): entrega às telas a mão, as jogadas,
                            a pontuação e os oponentes no formato da interface, sobre o motor;
                            e o modo truco
-src/conteudo/              Biblioteca de conceitos, conquistas, textos e progresso salvo
+src/conteudo/              Glossário, conquistas, textos e progresso salvo
 src/arte/                  arte procedural em canvas: cartas, versos, mesas, avatares, ícones
 src/interface/             menu, telas HTML, avisos e som (WebAudio)
 src/cenas/                 cenas do Phaser: carregamento, menu e mesa
@@ -146,16 +146,17 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
 - **35 conquistas** em graduações de bronze a antimatéria, incluindo as do enunciado (Desk rejection, Marcha dos patos, Contra tudo e contra todos, Artilheiro dos gols inúteis, 100 dropouts…) e as da fusão (baralhos Nobreza e Backprop, mesas de 4 e 5 jogadores, 3 baralhos, arquiteturas).
 - **9 avatares** para o jogador, 6 deles liberados por conquistas (Menu > Avatar).
 - **Modo dicas**: dicas de estratégia a cada vez, sempre com o conceito de redes neurais por trás, e explicações nos botões (mouse ou segurar no celular); só usam o que está à vista e nunca dizem qual carta virada escolher. Mãos com dicas não valem conquistas.
-- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Biblioteca de conceitos e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
-- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos da Biblioteca de conceitos.
+- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Glossário e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
+- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Glossário.
 - **Trilha sonora** (ligada por padrão): baião animado no menu (sanfona, zabumba, triângulo e palmas), blues lento na Planície (mesa neutra), valsa com marimba no oceano, épica com trompa, harpa e tambores na montanha e uma dança de fada com harmônica de vidro e glockenspiel no pântano; fanfarra e confete na vitória.
 - **Feedback visual**: conexões com espessura proporcional ao valor (como no Playground), curva de treino, explosões, banners, músicas e sons.
 
 ## Conteúdo educativo
 
-Cada mecânica corresponde a um verbete da **Biblioteca de conceitos** (o antigo Grimório), que aparece como aviso na
-primeira vez em que acontece: neurônio, função de ativação, camadas e arquiteturas, propagação direta, pesos, curva de
-treino, retropropagação, fine-tuning, overfitting, dropout, early stopping, stack overflow, vanishing gradient, transfer
+Cada mecânica corresponde a um verbete do **Glossário** (antes Biblioteca de conceitos e, no começo, Grimório), que aparece como aviso na
+primeira vez em que acontece: neurônio, função de ativação, saturação da ativação (o aviso "Saída saturada" do baralho
+Backprop), camadas e arquiteturas, propagação direta, pesos, curva de treino, retropropagação (e por que o baralho
+Backprop, que só faz o forward pass, tem esse nome), fine-tuning, overfitting, dropout, early stopping, stack overflow, vanishing gradient, transfer
 learning, ruído, Monte Carlo, mudança de distribuição (terrenos como weight decay e concept drift) e decisão sob
 incerteza (truco). Cada verbete traz a equação, uma figura quando ajuda, como aparece no jogo e até onde a comparação
 vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Ver o conceito".
@@ -190,7 +191,7 @@ Autores:
 <!-- autores -->
 - Welyngton José Vinicius Dal Prá ([@welyngton](https://github.com/welyngton)): Truco de Turing (interface, arte, sons, conquistas e modo truco)
 - Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande)): testes, validação das regras e fusão com o NeuroDeck
-- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações na Biblioteca de conceitos
+- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações no Glossário
 - Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções da fusão
 - Francisco Lima: NeuroDeck (regras, motor, oponentes e mods)
 - Claude ([@claude](https://github.com/claude))

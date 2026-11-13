@@ -16,7 +16,7 @@ export function abrirSobre() {
       '<p>A turma fez dois jogos para o mesmo tema, e o professor decidiu juntar o melhor de cada um:</p>' +
       '<ul>' +
       '<li><b>NeuroDeck</b> (<a href="https://neurodeck-fpo.web.app/" target="_blank" rel="noopener">neurodeck-fpo.web.app</a>): as <b>regras</b>. O motor do NeuroDeck decide tudo o que acontece na mesa: jogadas, pontuação, terrenos, desempates, as arquiteturas de rede, de 2 a 5 jogadores, os oponentes do computador e a API de mods.</li>' +
-      '<li><b>Truco de Turing</b>: a <b>interface</b>. Arte das cartas, menu, mesa, efeitos, sons, música, avatares, conquistas, a Biblioteca de conceitos e o modo truco.</li>' +
+      '<li><b>Truco de Turing</b>: a <b>interface</b>. Arte das cartas, menu, mesa, efeitos, sons, música, avatares, conquistas, o Glossário e o modo truco.</li>' +
       '</ul>' +
       '<p>O motor do NeuroDeck foi copiado para o projeto sem alterações e conferido contra o site publicado em 1.000 partidas; depois recebeu as decisões de regra do professor e do grupo, registradas no repositório.</p>' +
       '<h3>A disciplina</h3>' +
@@ -38,7 +38,7 @@ export function abrirSobre() {
       '<li><b>Welyngton José Vinicius Dal Prá</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li>' +
       '<li><b>Diego Casagrande</b>: testes, validação das regras e fusão dos dois jogos.</li>' +
       '<li><b>Vinícius Chiconato</b>: correções da fusão.</li>' +
-      '<li><b>Suzy Arcanjo</b>: verbetes das ações na Biblioteca de conceitos.</li>' +
+      '<li><b>Suzy Arcanjo</b>: verbetes das ações no Glossário.</li>' +
       '</ul>' +
       '<p class="contribuicoes">Contribuições são bem-vindas: o código está aberto no repositório.</p>' +
       '<h3>Créditos e licença</h3>' +

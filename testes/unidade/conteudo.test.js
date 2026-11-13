@@ -41,7 +41,7 @@ describe('grimorio.js', () => {
     }
     assert.deepEqual(VERBETES.filter((v) => v.formula).map((v) => v.id), ['overfit', 'stackoverflow', 'transfer']);
   });
-  it('Biblioteca de conceitos: todo verbete tem equação em MathML e "até onde vale a comparação"; as figuras existem', () => {
+  it('Glossário: todo verbete tem equação em MathML e "até onde vale a comparação"; as figuras existem', () => {
     for (const v of VERBETES) {
       assert.match(v.equacao, /^(<math display="block">.*?<\/math>)+$/s, v.id);
       assert.ok(v.limite && v.limite.length > 20, v.id);
@@ -58,7 +58,7 @@ describe('grimorio.js', () => {
     assert.match(v.stackoverflow.conceito, /outro fenômeno/);
     assert.match(v.perda.noJogo, /sobe/);
   });
-  it('ajuda das ações: cada ação da barra tem verbete na Biblioteca e regra no motor', () => {
+  it('ajuda das ações: cada ação da barra tem verbete no Glossário e regra no motor', () => {
     const ids = new Set(VERBETES.map((x) => x.id));
     for (const a of ACOES_DA_AJUDA) {
       assert.ok(ids.has(a.verbete), a.id);

@@ -221,7 +221,7 @@ Cena do menu: fundo animado (uma rede neural pulsando e cartas flutuando) atrás
 
 ## `src/cenas/mesa/CenaMesa.js`
 
-Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os métodos ficam em arquivos separados por assunto e são copiados para o protótipo no fim deste arquivo: | Arquivo | Assunto | |---------------|--------------------------------------------------------------------| | cenario.js | molduras fixas, botões e criação dos textos dos painéis | | desenho.js | desenhar o estado: neurônios, mãos, placar, curva, dica, alvos | | entrada.js | cliques e toques do jogador | | turnos.js | fluxo da mão: iniciar, executar jogada, vez de cada jogador | | truco.js | pedir, anunciar e responder truco | | efeitos.js | animações dos eventos, faíscas, faixas, balão e avisos da Biblioteca de conceitos | | ambiente.js | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento) | | paineis.js | painéis de leitura: placar por camada, registro completo, cemitério | | online.js | partida online: ações pela sala, fila, vez dos outros aparelhos | | resultado.js | fim da mão, tentos, conquistas, comemoração e tela de resultado | | dicas.js | modo dicas: sugestão de jogada e dicas flutuantes dos botões | Estado principal da cena: - `this.partida`: placar de tentos e truco (nucleo/truco.js); - `this.mao`: estado da mão atual (nucleo/partida.js); - `this.quemVe`: índice do jogador que está olhando a tela (-1 enquanto o aparelho troca de mãos); - `this.numJogadores`, `this.humanos`, `this.variosHumanos`: quem está na mesa (os humanos são os primeiros índices; os demais são oponentes do computador); - `this.modo`, `this.selecao`, `this.alvos`: o que o jogador está escolhendo; - `this.ocupada`: verdadeiro durante animações e a vez do oponente (bloqueia cliques); - `this.encerrada`: a mão acabou.
+Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os métodos ficam em arquivos separados por assunto e são copiados para o protótipo no fim deste arquivo: | Arquivo | Assunto | |---------------|--------------------------------------------------------------------| | cenario.js | molduras fixas, botões e criação dos textos dos painéis | | desenho.js | desenhar o estado: neurônios, mãos, placar, curva, dica, alvos | | entrada.js | cliques e toques do jogador | | turnos.js | fluxo da mão: iniciar, executar jogada, vez de cada jogador | | truco.js | pedir, anunciar e responder truco | | efeitos.js | animações dos eventos, faíscas, faixas, balão e avisos do Glossário | | ambiente.js | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento) | | paineis.js | painéis de leitura: placar por camada, registro completo, cemitério | | online.js | partida online: ações pela sala, fila, vez dos outros aparelhos | | resultado.js | fim da mão, tentos, conquistas, comemoração e tela de resultado | | dicas.js | modo dicas: sugestão de jogada e dicas flutuantes dos botões | Estado principal da cena: - `this.partida`: placar de tentos e truco (nucleo/truco.js); - `this.mao`: estado da mão atual (nucleo/partida.js); - `this.quemVe`: índice do jogador que está olhando a tela (-1 enquanto o aparelho troca de mãos); - `this.numJogadores`, `this.humanos`, `this.variosHumanos`: quem está na mesa (os humanos são os primeiros índices; os demais são oponentes do computador); - `this.modo`, `this.selecao`, `this.alvos`: o que o jogador está escolhendo; - `this.ocupada`: verdadeiro durante animações e a vez do oponente (bloqueia cliques); - `this.encerrada`: a mão acabou.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -277,6 +277,7 @@ Parte da CenaMesa: desenhar o estado da mão na tela. Neurônios, mãos, placar,
 
 | Nome | Tipo | Descrição |
 |---|---|---|
+| `corDaSoma` | constante | Cor da soma no placar: vermelha se uma quadra zerou a rede, laranja se a saída do Backprop saturou. |
 | `inspecionar(textura, nota)` | método | Mostra uma textura na inspeção, com uma nota explicativa embaixo. |
 | `mostrarDica(texto)` | método | Mostra a dica do turno no rodapé do painel esquerdo. |
 | `redesenhar()` | método | Redesenha tudo a partir do estado: pontuações, alvos, neurônios, mãos e painéis. |
@@ -303,7 +304,7 @@ Parte da CenaMesa: desenhar o estado da mão na tela. Neurônios, mãos, placar,
 
 ## `src/cenas/mesa/dicas.js`
 
-Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo da Biblioteca de conceitos: uma oportunidade, um risco ou uma estratégia geral, sempre com o conceito de redes neurais por trás. As dicas usam só informação pública e nunca apontam qual neurônio oculto ativar; - **dicas flutuantes** nos botões de ação (Dropout, Transfer, Passar e TRUCO): ao passar o mouse ou, no celular, ao segurar o botão. Explicam a ação, o que vale fazer agora (no truco, a chance estimada por simulação) e o conceito da Biblioteca de conceitos; - a chance estimada de vitória também na caixa de resposta ao truco. Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas estatísticas. O aviso aparece ao ligar.
+Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo do Glossário: uma oportunidade, um risco ou uma estratégia geral, sempre com o conceito de redes neurais por trás. As dicas usam só informação pública e nunca apontam qual neurônio oculto ativar; - **dicas flutuantes** nos botões de ação (Dropout, Transfer, Passar e TRUCO): ao passar o mouse ou, no celular, ao segurar o botão. Explicam a ação, o que vale fazer agora (no truco, a chance estimada por simulação) e o conceito do Glossário; - a chance estimada de vitória também na caixa de resposta ao truco. Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas estatísticas. O aviso aparece ao ligar.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -320,7 +321,7 @@ Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a c
 
 ## `src/cenas/mesa/efeitos.js`
 
-Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js) em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do oponente e avisos da Biblioteca de conceitos.
+Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js) em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do oponente e avisos do Glossário.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -340,14 +341,14 @@ Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo
 | `animar_travada(evento)` | método | Rede finalizada porque não sobrou neurônio livre na camada seguinte. |
 | `animar_passe(evento)` | método | Alguém passou a vez. |
 | `animar_inicio(evento)` | método | Quem começa: mostra as cartas reveladas (ou anuncia o sorteio). |
-| `verificarVanishing()` | método | Avisa quando uma rede acaba de formar uma quadra de figuras (vanishing gradient). |
+| `verificarVanishing()` | método | Avisa quando uma rede acaba de formar uma quadra de figuras (vanishing gradient) ou, no baralho Backprop, quando a saída fica saturada depois das ativações (saturação no forward pass, com verbete próprio). |
 | `voarCarta(carta, x0, y0, x1, y1, atraso = 0)` | método | Uma carta voa de (x0, y0) até (x1, y1) e some. |
 | `explodir(x, y, cor, quantidade)` | método | Explosão de `quantidade` faíscas da cor dada. A faísca colorida é uma textura própria (Canvas não tem tint). |
 | `textoFlutuante(x, y, texto, cor = '#fff', tamanho = 20)` | método | Texto que sobe e desaparece. |
 | `faixa(texto, cor = '#f6dc8f', tamanho = 48, icone = null)` | método | Faixa grande no centro do tabuleiro (gritos de truco, ataques). |
 | `falar(texto, quem)` | método | Balão de fala de um oponente. Fica à esquerda do placar, na altura do bloco dele, com a ponta virada para o avatar. |
 | `impactoDoTruco(valor)` | método | Impacto do grito de truco: tapa na mesa, flash e tremor de tela mais fortes que o do stack overflow, crescendo a cada degrau (TRUCO 3, SEIS 6, NOVE 9, DOZE 12). |
-| `avisarVerbete(id)` | método | Mostra uma vez por sessão o resumo do verbete da Biblioteca de conceitos ligado ao que aconteceu. |
+| `avisarVerbete(id)` | método | Mostra uma vez por sessão o resumo do verbete do Glossário ligado ao que aconteceu. |
 
 ## `src/cenas/mesa/entrada.js`
 
@@ -367,7 +368,7 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | `alternarDropout()` | método | Botão Dropout: entra ou sai do modo de escolher o alcance. |
 | `fazerTransfer()` | método | Botão Transfer: troca as quatro cartas iguais da mão. |
 | `passarAVez()` | método | Botão Passar a vez. |
-| `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Biblioteca de conceitos e a chave das dicas, numa janela só. |
+| `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Glossário e a chave das dicas, numa janela só. |
 | `abrirAjudaDaMesa()` | método | Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. |
 | `abrirMenuDaMesa()` | método | Botão MENU da mesa: som e música (a janela fica aberta para ligar e desligar), voltar ao jogo ou abandonar a partida. |
 
@@ -538,17 +539,17 @@ Conquistas e suas graduações (bronze a antimatéria, como sugere a especifica�
 
 ## `src/conteudo/dicasDeJogo.js`
 
-Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por trás. Regra de ouro: as dicas usam **só informação pública** — as cartas da mão de quem pede a dica, os neurônios já revelados na mesa, as somas e o placar. Nunca apontam qual neurônio oculto ativar nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica. `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos primeiro), ou uma dica geral de estratégia ligada a um verbete da Biblioteca de conceitos. Não depende do Phaser: roda também no Node (testes).
+Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por trás. Regra de ouro: as dicas usam **só informação pública** — as cartas da mão de quem pede a dica, os neurônios já revelados na mesa, as somas e o placar. Nunca apontam qual neurônio oculto ativar nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica. `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos primeiro), ou uma dica geral de estratégia ligada a um verbete do Glossário. Não depende do Phaser: roda também no Node (testes).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `DICAS_GERAIS` | constante (exportada) | Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma boa prática do jogo a um verbete da Biblioteca de conceitos (`verbete`). |
+| `DICAS_GERAIS` | constante (exportada) | Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma boa prática do jogo a um verbete do Glossário (`verbete`). |
 | `contarValores(mao)` | função | Contagem de cartas da mão por valor. |
 | `escolherDicaDeJogo(mao, j, partida, recentes = [])` | função (exportada) | Escolhe a dica de jogo para o jogador `j` agora. |
 
 ## `src/conteudo/figurasDaBiblioteca.js`
 
-Figuras da Biblioteca de conceitos: diagramas em SVG, desenhados à mão e embutidos no verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e escalam com a largura do verbete.
+Figuras do Glossário: diagramas em SVG, desenhados à mão e embutidos no verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e escalam com a largura do verbete.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -568,7 +569,7 @@ Figuras da Biblioteca de conceitos: diagramas em SVG, desenhados à mão e embut
 
 ## `src/conteudo/grimorio.js`
 
-Biblioteca de conceitos (antes "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com `$...$` para LaTeX na linha) e `formula` (LaTeX em destaque, pelo KaTeX), redigidos por Suzy Arcanjo (issue #23 do repositório original).
+Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com `$...$` para LaTeX na linha) e `formula` (LaTeX em destaque, pelo KaTeX), redigidos por Suzy Arcanjo (issue #23 do repositório original).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -675,9 +676,9 @@ Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápi
 | `abrirPainel(html, opcoes = {})` | função (exportada) | Abre uma tela sobre o jogo. |
 | `fecharTodos()` | função (exportada) | Fecha todas as telas abertas. |
 | `mostrarAviso(titulo, texto, tipo, duracaoMs = 5200)` | função (exportada) | Mostra um aviso rápido no topo da tela (só um por vez). |
-| `mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito)` | função (exportada) | Dica de jogo do modo "dicas", no estilo da Biblioteca de conceitos: título, conselho e o conceito de redes neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha). |
+| `mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito)` | função (exportada) | Dica de jogo do modo "dicas", no estilo do Glossário: título, conselho e o conceito de redes neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha). |
 | `confirmar(titulo, texto, botoes, opcoes = {})` | função (exportada) | Caixa de confirmação com botões. |
-| `mostrarDicaFlutuante(titulo, html, alvo)` | função (exportada) | Mostra uma dica no estilo da Biblioteca de conceitos ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
+| `mostrarDicaFlutuante(titulo, html, alvo)` | função (exportada) | Mostra uma dica no estilo do Glossário ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
 | `esconderDicaFlutuante()` | função (exportada) | Esconde a dica flutuante, se houver. |
 
 ## `src/interface/som.js`
@@ -698,11 +699,11 @@ Efeitos sonoros sintetizados com WebAudio (nenhum arquivo de áudio). O navegado
 
 ## `src/interface/telas/ajudaDasAcoes.js`
 
-Ajuda das ações, como o botão "?" do NeuroDeck: um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Ver o conceito" que abre o verbete certo da Biblioteca de conceitos.
+Ajuda das ações, como o botão "?" do NeuroDeck: um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Ver o conceito" que abre o verbete certo do Glossário.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no NeuroDeck (de onde vêm a regra e o conceito); `verbete` é o verbete da Biblioteca de conceitos. |
+| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no NeuroDeck (de onde vêm a regra e o conceito); `verbete` é o verbete do Glossário. |
 | `doMotor(id)` | função | Ação do NeuroDeck, ou um objeto vazio se o motor não tiver aquele id. |
 | `abrirAjudaDasAcoes(app, idInicial)` | função (exportada) | Abre a ajuda das ações. |
 
@@ -728,21 +729,24 @@ Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as 
 
 ## `src/interface/telas/grimorio.js`
 
-Tela da Biblioteca de conceitos (antes "Grimório"): lista de verbetes à esquerda e o verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
+Tela do Glossário (antes "Biblioteca de conceitos" e "Grimório"): lista de verbetes à esquerda e o verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `htmlDoVerbete(v)` | função (exportada) | Corpo do verbete: a ideia do dia a dia (verbetes de Ação), o conceito, a equação, a figura, como aparece no jogo, até onde a comparação vale, a matemática para se aprofundar, a fonte e a autoria. Equação (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador. |
-| `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre a Biblioteca de conceitos. |
+| `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre o Glossário. |
 | `desenharLista(ativo)` | função | Desenha a lista com o verbete ativo destacado. |
 | `mostrar(id)` | função | Mostra um verbete e o marca como lido. |
 
 ## `src/interface/telas/mods.js`
 
-Tela "Mods": como criar baralhos, terrenos e ações para o motor do NeuroDeck, com um mod de exemplo comentado (conteudo/modExemplo.js). A API é a do registro do motor (src/motor/engine/registry.js, apiVersion 2). A tela é honesta sobre o estado atual: o motor aceita mods, mas a interface do jogo unificado ainda não os carrega.
+Tela "Mods": como criar baralhos, terrenos e ações para o motor do NeuroDeck, com um mod de exemplo comentado (conteudo/modExemplo.js) e links para os arquivos e exemplos no repositório do jogo no GitHub. A API é a do registro do motor (src/motor/engine/registry.js, apiVersion 2). A tela é honesta sobre o estado atual: o motor aceita mods, mas a interface do jogo unificado ainda não os carrega.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
+| `REPOSITORIO` | constante (exportada) | Endereço dos arquivos no repositório do jogo no GitHub (ramo main). |
+| `linkDoArquivo` | constante | Link para um arquivo do repositório, com o caminho como texto. |
+| `ARQUIVOS_DE_MODS` | constante (exportada) | Arquivos do repositório que servem de referência e de exemplo para quem vai escrever um mod. O teste de `testes/unidade/interface.test.js` confere que cada um existe. |
 | `TIPOS` | constante | Campos de cada tipo de mod, resumidos do registro do motor. |
 | `abrirMods()` | função (exportada) | Abre a tela "Mods". |
 
@@ -774,7 +778,7 @@ Tela de regras, com o conteúdo do manual do NeuroDeck e as decisões da fusão,
 
 ## `src/interface/telas/revisao.js`
 
-Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da linha do tempo guardada pela mesa (cenas/mesa/turnos.js): - um resumo com os momentos-chave (maior salto, golpe mais duro, a virada) e o que cada um fez; - a curva de treino das duas redes, passo a passo, com marcas nas ações importantes; - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais da Biblioteca de conceitos; - na partida com várias mãos, o placar mão a mão.
+Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da linha do tempo guardada pela mesa (cenas/mesa/turnos.js): - um resumo com os momentos-chave (maior salto, golpe mais duro, a virada) e o que cada um fez; - a curva de treino das duas redes, passo a passo, com marcas nas ações importantes; - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais do Glossário; - na partida com várias mãos, o placar mão a mão.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -782,7 +786,7 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 | `placar` | constante | Junta números com ' × ' (placar de 2 a 5 jogadores). |
 | `MARCAS` | constante | Cor e rótulo de cada tipo de acontecimento marcado na curva. |
 | `tipoDoPasso(passo)` | função | Tipo principal de um passo: o evento mais marcante, ou o tipo da jogada. |
-| `VERBETE_DO_TIPO` | constante | Verbete da Biblioteca de conceitos ligado a cada tipo de passo. |
+| `VERBETE_DO_TIPO` | constante | Verbete do Glossário ligado a cada tipo de passo. |
 | `variacoes(passos)` | função | Diferença das somas em relação ao passo anterior. |
 | `momentosChave(passos, nomes)` | função | Momentos-chave da mão, em frases curtas. |
 | `contagens(passos)` | função | Quantas vezes cada jogador fez cada tipo de ação. |
@@ -961,7 +965,8 @@ Soma da rede de um jogador (o "forward pass" do jogo), calculada pelo motor do N
 | `arredondar` | constante |  |
 | `pontuarRede(mao, j)` | função (exportada) | Calcula a soma da rede do jogador `j`. |
 | `decimal` | constante | Número com vírgula decimal e no máximo 2 casas ("1,2", "23,45"). |
-| `pontuarForward(mao, resultado)` | função | Baralho Backprop: a rede vale a ativação da saída. Cada neurônio mostra a ativação depois da camada dele (`pontos`) e, nas notas, o peso do naipe, o viés e a função de ativação. Não há combos de figuras: o vanishing gradient é a saída baixa depois de uma ativação não linear. |
+| `ROTULO_SAIDA_SATURADA` | constante (exportada) | Rótulo do aviso do baralho Backprop (ver `pontuarForward`). |
+| `pontuarForward(mao, resultado)` | função | Baralho Backprop: a rede vale a ativação da saída. Cada neurônio mostra a ativação depois da camada dele (`pontos`) e, nas notas, o peso do naipe, o viés e a função de ativação. Não há combos de figuras. O motor marca (no campo `vanishing`, nome que vem do NeuroDeck) a rede de 3 ou mais neurônios que passou por alguma ativação não linear e terminou abaixo de 20. Sigmoide e tanh do baralho vão no máximo até 20, então isso é saturação da ativação no forward pass, e não vanishing gradient, que acontece no backward e que este baralho não calcula. Aqui o aviso vira `saturada`, e `vanishing` fica falso: nenhum texto do Backprop fala em vanishing gradient. |
 | `mediaDePontos(mao, cartas)` | função (exportada) | Média de pontos de um conjunto de cartas. |
 
 ## `src/nucleo/rede.js`

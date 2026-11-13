@@ -1,5 +1,5 @@
 /**
- * @file Figuras da Biblioteca de conceitos: diagramas em SVG, desenhados à mão e embutidos no
+ * @file Figuras do Glossário: diagramas em SVG, desenhados à mão e embutidos no
  * verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e
  * escalam com a largura do verbete.
  */

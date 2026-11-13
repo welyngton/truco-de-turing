@@ -11,12 +11,27 @@ before(async () => { servidor = await subirServidor(); });
 after(() => servidor.fechar());
 
 describe('menu e telas', () => {
-  it('carrega, mostra o menu com as escolhas e abre Regras (abas, ajuda das ações), Biblioteca de conceitos, Conquistas, Mods e Sobre', async () => {
+  it('carrega, mostra o menu com as escolhas e abre Regras (abas, ajuda das ações), Glossário, Conquistas, Mods e Sobre', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
     try {
       await esperarMenu(pagina);
       await capturar(pagina, '01-menu');
+      /* os seis botões de baixo do menu têm o mesmo tamanho e o texto cabe neles, no desktop e no celular deitado */
+      for (const tela of [{ width: 1280, height: 720 }, { width: 844, height: 390 }, { width: 667, height: 375 }]) {
+        await pagina.setViewportSize(tela);
+        await pagina.waitForFunction(() => document.querySelector('#m-avatar-img')?.complete);
+        const botoes = await pagina.locator('.menu-mais .botao').evaluateAll((bs) => bs.map((b) => {
+          const r = b.getBoundingClientRect();
+          return { id: b.id, l: Math.round(r.width), a: Math.round(r.height), cabe: b.scrollWidth <= b.clientWidth + 1 };
+        }));
+        assert.equal(botoes.length, 6);
+        for (const b of botoes) {
+          assert.deepEqual([b.l, b.a], [botoes[0].l, botoes[0].a], tela.width + 'px: ' + b.id);
+          assert.ok(b.cabe, tela.width + 'px: texto de ' + b.id + ' não cabe');
+        }
+      }
+      await pagina.setViewportSize({ width: 1280, height: 720 });
       assert.equal(await pagina.locator('#m-oponente option').count(), 3);
       assert.equal(await pagina.locator('#m-jogadores option').count(), 4);
       assert.equal(await pagina.locator('#m-arquitetura option').count(), 4);
@@ -29,7 +44,7 @@ describe('menu e telas', () => {
       assert.equal(await musicaDoMenu(), true);
       await pagina.selectOption('#m-terreno', 'oceano');
       await pagina.waitForSelector('.miniatura img');
-      for (const [botao, texto] of [['#m-regras', 'Regras'], ['#m-grimorio', 'Biblioteca de conceitos'], ['#m-conquistas', 'Conquistas'], ['#m-mods', 'Mods'], ['#m-sobre', 'Sobre']]) {
+      for (const [botao, texto] of [['#m-regras', 'Regras'], ['#m-grimorio', 'Glossário'], ['#m-conquistas', 'Conquistas'], ['#m-mods', 'Mods'], ['#m-sobre', 'Sobre']]) {
         await pagina.click(botao);
         await pagina.waitForSelector('.camada:not(.transparente) h2');
         assert.match(await pagina.locator('.camada:not(.transparente) h2').first().textContent(), new RegExp(texto));
@@ -48,7 +63,7 @@ describe('menu e telas', () => {
           /* a equação é desenhada (MathML com altura de verdade, não texto cru) */
           assert.ok(await pagina.locator('#g-verbete .equacao math').evaluate((m) => m.getBoundingClientRect().height > 20));
           await capturar(pagina, '28-biblioteca-dropout');
-          /* fecha a Biblioteca e a ajuda; as regras continuam abertas */
+          /* fecha o Glossário e a ajuda; as regras continuam abertas */
           await pagina.locator('.camada:not(.transparente) [data-fechar] >> nth=-1').click();
           await pagina.locator('.ajuda-acoes [data-fechar] >> nth=0').click();
         }
