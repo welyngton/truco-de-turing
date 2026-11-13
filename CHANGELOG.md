@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.3.4 — 2026-11-13
+
+- fix: animação dos terrenos visível no celular ([#50](https://github.com/welyngton/truco-de-turing/pull/50), por [@welyngton](https://github.com/welyngton))
+
 ## 2.3.3 — 2026-11-13
 
 - ajuste: menos partículas por cima das cartas (cerca de 1/3) ([#49](https://github.com/welyngton/truco-de-turing/pull/49), por [@welyngton](https://github.com/welyngton))
