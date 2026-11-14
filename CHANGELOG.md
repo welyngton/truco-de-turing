@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.4.2 — 2026-11-14
+
+- Update authors section in README.md
+
 ## 2.4.1 — 2026-11-13
 
 - fix: fórmulas do "Para se aprofundar" em MathML, sem depender do CDN (#43) ([#53](https://github.com/welyngton/truco-de-turing/pull/53), por [@welyngton](https://github.com/welyngton))
