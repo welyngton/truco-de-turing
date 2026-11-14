@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.4.4 — 2026-11-14
+
+- Create CNAME
+
 ## 2.4.3 — 2026-11-14
 
 - fix: Firebase e Google Analytics no projeto truco-e26e8-703bc (#40) ([#55](https://github.com/welyngton/truco-de-turing/pull/55), por [@welyngton](https://github.com/welyngton))
