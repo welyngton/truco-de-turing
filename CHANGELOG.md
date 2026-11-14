@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.4.7 — 2026-11-14
+
+- fix: salas online amarradas à conta e limpeza das mensagens antigas (#62) ([#65](https://github.com/welyngton/truco-de-turing/pull/65), por [@welyngton](https://github.com/welyngton))
+
 ## 2.4.6 — 2026-11-14
 
 - fix: conta continua conectada ao recarregar a página (#60) ([#64](https://github.com/welyngton/truco-de-turing/pull/64), por [@welyngton](https://github.com/welyngton))

@@ -8427,7 +8427,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.4.6";
+  var VERSAO = "2.4.7";
   var DATA_DA_VERSAO = "2026-11-14";
 
   // src/interface/telas/sobre.js
@@ -8550,7 +8550,7 @@ export default function (NeuroDeck) {
   var Sala = class {
     /**
      * @param {object} transporte `{ enviar(msg), aoReceber(cb), fechar() }`.
-     * @param {object} eu `{ cliente, nome, avatar }`.
+     * @param {object} eu `{ cliente, nome, avatar, uid? }` (`uid`: a conta, quando a sala vai pela internet).
      * @param {object} [relogio] `{ agora(), intervalo(fn, ms), parar(id) }` (os testes trocam por um relógio falso).
      */
     constructor(transporte2, eu, relogio = RELOGIO_REAL) {
@@ -8564,6 +8564,7 @@ export default function (NeuroDeck) {
       this.pendentes = /* @__PURE__ */ new Map();
       this.historico = [];
       this.vistos = /* @__PURE__ */ new Map();
+      this.donos = /* @__PURE__ */ new Map();
       this.ouvintes = { sala: [], acao: [], aviso: [] };
       this.desligar = transporte2.aoReceber((msg) => this.receber(msg));
       this.batimento = relogio.intervalo(() => this.pulsar(), BATIMENTO);
@@ -8596,7 +8597,7 @@ export default function (NeuroDeck) {
     criar(codigo, opcoes, pessoas, semente) {
       const total = opcoes.jogadores;
       const cadeiras = Array.from({ length: total }, (_, j) => {
-        if (j === 0) return { tipo: "humano", cliente: this.eu.cliente, nome: this.eu.nome, avatar: this.eu.avatar };
+        if (j === 0) return { tipo: "humano", cliente: this.eu.cliente, uid: this.eu.uid, nome: this.eu.nome, avatar: this.eu.avatar };
         if (j < pessoas) return { tipo: "vaga", nome: "Vaga " + (j + 1) };
         return { tipo: "oponente", nome: "" };
       });
@@ -8648,6 +8649,8 @@ export default function (NeuroDeck) {
     /* ------------------------------------------------------------------ mensagens */
     receber(msg) {
       if (!msg || msg.de === this.eu.cliente) return;
+      if (!this.donos.has(msg.de)) this.donos.set(msg.de, msg.uid);
+      else if (this.donos.get(msg.de) !== msg.uid) return;
       this.vistos.set(msg.de, this.relogio.agora());
       const metodo = this["ao_" + msg.tipo];
       if (metodo) metodo.call(this, msg);
@@ -8657,16 +8660,18 @@ export default function (NeuroDeck) {
       if (!this.souAnfitriao) return;
       const c = this.config.cadeiras;
       let j = c.findIndex((x) => x.cliente === msg.de);
+      if (j >= 0 && c[j].uid !== msg.uid) return;
       if (j < 0 && !this.config.iniciada) j = c.findIndex((x) => x.tipo === "vaga");
       if (j >= 0) {
-        Object.assign(c[j], { tipo: "humano", cliente: msg.de, nome: msg.nome || "Jogador " + (j + 1), avatar: msg.avatar });
+        Object.assign(c[j], { tipo: "humano", cliente: msg.de, uid: msg.uid, nome: msg.nome || "Jogador " + (j + 1), avatar: msg.avatar });
         this.emitir("aviso", c[j].nome + " entrou na sala.");
       }
       this.anunciarSala();
-      for (const evento of this.historico) this.transporte.enviar({ ...evento, para: msg.de });
+      for (const evento of this.historico) this.transporte.enviar({ ...evento, de: this.eu.cliente, para: msg.de });
     }
     ao_sala(msg) {
       if (this.souAnfitriao && msg.de !== this.anfitriao) return;
+      if (this.anfitriao && msg.de !== this.anfitriao && !this.sentado(msg.de, msg.uid)) return;
       this.anfitriao = msg.de;
       this.config = msg.config;
       this.seq = Math.max(this.seq, msg.seq || 0);
@@ -8674,11 +8679,16 @@ export default function (NeuroDeck) {
     }
     ao_pedido(msg) {
       if (!this.souAnfitriao) return;
-      const cadeira = this.config.cadeiras.findIndex((c) => c.cliente === msg.de);
-      if (cadeira < 0 || msg.acao && msg.acao.cadeira !== cadeira) return;
+      const cadeira = this.config.cadeiras.findIndex((c) => c.tipo === "humano" && c.cliente === msg.de);
+      if (cadeira < 0 || this.config.cadeiras[cadeira].uid !== msg.uid || msg.acao && msg.acao.cadeira !== cadeira) return;
       this.ordenar(msg.acao);
     }
+    /** `cliente` (da conta `uid`) está sentado numa cadeira humana da sala? */
+    sentado(cliente, uid) {
+      return !!this.config && this.config.cadeiras.some((c) => c.tipo === "humano" && c.cliente === cliente && c.uid === uid);
+    }
     ao_acao(msg) {
+      if (msg.de !== this.anfitriao) return;
       if (msg.para && msg.para !== this.eu.cliente) return;
       this.seq = Math.max(this.seq, msg.seq);
       if (!this.historico.some((e) => e.seq === msg.seq)) this.historico.push(msg);
@@ -8787,6 +8797,8 @@ export default function (NeuroDeck) {
   var VERSAO_FIREBASE = "10.12.2";
 
   // src/online/firebase.js
+  var VALIDADE_DAS_MENSAGENS = 6 * 60 * 60 * 1e3;
+  var LIMPEZA_POR_VEZ = 200;
   var sdk = null;
   function firebaseConfigurado() {
     return !!FIREBASE;
@@ -8842,7 +8854,10 @@ export default function (NeuroDeck) {
     await fs.setDoc(fs.doc(banco, "contas", uid), JSON.parse(JSON.stringify(progresso)));
   }
   async function transporteFirebase(codigo) {
-    const { fs, banco } = await carregar2();
+    const { fs, banco, autenticacao } = await carregar2();
+    const usuario = autenticacao.currentUser;
+    if (!usuario) throw new Error("Entre numa conta para jogar pela internet.");
+    const uid = usuario.uid;
     const colecao = fs.collection(banco, "salas", codigo, "mensagens");
     const ouvintes2 = /* @__PURE__ */ new Set();
     const vistos = /* @__PURE__ */ new Set();
@@ -8854,14 +8869,15 @@ export default function (NeuroDeck) {
       for (const mudanca of instantaneo.docChanges()) {
         if (mudanca.type !== "added" || vistos.has(mudanca.doc.id)) continue;
         vistos.add(mudanca.doc.id);
-        const { em, ...msg } = mudanca.doc.data();
+        const { em, expira, ...msg } = mudanca.doc.data();
         for (const cb of ouvintes2) cb(msg);
       }
     }, falhou);
     return {
       /* JSON tira os `undefined`, que o Firestore recusa */
       enviar: (msg) => {
-        Promise.resolve(fs.addDoc(colecao, { ...JSON.parse(JSON.stringify(msg)), em: fs.serverTimestamp() })).catch(falhou);
+        const doc = { ...JSON.parse(JSON.stringify(msg)), uid, em: fs.serverTimestamp(), expira: fs.Timestamp.fromMillis(Date.now() + VALIDADE_DAS_MENSAGENS) };
+        Promise.resolve(fs.addDoc(colecao, doc)).catch(falhou);
       },
       aoReceber: (cb) => {
         ouvintes2.add(cb);
@@ -8877,6 +8893,17 @@ export default function (NeuroDeck) {
         parar();
       }
     };
+  }
+  async function limparMensagensVencidas(limite = LIMPEZA_POR_VEZ) {
+    const { fs, banco } = await carregar2();
+    const antes = fs.Timestamp.fromMillis(Date.now() - 10 * 60 * 1e3);
+    const consulta = fs.query(fs.collectionGroup(banco, "mensagens"), fs.where("expira", "<", antes), fs.limit(limite));
+    const { docs } = await fs.getDocs(consulta);
+    if (!docs.length) return 0;
+    const lote = fs.writeBatch(banco);
+    for (const d of docs) lote.delete(d.ref);
+    await lote.commit();
+    return docs.length;
   }
 
   // src/online/errosFirebase.js
@@ -9045,9 +9072,15 @@ export default function (NeuroDeck) {
   }
   var ESPERA_PELA_SALA = 8e3;
   var pelaInternet = () => firebaseConfigurado() && !!contaAtual();
+  var limpouSalas = false;
   async function transporte(codigo) {
-    if (pelaInternet()) return transporteFirebase(codigo);
-    return transporteLocal(codigo);
+    if (!pelaInternet()) return transporteLocal(codigo);
+    if (!limpouSalas) {
+      limpouSalas = true;
+      limparMensagensVencidas().catch(() => {
+      });
+    }
+    return transporteFirebase(codigo);
   }
   function abrirOnline(app) {
     const nuvem = firebaseConfigurado();
@@ -9070,7 +9103,7 @@ export default function (NeuroDeck) {
         app.progresso.nomeOnline = nomeMesa;
         app.salvar();
       }
-      return { cliente: clienteDaAba(), nome: nomeMesa, avatar: avatarDoJogador(app.progresso) };
+      return { cliente: clienteDaAba(), nome: nomeMesa, avatar: avatarDoJogador(app.progresso), uid: pelaInternet() ? contaAtual().uid : void 0 };
     };
     const pessoasNaSala = () => sala && sala.config ? sala.config.cadeiras.filter((c) => c.tipo === "humano").length : 0;
     const estadoDaEspera = (texto, classe) => {
