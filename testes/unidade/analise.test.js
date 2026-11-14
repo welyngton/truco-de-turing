@@ -67,7 +67,7 @@ describe('analise.js', () => {
     assert.equal(script.src, 'https://www.googletagmanager.com/gtag/js?id=' + ID_GOOGLE_ANALYTICS);
     assert.ok(script.async);
     const config = comandos(w).find((c) => c[0] === 'config');
-    assert.deepEqual(config, ['config', 'G-VWSGVWJK6Q', { allow_google_signals: false, allow_ad_personalization_signals: false }]);
+    assert.deepEqual(config, ['config', 'G-C39CQS6CGH', { allow_google_signals: false, allow_ad_personalization_signals: false }]);
     const padrao = comandos(w).find((c) => c[0] === 'consent');
     assert.equal(padrao[2].ad_storage, 'denied');
     assert.ok(medindo());

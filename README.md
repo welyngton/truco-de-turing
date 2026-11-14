@@ -164,7 +164,7 @@ vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada 
 ## Estatísticas de uso
 
 O site publicado (`https://welyngton.github.io/truco-de-turing/`) usa o **Google Analytics 4**
-(ID `G-VWSGVWJK6Q`) para contar partidas, mãos, pedidos de truco, verbetes lidos e conquistas
+(ID `G-C39CQS6CGH`) para contar partidas, mãos, pedidos de truco, verbetes lidos e conquistas
 (`src/interface/analise.js`). Só mede depois que a pessoa aceita na faixa de consentimento, e a
 escolha pode ser mudada na tela "Sobre". Sinais de publicidade ficam desligados. Em `localhost`, no
 arquivo único (`file://`), em forks publicados em outro endereço e nos testes automatizados nada é

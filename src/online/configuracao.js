@@ -9,12 +9,13 @@
  * protege os dados são as regras do Firestore.
  */
 export const FIREBASE = {
-  apiKey: 'AIzaSyCAqlXwLR3Cl8DrgkLIoIS5A0zcF5TGfng',
-  authDomain: 'truco-e26e8.firebaseapp.com',
-  projectId: 'truco-e26e8',
-  storageBucket: 'truco-e26e8.firebasestorage.app',
-  messagingSenderId: '932294943078',
-  appId: '1:932294943078:web:e5d0edf14d5a44de45a8a7',
+  /* projeto "truco-e26e8" no console, de ID truco-e26e8-703bc; app da Web "truco-de-turing" */
+  apiKey: 'AIzaSyCH3yfsmf0KJQ0hJ7aU4DhCBcBVOqwRSHs',
+  authDomain: 'truco-e26e8-703bc.firebaseapp.com',
+  projectId: 'truco-e26e8-703bc',
+  storageBucket: 'truco-e26e8-703bc.firebasestorage.app',
+  messagingSenderId: '832619971345',
+  appId: '1:832619971345:web:b50cd62330112e05b942b0',
   /* sem measurementId: o Google Analytics é carregado à parte, com consentimento (interface/analise.js) */
 };
 

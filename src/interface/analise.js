@@ -1,5 +1,5 @@
 /**
- * @file Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWSGVWJK6Q).
+ * @file Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", fluxo do app da Web "truco-de-turing", ID G-C39CQS6CGH).
  *
  * Regras:
  * - Só mede no site publicado (`https://welyngton.github.io`). Em localhost, no arquivo único aberto
@@ -21,7 +21,7 @@
  */
 
 /** ID da métrica do fluxo da Web no Google Analytics. */
-export const ID_GOOGLE_ANALYTICS = 'G-VWSGVWJK6Q';
+export const ID_GOOGLE_ANALYTICS = 'G-C39CQS6CGH';
 
 /** Endereços onde o jogo publicado mede (o do fluxo de dados no Google Analytics). */
 export const HOSTS_MEDIDOS = ['welyngton.github.io'];
