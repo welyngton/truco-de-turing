@@ -9,8 +9,9 @@
  * como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela.
  *
  * Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem
- * `aprofundar` (texto com `$...$` para LaTeX na linha) e `formula` (LaTeX em destaque, pelo KaTeX),
- * redigidos por Suzy Arcanjo (issue #23 do repositório original).
+ * `aprofundar` (texto com fórmulas MathML na linha, montadas com `na`) e `formula` (MathML em
+ * bloco), redigidos por Suzy Arcanjo (issue #23 do repositório original). Toda a matemática é
+ * MathML nativo, desenhado pelo próprio navegador: funciona sem rede e no arquivo único.
  */
 
 /** Nome da tela, num lugar só. */
@@ -18,6 +19,8 @@ export const NOME_DA_BIBLIOTECA = 'Glossário';
 
 /* ---------- pedacinhos de MathML ---------- */
 const bloco = (...partes) => '<math display="block">' + partes.join('') + '</math>';
+/** Fórmula no meio da frase (usada em `aprofundar`). */
+const na = (...partes) => '<math>' + partes.join('') + '</math>';
 const mi = (x) => '<mi>' + x + '</mi>';
 const mo = (x) => '<mo>' + x + '</mo>';
 const mn = (x) => '<mn>' + x + '</mn>';
@@ -96,8 +99,9 @@ export const VERBETES = [
     equacao: bloco(mt('lacuna de generalização'), mo('='), sub(mi('L'), mt('validação')), mo('−'), sub(mi('L'), mt('treino'))),
     figura: 'sobreajuste',
     noJogo: 'Jogue 1 carta do mesmo valor sobre o último neurônio oculto do rival, deixando a pilha com 2 cartas: o neurônio vai para o cemitério e a rede dele recua uma camada.',
-    aprofundar: String.raw`O sinal típico é o erro de treino continuar caindo enquanto o erro em dados novos (validação) começa a subir. Um remédio clássico é a regularização, que soma ao erro uma "multa" quando os pesos crescem demais ($\lambda$ controla a força dessa multa):`,
-    formula: String.raw`L(w) = \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat{y}_i)^2 + \lambda \sum_j w_j^2`,
+    aprofundar: 'O sinal típico é o erro de treino continuar caindo enquanto o erro em dados novos (validação) começa a subir. Um remédio clássico é a regularização, que soma ao erro uma "multa" quando os pesos crescem demais (' + na(mi('λ')) + ' controla a força dessa multa):',
+    formula: bloco(mi('L'), par(mi('w')), mo('='), frac(mn('1'), mi('n')), soma(linha(mi('i'), mo('='), mn('1')), mi('n')), sup(par(sub(mi('y'), mi('i')), mo('−'), sub(chapeu('y'), mi('i'))), mn('2')),
+      mo('+'), mi('λ'), '<munder>' + mo('∑') + mi('j') + '</munder>', sup(sub(mi('w'), mi('j')), mn('2'))),
     limite: 'Na vida real ninguém ataca a rede dos outros com overfitting: é um defeito do próprio treino. O jogo transforma o defeito em ataque.' },
   { id: 'dropout', titulo: 'Dropout', categoria: 'Ação', autoria: 'Suzy Arcanjo',
     ideia: 'Num trabalho em grupo, um aluno faz tudo e os outros se encostam. Se o professor sortear, a cada aula, alguns alunos para ficarem de fora, todo mundo precisa aprender tudo, e o grupo fica forte mesmo quando alguém falta.',
@@ -120,8 +124,8 @@ export const VERBETES = [
     equacao: bloco(mt('chamadas'), mo('×'), mt('quadro'), mo('&gt;'), mt('pilha'), mspace(), mo('⇒'), mspace(), mt('estouro')) +
       bloco(mt('explosão de gradientes (outro fenômeno):'), mspace(), linha('<mo>‖</mo>', prod(linha(mi('k'), mo('='), mn('1')), mi('L')), sub(negrito('J'), mi('k')), '<mo>‖</mo>'), mo('→'), mi('∞')),
     noJogo: 'Deixe o último neurônio oculto do rival com 4 cartas no total: a pilha "estoura", a rede dele é finalizada e ele perde todas as cartas da mão.',
-    aprofundar: String.raw`A recursão precisa de um caso de parada. O fatorial, por exemplo, para em $0! = 1$. Sem essa linha, as chamadas nunca terminariam e a pilha estouraria:`,
-    formula: String.raw`n! = n \cdot (n-1)!, \qquad 0! = 1`,
+    aprofundar: 'A recursão precisa de um caso de parada. O fatorial, por exemplo, para em ' + na(mn('0'), mo('!'), mo('='), mn('1')) + '. Sem essa linha, as chamadas nunca terminariam e a pilha estouraria:',
+    formula: bloco(mi('n'), mo('!'), mo('='), mi('n'), mo('·'), par(mi('n'), mo('−'), mn('1')), mo('!'), mo(','), mspace(), mn('0'), mo('!'), mo('='), mn('1')),
     limite: 'É uma piada de programador: a pilha de 4 cartas lembra a pilha de chamadas. Não descreve nada que aconteça no treino de uma rede.' },
   { id: 'vanishing', titulo: 'Vanishing gradient', categoria: 'Combo',
     conceito: 'Na retropropagação, o gradiente que chega às primeiras camadas é um produto de muitas derivadas. Com ativações saturantes como a sigmoide, cuja derivada nunca passa de 1/4, esse produto encolhe a cada camada e as primeiras param de aprender. ReLU, inicialização cuidadosa, normalização e conexões residuais ajudam.',
@@ -135,8 +139,9 @@ export const VERBETES = [
     conceito: 'Aprendizado por transferência reaproveita um modelo pré-treinado em outra tarefa: as camadas iniciais, que aprenderam padrões gerais, ficam congeladas, e só as últimas são treinadas de novo. Economiza dados e tempo de treino.',
     equacao: bloco(mi('θ'), mo('='), par(sub(mi('θ'), mt('base')), mt(' (congelado)'), mo(','), sub(mi('θ'), mt('cabeça')), mt(' (treinado)'))),
     noJogo: 'Com 4 cartas do mesmo valor na mão, revele-as e troque-as por 4 cartas do limbo. Uma vez por partida e não gasta o turno.',
-    aprofundar: String.raw`A rede da tarefa B começa com os pesos $\theta_A$ aprendidos na tarefa A, que ficam "congelados" na parte $g$; só a parte final $h$ é treinada com os dados da tarefa B:`,
-    formula: String.raw`\min_{\theta_h} \; L_B\big(h_{\theta_h}(g_{\theta_A}(x))\big)`,
+    aprofundar: 'A rede da tarefa B começa com os pesos ' + na(sub(mi('θ'), mi('A'))) + ' aprendidos na tarefa A, que ficam "congelados" na parte ' + na(mi('g')) + '; só a parte final ' + na(mi('h')) + ' é treinada com os dados da tarefa B:',
+    formula: bloco('<munder>' + mo('min') + sub(mi('θ'), mi('h')) + '</munder>', sub(mi('L'), mi('B')),
+      par(sub(mi('h'), sub(mi('θ'), mi('h'))), par(sub(mi('g'), sub(mi('θ'), mi('A'))), par(mi('x'))))),
     limite: 'A comparação é fraca: o ponto em comum é trazer algo de fora em vez de começar do zero.' },
   { id: 'ruido', titulo: 'Ruído e limbo', categoria: 'Dados',
     conceito: 'Dados reais têm ruído. Injetar ruído de propósito (aumento de dados, inicialização aleatória) torna o modelo mais robusto a variações que ele vai encontrar no uso.',

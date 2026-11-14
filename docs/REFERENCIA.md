@@ -574,11 +574,12 @@ Figuras do Glossário: diagramas em SVG, desenhados à mão e embutidos no verbe
 
 ## `src/conteudo/grimorio.js`
 
-Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com `$...$` para LaTeX na linha) e `formula` (LaTeX em destaque, pelo KaTeX), redigidos por Suzy Arcanjo (issue #23 do repositório original).
+Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com fórmulas MathML na linha, montadas com `na`) e `formula` (MathML em bloco), redigidos por Suzy Arcanjo (issue #23 do repositório original). Toda a matemática é MathML nativo, desenhado pelo próprio navegador: funciona sem rede e no arquivo único.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `NOME_DA_BIBLIOTECA` | constante (exportada) | Nome da tela, num lugar só. |
+| `na` | constante | Fórmula no meio da frase (usada em `aprofundar`). |
 | `mspace()` | função | Espaço entre duas equações na mesma linha. |
 | `mover(x)` | função | Variável com til (versão perturbada ou mascarada). |
 
@@ -640,16 +641,6 @@ Estatísticas de uso com o Google Analytics 4 (fluxo "Truco de Turing", ID G-VWS
 | `iniciarAnalise(janela = globalThis)` | função (exportada) | Liga a medição se a pessoa já aceitou; na primeira visita, pergunta. Fora do site publicado, não faz nada. |
 | `registrarEvento(nome, dados = {})` | função (exportada) | Envia um evento do jogo ao Google Analytics (se a medição estiver ligada). |
 | `reiniciarAnalise()` | função (exportada) | Volta ao estado inicial (para os testes). |
-
-## `src/interface/formulas.js`
-
-Texto com fórmulas em LaTeX para os painéis HTML: `$...$` no meio da frase e `$$...$$` em destaque. Usa o KaTeX carregado pela página (global `katex`); sem ele, mostra o LaTeX como código, para o texto continuar legível offline.
-
-| Nome | Tipo | Descrição |
-|---|---|---|
-| `FORMULA` | constante | Trechos `$$...$$` (destaque) ou `$...$` (na linha). |
-| `formulaHtml(tex, destaque, katex = globalThis.katex)` | função (exportada) | Uma fórmula em HTML. |
-| `textoComFormulas(texto, katex = globalThis.katex)` | função (exportada) | Texto em HTML, com o texto comum escapado e as fórmulas renderizadas. |
 
 ## `src/interface/menu.js`
 
@@ -769,7 +760,7 @@ Tela do Glossário (antes "Biblioteca de conceitos" e "Grimório"): lista de ver
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `htmlDoVerbete(v)` | função (exportada) | Corpo do verbete: a ideia do dia a dia (verbetes de Ação), o conceito, a equação, a figura, como aparece no jogo, até onde a comparação vale, a matemática para se aprofundar, a fonte e a autoria. Equação (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador. |
+| `htmlDoVerbete(v)` | função (exportada) | Corpo do verbete: a ideia do dia a dia (verbetes de Ação), o conceito, a equação, a figura, como aparece no jogo, até onde a comparação vale, a matemática para se aprofundar, a fonte e a autoria. Equação, "aprofundar" e fórmula (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador. |
 | `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre o Glossário. |
 | `desenharLista(ativo)` | função | Desenha a lista com o verbete ativo destacado. |
 | `mostrar(id)` | função | Mostra um verbete e o marca como lido. |

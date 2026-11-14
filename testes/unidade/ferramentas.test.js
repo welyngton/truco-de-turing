@@ -117,6 +117,17 @@ describe('empacotar.js', () => {
     assert.ok(!artifact.includes('<html'));
     assert.match(artifact, /claude:viewport-fit-sides/);
   });
+  it('fórmulas do "Para se aprofundar" vão em MathML no arquivo único, sem KaTeX nem CDN (#43)', () => {
+    rodar('empacotar.js');
+    const pagina = ler('dist/truco-de-turing.html');
+    assert.doesNotMatch(pagina, /katex|cdn\.jsdelivr\.net/i);
+    /* recursos carregados de fora (<script src> e <link href>): só o Phaser e as fontes do Google */
+    const externos = [...pagina.matchAll(/<(?:script[^>]*\ssrc|link[^>]*\shref)="(https?:[^"]+)"/g)].map((m) => new URL(m[1]).hostname);
+    assert.deepEqual([...new Set(externos)].sort(), ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com']);
+    /* as três fórmulas vão montadas pelos auxiliares de MathML, sem nenhum LaTeX sobrando */
+    assert.equal((pagina.match(/formula: bloco\(/g) || []).length, 3);
+    assert.doesNotMatch(pagina, /\\(frac|sum|lambda|theta|cdot|qquad)\b/);
+  });
 });
 
 describe('documentar.js', () => {

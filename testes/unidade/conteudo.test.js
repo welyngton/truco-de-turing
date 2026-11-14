@@ -28,15 +28,21 @@ describe('grimorio.js', () => {
     assert.equal(new Set(VERBETES.map((v) => v.id)).size, VERBETES.length);
     for (const v of VERBETES) assert.ok(v.titulo && v.categoria && v.conceito && v.noJogo, v.id);
   });
-  it('verbetes de Ação: ideia do dia a dia e autoria; matemática em LaTeX balanceado quando houver', () => {
+  it('verbetes de Ação: ideia do dia a dia e autoria; matemática para se aprofundar em MathML (#43)', () => {
     const comIdeia = VERBETES.filter((v) => v.ideia);
     assert.deepEqual(comIdeia.map((v) => v.id).sort(), ['dropout', 'earlystop', 'overfit', 'stackoverflow', 'tunagem', 'transfer'].sort());
     for (const v of comIdeia) {
       assert.equal(v.autoria, 'Suzy Arcanjo', v.id);
       assert.ok(!('ondeFalha' in v), v.id + ': o limite da comparação fica em `limite`');
       if (v.aprofundar || v.formula) assert.ok(v.aprofundar && v.formula, v.id + ': aprofundar e formula andam juntos');
-      for (const campo of ['ideia', 'conceito', 'noJogo', 'limite', 'aprofundar']) {
-        if (v[campo]) assert.equal((v[campo].match(/\$/g) || []).length % 2, 0, v.id + '.' + campo + ': cifrões sem par');
+      for (const campo of ['ideia', 'conceito', 'noJogo', 'limite', 'aprofundar', 'formula']) {
+        if (v[campo]) assert.doesNotMatch(v[campo], /\$|\\[a-z]+/, v.id + '.' + campo + ': sobrou LaTeX (o KaTeX saiu do jogo)');
+      }
+      if (v.formula) {
+        assert.match(v.formula, /^<math display="block">.*<\/math>$/s, v.id + ': fórmula em MathML de bloco');
+        /* "aprofundar" é HTML confiável: fora das fórmulas na linha, só texto, sem marcação solta */
+        assert.match(v.aprofundar, /<math>.*?<\/math>/s, v.id + ': fórmula na linha');
+        assert.doesNotMatch(v.aprofundar.replace(/<math>.*?<\/math>/gs, ''), /[<>&]/, v.id + ': marcação fora das fórmulas');
       }
     }
     assert.deepEqual(VERBETES.filter((v) => v.formula).map((v) => v.id), ['overfit', 'stackoverflow', 'transfer']);

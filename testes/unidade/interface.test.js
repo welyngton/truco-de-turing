@@ -16,7 +16,6 @@ const { abrirMenu } = await import('../../src/interface/menu.js');
 const { abrirAvatares } = await import('../../src/interface/telas/avatares.js');
 const { abrirRegras } = await import('../../src/interface/telas/regras.js');
 const { abrirGrimorio, htmlDoVerbete } = await import('../../src/interface/telas/grimorio.js');
-const { textoComFormulas, formulaHtml } = await import('../../src/interface/formulas.js');
 const { abrirConquistas, medalhaHtml } = await import('../../src/interface/telas/conquistas.js');
 const { abrirSobre } = await import('../../src/interface/telas/sobre.js');
 const { abrirMods, REPOSITORIO, ARQUIVOS_DE_MODS } = await import('../../src/interface/telas/mods.js');
@@ -288,17 +287,11 @@ describe('telas', () => {
     const texto = $('#g-verbete').textContent;
     for (const trecho of ['A ideia', 'No jogo', 'Até onde vale a comparação', 'Para se aprofundar', 'Suzy Arcanjo']) assert.match(texto, new RegExp(trecho));
     assert.ok($('#g-verbete .equacao math'));
-    assert.ok($('#g-verbete .formula-bloco, #g-verbete .katex-display'));
+    assert.ok($('#g-verbete .aprofundar p math:not([display])'), 'λ na linha, em MathML');
+    assert.ok($('#g-verbete .aprofundar .formula math[display="block"]'), 'fórmula em destaque, em MathML');
+    assert.doesNotMatch($('#g-verbete').innerHTML, /katex|formula-tex|\\frac/);
     const curto = htmlDoVerbete(VERBETES.find((v) => !v.ideia));
     assert.doesNotMatch(curto, /A ideia|Para se aprofundar|Colaboração/);
-  });
-  it('fórmulas: KaTeX quando existe, LaTeX escapado como código quando não', () => {
-    const semKatex = textoComFormulas('peso $w<1$ e $$a \\cdot b$$ fim', null);
-    assert.match(semKatex, /peso <code class="formula-tex">w&lt;1<\/code> e <div class="formula-bloco"><code class="formula-tex">a \\cdot b<\/code><\/div> fim/);
-    const katex = { renderToString: (tex, o) => '[' + (o.displayMode ? 'D' : 'L') + ':' + tex + ']' };
-    assert.equal(textoComFormulas('x $a$ y $$b$$', katex), 'x [L:a] y [D:b]');
-    assert.match(formulaHtml('c', false, { renderToString: () => { throw new Error('ruim'); } }), /formula-tex/);
-    assert.equal(textoComFormulas('sem fórmula <b>', null), 'sem fórmula &lt;b&gt;');
   });
   it('Glossário: título novo, equação, figura e "até onde vale a comparação"', () => {
     abrirGrimorio(appFalso(), 'dropout');
