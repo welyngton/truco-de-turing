@@ -84,7 +84,15 @@ describe('partida online entre abas', () => {
       await a.waitForSelector('#o-espera:not([hidden])');
       const codigo = (await a.locator('#o-codigo-sala').textContent()).trim();
       assert.match(codigo, /^[A-Z0-9]{5}$/);
-      assert.equal(await a.locator('#o-comecar').isDisabled(), true);
+      /* sozinha na sala: a tela diz que está aguardando, com o código, e o botão explica o que falta */
+      assert.match(await a.locator('#avisos .aviso').textContent(), new RegExp('Aguardando o\\(s\\) outro\\(s\\) jogador\\(es\\)\\. O código da sala é ' + codigo));
+      assert.match(await a.locator('#o-espera-nota').textContent(), new RegExp('Aguardando.*' + codigo));
+      assert.equal(await a.locator('#o-comecar').getAttribute('aria-disabled'), 'true');
+      await a.click('#o-comecar', { force: true }); /* o Playwright não clica sozinho em aria-disabled; a pessoa clica */
+      assert.match(await a.locator('#avisos .aviso').textContent(), /Ainda não entrou mais ninguém/);
+      assert.equal(await a.locator('#o-espera').isVisible(), true, 'continua na sala, esperando');
+      /* a página usa color-scheme: dark; sem cor explícita, o texto dos campos sairia branco no fundo claro */
+      assert.equal(await a.evaluate(() => getComputedStyle(document.querySelector('#o-nome')).color), 'rgb(36, 23, 12)');
       /* Beto entra com o código */
       await b.pagina.click('#m-online');
       await b.pagina.fill('#o-nome', 'Beto');
@@ -92,6 +100,9 @@ describe('partida online entre abas', () => {
       await b.pagina.click('#o-entrar');
       await a.waitForFunction(() => document.querySelectorAll('#o-cadeiras li.humano').length === 2);
       await b.pagina.waitForSelector('#o-cadeiras li.humano >> nth=1');
+      assert.equal(await a.locator('#o-comecar').getAttribute('aria-disabled'), 'false');
+      assert.match(await a.locator('#o-espera-nota').textContent(), /2 pessoas na sala/);
+      assert.match(await b.pagina.locator('#o-espera-nota').textContent(), /cadeira 2\. Aguardando o anfitrião/);
       await capturar(a, '30-sala-online');
       await a.click('#o-comecar');
       for (const p of [a, b.pagina]) await p.waitForFunction(() => { const c = globalThis.__TRUCO_DE_TURING__.jogo.scene.getScene('Mesa'); return c && c.sys.isActive() && c.mao; });
@@ -104,6 +115,25 @@ describe('partida online entre abas', () => {
       assert.equal(await estado(a), await estado(b.pagina));
       assert.deepEqual(jogo.erros, []);
       assert.deepEqual(b.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
+  it('código de sala que não existe: a tela diz que não achou, em vez de procurar para sempre', async () => {
+    const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
+    try {
+      const a = jogo.pagina;
+      await prepararMenu(a);
+      await a.click('#m-online');
+      await a.fill('#o-codigo', 'zzzz9');
+      await a.click('#o-entrar');
+      assert.match(await a.locator('#o-espera-nota').textContent(), /Procurando a sala ZZZZ9/);
+      await a.waitForFunction(() => /Não achei a sala ZZZZ9/.test(document.querySelector('#o-espera-nota').textContent), null, { timeout: 15000 });
+      assert.match(await a.locator('#o-espera-nota').getAttribute('class'), /erro/);
+      assert.equal(await a.locator('#o-comecar').isHidden(), true);
+      /* sair da sala volta para a escolha */
+      await a.click('#o-desistir');
+      assert.equal(await a.locator('#o-escolha').isVisible(), true);
+      assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });
 

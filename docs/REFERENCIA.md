@@ -779,16 +779,23 @@ Tela "Mods": como criar baralhos, terrenos e ações para o motor do NeuroDeck, 
 
 ## `src/interface/telas/online.js`
 
-Tela "Jogar online": conta e sala. - Conta: com o projeto Firebase configurado (src/online/configuracao.js), entrar com Google ou e-mail e senha guarda o progresso na conta. Sem ele, o jogo usa o nome deste aparelho. - Sala: criar (com as opções do menu e quantas pessoas vão jogar) ou entrar com o código. Com o Firebase, a sala funciona pela internet; sem ele, entre abas e janelas deste navegador. - Espera: o código em destaque e as cadeiras; o anfitrião começa a partida quando quiser (as vagas que sobrarem vão para o computador).
+Tela "Jogar online": conta e sala. - Conta: com o projeto Firebase configurado (src/online/configuracao.js), entrar com Google ou e-mail e senha guarda o progresso na conta. Sem ele, o jogo usa o nome deste aparelho. - Sala: criar (com as opções do menu e quantas pessoas vão jogar) ou entrar com o código. Com o Firebase, a sala funciona pela internet; sem ele, entre abas e janelas deste navegador. - Espera: o código em destaque (com botão de copiar), as cadeiras e o estado da sala sempre escrito: "aguardando o(s) outro(s) jogador(es)", quem entrou, sala não encontrada ou falha de conexão. O anfitrião começa quando houver pelo menos mais uma pessoa (as vagas que sobrarem vão para o computador); antes disso, o botão explica o que falta. - Erros do Firebase aparecem em português, dizendo o que fazer (online/errosFirebase.js).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `clienteDaAba()` | função | Identificador deste aparelho, o mesmo depois de recarregar a aba (para voltar à cadeira). |
 | `contaAtual` | constante | Conta atual nesta sessão (Firebase), ou null. |
-| `usarConta(app, conta, metodo)` | função | Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. |
+| `ESPERA_PELA_SALA` | constante (exportada) | Tempo sem resposta do anfitrião até a tela dizer que não achou a sala. |
+| `avisouFalhaAoSalvar` | constante | Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) |
+| `usarConta(app, conta, metodo)` | função | Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. A conta só passa a valer depois de ler e gravar no Firestore; se isso falhar, o erro sobe para a tela e o jogo continua com o progresso do aparelho, sem fingir que salvou na nuvem. |
+| `pelaInternet` | constante | A sala deste aparelho vai pela internet (Firebase configurado e conta conectada)? |
 | `transporte(codigo)` | função | Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. |
 | `abrirOnline(app)` | função (exportada) | Abre a tela "Jogar online". |
+| `pessoasNaSala` | constante | Quantas pessoas estão sentadas na sala. |
+| `estadoDaEspera` | constante | Estado da espera, por escrito (e com a classe que dá a cor: 'aguardando', 'pronta' ou 'erro'). |
+| `abrirSala(codigo)` | função | Abre a sala com o transporte certo e mostra na tela as falhas de conexão do Firestore. |
 | `esperar(novaSala)` | função | Mostra a espera da sala e acompanha as cadeiras até a partida começar. |
+| `falhaAoAbrir` | constante | Abrir a sala falhou (sem conexão, Firestore fora do ar): diz o que houve. |
 
 ## `src/interface/telas/regras.js`
 
@@ -1077,6 +1084,16 @@ Contas: o progresso (conquistas, avatares, verbetes lidos e contadores) passa a 
 | `mesclarProgresso(local, conta)` | função (exportada) | Junta o progresso do aparelho com o da conta. - contadores: o maior dos dois (as mesmas mãos não contam duas vezes); - conquistas: a união, com a data mais antiga de cada uma; - verbetes, terrenos, baralhos e arquiteturas: a união; - avatar: o da conta, se houver; preferências do aparelho (som, música, opções do menu) ficam. |
 | `progressoDaConta(progresso)` | função (exportada) | Parte do progresso que vai para a conta (sem preferências do aparelho). |
 
+## `src/online/errosFirebase.js`
+
+Erros do Firebase em português, dizendo o que fazer. Os códigos que vêm de configuração que falta no console (login desativado, domínio não autorizado, Firestore não criado, regras não publicadas) apontam o passo do guia `docs/FIREBASE.md`, para quem testa saber onde mexer.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `MENSAGENS` | constante | Mensagem por código de erro do Firebase (Authentication e Firestore). |
+| `DESISTIU` | constante | Quem fechou a janela do Google desistiu: não é erro para avisar. |
+| `explicarErroFirebase(erro)` | função (exportada) | Explica um erro do Firebase. |
+
 ## `src/online/firebase.js`
 
 Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte das salas pela internet (Firestore). O SDK só é baixado do CDN quando o projeto está configurado (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado. Dados no Firestore (ver firestore.rules): - `contas/{uid}`: o progresso da conta (ver contas.js, `progressoDaConta`); - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação.
@@ -1091,7 +1108,7 @@ Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte d
 | `aoMudarConta(cb)` | função (exportada) | Avisa `cb(conta \| null)` quando alguém entra ou sai. Devolve a função que para de ouvir. |
 | `carregarProgressoDaConta(uid)` | função (exportada) | Progresso salvo na conta, ou null. |
 | `salvarProgressoNaConta(uid, progresso)` | função (exportada) | Salva o progresso na conta. |
-| `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. |
+| `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. `aoFalhar(cb)` avisa quando o Firestore recusa ler ou gravar (regras, conexão), para a tela dizer ao jogador em vez de a sala ficar parada em silêncio. |
 
 ## `src/online/sala.js`
 

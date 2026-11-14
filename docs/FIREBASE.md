@@ -86,15 +86,26 @@ Use o jogo publicado (`https://welyngton.github.io/truco-de-turing/`) depois do 
 
 ## Se algo der errado
 
-Na tela **Jogar online**, o jogo mostra o erro do Firebase como ele vem, com o código entre
-parênteses. O código indica onde mexer:
+O jogo explica os erros do Firebase em português (`src/online/errosFirebase.js`). O aviso já indica
+onde mexer:
 
-| Código no aviso | O que falta |
+| Aviso no jogo | O que falta |
 |---|---|
-| `auth/operation-not-allowed`, `auth/configuration-not-found` | Passo 1 |
-| `auth/unauthorized-domain` | Passo 2 |
-| `permission-denied`, `failed-precondition`, "database (default) does not exist" | Passo 3 |
-| `auth/invalid-api-key`, `auth/api-key-not-valid`, `auth/admin-restricted-operation` | Passo 4: a configuração em `configuracao.js` não é deste projeto |
+| "Esse jeito de entrar ainda não está ativado…" | Passo 1 |
+| "Este endereço ainda não está autorizado…" | Passo 2 |
+| "O banco Firestore do projeto ainda não foi criado…" | Passo 3, criar o banco |
+| "O Firestore recusou o pedido…" | Passo 3, publicar as regras |
+| "A chave do app da Web… não confere" | Passo 4 |
+| "O progresso ficou só neste aparelho…" | Gravar na conta falhou. O motivo vem no próprio aviso. |
+| "A sala perdeu a conexão…" | O Firestore recusou ler ou gravar as mensagens da sala. O motivo vem no próprio aviso. |
+
+Se o Firestore falhar no login, a conta não chega a valer. O jogo continua com o progresso do
+aparelho e não finge que salvou na nuvem.
+
+Na sala, o estado fica sempre escrito: "Aguardando o(s) outro(s) jogador(es). O código da sala é
+…", quantas pessoas entraram, "Não achei a sala …" (depois de 8 segundos sem resposta de quem
+criou) ou a falha de conexão. Sem conta, a sala só funciona entre abas do mesmo navegador, e a
+tela avisa isso.
 
 ## Limites conhecidos
 
