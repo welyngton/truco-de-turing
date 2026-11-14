@@ -14,7 +14,9 @@
  */
 import { Sala, codigoDeSala, idDeCliente } from '../../online/sala.js';
 import { transporteLocal } from '../../online/transportes.js';
-import { firebaseConfigurado, entrarComGoogle, entrarComEmail, transporteFirebase, limparMensagensVencidas } from '../../online/firebase.js';
+import { firebaseConfigurado, entrarComGoogle, entrarComEmail, transporteFirebase, limparMensagensVencidas, ehAdministrador } from '../../online/firebase.js';
+import { abrirJogadores } from './jogadores.js';
+import { TEXTO_DA_CONTA } from '../../online/contas.js';
 import { explicarErroFirebase } from '../../online/errosFirebase.js';
 import { avatarDoJogador } from '../../conteudo/avatares.js';
 import { abrirPainel, escaparHtml, mostrarAviso } from '../paineis.js';
@@ -64,9 +66,10 @@ export function abrirOnline(app) {
     '<section class="online-conta"><h3>Conta</h3>' +
     (nuvem
       ? '<p id="o-conta-estado">' + (contaAtual() ? 'Conectado como <b>' + escaparHtml(contaAtual().nome) + '</b>. O progresso fica na conta.' : 'Entre para guardar conquistas, avatares e progresso na conta e jogar pela internet.') + '</p>' +
-        '<div class="linha"><button class="botao" id="o-google">Entrar com Google</button><button class="botao discreto" id="o-sair"' + (contaAtual() ? '' : ' hidden') + '>Sair da conta</button></div>' +
+        '<div class="linha"><button class="botao" id="o-google">Entrar com Google</button><button class="botao discreto" id="o-sair"' + (contaAtual() ? '' : ' hidden') + '>Sair da conta</button><button class="botao discreto" id="o-jogadores" hidden>Jogadores</button></div>' +
         '<div class="campos-duplos"><input id="o-email" type="email" placeholder="e-mail" autocomplete="email"><input id="o-senha" type="password" placeholder="senha" autocomplete="current-password"></div>' +
-        '<div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>'
+        '<div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>' +
+        '<p class="nota" id="o-conta-dados">' + TEXTO_DA_CONTA + '</p>'
       : '<p class="nota">As contas na nuvem e as salas pela internet entram quando o projeto Firebase do grupo for configurado. Por enquanto o progresso fica neste navegador, e as salas funcionam entre abas e janelas dele (abra o jogo em outra janela para testar).</p>') +
     '<div class="campo"><label for="o-nome">Seu nome na mesa</label><input id="o-nome" maxlength="20" value="' + escaparHtml(nome) + '" placeholder="Como os outros vão ver você"></div>' +
     '</section>' +
@@ -203,7 +206,12 @@ export function abrirOnline(app) {
       $('o-conta-estado').innerHTML = conta ? 'Conectado como <b>' + escaparHtml(conta.nome) + '</b>. O progresso fica na conta.' : 'Entre para guardar o progresso na conta e jogar pela internet.';
       $('o-sair').hidden = !conta;
       if (conta && !$('o-nome').value) $('o-nome').value = conta.nome;
+      /* a lista de jogadores só é oferecida a quem as regras do Firestore deixam ler as contas */
+      $('o-jogadores').hidden = true;
+      if (conta) ehAdministrador(conta.uid).then((sim) => { const b = $('o-jogadores'); if (b && contaAtual() && contaAtual().uid === conta.uid) b.hidden = !sim; });
     };
+    $('o-jogadores').addEventListener('click', () => abrirJogadores());
+    mostrarConta();
     /* a conta pode voltar (retomada ao recarregar) ou mudar com a tela aberta */
     pararDeOuvirConta = aoMudarDeConta(() => { if (painel.elemento.isConnected) mostrarConta(); else pararDeOuvirConta(); });
     const tentar = (acao, metodo) => async () => {

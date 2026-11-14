@@ -20,7 +20,9 @@ export const metodosDoTruco = {
   anunciarTruco(j, daRede = false) {
     if (this.online && !daRede) return this.enviarOnline({ tipo: 'truco', cadeira: j });
     pedirTruco(this.partida, j);
-    registrarEvento(EVENTOS.truco, { valor: this.partida.pedido.para, quem: this.mao.jogadores[j].tipo });
+    /* `meu`: pedido de quem joga neste aparelho (a cadeira dele na partida online) */
+    const meu = this.mao.jogadores[j].tipo === 'humano' && (!this.online || j === this.cadeiraOnline());
+    registrarEvento(EVENTOS.truco, { valor: this.partida.pedido.para, quem: this.mao.jogadores[j].tipo, meu: meu ? 1 : 0 });
     this.impactoDoTruco(this.partida.pedido.para);
     this.avisarVerbete('truco');
     this.faixa(GRITO_TRUCO[this.partida.pedido.para], COR_JOGADOR_CSS[j], 72);

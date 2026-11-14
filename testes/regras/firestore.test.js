@@ -49,6 +49,32 @@ describe('firestore.rules (emulador)', { skip: SEM_EMULADOR }, () => {
       await assertFails(setDoc(doc(banco('beto'), 'contas', 'ana'), { vitorias: 99 }));
       await assertFails(getDoc(doc(banco(null), 'contas', 'ana')));
     });
+
+    it('administrador (documento em admins/) lê e lista todas as contas, sem gravar nas dos outros (#66)', async () => {
+      await semRegras(async (db) => {
+        await setDoc(doc(db, 'admins', 'prof'), { desde: 1 });
+        await setDoc(doc(db, 'contas', 'ana'), { vitorias: 1 });
+        await setDoc(doc(db, 'contas', 'beto'), { vitorias: 2 });
+      });
+      await assertSucceeds(getDoc(doc(banco('prof'), 'contas', 'ana')));
+      assert.equal((await assertSucceeds(getDocs(collection(banco('prof'), 'contas')))).size, 2);
+      await assertFails(setDoc(doc(banco('prof'), 'contas', 'ana'), { vitorias: 99 }));
+      await assertFails(deleteDoc(doc(banco('prof'), 'contas', 'ana')));
+      /* conta comum não lista as contas */
+      await assertFails(getDocs(collection(banco('ana'), 'contas')));
+      await assertFails(getDocs(collection(banco(null), 'contas')));
+    });
+
+    it('admins/: cada conta só lê o próprio documento, e ninguém grava pelo jogo', async () => {
+      await semRegras((db) => setDoc(doc(db, 'admins', 'prof'), { desde: 1 }));
+      await assertSucceeds(getDoc(doc(banco('prof'), 'admins', 'prof')));
+      await assertSucceeds(getDoc(doc(banco('ana'), 'admins', 'ana')));
+      await assertFails(getDoc(doc(banco('ana'), 'admins', 'prof')));
+      await assertFails(getDocs(collection(banco('prof'), 'admins')));
+      await assertFails(setDoc(doc(banco('ana'), 'admins', 'ana'), { desde: 1 }));
+      await assertFails(setDoc(doc(banco('prof'), 'admins', 'ana'), { desde: 1 }));
+      await assertFails(deleteDoc(doc(banco('prof'), 'admins', 'prof')));
+    });
   });
 
   describe('mensagens da sala: criar', () => {

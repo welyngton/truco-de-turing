@@ -11,7 +11,8 @@
  *
  * O menu e a tela "Jogar online" acompanham a conta por `aoMudarDeConta`.
  */
-import { mesclarProgresso, progressoDaConta } from '../online/contas.js';
+import { mesclarProgresso, documentoDaConta } from '../online/contas.js';
+import { estatisticasDe } from '../online/estatisticas.js';
 import { firebaseConfigurado, contaGuardada, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta } from '../online/firebase.js';
 import { explicarErroFirebase } from '../online/errosFirebase.js';
 import { mostrarAviso } from './paineis.js';
@@ -22,6 +23,10 @@ export const MARCA_DE_CONTA = 'truco-de-turing:conta';
 
 /** Conta que vale agora (`{ uid, nome, email }`), ou null. */
 let atual = null;
+/** Método de login da conta que vale agora ('google', 'email'…). */
+let metodoAtual = '';
+/** O acesso desta abertura do jogo já foi contado na conta? (uma vez por abertura) */
+let acessoContadoNaConta = false;
 const ouvintes = new Set();
 /** Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) */
 let avisouFalhaAoSalvar = false;
@@ -36,6 +41,9 @@ function mudar(conta) {
   atual = conta;
   for (const cb of [...ouvintes]) cb(conta);
 }
+
+/** Alguém entrou numa conta neste navegador e não saiu? (a conta em si só vale depois de retomada) */
+export function haMarcaDeConta() { return !!lerMarca(); }
 
 const lerMarca = () => { try { return globalThis.localStorage?.getItem(MARCA_DE_CONTA) || null; } catch (e) { return null; } };
 const gravarMarca = (metodo) => { try { globalThis.localStorage?.setItem(MARCA_DE_CONTA, metodo || 'conta'); } catch (e) { /* sem armazenamento: só não retoma */ } };
@@ -54,7 +62,14 @@ export async function usarConta(app, conta, metodo, { retomada = false } = {}) {
   const naConta = await carregarProgressoDaConta(conta.uid);
   const mesclado = mesclarProgresso(app.progresso, naConta);
   mesclado.nomeOnline = mesclado.nomeOnline || conta.nome;
-  await salvarProgressoNaConta(conta.uid, progressoDaConta(mesclado));
+  /* A mescla fica com o maior número de acessos. Se a conta já tinha tantos ou mais que este
+     aparelho, a abertura de agora sumiria: ela conta mais um na conta, uma vez por abertura. */
+  const jaNaConta = naConta && naConta.estatisticas ? naConta.estatisticas.acessos || 0 : 0;
+  const estatisticas = estatisticasDe(mesclado);
+  if (!acessoContadoNaConta) estatisticas.acessos = Math.max(estatisticas.acessos, jaNaConta + 1);
+  await salvarProgressoNaConta(conta.uid, documentoDaConta(mesclado, conta, metodo));
+  acessoContadoNaConta = true;
+  metodoAtual = metodo;
   app.progresso = mesclado;
   avisouFalhaAoSalvar = false;
   gravarMarca(metodo);
@@ -66,7 +81,7 @@ export async function usarConta(app, conta, metodo, { retomada = false } = {}) {
     app.salvar = function () {
       this.salvarSoLocal();
       if (!atual) return;
-      salvarProgressoNaConta(atual.uid, progressoDaConta(this.progresso)).then(() => { avisouFalhaAoSalvar = false; }, (e) => {
+      salvarProgressoNaConta(atual.uid, documentoDaConta(this.progresso, atual, metodoAtual)).then(() => { avisouFalhaAoSalvar = false; }, (e) => {
         if (avisouFalhaAoSalvar) return;
         avisouFalhaAoSalvar = true;
         mostrarAviso('Conta', 'O progresso ficou só neste aparelho. ' + (explicarErroFirebase(e) || ''), null, 7000);

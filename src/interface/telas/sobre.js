@@ -2,6 +2,7 @@
  * @file Tela "Sobre": versão, o jogo unificado (NeuroDeck + Truco de Turing), a disciplina, as regras
  * originais, o professor, os autores, as estatísticas de uso (ligar e desligar) e a licença.
  */
+import { TEXTO_DA_CONTA } from '../../online/contas.js';
 import { abrirPainel } from '../paineis.js';
 import { VERSAO, DATA_DA_VERSAO } from '../../versao.js';
 import { podeMedir, consentimento, definirConsentimento, TEXTO_DAS_ESTATISTICAS } from '../analise.js';
@@ -53,6 +54,8 @@ export function abrirSobre() {
       '<p>' + TEXTO_DAS_ESTATISTICAS + '</p>' +
       '<p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + '</p>' +
       (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : '') +
+      '<h3>Dados da conta</h3>' +
+      '<p id="s-conta">' + TEXTO_DA_CONTA + '</p>' +
       '<h3>Créditos e licença</h3>' +
       '<p>Código aberto sob a licença <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no repositório <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras é o do NeuroDeck, incluído com a concordância do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas é gerada por código; fontes Cinzel e Spectral.</p>' +
       '<div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';

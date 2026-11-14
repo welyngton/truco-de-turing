@@ -159,6 +159,37 @@ Na sala, o estado fica sempre escrito: "Aguardando o(s) outro(s) jogador(es). O 
 criou) ou a falha de conexão. Sem conta, a sala só funciona entre abas do mesmo navegador, e a
 tela avisa isso.
 
+## Rastreio dos jogadores (issue #66)
+
+Cada conta guarda em `contas/<uid>`, além do progresso:
+
+| Campo | O que tem |
+|---|---|
+| `perfil` | nome, e-mail e método de login |
+| `estatisticas` | acessos, primeiro e último acesso, versão e aparelho do último acesso; partidas (iniciadas, terminadas, vencidas, abandonadas); mãos (jogadas, vencidas); trucos pedidos; salas criadas, salas em que entrou e partidas online; jogadas e vitórias por oponente, baralho e terreno |
+| `resumo` | conquistas, verbetes lidos, acessos, último acesso, partidas, vitórias e mãos, para listar sem abrir o resto |
+
+Os contadores vêm dos mesmos eventos enviados ao Google Analytics (`src/online/estatisticas.js`),
+mas valem para toda conta, com ou sem consentimento de medição. Sem conta, ficam no aparelho e
+sobem quando a pessoa entra. Na junção entre aparelho e conta vale o maior de cada contador, como
+no resto do progresso: partidas jogadas em dois aparelhos sem conexão entre uma e outra podem
+contar a menos.
+
+### Dar acesso de administrador
+
+A tela **Jogadores** (botão em "Jogar online") lista todas as contas e baixa o CSV. Ela só aparece
+para quem tem um documento em `admins/<uid>`:
+
+1. Entre no jogo com a conta que vai administrar.
+2. No console, abra **Authentication > Usuários** e copie o **UID do usuário** dessa conta.
+3. Em **Firestore Database > Dados**, crie a coleção `admins` com um documento cujo **ID é esse
+   UID**. O conteúdo não importa (por exemplo, o campo `desde` com a data).
+4. Publique as regras de `firestore.rules` de novo (passo 3 deste guia): elas deixam o
+   administrador ler todas as contas, sem gravar em nenhuma, e cada conta ler só o próprio
+   documento de `admins`.
+
+Para tirar o acesso, apague o documento. O jogo não consegue criar nem apagar administradores.
+
 ## Limites conhecidos
 
 - A limpeza das salas antigas depende de alguém abrir uma sala pela internet (veja acima). Sem
