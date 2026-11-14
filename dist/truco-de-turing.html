@@ -509,6 +509,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 /* jogar online */
 .jogar-linha { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 .jogar-online { font-size: 15px; }
+/* quem está conectado, abaixo de "Jogar" (só aparece com conta) */
+.menu-capa .menu-conta { margin: -2px 0 0; font: 600 14px var(--fonte-interface); color: #cdbf9e; line-height: 1.3; max-width: none; }
+.menu-capa .menu-conta::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; background: #6fbf5a; }
+.menu-capa .menu-conta b { color: var(--pergaminho); }
+.menu-capa .menu-conta[hidden] { display: none; }
+@media (max-height: 420px) and (min-width: 560px) { .menu-capa .menu-conta { font-size: 12px; display: block; } }
 .folha.online { width: min(640px, 100%); }
 /* cor do texto explícita: a página usa `color-scheme: dark`, e sem isso o navegador escreve em branco no campo claro */
 .online input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; color: var(--tinta); caret-color: var(--tinta); color-scheme: light; border: 1.5px solid #2b1608; border-radius: 8px; background: #fff8e6; }
@@ -3039,14 +3045,14 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     for (const [k, v] of Object.entries(dados || {})) if (PROPRIEDADES_DO_JOGADOR.includes(k) && k !== "id_jogador") estado.perfil[k] = v;
     if (medindo()) enviarJogador(estado.janela);
   }
-  function definirConta(uid, metodo) {
+  function definirConta(uid, metodo, { retomada = false } = {}) {
     const antes = estado.conta;
     estado.conta = uid || null;
     estado.perfil.tipo_conta = uid ? metodo && metodo.startsWith("email") ? "email" : metodo || "conta" : "local";
     if (!medindo()) return;
     if (uid) {
       enviarJogador(estado.janela);
-      registrarEvento(EVENTOS.login, { method: metodo || "conta" });
+      if (!retomada) registrarEvento(EVENTOS.login, { method: metodo || "conta" });
     } else if (antes) {
       registrarEvento(EVENTOS.logout);
       enviarJogador(estado.janela);
@@ -8191,11 +8197,11 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
   function abrirAvatares(app, aoMudar) {
     const p = app.progresso;
-    const atual2 = avatarDoJogador(p);
+    const atual3 = avatarDoJogador(p);
     const itens = AVATARES_DO_JOGADOR.map((a) => {
       const livre = avatarLiberado(a, p);
       const img = retratoDoAvatar(a.id);
-      return '<button class="avatar-opcao' + (livre ? "" : " bloqueado") + '" data-avatar="' + a.id + '" aria-pressed="' + (a.id === atual2) + '"' + (livre ? "" : ' aria-disabled="true"') + '><span class="avatar-retrato">' + (img ? '<img alt="" src="' + img + '">' : "") + (livre ? "" : '<span class="cadeado">' + ICONE_CADEADO + "</span>") + "</span><b>" + escaparHtml(a.nome) + "</b><small>" + escaparHtml(livre ? a.descricao : 'Liberado pela conquista "' + conquistaQueLibera(a) + '".') + "</small></button>";
+      return '<button class="avatar-opcao' + (livre ? "" : " bloqueado") + '" data-avatar="' + a.id + '" aria-pressed="' + (a.id === atual3) + '"' + (livre ? "" : ' aria-disabled="true"') + '><span class="avatar-retrato">' + (img ? '<img alt="" src="' + img + '">' : "") + (livre ? "" : '<span class="cadeado">' + ICONE_CADEADO + "</span>") + "</span><b>" + escaparHtml(a.nome) + "</b><small>" + escaparHtml(livre ? a.descricao : 'Liberado pela conquista "' + conquistaQueLibera(a) + '".') + "</small></button>";
     }).join("");
     const livres = AVATARES_DO_JOGADOR.filter((a) => avatarLiberado(a, p)).length;
     const html = '<div class="folha larga avatares"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Seu avatar</h2><p>O retrato que aparece no placar da mesa. ' + livres + " de " + AVATARES_DO_JOGADOR.length + ' liberados; os outros saem com conquistas.</p><div class="avatares-grade">' + itens + '</div><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Pronto</button></div></div>';
@@ -8421,7 +8427,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.4.5";
+  var VERSAO = "2.4.6";
   var DATA_DA_VERSAO = "2026-11-14";
 
   // src/interface/telas/sobre.js
@@ -8750,43 +8756,21 @@ export default function (NeuroDeck) {
     const Canal = globalThis.BroadcastChannel;
     if (!Canal) throw new Error("Este navegador n\xE3o tem BroadcastChannel.");
     const canal = new Canal("truco-de-turing:" + codigo);
-    const ouvintes = /* @__PURE__ */ new Set();
+    const ouvintes2 = /* @__PURE__ */ new Set();
     canal.onmessage = (e) => {
-      for (const cb of ouvintes) cb(e.data);
+      for (const cb of ouvintes2) cb(e.data);
     };
     return {
       enviar: (msg) => canal.postMessage(JSON.parse(JSON.stringify(msg))),
       aoReceber: (cb) => {
-        ouvintes.add(cb);
-        return () => ouvintes.delete(cb);
+        ouvintes2.add(cb);
+        return () => ouvintes2.delete(cb);
       },
       fechar: () => {
-        ouvintes.clear();
+        ouvintes2.clear();
         canal.close();
       }
     };
-  }
-
-  // src/online/contas.js
-  var CONTADORES = ["vitorias", "maos", "dropouts", "vitoriasZen"];
-  var CONJUNTOS = ["lidos", "terrenos", "baralhos", "arquiteturas"];
-  function mesclarProgresso(local, conta2) {
-    if (!conta2) return { ...local };
-    const m = { ...local };
-    for (const k of CONTADORES) m[k] = Math.max(local[k] || 0, conta2[k] || 0);
-    for (const k of CONJUNTOS) m[k] = { ...local[k] || {}, ...conta2[k] || {} };
-    m.desbloqueadas = { ...local.desbloqueadas || {} };
-    for (const [id, quando] of Object.entries(conta2.desbloqueadas || {})) {
-      m.desbloqueadas[id] = m.desbloqueadas[id] ? Math.min(m.desbloqueadas[id], quando) : quando;
-    }
-    m.verbetesLidos = Object.keys(m.lidos).length;
-    if (conta2.avatar) m.avatar = conta2.avatar;
-    return m;
-  }
-  function progressoDaConta(progresso) {
-    const p = {};
-    for (const k of [...CONTADORES, ...CONJUNTOS, "desbloqueadas", "verbetesLidos", "avatar"]) if (progresso[k] !== void 0) p[k] = progresso[k];
-    return p;
   }
 
   // src/online/configuracao.js
@@ -8834,6 +8818,19 @@ export default function (NeuroDeck) {
     const { auth, autenticacao } = await carregar2();
     await auth.signOut(autenticacao);
   }
+  async function contaGuardada() {
+    const { auth, autenticacao } = await carregar2();
+    return new Promise((resolver) => {
+      let parar = null, lida = false;
+      parar = auth.onAuthStateChanged(autenticacao, (user) => {
+        if (lida) return;
+        lida = true;
+        if (parar) parar();
+        resolver(user ? conta(user) : null);
+      });
+      if (lida) parar();
+    });
+  }
   var conta = (user) => ({ uid: user.uid, nome: user.displayName || (user.email || "").split("@")[0] || "Jogador", email: user.email || "" });
   async function carregarProgressoDaConta(uid) {
     const { fs, banco } = await carregar2();
@@ -8847,7 +8844,7 @@ export default function (NeuroDeck) {
   async function transporteFirebase(codigo) {
     const { fs, banco } = await carregar2();
     const colecao = fs.collection(banco, "salas", codigo, "mensagens");
-    const ouvintes = /* @__PURE__ */ new Set();
+    const ouvintes2 = /* @__PURE__ */ new Set();
     const vistos = /* @__PURE__ */ new Set();
     const falhas = /* @__PURE__ */ new Set();
     const falhou = (erro) => {
@@ -8858,7 +8855,7 @@ export default function (NeuroDeck) {
         if (mudanca.type !== "added" || vistos.has(mudanca.doc.id)) continue;
         vistos.add(mudanca.doc.id);
         const { em, ...msg } = mudanca.doc.data();
-        for (const cb of ouvintes) cb(msg);
+        for (const cb of ouvintes2) cb(msg);
       }
     }, falhou);
     return {
@@ -8867,15 +8864,15 @@ export default function (NeuroDeck) {
         Promise.resolve(fs.addDoc(colecao, { ...JSON.parse(JSON.stringify(msg)), em: fs.serverTimestamp() })).catch(falhou);
       },
       aoReceber: (cb) => {
-        ouvintes.add(cb);
-        return () => ouvintes.delete(cb);
+        ouvintes2.add(cb);
+        return () => ouvintes2.delete(cb);
       },
       aoFalhar: (cb) => {
         falhas.add(cb);
         return () => falhas.delete(cb);
       },
       fechar: () => {
-        ouvintes.clear();
+        ouvintes2.clear();
         falhas.clear();
         parar();
       }
@@ -8921,6 +8918,119 @@ export default function (NeuroDeck) {
     return texto || "Algo deu errado com o Firebase.";
   }
 
+  // src/online/contas.js
+  var CONTADORES = ["vitorias", "maos", "dropouts", "vitoriasZen"];
+  var CONJUNTOS = ["lidos", "terrenos", "baralhos", "arquiteturas"];
+  function mesclarProgresso(local, conta2) {
+    if (!conta2) return { ...local };
+    const m = { ...local };
+    for (const k of CONTADORES) m[k] = Math.max(local[k] || 0, conta2[k] || 0);
+    for (const k of CONJUNTOS) m[k] = { ...local[k] || {}, ...conta2[k] || {} };
+    m.desbloqueadas = { ...local.desbloqueadas || {} };
+    for (const [id, quando] of Object.entries(conta2.desbloqueadas || {})) {
+      m.desbloqueadas[id] = m.desbloqueadas[id] ? Math.min(m.desbloqueadas[id], quando) : quando;
+    }
+    m.verbetesLidos = Object.keys(m.lidos).length;
+    if (conta2.avatar) m.avatar = conta2.avatar;
+    return m;
+  }
+  function progressoDaConta(progresso) {
+    const p = {};
+    for (const k of [...CONTADORES, ...CONJUNTOS, "desbloqueadas", "verbetesLidos", "avatar"]) if (progresso[k] !== void 0) p[k] = progresso[k];
+    return p;
+  }
+
+  // src/interface/conta.js
+  var MARCA_DE_CONTA = "truco-de-turing:conta";
+  var atual2 = null;
+  var ouvintes = /* @__PURE__ */ new Set();
+  var avisouFalhaAoSalvar = false;
+  function contaAtual() {
+    return atual2;
+  }
+  function aoMudarDeConta(cb) {
+    ouvintes.add(cb);
+    return () => ouvintes.delete(cb);
+  }
+  function mudar(conta2) {
+    atual2 = conta2;
+    for (const cb of [...ouvintes]) cb(conta2);
+  }
+  var lerMarca = () => {
+    try {
+      return globalThis.localStorage?.getItem(MARCA_DE_CONTA) || null;
+    } catch (e) {
+      return null;
+    }
+  };
+  var gravarMarca = (metodo) => {
+    try {
+      globalThis.localStorage?.setItem(MARCA_DE_CONTA, metodo || "conta");
+    } catch (e) {
+    }
+  };
+  var apagarMarca = () => {
+    try {
+      globalThis.localStorage?.removeItem(MARCA_DE_CONTA);
+    } catch (e) {
+    }
+  };
+  async function usarConta(app, conta2, metodo, { retomada = false } = {}) {
+    const naConta = await carregarProgressoDaConta(conta2.uid);
+    const mesclado = mesclarProgresso(app.progresso, naConta);
+    mesclado.nomeOnline = mesclado.nomeOnline || conta2.nome;
+    await salvarProgressoNaConta(conta2.uid, progressoDaConta(mesclado));
+    app.progresso = mesclado;
+    avisouFalhaAoSalvar = false;
+    gravarMarca(metodo);
+    definirConta(conta2.uid, metodo, { retomada });
+    mudar(conta2);
+    if (!app.salvarSoLocal) {
+      app.salvarSoLocal = app.salvar;
+      app.salvar = function() {
+        this.salvarSoLocal();
+        if (!atual2) return;
+        salvarProgressoNaConta(atual2.uid, progressoDaConta(this.progresso)).then(() => {
+          avisouFalhaAoSalvar = false;
+        }, (e) => {
+          if (avisouFalhaAoSalvar) return;
+          avisouFalhaAoSalvar = true;
+          mostrarAviso("Conta", "O progresso ficou s\xF3 neste aparelho. " + (explicarErroFirebase(e) || ""), null, 7e3);
+        });
+      };
+    }
+    app.salvar();
+  }
+  async function sairDaContaAtual() {
+    await sairDaConta();
+    apagarMarca();
+    definirConta(null);
+    mudar(null);
+  }
+  async function retomarConta(app) {
+    if (!firebaseConfigurado()) return null;
+    const metodo = lerMarca();
+    if (!metodo) return null;
+    let conta2;
+    try {
+      conta2 = await contaGuardada();
+    } catch (e) {
+      return null;
+    }
+    if (!conta2) {
+      apagarMarca();
+      return null;
+    }
+    if (atual2) return atual2;
+    try {
+      await usarConta(app, conta2, metodo, { retomada: true });
+      return conta2;
+    } catch (e) {
+      mostrarAviso("Conta", "N\xE3o deu para retomar a conta de " + conta2.nome + "; o progresso fica neste aparelho at\xE9 voc\xEA entrar de novo. " + (explicarErroFirebase(e) || ""), null, 8e3);
+      return null;
+    }
+  }
+
   // src/interface/telas/online.js
   function clienteDaAba() {
     try {
@@ -8933,35 +9043,8 @@ export default function (NeuroDeck) {
       return idDeCliente();
     }
   }
-  var contaAtual = null;
   var ESPERA_PELA_SALA = 8e3;
-  var avisouFalhaAoSalvar = false;
-  async function usarConta(app, conta2, metodo) {
-    const naConta = await carregarProgressoDaConta(conta2.uid);
-    const mesclado = mesclarProgresso(app.progresso, naConta);
-    mesclado.nomeOnline = mesclado.nomeOnline || conta2.nome;
-    await salvarProgressoNaConta(conta2.uid, progressoDaConta(mesclado));
-    app.progresso = mesclado;
-    contaAtual = conta2;
-    avisouFalhaAoSalvar = false;
-    definirConta(conta2.uid, metodo);
-    if (!app.salvarSoLocal) {
-      app.salvarSoLocal = app.salvar;
-      app.salvar = function() {
-        this.salvarSoLocal();
-        if (!contaAtual) return;
-        salvarProgressoNaConta(contaAtual.uid, progressoDaConta(this.progresso)).then(() => {
-          avisouFalhaAoSalvar = false;
-        }, (e) => {
-          if (avisouFalhaAoSalvar) return;
-          avisouFalhaAoSalvar = true;
-          mostrarAviso("Conta", "O progresso ficou s\xF3 neste aparelho. " + (explicarErroFirebase(e) || ""), null, 7e3);
-        });
-      };
-    }
-    app.salvar();
-  }
-  var pelaInternet = () => firebaseConfigurado() && !!contaAtual;
+  var pelaInternet = () => firebaseConfigurado() && !!contaAtual();
   async function transporte(codigo) {
     if (pelaInternet()) return transporteFirebase(codigo);
     return transporteLocal(codigo);
@@ -8970,11 +9053,14 @@ export default function (NeuroDeck) {
     const nuvem = firebaseConfigurado();
     const nome = app.progresso.nomeOnline || "";
     const maxPessoas = app.opcoes.jogadores;
-    const html = '<div class="folha online"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Jogar online</h2><section class="online-conta"><h3>Conta</h3>' + (nuvem ? '<p id="o-conta-estado">' + (contaAtual ? "Conectado como <b>" + escaparHtml(contaAtual.nome) + "</b>. O progresso fica na conta." : "Entre para guardar conquistas, avatares e progresso na conta e jogar pela internet.") + '</p><div class="linha"><button class="botao" id="o-google">Entrar com Google</button><button class="botao discreto" id="o-sair"' + (contaAtual ? "" : " hidden") + '>Sair da conta</button></div><div class="campos-duplos"><input id="o-email" type="email" placeholder="e-mail" autocomplete="email"><input id="o-senha" type="password" placeholder="senha" autocomplete="current-password"></div><div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>' : '<p class="nota">As contas na nuvem e as salas pela internet entram quando o projeto Firebase do grupo for configurado. Por enquanto o progresso fica neste navegador, e as salas funcionam entre abas e janelas dele (abra o jogo em outra janela para testar).</p>') + '<div class="campo"><label for="o-nome">Seu nome na mesa</label><input id="o-nome" maxlength="20" value="' + escaparHtml(nome) + '" placeholder="Como os outros v\xE3o ver voc\xEA"></div></section><section class="online-sala" id="o-escolha"><h3>Sala</h3><p>A sala usa as op\xE7\xF5es do menu (jogadores, oponente, arquitetura, baralho, terreno e partida). Cadeiras sem pessoa ficam com o computador.</p><div class="campos-duplos"><div class="campo"><label for="o-pessoas">Pessoas na sala</label><select id="o-pessoas">' + Array.from({ length: maxPessoas - 1 }, (_, i) => '<option value="' + (i + 2) + '">' + (i + 2) + " de " + maxPessoas + " cadeiras</option>").join("") + '</select></div><div class="campo"><label>&nbsp;</label><button class="botao vinho" id="o-criar">Criar sala</button></div></div><div class="campos-duplos"><div class="campo"><label for="o-codigo">C\xF3digo da sala</label><input id="o-codigo" maxlength="5" placeholder="ABCDE" autocapitalize="characters"></div><div class="campo"><label>&nbsp;</label><button class="botao" id="o-entrar">Entrar na sala</button></div></div></section><section class="online-espera" id="o-espera" hidden><h3>Sala <span class="codigo-sala" id="o-codigo-sala"></span><button class="botao discreto pequeno" id="o-copiar" type="button">Copiar c\xF3digo</button></h3><p class="espera-estado" id="o-espera-nota" role="status" aria-live="polite"></p><ol class="cadeiras" id="o-cadeiras"></ol><p class="nota" id="o-espera-alcance"></p><div class="linha fim"><button class="botao discreto" id="o-desistir">Sair da sala</button><button class="botao vinho" id="o-comecar" hidden>Come\xE7ar partida</button></div></section></div>';
+    const html = '<div class="folha online"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Jogar online</h2><section class="online-conta"><h3>Conta</h3>' + (nuvem ? '<p id="o-conta-estado">' + (contaAtual() ? "Conectado como <b>" + escaparHtml(contaAtual().nome) + "</b>. O progresso fica na conta." : "Entre para guardar conquistas, avatares e progresso na conta e jogar pela internet.") + '</p><div class="linha"><button class="botao" id="o-google">Entrar com Google</button><button class="botao discreto" id="o-sair"' + (contaAtual() ? "" : " hidden") + '>Sair da conta</button></div><div class="campos-duplos"><input id="o-email" type="email" placeholder="e-mail" autocomplete="email"><input id="o-senha" type="password" placeholder="senha" autocomplete="current-password"></div><div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>' : '<p class="nota">As contas na nuvem e as salas pela internet entram quando o projeto Firebase do grupo for configurado. Por enquanto o progresso fica neste navegador, e as salas funcionam entre abas e janelas dele (abra o jogo em outra janela para testar).</p>') + '<div class="campo"><label for="o-nome">Seu nome na mesa</label><input id="o-nome" maxlength="20" value="' + escaparHtml(nome) + '" placeholder="Como os outros v\xE3o ver voc\xEA"></div></section><section class="online-sala" id="o-escolha"><h3>Sala</h3><p>A sala usa as op\xE7\xF5es do menu (jogadores, oponente, arquitetura, baralho, terreno e partida). Cadeiras sem pessoa ficam com o computador.</p><div class="campos-duplos"><div class="campo"><label for="o-pessoas">Pessoas na sala</label><select id="o-pessoas">' + Array.from({ length: maxPessoas - 1 }, (_, i) => '<option value="' + (i + 2) + '">' + (i + 2) + " de " + maxPessoas + " cadeiras</option>").join("") + '</select></div><div class="campo"><label>&nbsp;</label><button class="botao vinho" id="o-criar">Criar sala</button></div></div><div class="campos-duplos"><div class="campo"><label for="o-codigo">C\xF3digo da sala</label><input id="o-codigo" maxlength="5" placeholder="ABCDE" autocapitalize="characters"></div><div class="campo"><label>&nbsp;</label><button class="botao" id="o-entrar">Entrar na sala</button></div></div></section><section class="online-espera" id="o-espera" hidden><h3>Sala <span class="codigo-sala" id="o-codigo-sala"></span><button class="botao discreto pequeno" id="o-copiar" type="button">Copiar c\xF3digo</button></h3><p class="espera-estado" id="o-espera-nota" role="status" aria-live="polite"></p><ol class="cadeiras" id="o-cadeiras"></ol><p class="nota" id="o-espera-alcance"></p><div class="linha fim"><button class="botao discreto" id="o-desistir">Sair da sala</button><button class="botao vinho" id="o-comecar" hidden>Come\xE7ar partida</button></div></section></div>';
     let sala = null;
     let procurando = null;
+    let pararDeOuvirConta = () => {
+    };
     const painel = abrirPainel(html, { aoFechar: () => {
       clearTimeout(procurando);
+      pararDeOuvirConta();
       if (sala && !app.online) sala.sair();
     } });
     const $2 = (id) => painel.elemento.querySelector("#" + id);
@@ -9045,7 +9131,7 @@ export default function (NeuroDeck) {
         return;
       }
       s.criar(codigo, { ...app.opcoes }, Number($2("o-pessoas").value), Math.floor(Math.random() * 2 ** 31));
-      registrarEvento(EVENTOS.salaOnline, { acao: "criar", pessoas: Number($2("o-pessoas").value), conta: contaAtual ? 1 : 0 });
+      registrarEvento(EVENTOS.salaOnline, { acao: "criar", pessoas: Number($2("o-pessoas").value), conta: contaAtual() ? 1 : 0 });
       esperar(s);
       mostrarAviso("Sala " + codigo + " criada", "Aguardando o(s) outro(s) jogador(es). O c\xF3digo da sala \xE9 " + codigo + ".", null, 8e3);
     });
@@ -9071,7 +9157,7 @@ export default function (NeuroDeck) {
         if (sala !== s || s.config) return;
         estadoDaEspera("N\xE3o achei a sala " + codigo + ". Confira o c\xF3digo e se quem criou a sala continua com ela aberta" + (pelaInternet() ? "." : firebaseConfigurado() ? ". Sem conta, s\xF3 d\xE1 para entrar em salas abertas neste navegador." : " neste navegador."), "erro");
       }, ESPERA_PELA_SALA);
-      registrarEvento(EVENTOS.salaOnline, { acao: "entrar", conta: contaAtual ? 1 : 0 });
+      registrarEvento(EVENTOS.salaOnline, { acao: "entrar", conta: contaAtual() ? 1 : 0 });
     });
     $2("o-comecar").addEventListener("click", () => {
       if (!sala) return;
@@ -9100,14 +9186,18 @@ export default function (NeuroDeck) {
     });
     if (nuvem) {
       const mostrarConta = () => {
-        $2("o-conta-estado").innerHTML = contaAtual ? "Conectado como <b>" + escaparHtml(contaAtual.nome) + "</b>. O progresso fica na conta." : "Entre para guardar o progresso na conta e jogar pela internet.";
-        $2("o-sair").hidden = !contaAtual;
-        if (contaAtual && !$2("o-nome").value) $2("o-nome").value = contaAtual.nome;
+        const conta2 = contaAtual();
+        $2("o-conta-estado").innerHTML = conta2 ? "Conectado como <b>" + escaparHtml(conta2.nome) + "</b>. O progresso fica na conta." : "Entre para guardar o progresso na conta e jogar pela internet.";
+        $2("o-sair").hidden = !conta2;
+        if (conta2 && !$2("o-nome").value) $2("o-nome").value = conta2.nome;
       };
+      pararDeOuvirConta = aoMudarDeConta(() => {
+        if (painel.elemento.isConnected) mostrarConta();
+        else pararDeOuvirConta();
+      });
       const tentar = (acao, metodo) => async () => {
         try {
           await usarConta(app, await acao(), metodo);
-          mostrarConta();
         } catch (e) {
           const texto = explicarErroFirebase(e);
           if (texto) mostrarAviso("Conta", texto, null, 8e3);
@@ -9117,10 +9207,12 @@ export default function (NeuroDeck) {
       $2("o-email-entrar").addEventListener("click", tentar(() => entrarComEmail($2("o-email").value, $2("o-senha").value), "email"));
       $2("o-email-criar").addEventListener("click", tentar(() => entrarComEmail($2("o-email").value, $2("o-senha").value, true), "email_novo"));
       $2("o-sair").addEventListener("click", async () => {
-        await sairDaConta();
-        contaAtual = null;
-        definirConta(null);
-        mostrarConta();
+        try {
+          await sairDaContaAtual();
+        } catch (e) {
+          const texto = explicarErroFirebase(e);
+          if (texto) mostrarAviso("Conta", texto, null, 8e3);
+        }
       });
     }
     return painel;
@@ -9176,7 +9268,7 @@ export default function (NeuroDeck) {
     "m-sobre": "sobre"
   };
   function htmlDoMenu(opcoes) {
-    return '<div class="menu"><section class="menu-capa"><h1>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Regras do NeuroDeck com a interface do Truco de Turing. Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
+    return '<div class="menu"><section class="menu-capa"><h1>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><p class="menu-conta" id="m-conta" role="status" hidden></p><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Regras do NeuroDeck com a interface do Truco de Turing. Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
   }
   function abrirMenu(app) {
     app.opcoes = normalizarOpcoes(app.opcoes);
@@ -9264,6 +9356,20 @@ export default function (NeuroDeck) {
     campo("m-sobre").addEventListener("click", () => {
       lerEscolhas();
       abrirSobre();
+    });
+    const mostrarConta = () => {
+      const conta2 = contaAtual(), linha2 = campo("m-conta");
+      linha2.hidden = !conta2;
+      linha2.innerHTML = conta2 ? "Conectado como <b>" + escaparHtml(conta2.nome) + "</b>. O progresso vai para a conta." : "";
+    };
+    mostrarConta();
+    const pararDeOuvir = aoMudarDeConta(() => {
+      if (!elemento.isConnected) {
+        pararDeOuvir();
+        return;
+      }
+      mostrarConta();
+      mostrarAvatar();
     });
     return painel;
   }
@@ -12478,6 +12584,7 @@ export default function (NeuroDeck) {
   prepararTextoNitido();
   Aplicacao.iniciar();
   iniciarJogo();
+  retomarConta(Aplicacao);
   iniciarAnalise();
   globalThis.__TRUCO_DE_TURING__ = Aplicacao;
 })();

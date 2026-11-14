@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.4.6 — 2026-11-14
+
+- fix: conta continua conectada ao recarregar a página (#60) ([#64](https://github.com/welyngton/truco-de-turing/pull/64), por [@welyngton](https://github.com/welyngton))
+
 ## 2.4.5 — 2026-11-14
 
 - fix: Jogar online diz o que está acontecendo na sala, campos legíveis e erros em português ([#63](https://github.com/welyngton/truco-de-turing/pull/63), por [@welyngton](https://github.com/welyngton))
