@@ -340,7 +340,7 @@ npm run docs         # atualiza docs/REFERENCIA.md
 os módulos de `src/`). Alternativas: enviar `dist/truco-de-turing.html` ao itch.io (projeto HTML),
 Netlify Drop ou Cloudflare Pages.
 
-**Estatísticas de uso.** `interface/analise.js` liga o Google Analytics 4 (ID `G-VWSGVWJK6Q`) só em
+**Estatísticas de uso.** `interface/analise.js` liga o Google Analytics 4 (ID `G-C39CQS6CGH`) só em
 `https://welyngton.github.io` e só depois do "Aceitar" na faixa de consentimento (a escolha fica no
 `localStorage` e muda na tela Sobre). Para um evento novo, chame `registrarEvento('nome', { ... })`:
 ele não faz nada fora do site publicado, sem consentimento ou nos testes (navegador automatizado).
