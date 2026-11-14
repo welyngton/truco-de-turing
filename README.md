@@ -233,12 +233,12 @@ Distribuído sob a [GPL-3.0](https://github.com/welyngton/truco-de-turing#GPL-3.
 
 Autores:
 <!-- autores -->
+- Peng Yaohao: especificação inicial, gerência do projeto, validação e feedbacks
 - Welyngton José Vinicius Dal Prá ([@welyngton](https://github.com/welyngton)): Truco de Turing (interface, arte, sons, conquistas e modo truco)
 - Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande)): testes, validação das regras e fusão com o NeuroDeck
 - Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações no Glossário
 - Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções da fusão
-- Francisco Lima: NeuroDeck (regras, motor, oponentes e mods)
-- Claude ([@claude](https://github.com/claude))
+- 
 <!-- /autores -->
 
 Regras originais: Peng Yaohao - FPO-UNB - 2026-2
