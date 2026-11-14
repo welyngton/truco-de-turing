@@ -498,7 +498,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .jogar-linha { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 .jogar-online { font-size: 15px; }
 .folha.online { width: min(640px, 100%); }
-.online input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; border: 1.5px solid #2b1608; border-radius: 8px; background: #fff8e6; }
+/* cor do texto explícita: a página usa `color-scheme: dark`, e sem isso o navegador escreve em branco no campo claro */
+.online input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; color: var(--tinta); caret-color: var(--tinta); color-scheme: light; border: 1.5px solid #2b1608; border-radius: 8px; background: #fff8e6; }
+.online input::placeholder { color: #8a7a5c; opacity: 1; }
+.online input:-webkit-autofill { -webkit-text-fill-color: var(--tinta); box-shadow: 0 0 0 100px #fff8e6 inset; }
+.espera-estado { margin: 8px 0; padding: 8px 12px; border-radius: 8px; border-left: 4px solid #c99a3a; background: #f9eeda; font-weight: 600; }
+.espera-estado.aguardando::before { content: ''; display: inline-block; width: 0.7em; height: 0.7em; margin-right: 8px; border-radius: 50%; background: #c99a3a; animation: pulsar-espera 1.2s ease-in-out infinite; }
+.espera-estado.pronta { border-left-color: #2f7d4f; background: #e6f1e3; }
+.espera-estado.erro { border-left-color: #a3242f; background: #f6dfd8; color: #6b1a22; }
+@keyframes pulsar-espera { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .espera-estado.aguardando::before { animation: none; } }
+.botao.inativo { filter: grayscale(0.7); opacity: 0.55; box-shadow: none; }
+.online-espera h3 .botao { margin-left: 12px; vertical-align: middle; }
 .online .campos-duplos { margin: 8px 0; }
 .codigo-sala { font: 900 26px var(--fonte-titulo); letter-spacing: 0.18em; color: #6b1a22; margin-left: 8px; }
 .cadeiras { margin: 8px 0 14px; padding-left: 26px; }

@@ -242,6 +242,9 @@ describe('ações da mesa', () => {
       await esperarCena(pagina, 'return !cena.partida.pedido || !!document.querySelector(".grito-truco")');
       /* desfecho do pedido: o oponente aceitou (a mão segue), correu (resultado e próxima mão) ou pediu mais (o humano aceita) */
       await semPedidoNaMesa(pagina);
+      /* espera a vez do humano antes de forçar o pedido: com o oponente no meio da jogada, a mão podia
+         acabar por baixo do pedido forçado e o resultado cobria os botões do truco */
+      await esperarMinhaVez(pagina);
       /* o oponente pede truco: o humano pede mais, depois aceita */
       await naCena(pagina, 'cena.partida.aumentadoPor = -1; cena.partida.valor = 1; cena.anunciarTruco(1);');
       await pagina.waitForSelector('.grito-truco');
@@ -348,7 +351,10 @@ describe('ações da mesa', () => {
         if (durante) await durante();
         await Promise.all([cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [], timestamp: inicio + duracao / 1000 }), trabalho]);
       };
-      await tocar(800, { durante: async () => assert.ok(await pagina.$('.dica-flutuante'), 'dica aparece ao segurar') });
+      /* O temporizador de "segurar" (450 ms) só começa quando o Phaser processa o toque, num quadro do
+         jogo. Com a máquina ocupada (CI), isso atrasa: o dedo continua na tela até a dica aparecer, em
+         vez de conferir num instante fixo. O carimbo do fim do toque continua sendo início + 800 ms. */
+      await tocar(800, { durante: async () => { await pagina.waitForSelector('.dica-flutuante', { timeout: 10000 }); } });
       await pagina.waitForTimeout(300);
       assert.equal(await naCena(pagina, 'return cena.partida.valor > 1 || !!cena.partida.pedido'), false, 'segurar não truca');
       await pagina.waitForTimeout(2400); /* a dica some */

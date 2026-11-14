@@ -5,13 +5,17 @@
  *   e-mail e senha guarda o progresso na conta. Sem ele, o jogo usa o nome deste aparelho.
  * - Sala: criar (com as opções do menu e quantas pessoas vão jogar) ou entrar com o código. Com o
  *   Firebase, a sala funciona pela internet; sem ele, entre abas e janelas deste navegador.
- * - Espera: o código em destaque e as cadeiras; o anfitrião começa a partida quando quiser (as
- *   vagas que sobrarem vão para o computador).
+ * - Espera: o código em destaque (com botão de copiar), as cadeiras e o estado da sala sempre
+ *   escrito: "aguardando o(s) outro(s) jogador(es)", quem entrou, sala não encontrada ou falha
+ *   de conexão. O anfitrião começa quando houver pelo menos mais uma pessoa (as vagas que
+ *   sobrarem vão para o computador); antes disso, o botão explica o que falta.
+ * - Erros do Firebase aparecem em português, dizendo o que fazer (online/errosFirebase.js).
  */
 import { Sala, codigoDeSala, idDeCliente } from '../../online/sala.js';
 import { transporteLocal } from '../../online/transportes.js';
 import { mesclarProgresso, progressoDaConta } from '../../online/contas.js';
 import { firebaseConfigurado, entrarComGoogle, entrarComEmail, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta, transporteFirebase } from '../../online/firebase.js';
+import { explicarErroFirebase } from '../../online/errosFirebase.js';
 import { avatarDoJogador } from '../../conteudo/avatares.js';
 import { abrirPainel, escaparHtml, mostrarAviso } from '../paineis.js';
 import { registrarEvento, definirConta, EVENTOS } from '../analise.js';
@@ -30,25 +34,48 @@ function clienteDaAba() {
 /** Conta atual nesta sessão (Firebase), ou null. */
 let contaAtual = null;
 
-/** Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. */
+/** Tempo sem resposta do anfitrião até a tela dizer que não achou a sala. */
+export const ESPERA_PELA_SALA = 8000;
+
+/** Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) */
+let avisouFalhaAoSalvar = false;
+
+/**
+ * Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. A conta
+ * só passa a valer depois de ler e gravar no Firestore; se isso falhar, o erro sobe para a tela e
+ * o jogo continua com o progresso do aparelho, sem fingir que salvou na nuvem.
+ */
 async function usarConta(app, conta, metodo) {
-  contaAtual = conta;
-  definirConta(conta.uid, metodo);
   const naConta = await carregarProgressoDaConta(conta.uid);
-  app.progresso = mesclarProgresso(app.progresso, naConta);
-  app.progresso.nomeOnline = app.progresso.nomeOnline || conta.nome;
-  app.salvar();
-  await salvarProgressoNaConta(conta.uid, progressoDaConta(app.progresso));
+  const mesclado = mesclarProgresso(app.progresso, naConta);
+  mesclado.nomeOnline = mesclado.nomeOnline || conta.nome;
+  await salvarProgressoNaConta(conta.uid, progressoDaConta(mesclado));
+  app.progresso = mesclado;
+  contaAtual = conta;
+  avisouFalhaAoSalvar = false;
+  definirConta(conta.uid, metodo);
   /* daqui em diante, cada vez que o progresso é salvo, ele vai também para a conta */
   if (!app.salvarSoLocal) {
     app.salvarSoLocal = app.salvar;
-    app.salvar = function () { this.salvarSoLocal(); if (contaAtual) salvarProgressoNaConta(contaAtual.uid, progressoDaConta(this.progresso)).catch(() => {}); };
+    app.salvar = function () {
+      this.salvarSoLocal();
+      if (!contaAtual) return;
+      salvarProgressoNaConta(contaAtual.uid, progressoDaConta(this.progresso)).then(() => { avisouFalhaAoSalvar = false; }, (e) => {
+        if (avisouFalhaAoSalvar) return;
+        avisouFalhaAoSalvar = true;
+        mostrarAviso('Conta', 'O progresso ficou só neste aparelho. ' + (explicarErroFirebase(e) || ''), null, 7000);
+      });
+    };
   }
+  app.salvar();
 }
+
+/** A sala deste aparelho vai pela internet (Firebase configurado e conta conectada)? */
+const pelaInternet = () => firebaseConfigurado() && !!contaAtual;
 
 /** Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. */
 async function transporte(codigo) {
-  if (firebaseConfigurado() && contaAtual) return transporteFirebase(codigo);
+  if (pelaInternet()) return transporteFirebase(codigo);
   return transporteLocal(codigo);
 }
 
@@ -79,12 +106,15 @@ export function abrirOnline(app) {
     '<div class="campos-duplos"><div class="campo"><label for="o-codigo">Código da sala</label><input id="o-codigo" maxlength="5" placeholder="ABCDE" autocapitalize="characters"></div>' +
     '<div class="campo"><label>&nbsp;</label><button class="botao" id="o-entrar">Entrar na sala</button></div></div>' +
     '</section>' +
-    '<section class="online-espera" id="o-espera" hidden><h3>Sala <span class="codigo-sala" id="o-codigo-sala"></span></h3>' +
-    '<p id="o-espera-nota"></p><ol class="cadeiras" id="o-cadeiras"></ol>' +
+    '<section class="online-espera" id="o-espera" hidden><h3>Sala <span class="codigo-sala" id="o-codigo-sala"></span>' +
+    '<button class="botao discreto pequeno" id="o-copiar" type="button">Copiar código</button></h3>' +
+    '<p class="espera-estado" id="o-espera-nota" role="status" aria-live="polite"></p><ol class="cadeiras" id="o-cadeiras"></ol>' +
+    '<p class="nota" id="o-espera-alcance"></p>' +
     '<div class="linha fim"><button class="botao discreto" id="o-desistir">Sair da sala</button><button class="botao vinho" id="o-comecar" hidden>Começar partida</button></div></section>' +
     '</div>';
   let sala = null;
-  const painel = abrirPainel(html, { aoFechar: () => { if (sala && !app.online) sala.sair(); } });
+  let procurando = null; /* relógio de "sala não encontrada" de quem entrou com o código */
+  const painel = abrirPainel(html, { aoFechar: () => { clearTimeout(procurando); if (sala && !app.online) sala.sair(); } });
   const $ = (id) => painel.elemento.querySelector('#' + id);
 
   const eu = () => {
@@ -93,22 +123,50 @@ export function abrirOnline(app) {
     return { cliente: clienteDaAba(), nome: nomeMesa, avatar: avatarDoJogador(app.progresso) };
   };
 
+  /** Quantas pessoas estão sentadas na sala. */
+  const pessoasNaSala = () => (sala && sala.config ? sala.config.cadeiras.filter((c) => c.tipo === 'humano').length : 0);
+  /** Estado da espera, por escrito (e com a classe que dá a cor: 'aguardando', 'pronta' ou 'erro'). */
+  const estadoDaEspera = (texto, classe) => { const nota = $('o-espera-nota'); nota.textContent = texto; nota.className = 'espera-estado ' + classe; };
+
+  /** Abre a sala com o transporte certo e mostra na tela as falhas de conexão do Firestore. */
+  async function abrirSala(codigo) {
+    const t = await transporte(codigo);
+    if (t.aoFalhar) {
+      let avisou = false;
+      t.aoFalhar((erro) => {
+        const texto = 'A sala perdeu a conexão. ' + (explicarErroFirebase(erro) || '');
+        if ($('o-espera-nota')) estadoDaEspera(texto, 'erro');
+        if (!avisou) { avisou = true; mostrarAviso('Sala', texto, null, 8000); }
+      });
+    }
+    return new Sala(t, eu());
+  }
+
   /** Mostra a espera da sala e acompanha as cadeiras até a partida começar. */
   function esperar(novaSala) {
     sala = novaSala;
     $('o-escolha').hidden = true;
     $('o-espera').hidden = false;
+    $('o-espera-alcance').textContent = pelaInternet()
+      ? 'Sala pela internet: quem entrar precisa estar conectado numa conta.'
+      : firebaseConfigurado()
+        ? 'Sem conta, esta sala só funciona entre abas e janelas deste navegador. Para jogar pela internet, saia da sala e entre numa conta.'
+        : 'Esta sala funciona entre abas e janelas deste navegador.';
     const desenhar = (config) => {
       if (!config) return;
+      clearTimeout(procurando);
       $('o-codigo-sala').textContent = config.codigo;
       const humanos = config.cadeiras.filter((c) => c.tipo === 'humano').length;
-      $('o-espera-nota').textContent = sala.souAnfitriao
-        ? 'Passe o código para quem vai jogar. Começe quando todos tiverem entrado (' + humanos + ' na sala).'
-        : 'Você está na cadeira ' + (sala.minhaCadeira + 1) + '. Esperando o anfitrião começar.';
+      if (sala.souAnfitriao && humanos < 2) estadoDaEspera('Aguardando o(s) outro(s) jogador(es). O código da sala é ' + config.codigo + ': passe para quem vai jogar.', 'aguardando');
+      else if (sala.souAnfitriao) estadoDaEspera(humanos + ' pessoas na sala. Comece quando todos tiverem entrado; as vagas que sobrarem ficam com o computador.', 'pronta');
+      else if (sala.minhaCadeira < 0) estadoDaEspera('A sala ' + config.codigo + ' não tem vaga livre ou a partida já começou.', 'erro');
+      else estadoDaEspera('Você está na cadeira ' + (sala.minhaCadeira + 1) + '. Aguardando o anfitrião começar a partida.', 'aguardando');
       $('o-cadeiras').innerHTML = config.cadeiras.map((c, j) => '<li class="' + c.tipo + '">' +
         (c.tipo === 'humano' ? escaparHtml(c.nome) + (c.cliente === sala.eu.cliente ? ' (você)' : '') + (j === 0 ? ' · anfitrião' : '') : c.tipo === 'vaga' ? 'vaga livre' : 'computador') + '</li>').join('');
       $('o-comecar').hidden = !sala.souAnfitriao;
-      $('o-comecar').disabled = humanos < 2;
+      /* sem `disabled`: o botão continua respondendo ao clique, para explicar o que falta */
+      $('o-comecar').setAttribute('aria-disabled', String(humanos < 2));
+      $('o-comecar').classList.toggle('inativo', humanos < 2);
       if (config.iniciada) {
         app.online = { sala };
         painel.fechar();
@@ -119,25 +177,51 @@ export function abrirOnline(app) {
     desenhar(sala.config);
   }
 
+  /** Abrir a sala falhou (sem conexão, Firestore fora do ar): diz o que houve. */
+  const falhaAoAbrir = (erro) => mostrarAviso('Sala', 'Não deu para abrir a sala. ' + (explicarErroFirebase(erro) || ''), null, 8000);
+
   $('o-criar').addEventListener('click', async () => {
     const codigo = codigoDeSala();
-    const s = new Sala(await transporte(codigo), eu());
+    let s;
+    try { s = await abrirSala(codigo); } catch (e) { falhaAoAbrir(e); return; }
     s.criar(codigo, { ...app.opcoes }, Number($('o-pessoas').value), Math.floor(Math.random() * 2 ** 31));
     registrarEvento(EVENTOS.salaOnline, { acao: 'criar', pessoas: Number($('o-pessoas').value), conta: contaAtual ? 1 : 0 });
     esperar(s);
+    mostrarAviso('Sala ' + codigo + ' criada', 'Aguardando o(s) outro(s) jogador(es). O código da sala é ' + codigo + '.', null, 8000);
   });
   $('o-entrar').addEventListener('click', async () => {
     const codigo = $('o-codigo').value.trim().toUpperCase();
     if (!/^[A-Z0-9]{5}$/.test(codigo)) { mostrarAviso('Código da sala', 'São 5 letras e números, como ABCDE.'); return; }
-    const s = new Sala(await transporte(codigo), eu());
+    let s;
+    try { s = await abrirSala(codigo); } catch (e) { falhaAoAbrir(e); return; }
     esperar(s);
-    $('o-espera-nota').textContent = 'Procurando a sala ' + codigo + '…';
+    estadoDaEspera('Procurando a sala ' + codigo + '…', 'aguardando');
     $('o-codigo-sala').textContent = codigo;
     s.entrar();
+    /* o anfitrião responde em instantes; sem resposta, o código está errado ou a sala fechou */
+    clearTimeout(procurando);
+    procurando = setTimeout(() => {
+      if (sala !== s || s.config) return;
+      estadoDaEspera('Não achei a sala ' + codigo + '. Confira o código e se quem criou a sala continua com ela aberta' +
+        (pelaInternet() ? '.' : firebaseConfigurado() ? '. Sem conta, só dá para entrar em salas abertas neste navegador.' : ' neste navegador.'), 'erro');
+    }, ESPERA_PELA_SALA);
     registrarEvento(EVENTOS.salaOnline, { acao: 'entrar', conta: contaAtual ? 1 : 0 });
   });
-  $('o-comecar').addEventListener('click', () => { if (!sala) return; registrarEvento(EVENTOS.salaOnline, { acao: 'comecar' }); sala.comecar(); });
-  $('o-desistir').addEventListener('click', () => { if (sala) sala.sair(); sala = null; $('o-escolha').hidden = false; $('o-espera').hidden = true; });
+  $('o-comecar').addEventListener('click', () => {
+    if (!sala) return;
+    if (pessoasNaSala() < 2) {
+      mostrarAviso('Aguardando jogadores', 'Ainda não entrou mais ninguém. O código da sala é ' + sala.config.codigo + ': a partida começa quando outra pessoa entrar.', null, 7000);
+      return;
+    }
+    registrarEvento(EVENTOS.salaOnline, { acao: 'comecar' });
+    sala.comecar();
+  });
+  $('o-copiar').addEventListener('click', async () => {
+    const codigo = $('o-codigo-sala').textContent.trim();
+    try { await navigator.clipboard.writeText(codigo); mostrarAviso('Código copiado', 'Sala ' + codigo + '.', null, 2500); }
+    catch (e) { mostrarAviso('Código da sala', codigo + ' (não deu para copiar sozinho; anote ou selecione o código).', null, 6000); }
+  });
+  $('o-desistir').addEventListener('click', () => { clearTimeout(procurando); if (sala) sala.sair(); sala = null; $('o-escolha').hidden = false; $('o-espera').hidden = true; });
 
   if (nuvem) {
     const mostrarConta = () => {
@@ -146,7 +230,11 @@ export function abrirOnline(app) {
       if (contaAtual && !$('o-nome').value) $('o-nome').value = contaAtual.nome;
     };
     const tentar = (acao, metodo) => async () => {
-      try { await usarConta(app, await acao(), metodo); mostrarConta(); } catch (e) { mostrarAviso('Conta', e.message || String(e)); }
+      try { await usarConta(app, await acao(), metodo); mostrarConta(); } catch (e) {
+        /* quem fechou a janela do Google desistiu: sem aviso */
+        const texto = explicarErroFirebase(e);
+        if (texto) mostrarAviso('Conta', texto, null, 8000);
+      }
     };
     $('o-google').addEventListener('click', tentar(() => entrarComGoogle(), 'google'));
     $('o-email-entrar').addEventListener('click', tentar(() => entrarComEmail($('o-email').value, $('o-senha').value), 'email'));
