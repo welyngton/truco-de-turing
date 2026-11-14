@@ -1,7 +1,9 @@
 /**
  * @file Sala online (src/online/sala.js) com a central em memória: entrada, cadeiras, ordem das
  * ações e mãos inteiras jogadas em vários aparelhos ao mesmo tempo, sem divergência de estado,
- * inclusive com mensagens fora de ordem, truco, alguém que cai e o anfitrião que sai.
+ * inclusive com mensagens fora de ordem, truco, alguém que cai e o anfitrião que sai. Cada
+ * aparelho tem uma conta (`uid-<nome>`), como pela internet, e uma conta não age em nome de outra
+ * (issue #62).
  *
  * Rodar: node --test testes/unidade/online.test.js
  */
@@ -41,7 +43,8 @@ function relogioFalso() {
  */
 function aparelho(central, relogio, nome, sortear) {
   const a = { nome, sala: null, mao: null, partida: null, aplicadas: [], esperando: false };
-  a.sala = new Sala(central.conectar(), { cliente: nome, nome }, relogio);
+  const uid = 'uid-' + nome;
+  a.sala = new Sala(central.conectar(uid), { cliente: nome, nome, uid }, relogio);
   a.sala.on('acao', (acao) => {
     a.aplicadas.push(acao.seq);
     if (acao.tipo === 'jogada') aplicarJogada(a.mao, acao.jogada);
@@ -193,6 +196,72 @@ describe('sala online', () => {
     jogarAteOFim({ ...s, todos: [A, B2] });
     assert.equal(A.mao.fase, 'fim');
     assert.equal(foto(A), foto(B2));
+  });
+});
+
+describe('sala online: uma conta não age em nome de outra (#62)', () => {
+  /** Outra conta que conhece o código da sala e o código de cliente de B (lê as mensagens). */
+  const intrusa = (s) => s.central.conectar('uid-intrusa');
+  const jogadaDe = (cadeira) => ({ tipo: 'jogada', cadeira, jogada: { tipo: 'passar', jogador: cadeira } });
+
+  it('a cadeira guarda o uid de quem sentou', () => {
+    const { A } = montarSala();
+    assert.deepEqual(A.sala.config.cadeiras.map((c) => c.uid), ['uid-A', 'uid-B']);
+  });
+
+  it('pedido com o código de cliente de B, vindo de outra conta, é ignorado', () => {
+    const s = montarSala();
+    const antes = s.A.sala.seq;
+    intrusa(s).enviar({ tipo: 'pedido', de: 'B', acao: jogadaDe(1) });
+    assert.equal(s.A.sala.seq, antes);
+  });
+
+  it('pedido de uma conta que não está sentada é ignorado, mesmo com um código de cliente novo', () => {
+    const s = montarSala();
+    const antes = s.A.sala.seq;
+    intrusa(s).enviar({ tipo: 'pedido', de: 'cX', acao: jogadaDe(1) });
+    assert.equal(s.A.sala.seq, antes);
+  });
+
+  it('"ola" com o código de cliente de B, vindo de outra conta, não toma a cadeira dele', () => {
+    const s = montarSala();
+    intrusa(s).enviar({ tipo: 'ola', de: 'B', nome: 'Falsa' });
+    assert.equal(s.A.sala.config.cadeiras[1].nome, 'B');
+    assert.equal(s.A.sala.config.cadeiras[1].uid, 'uid-B');
+  });
+
+  it('"tchau" falso não tira B da mesa', () => {
+    const s = montarSala();
+    intrusa(s).enviar({ tipo: 'tchau', de: 'B' });
+    s.relogio.andar(BATIMENTO);
+    assert.equal(s.A.sala.config.cadeiras[1].tipo, 'humano');
+    assert.equal(s.A.mao.jogadores[1].tipo, 'humano');
+  });
+
+  it('ação numerada que não vem do anfitrião é ignorada pelos convidados', () => {
+    const s = montarSala();
+    const B = s.outros[0];
+    const antes = B.sala.entregue;
+    intrusa(s).enviar({ tipo: 'acao', de: 'cX', seq: antes + 1, acao: jogadaDe(1) });
+    intrusa(s).enviar({ tipo: 'acao', de: 'A', seq: antes + 1, acao: jogadaDe(1) });
+    assert.equal(B.sala.entregue, antes);
+  });
+
+  it('"sala" de quem não está sentado não troca o anfitrião dos convidados', () => {
+    const s = montarSala();
+    const B = s.outros[0];
+    intrusa(s).enviar({ tipo: 'sala', de: 'cX', config: { ...B.sala.config, iniciada: false }, seq: 0 });
+    assert.equal(B.sala.anfitriao, 'A');
+    assert.equal(B.sala.config.iniciada, true);
+  });
+
+  it('a mão inteira continua igual nas duas telas mesmo com a intrusa mandando mensagens', () => {
+    const s = montarSala();
+    const outra = intrusa(s);
+    jogarAteOFim(s, { entre: (passo) => outra.enviar({ tipo: 'pedido', de: 'B', acao: jogadaDe(1), passo }) });
+    const [A, B] = s.todos;
+    assert.equal(A.mao.fase, 'fim');
+    assert.equal(foto(A), foto(B));
   });
 });
 

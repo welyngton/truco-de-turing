@@ -221,6 +221,9 @@ Botão **Jogar online** no menu:
   recarrega a aba volta à mesma cadeira.
 - **Onde roda**: pela internet, com o projeto Firebase do grupo (`src/online/configuracao.js`,
   regras em `firestore.rules`); sem login, a sala funciona entre abas e janelas do mesmo navegador.
+- **Contas na sala**: cada mensagem leva o uid da conta (as regras recusam outro), e cada cadeira
+  fica com a conta de quem sentou, então uma conta não joga no lugar de outra. As mensagens vencem
+  em 6 horas, e o jogo apaga as vencidas quando alguém abre uma sala (detalhes em `docs/FIREBASE.md`).
 
 Limite conhecido: cada aparelho tem o estado completo da mão (é assim que a sincronia funciona sem
 servidor próprio), então quem abrir o console do navegador consegue ver as cartas dos outros.

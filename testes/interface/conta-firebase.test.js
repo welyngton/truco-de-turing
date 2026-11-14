@@ -25,7 +25,8 @@ const SDK = {
     const f = () => globalThis.__FIREBASE_FALSO__; const erro = ${erro};
     const usuario = { uid: 'uid-teste', displayName: 'Ada', email: 'ada@exemplo.com' };
     const entrar = async () => { if (f().login !== 'ok') throw erro(f().login); f().sessao = true; return { user: usuario }; };
-    export const getAuth = () => ({});
+    const autenticacao = { get currentUser() { return f().sessao ? usuario : null; } };
+    export const getAuth = () => autenticacao;
     export class GoogleAuthProvider {}
     export const signInWithPopup = entrar, signInWithEmailAndPassword = entrar, createUserWithEmailAndPassword = entrar;
     export const signOut = async () => { f().sessao = false; };
@@ -39,9 +40,15 @@ const SDK = {
     export const getDoc = async (c) => { banco(); const d = f().docs[c]; return { exists: () => !!d, data: () => d }; };
     export const setDoc = async (c, dados) => { banco(); f().docs[c] = dados; };
     export const collection = (_b, ...partes) => partes.join('/');
-    export const query = (c) => c, orderBy = () => null, serverTimestamp = () => 0;
+    export const collectionGroup = (_b, nome) => 'grupo:' + nome;
+    export const query = (c) => c, orderBy = () => null, where = () => null, limit = () => null, serverTimestamp = () => 0;
+    export const Timestamp = { fromMillis: (ms) => ({ ms }) };
     export const onSnapshot = () => () => {};
-    export const addDoc = async () => { banco(); };`,
+    /* mensagens enviadas às salas ficam em \`enviadas\` */
+    export const addDoc = async (c, dados) => { banco(); (f().enviadas = f().enviadas || []).push({ c, dados }); };
+    /* a limpeza acha as mensagens de \`vencidas\` e as apagadas vão para \`apagadas\` */
+    export const getDocs = async () => { banco(); f().buscas = (f().buscas || 0) + 1; return { docs: (f().vencidas || []).map((ref) => ({ ref })) }; };
+    export const writeBatch = () => { const lote = []; return { delete: (ref) => lote.push(ref), commit: async () => { banco(); f().apagadas = (f().apagadas || []).concat(lote); } }; };`,
 };
 
 /**
@@ -248,6 +255,36 @@ describe('conta retomada ao recarregar a página (#60)', () => {
       assert.match(await aviso(pagina), /Não deu para retomar a conta de Ada.*Sem conexão/);
       assert.equal(await marca(pagina), 'google');
       assert.equal(await pagina.locator('#m-conta').isHidden(), true);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+});
+
+describe('sala pela internet com conta (#62)', () => {
+  it('cada mensagem leva o uid da conta e a validade; a primeira sala da visita limpa as mensagens vencidas', async () => {
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', vencidas: ['salas/VELHA/mensagens/m1', 'salas/VELHA/mensagens/m2'] });
+    const { pagina } = jogo;
+    try {
+      await entrar(pagina);
+      await pagina.click('#o-criar');
+      await pagina.waitForFunction(() => (globalThis.__FIREBASE_FALSO__.enviadas || []).length > 0);
+      const { enviadas, apagadas, buscas } = await pagina.evaluate(() => globalThis.__FIREBASE_FALSO__);
+      const agora = Date.now(), seisHoras = 6 * 3600 * 1000;
+      for (const { c, dados } of enviadas) {
+        assert.match(c, /^salas\/[A-Z2-9]{5}\/mensagens$/);
+        assert.equal(dados.uid, 'uid-teste', 'a mensagem leva o uid da conta');
+        assert.ok(Math.abs(dados.expira.ms - agora - seisHoras) < 60000, 'vence em 6 horas');
+      }
+      const sala = enviadas.find((m) => m.dados.tipo === 'sala');
+      assert.equal(sala.dados.config.cadeiras[0].uid, 'uid-teste', 'a cadeira do anfitrião guarda o uid');
+      await pagina.waitForFunction(() => (globalThis.__FIREBASE_FALSO__.apagadas || []).length === 2);
+      assert.equal(buscas, 1);
+      assert.deepEqual(apagadas, ['salas/VELHA/mensagens/m1', 'salas/VELHA/mensagens/m2']);
+      /* outra sala na mesma visita não limpa de novo */
+      await pagina.click('#o-desistir');
+      await pagina.click('#o-criar');
+      await pagina.waitForTimeout(500);
+      assert.equal(await pagina.evaluate(() => globalThis.__FIREBASE_FALSO__.buscas), 1);
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });
