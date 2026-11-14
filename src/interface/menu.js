@@ -23,6 +23,7 @@ import { abrirSobre } from './telas/sobre.js';
 import { abrirMods } from './telas/mods.js';
 import { abrirAvatares, retratoDoAvatar } from './telas/avatares.js';
 import { abrirOnline } from './telas/online.js';
+import { contaAtual, aoMudarDeConta } from './conta.js';
 import { avatarDoJogador } from '../conteudo/avatares.js';
 
 /** Opções da lista de oponentes do computador (todos os oponentes da mesa têm o mesmo perfil). */
@@ -85,6 +86,7 @@ function htmlDoMenu(opcoes) {
     '<div class="menu-acoes">' +
     '<div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button>' +
     '<button class="botao jogar-online" id="m-online">Jogar online</button></div>' +
+    '<p class="menu-conta" id="m-conta" role="status" hidden></p>' +
     '<div class="menu-mais">' +
     '<button class="botao" id="m-regras">Como jogar</button>' +
     '<button class="botao" id="m-grimorio">Glossário</button>' +
@@ -185,5 +187,14 @@ export function abrirMenu(app) {
   mostrarAvatar();
   campo('m-avatar').addEventListener('click', () => { lerEscolhas(); abrirAvatares(app, mostrarAvatar); });
   campo('m-sobre').addEventListener('click', () => { lerEscolhas(); abrirSobre(); });
+  /* quem está conectado (a conta pode voltar alguns instantes depois de abrir o jogo, ver conta.js);
+     ao entrar, o avatar pode passar a ser o da conta */
+  const mostrarConta = () => {
+    const conta = contaAtual(), linha = campo('m-conta');
+    linha.hidden = !conta;
+    linha.innerHTML = conta ? 'Conectado como <b>' + escaparHtml(conta.nome) + '</b>. O progresso vai para a conta.' : '';
+  };
+  mostrarConta();
+  const pararDeOuvir = aoMudarDeConta(() => { if (!elemento.isConnected) { pararDeOuvir(); return; } mostrarConta(); mostrarAvatar(); });
   return painel;
 }

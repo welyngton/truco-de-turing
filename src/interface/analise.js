@@ -105,16 +105,18 @@ export function atualizarJogador(dados) {
 
 /**
  * Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e
- * não identifica a pessoa fora do jogo; nome e e-mail não são enviados.
+ * não identifica a pessoa fora do jogo; nome e e-mail não são enviados. A conta retomada ao
+ * recarregar a página (`retomada`) volta a valer sem contar um evento `login` novo.
  * @param {string|null} uid
  * @param {string} [metodo] 'google', 'email' ou 'email_novo'
+ * @param {{retomada?: boolean}} [opcoes]
  */
-export function definirConta(uid, metodo) {
+export function definirConta(uid, metodo, { retomada = false } = {}) {
   const antes = estado.conta;
   estado.conta = uid || null;
   estado.perfil.tipo_conta = uid ? (metodo && metodo.startsWith('email') ? 'email' : metodo || 'conta') : 'local';
   if (!medindo()) return;
-  if (uid) { enviarJogador(estado.janela); registrarEvento(EVENTOS.login, { method: metodo || 'conta' }); }
+  if (uid) { enviarJogador(estado.janela); if (!retomada) registrarEvento(EVENTOS.login, { method: metodo || 'conta' }); }
   else if (antes) { registrarEvento(EVENTOS.logout); enviarJogador(estado.janela); }
 }
 

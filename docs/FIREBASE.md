@@ -77,6 +77,20 @@ Use o jogo publicado (`https://welyngton.github.io/truco-de-turing/`) depois do 
    lá também, assim como as conquistas ganhas no primeiro aparelho.
 4. No console, em **Firestore Database > Dados**, deve existir `contas/<uid>`.
 
+**A conta continua conectada ao recarregar (#60)**
+
+1. Entre numa conta e volte ao menu. Abaixo de **Jogar** aparece "Conectado como …".
+2. Recarregue a página (F5). Em um ou dois segundos a mesma linha volta, sem clicar em nada, e
+   **Jogar online** abre já conectado.
+3. Leia outro verbete do Glossário e confira, em outro aparelho com a mesma conta, que ele aparece
+   como "lido".
+4. Clique em **Sair da conta** e recarregue: o menu não mostra conta nenhuma.
+
+Para isso, o login grava a marca `truco-de-turing:conta` no `localStorage` e sair da conta a apaga.
+Só com a marca o jogo baixa o SDK do Firebase ao abrir (`src/interface/conta.js`). Se a sessão do
+Firebase tiver acabado, a marca é apagada em silêncio. Se o Firestore falhar na retomada, aparece o
+aviso "Não deu para retomar a conta…" e o jogo tenta de novo na próxima visita.
+
 **Partida entre dois aparelhos pelo código da sala**
 
 1. Entre numa conta nos dois aparelhos (pode ser a mesma ou outra).

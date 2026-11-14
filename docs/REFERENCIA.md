@@ -629,7 +629,7 @@ Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", 
 | `idDoJogador(janela = globalThis)` | função (exportada) | Código do jogador enviado ao Google: `c-<uid>` com conta, `a-<código do aparelho>` sem. |
 | `enviarJogador(janela)` | função | Envia ao gtag o `user_id` e as propriedades do jogador. |
 | `atualizarJogador(dados)` | função (exportada) | Atualiza as propriedades do jogador (experiência, conquistas, avatar…). Guarda mesmo com a medição desligada, para valer assim que ela ligar. |
-| `definirConta(uid, metodo)` | função (exportada) | Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e não identifica a pessoa fora do jogo; nome e e-mail não são enviados. |
+| `definirConta(uid, metodo, { retomada = false } = {})` | função (exportada) | Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e não identifica a pessoa fora do jogo; nome e e-mail não são enviados. A conta retomada ao recarregar a página (`retomada`) volta a valer sem contar um evento `login` novo. |
 | `podeMedir(janela = globalThis)` | função (exportada) | O jogo está no site publicado, num navegador comum (não automatizado)? |
 | `consentimento(janela = globalThis)` | função (exportada) | Lê a escolha guardada: 'sim', 'nao' ou null. |
 | `medindo()` | função (exportada) | A medição está ligada agora (site publicado, consentimento dado e script carregado)? |
@@ -641,6 +641,21 @@ Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", 
 | `iniciarAnalise(janela = globalThis)` | função (exportada) | Liga a medição se a pessoa já aceitou; na primeira visita, pergunta. Fora do site publicado, não faz nada. |
 | `registrarEvento(nome, dados = {})` | função (exportada) | Envia um evento do jogo ao Google Analytics (se a medição estiver ligada). |
 | `reiniciarAnalise()` | função (exportada) | Volta ao estado inicial (para os testes). |
+
+## `src/interface/conta.js`
+
+Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao recarregar a página (issue #60). O Firebase guarda a sessão no navegador, mas a conta só passa a valer para o jogo depois de ler e gravar o progresso no Firestore (`usarConta`). Para retomar a conta sem baixar o SDK para quem nunca entrou, o login grava a marca `MARCA_DE_CONTA` no `localStorage` (com o método de login) e sair da conta apaga a marca. Ao abrir o jogo, `retomarConta` só carrega o Firebase se a marca existir; aí espera a sessão guardada e junta o progresso da conta com o do aparelho, como no login. O menu e a tela "Jogar online" acompanham a conta por `aoMudarDeConta`.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `MARCA_DE_CONTA` | constante (exportada) | Chave no `localStorage` que diz que alguém entrou numa conta neste navegador (valor: o método de login). |
+| `atual` | constante | Conta que vale agora (`{ uid, nome, email }`), ou null. |
+| `avisouFalhaAoSalvar` | constante | Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) |
+| `contaAtual()` | função (exportada) | Conta conectada agora (`{ uid, nome, email }`), ou null. |
+| `aoMudarDeConta(cb)` | função (exportada) | Avisa `cb(conta \| null)` quando a conta muda. Devolve a função que para de ouvir. |
+| `usarConta(app, conta, metodo, { retomada = false } = {})` | função (exportada) | Passa a usar a conta: junta o progresso do aparelho com o da conta e passa a salvar nela. A conta só vale depois de ler e gravar no Firestore; se isso falhar, o erro sobe para quem chamou e o jogo continua com o progresso do aparelho, sem fingir que salvou na nuvem. |
+| `sairDaContaAtual()` | função (exportada) | Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. |
+| `retomarConta(app)` | função (exportada) | Ao abrir o jogo, retoma a conta de quem já entrou neste navegador. Sem a marca do login (ou sem o Firebase configurado), não faz nada e não baixa o SDK. Com a marca, espera a sessão que o Firebase guardou: - sessão encerrada (saiu em outro lugar, expirou): apaga a marca e segue sem conta; - sessão válida: junta o progresso como no login e volta a salvar na conta; - falha ao ler ou gravar a conta: avisa, segue com o progresso do aparelho e mantém a marca, para tentar de novo na próxima visita. |
 
 ## `src/interface/menu.js`
 
@@ -779,15 +794,12 @@ Tela "Mods": como criar baralhos, terrenos e ações para o motor do NeuroDeck, 
 
 ## `src/interface/telas/online.js`
 
-Tela "Jogar online": conta e sala. - Conta: com o projeto Firebase configurado (src/online/configuracao.js), entrar com Google ou e-mail e senha guarda o progresso na conta. Sem ele, o jogo usa o nome deste aparelho. - Sala: criar (com as opções do menu e quantas pessoas vão jogar) ou entrar com o código. Com o Firebase, a sala funciona pela internet; sem ele, entre abas e janelas deste navegador. - Espera: o código em destaque (com botão de copiar), as cadeiras e o estado da sala sempre escrito: "aguardando o(s) outro(s) jogador(es)", quem entrou, sala não encontrada ou falha de conexão. O anfitrião começa quando houver pelo menos mais uma pessoa (as vagas que sobrarem vão para o computador); antes disso, o botão explica o que falta. - Erros do Firebase aparecem em português, dizendo o que fazer (online/errosFirebase.js).
+Tela "Jogar online": conta e sala. - Conta: com o projeto Firebase configurado (src/online/configuracao.js), entrar com Google ou e-mail e senha guarda o progresso na conta (interface/conta.js, que também retoma a conta ao recarregar a página). Sem ele, o jogo usa o nome deste aparelho. - Sala: criar (com as opções do menu e quantas pessoas vão jogar) ou entrar com o código. Com o Firebase, a sala funciona pela internet; sem ele, entre abas e janelas deste navegador. - Espera: o código em destaque (com botão de copiar), as cadeiras e o estado da sala sempre escrito: "aguardando o(s) outro(s) jogador(es)", quem entrou, sala não encontrada ou falha de conexão. O anfitrião começa quando houver pelo menos mais uma pessoa (as vagas que sobrarem vão para o computador); antes disso, o botão explica o que falta. - Erros do Firebase aparecem em português, dizendo o que fazer (online/errosFirebase.js).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `clienteDaAba()` | função | Identificador deste aparelho, o mesmo depois de recarregar a aba (para voltar à cadeira). |
-| `contaAtual` | constante | Conta atual nesta sessão (Firebase), ou null. |
 | `ESPERA_PELA_SALA` | constante (exportada) | Tempo sem resposta do anfitrião até a tela dizer que não achou a sala. |
-| `avisouFalhaAoSalvar` | constante | Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) |
-| `usarConta(app, conta, metodo)` | função | Entrou numa conta: junta o progresso do aparelho com o da conta e passa a salvar nela. A conta só passa a valer depois de ler e gravar no Firestore; se isso falhar, o erro sobe para a tela e o jogo continua com o progresso do aparelho, sem fingir que salvou na nuvem. |
 | `pelaInternet` | constante | A sala deste aparelho vai pela internet (Firebase configurado e conta conectada)? |
 | `transporte(codigo)` | função | Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. |
 | `abrirOnline(app)` | função (exportada) | Abre a tela "Jogar online". |
@@ -1105,7 +1117,7 @@ Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte d
 | `entrarComGoogle()` | função (exportada) | Entra com a conta Google (janela do Google). Devolve `{ uid, nome, email }`. |
 | `entrarComEmail(email, senha, criar = false)` | função (exportada) | Entra com e-mail e senha; com `criar`, cria a conta antes. |
 | `sairDaConta()` | função (exportada) | Sai da conta. |
-| `aoMudarConta(cb)` | função (exportada) | Avisa `cb(conta \| null)` quando alguém entra ou sai. Devolve a função que para de ouvir. |
+| `contaGuardada()` | função (exportada) | Conta da sessão que o Firebase guardou neste navegador (quem entrou e não saiu), ou null. Espera o Firebase terminar de ler a sessão: o primeiro aviso de `onAuthStateChanged`. |
 | `carregarProgressoDaConta(uid)` | função (exportada) | Progresso salvo na conta, ou null. |
 | `salvarProgressoNaConta(uid, progresso)` | função (exportada) | Salva o progresso na conta. |
 | `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. `aoFalhar(cb)` avisa quando o Firestore recusa ler ou gravar (regras, conexão), para a tela dizer ao jogador em vez de a sala ficar parada em silêncio. |

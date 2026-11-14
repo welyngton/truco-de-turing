@@ -50,10 +50,23 @@ export async function sairDaConta() {
   await auth.signOut(autenticacao);
 }
 
-/** Avisa `cb(conta | null)` quando alguém entra ou sai. Devolve a função que para de ouvir. */
-export async function aoMudarConta(cb) {
+/**
+ * Conta da sessão que o Firebase guardou neste navegador (quem entrou e não saiu), ou null. Espera
+ * o Firebase terminar de ler a sessão: o primeiro aviso de `onAuthStateChanged`.
+ */
+export async function contaGuardada() {
   const { auth, autenticacao } = await carregar();
-  return auth.onAuthStateChanged(autenticacao, (user) => cb(user ? conta(user) : null));
+  return new Promise((resolver) => {
+    let parar = null, lida = false;
+    parar = auth.onAuthStateChanged(autenticacao, (user) => {
+      if (lida) return;
+      lida = true;
+      if (parar) parar();
+      resolver(user ? conta(user) : null);
+    });
+    /* o aviso pode chegar antes de onAuthStateChanged devolver a função que para de ouvir */
+    if (lida) parar();
+  });
 }
 
 const conta = (user) => ({ uid: user.uid, nome: user.displayName || (user.email || '').split('@')[0] || 'Jogador', email: user.email || '' });
