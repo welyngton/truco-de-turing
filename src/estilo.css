@@ -514,6 +514,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .espera-estado.erro { border-left-color: #a3242f; background: #f6dfd8; color: #6b1a22; }
 @keyframes pulsar-espera { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .espera-estado.aguardando::before { animation: none; } }
+.jogadores-lista { max-height: 52vh; overflow: auto; margin: 8px 0 12px; }
+.jogadores-lista td, .jogadores-lista th { white-space: nowrap; }
 .botao.inativo { filter: grayscale(0.7); opacity: 0.55; box-shadow: none; }
 .online-espera h3 .botao { margin-left: 12px; vertical-align: middle; }
 .online .campos-duplos { margin: 8px 0; }

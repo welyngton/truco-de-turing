@@ -12,7 +12,7 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 | `faixaDeExperiencia(maos)` | função (exportada) | Faixa de experiência do jogador pelo número de mãos jogadas (propriedade `experiencia`). |
 | `normalizarOpcoes(opcoes)` | função (exportada) | Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. |
 | `iniciar()` | método | Carrega opções e preferência de som. |
-| `atualizarJogadorNasEstatisticas()` | método | Passa às estatísticas de uso a experiência, as conquistas, o avatar e os verbetes lidos. |
+| `atualizarJogadorNasEstatisticas()` | método | Passa às estatísticas de uso a experiência, as conquistas, o avatar, os verbetes lidos, os acessos e as partidas. |
 | `salvar()` | método | Grava o progresso. |
 | `salvarOpcoes()` | método | Grava as escolhas do menu para a próxima visita. |
 | `alternarSom()` | método | Liga ou desliga o som e lembra a escolha. |
@@ -622,14 +622,17 @@ Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", 
 | `HOSTS_MEDIDOS` | constante (exportada) | Endereços onde o jogo publicado mede (o do fluxo de dados no Google Analytics). |
 | `CHAVE_DO_CONSENTIMENTO` | constante (exportada) | Chave do consentimento no `localStorage`: 'sim', 'nao' ou ausente (ainda não perguntado). |
 | `EVENTOS` | constante (exportada) | Nomes dos eventos enviados. `jogoIniciado`, `jogoFinalizado`, `vitoria` e `derrota` têm os nomes cadastrados em "Criar eventos" no Google Analytics (jogo_iniciado, jogo_finalizado, vitoria_do_jogador, derrota_jogador). O jogo envia esses nomes direto, então lá não é preciso regra nenhuma: uma regra que recria um evento com o próprio nome o conta em dobro. |
+| `EVENTOS_DE_PARTIDA` | constante | Eventos de partida que levam `conta` (1 com conta conectada, 0 sem), para separar os dois grupos. |
 | `PROPRIEDADES_DO_JOGADOR` | constante (exportada) | Propriedades do usuário (no Google Analytics: dimensões personalizadas com escopo "Usuário"). `id_jogador` separa os jogadores; as outras ajudam a comparar grupos. |
 | `CHAVE_DO_JOGADOR` | constante (exportada) | Chave do código anônimo do aparelho no `localStorage`. |
 | `estado` | constante | Estado do módulo: a janela onde o Analytics foi ligado (ou null). |
+| `ouvintesDeEventos` | constante | Quem acompanha os eventos do jogo dentro do próprio jogo (as estatísticas da conta, issue #66). |
+| `aoRegistrarEvento(cb)` | função (exportada) | Avisa `cb(nome, dados)` a cada evento do jogo, com a medição ligada ou não: os contadores do jogador (online/estatisticas.js) usam os mesmos eventos que vão para o Google Analytics. |
 | `idDoAparelho(janela = globalThis)` | função (exportada) | Código anônimo deste aparelho (criado na primeira vez que a medição liga). |
 | `idDoJogador(janela = globalThis)` | função (exportada) | Código do jogador enviado ao Google: `c-<uid>` com conta, `a-<código do aparelho>` sem. |
 | `enviarJogador(janela)` | função | Envia ao gtag o `user_id` e as propriedades do jogador. |
 | `atualizarJogador(dados)` | função (exportada) | Atualiza as propriedades do jogador (experiência, conquistas, avatar…). Guarda mesmo com a medição desligada, para valer assim que ela ligar. |
-| `definirConta(uid, metodo, { retomada = false } = {})` | função (exportada) | Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e não identifica a pessoa fora do jogo; nome e e-mail não são enviados. A conta retomada ao recarregar a página (`retomada`) volta a valer sem contar um evento `login` novo. |
+| `definirConta(uid, metodo, { retomada = false } = {})` | função (exportada) | Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e não identifica a pessoa fora do jogo; nome e e-mail não são enviados. A conta retomada ao recarregar a página (`retomada`) volta a valer com o evento `conta_retomada`, sem contar um `login` novo. |
 | `podeMedir(janela = globalThis)` | função (exportada) | O jogo está no site publicado, num navegador comum (não automatizado)? |
 | `consentimento(janela = globalThis)` | função (exportada) | Lê a escolha guardada: 'sim', 'nao' ou null. |
 | `medindo()` | função (exportada) | A medição está ligada agora (site publicado, consentimento dado e script carregado)? |
@@ -639,7 +642,7 @@ Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", 
 | `TEXTO_DAS_ESTATISTICAS` | constante (exportada) | Texto da faixa de consentimento (também usado na tela "Sobre"). |
 | `mostrarFaixa(janela)` | função | Mostra a faixa de consentimento no rodapé da página. |
 | `iniciarAnalise(janela = globalThis)` | função (exportada) | Liga a medição se a pessoa já aceitou; na primeira visita, pergunta. Fora do site publicado, não faz nada. |
-| `registrarEvento(nome, dados = {})` | função (exportada) | Envia um evento do jogo ao Google Analytics (se a medição estiver ligada). |
+| `registrarEvento(nome, dados = {})` | função (exportada) | Registra um evento do jogo: avisa quem ouve dentro do jogo (`aoRegistrarEvento`) e envia ao Google Analytics se a medição estiver ligada. |
 | `reiniciarAnalise()` | função (exportada) | Volta ao estado inicial (para os testes). |
 
 ## `src/interface/conta.js`
@@ -650,9 +653,12 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 |---|---|---|
 | `MARCA_DE_CONTA` | constante (exportada) | Chave no `localStorage` que diz que alguém entrou numa conta neste navegador (valor: o método de login). |
 | `atual` | constante | Conta que vale agora (`{ uid, nome, email }`), ou null. |
+| `metodoAtual` | constante | Método de login da conta que vale agora ('google', 'email'…). |
+| `acessoContadoNaConta` | constante | O acesso desta abertura do jogo já foi contado na conta? (uma vez por abertura) |
 | `avisouFalhaAoSalvar` | constante | Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) |
 | `contaAtual()` | função (exportada) | Conta conectada agora (`{ uid, nome, email }`), ou null. |
 | `aoMudarDeConta(cb)` | função (exportada) | Avisa `cb(conta \| null)` quando a conta muda. Devolve a função que para de ouvir. |
+| `haMarcaDeConta()` | função (exportada) | Alguém entrou numa conta neste navegador e não saiu? (a conta em si só vale depois de retomada) |
 | `usarConta(app, conta, metodo, { retomada = false } = {})` | função (exportada) | Passa a usar a conta: junta o progresso do aparelho com o da conta e passa a salvar nela. A conta só vale depois de ler e gravar no Firestore; se isso falhar, o erro sobe para quem chamou e o jogo continua com o progresso do aparelho, sem fingir que salvou na nuvem. |
 | `sairDaContaAtual()` | função (exportada) | Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. |
 | `retomarConta(app)` | função (exportada) | Ao abrir o jogo, retoma a conta de quem já entrou neste navegador. Sem a marca do login (ou sem o Firebase configurado), não faz nada e não baixa o SDK. Com a marca, espera a sessão que o Firebase guardou: - sessão encerrada (saiu em outro lugar, expirou): apaga a marca e segue sem conta; - sessão válida: junta o progresso como no login e volta a salvar na conta; - falha ao ler ou gravar a conta: avisa, segue com o progresso do aparelho e mantém a marca, para tentar de novo na próxima visita. |
@@ -779,6 +785,20 @@ Tela do Glossário (antes "Biblioteca de conceitos" e "Grimório"): lista de ver
 | `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre o Glossário. |
 | `desenharLista(ativo)` | função | Desenha a lista com o verbete ativo destacado. |
 | `mostrar(id)` | função | Mostra um verbete e o marca como lido. |
+
+## `src/interface/telas/jogadores.js`
+
+Tela "Jogadores" (issue #66), só para administradores: a lista das contas com acessos, conquistas e estatísticas de jogo, lida de `contas/` no Firestore, com exportação em CSV. Quem é administrador é decidido pelas regras do Firestore (documento em `admins/<uid>`); para as outras contas a leitura é recusada e a tela nem é oferecida.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `COLUNAS` | constante (exportada) | Colunas da lista e do CSV: título e como tirar o valor da linha. |
+| `NA_TELA` | constante | Colunas mostradas na tela (o CSV leva todas). |
+| `dataHora(ms)` | função (exportada) | Data e hora locais, `2026-11-14 15:47`; vazio sem data. |
+| `linhaDoJogador(doc)` | função (exportada) | Linha da lista a partir do documento da conta (contas.js, `documentoDaConta`). Contas gravadas antes das estatísticas existirem aparecem com o que têm. |
+| `ordenarJogadores(linhas)` | função (exportada) | Jogadores em ordem: último acesso mais recente primeiro. |
+| `csvDosJogadores(linhas)` | função (exportada) | CSV da lista (separado por ponto e vírgula, como o Excel em português espera, com a marca de UTF-8). Células que começam com =, +, - ou @ ganham um apóstrofo, para a planilha não as tratar como fórmula (nomes e e-mails vêm das contas). |
+| `abrirJogadores()` | função (exportada) | Abre a tela com a lista das contas. |
 
 ## `src/interface/telas/mods.js`
 
@@ -1088,14 +1108,16 @@ Configuração do projeto Firebase do grupo (Authentication + Firestore), usada 
 
 ## `src/online/contas.js`
 
-Contas: o progresso (conquistas, avatares, verbetes lidos e contadores) passa a ficar na conta e vale em qualquer aparelho. Ao entrar, o progresso do aparelho e o da conta se juntam sem perder nada nem contar em dobro (`mesclarProgresso`); depois, cada mão salva na conta.
+Contas: o progresso (conquistas, avatares, verbetes lidos e contadores) passa a ficar na conta e vale em qualquer aparelho. Ao entrar, o progresso do aparelho e o da conta se juntam sem perder nada nem contar em dobro (`mesclarProgresso`); depois, cada mão salva na conta. O documento da conta (`documentoDaConta`) leva também as estatísticas do jogador (estatisticas.js), o perfil (nome, e-mail e método de login) e um resumo para a lista de jogadores (issue #66).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
+| `TEXTO_DA_CONTA` | constante (exportada) | O que fica guardado na conta, em palavras para quem joga (tela "Sobre" e "Jogar online"). |
 | `CONTADORES` | constante | Contadores que só crescem: na mescla vale o maior. |
 | `CONJUNTOS` | constante | Conjuntos marcados (id → valor): na mescla vale a união. |
 | `mesclarProgresso(local, conta)` | função (exportada) | Junta o progresso do aparelho com o da conta. - contadores: o maior dos dois (as mesmas mãos não contam duas vezes); - conquistas: a união, com a data mais antiga de cada uma; - verbetes, terrenos, baralhos e arquiteturas: a união; - avatar: o da conta, se houver; preferências do aparelho (som, música, opções do menu) ficam. |
 | `progressoDaConta(progresso)` | função (exportada) | Parte do progresso que vai para a conta (sem preferências do aparelho). |
+| `documentoDaConta(progresso, conta, metodo)` | função (exportada) | Documento gravado em `contas/<uid>`: o progresso da conta, o perfil de quem entrou e o resumo usado na lista de jogadores (tela Jogadores, só para administradores). |
 
 ## `src/online/errosFirebase.js`
 
@@ -1107,9 +1129,25 @@ Erros do Firebase em português, dizendo o que fazer. Os códigos que vêm de co
 | `DESISTIU` | constante | Quem fechou a janela do Google desistiu: não é erro para avisar. |
 | `explicarErroFirebase(erro)` | função (exportada) | Explica um erro do Firebase. |
 
+## `src/online/estatisticas.js`
+
+Estatísticas do jogador (issue #66): acessos, partidas, mãos, truco, salas online e o desempenho por oponente, baralho e terreno. Ficam em `progresso.estatisticas`, no aparelho, e sobem para a conta (`contas/<uid>` no Firestore) quando a pessoa está conectada. Os contadores são alimentados pelos mesmos eventos enviados ao Google Analytics (`contarEvento`, ligado em aplicacao.js por `aoRegistrarEvento`), para os dois lados contarem as mesmas coisas. Aqui a contagem vale sempre, com ou sem consentimento de medição: é o registro do próprio jogador, guardado com o progresso dele. Só lógica, sem navegador nem Firebase (testável no Node).
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `estatisticasIniciais()` | função (exportada) | Estatísticas vazias. |
+| `GRUPOS` | constante | Grupos de contadores simples (nome → número). |
+| `TABELAS` | constante | Tabelas por chave (id → `{ jogadas, vencidas }`). |
+| `estatisticasDe(progresso)` | função (exportada) | Garante `progresso.estatisticas` completo (progressos antigos não têm; versões novas ganham campos) e o devolve. |
+| `tipoDeAparelho(janela = globalThis)` | função (exportada) | Celular ou computador, pelo jeito de apontar e pelo tamanho da tela. |
+| `registrarAcesso(progresso, { agora = Date.now()` | função (exportada) | Conta uma abertura do jogo. |
+| `contarEvento(progresso, nome, dados = {})` | função (exportada) | Atualiza os contadores a partir de um evento do jogo (os nomes de `EVENTOS`, em interface/analise.js). |
+| `mesclarEstatisticas(local, conta)` | função (exportada) | Junta as estatísticas do aparelho com as da conta, como o resto do progresso (contas.js): cada contador fica com o maior dos dois, para as mesmas partidas não contarem duas vezes; o primeiro acesso é o mais antigo e o último, o mais recente (com a versão e o aparelho dele). |
+| `resumoDoJogador(progresso)` | função (exportada) | Números de cabeçalho da conta, para listar e ordenar jogadores sem abrir cada estatística. |
+
 ## `src/online/firebase.js`
 
-Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte das salas pela internet (Firestore). O SDK só é baixado do CDN quando o projeto está configurado (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado. Dados no Firestore (ver firestore.rules): - `contas/{uid}`: o progresso da conta (ver contas.js, `progressoDaConta`); - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação. Cada mensagem leva o `uid` de quem enviou (as regras conferem) e vence em `expira`; mensagens vencidas são apagadas por `limparMensagensVencidas` (issue #62).
+Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte das salas pela internet (Firestore). O SDK só é baixado do CDN quando o projeto está configurado (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado. Dados no Firestore (ver firestore.rules): - `contas/{uid}`: o progresso, as estatísticas, o perfil e o resumo da conta (contas.js, `documentoDaConta`); cada conta lê e grava a própria, e administradores leem todas; - `admins/{uid}`: quem é administrador (documento criado à mão no console); - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação. Cada mensagem leva o `uid` de quem enviou (as regras conferem) e vence em `expira`; mensagens vencidas são apagadas por `limparMensagensVencidas` (issue #62).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1123,6 +1161,8 @@ Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte d
 | `contaGuardada()` | função (exportada) | Conta da sessão que o Firebase guardou neste navegador (quem entrou e não saiu), ou null. Espera o Firebase terminar de ler a sessão: o primeiro aviso de `onAuthStateChanged`. |
 | `carregarProgressoDaConta(uid)` | função (exportada) | Progresso salvo na conta, ou null. |
 | `salvarProgressoNaConta(uid, progresso)` | função (exportada) | Salva o progresso na conta. |
+| `ehAdministrador(uid)` | função (exportada) | A conta é administradora? Vale quem tem um documento em `admins/<uid>` (criado à mão no console do Firebase); as regras deixam cada conta ler só o próprio. Qualquer falha conta como "não", para a tela Jogadores simplesmente não aparecer. |
+| `listarContas()` | função (exportada) | Todas as contas, com o `uid` de cada uma (issue #66). As regras só deixam administradores ler; para as outras contas a leitura falha com `permission-denied`. |
 | `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. Cada mensagem enviada leva o `uid` da conta conectada (as regras recusam outro) e a data em que vence (`expira`); a sala recebe o `uid` junto e o usa para saber quem é quem (sala.js). `aoFalhar(cb)` avisa quando o Firestore recusa ler ou gravar (regras, conexão), para a tela dizer ao jogador em vez de a sala ficar parada em silêncio. |
 | `limparMensagensVencidas(limite = LIMPEZA_POR_VEZ)` | função (exportada) | Apaga mensagens vencidas (`expira` no passado) de todas as salas, até `limite` por vez. As regras deixam qualquer conta achar e apagar só as vencidas. O Firestore do plano gratuito não tem a limpeza automática (TTL), então o jogo faz isso quando alguém abre uma sala pela internet. A margem de 10 minutos cobre o relógio do aparelho adiantado em relação ao do servidor. |
 

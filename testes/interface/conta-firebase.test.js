@@ -47,7 +47,15 @@ const SDK = {
     /* mensagens enviadas às salas ficam em \`enviadas\` */
     export const addDoc = async (c, dados) => { banco(); (f().enviadas = f().enviadas || []).push({ c, dados }); };
     /* a limpeza acha as mensagens de \`vencidas\` e as apagadas vão para \`apagadas\` */
-    export const getDocs = async () => { banco(); f().buscas = (f().buscas || 0) + 1; return { docs: (f().vencidas || []).map((ref) => ({ ref })) }; };
+    export const getDocs = async (c) => {
+      banco();
+      /* a lista de contas (tela Jogadores) só sai para quem está em \`admins/\`, como nas regras */
+      if (c === 'contas') {
+        if (!f().docs['admins/uid-teste']) throw erro('permission-denied');
+        return { docs: Object.keys(f().docs).filter((k) => k.startsWith('contas/')).map((k) => ({ id: k.slice(7), data: () => f().docs[k] })) };
+      }
+      f().buscas = (f().buscas || 0) + 1; return { docs: (f().vencidas || []).map((ref) => ({ ref })) };
+    };
     export const writeBatch = () => { const lote = []; return { delete: (ref) => lote.push(ref), commit: async () => { banco(); f().apagadas = (f().apagadas || []).concat(lote); } }; };`,
 };
 
@@ -285,6 +293,79 @@ describe('sala pela internet com conta (#62)', () => {
       await pagina.click('#o-criar');
       await pagina.waitForTimeout(500);
       assert.equal(await pagina.evaluate(() => globalThis.__FIREBASE_FALSO__.buscas), 1);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
+  it('rastreio (#66): a conta guarda perfil, acessos, partidas e resumo; cada abertura conta um acesso', async () => {
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok' });
+    const { pagina } = jogo;
+    const doc = () => pagina.evaluate(() => globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste']);
+    try {
+      assert.match(await pagina.locator('#o-conta-dados').textContent(), /nome, e-mail, conquistas/, 'a tela diz o que fica guardado na conta');
+      await entrar(pagina);
+      let d = await doc();
+      assert.deepEqual(d.perfil, { nome: 'Ada', email: 'ada@exemplo.com', metodo: 'google' });
+      assert.equal(d.estatisticas.acessos, 1);
+      assert.ok(d.estatisticas.primeiroAcesso > 0 && d.estatisticas.ultimoAcesso >= d.estatisticas.primeiroAcesso);
+      assert.equal(d.estatisticas.aparelho, 'computador');
+      assert.match(d.estatisticas.versao, /^\d+\.\d+\.\d+$/);
+      /* os eventos do jogo viram contadores na conta, mesmo sem medição do Analytics (testes não medem) */
+      await pagina.evaluate(async () => {
+        const { registrarEvento, EVENTOS } = await import('/src/interface/analise.js');
+        registrarEvento(EVENTOS.jogoIniciado, { oponente: 'guloso', online: 0 });
+        registrarEvento(EVENTOS.truco, { valor: 3, quem: 'humano', meu: 1 });
+        registrarEvento(EVENTOS.truco, { valor: 6, quem: 'computador', meu: 0 });
+        registrarEvento(EVENTOS.fimDaMao, { baralho: 'backprop', terreno: 'oceano', venceu: 1 });
+        registrarEvento(EVENTOS.jogoFinalizado, { oponente: 'guloso', online: 0, venceu: 1 });
+        globalThis.__TRUCO_DE_TURING__.progresso.desbloqueadas.primeira = 1;
+        globalThis.__TRUCO_DE_TURING__.salvar();
+      });
+      await pagina.waitForFunction(() => globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].resumo.conquistas === 1);
+      d = await doc();
+      assert.deepEqual(d.estatisticas.partidas, { iniciadas: 1, terminadas: 1, vencidas: 1, abandonadas: 0 });
+      assert.deepEqual(d.estatisticas.maos, { jogadas: 1, vencidas: 1 });
+      assert.deepEqual(d.estatisticas.trucos, { pedidos: 1 });
+      assert.deepEqual(d.estatisticas.porOponente, { guloso: { jogadas: 1, vencidas: 1 } });
+      assert.deepEqual(d.estatisticas.porBaralho, { backprop: { jogadas: 1, vencidas: 1 } });
+      assert.deepEqual({ ...d.resumo, ultimoAcesso: 0 }, { conquistas: 1, verbetesLidos: 0, acessos: 1, ultimoAcesso: 0, partidas: 1, vitorias: 1, maos: 1 });
+      /* nova abertura com a conta retomada: mais um acesso, sem perder os contadores */
+      await recarregar(jogo);
+      await pagina.waitForFunction(() => globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].estatisticas.acessos === 2);
+      d = await doc();
+      assert.equal(d.estatisticas.partidas.vencidas, 1);
+      /* outro aparelho já acessou mais vezes: esta abertura soma uma à conta, não some na mescla */
+      await pagina.evaluate(() => { globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].estatisticas.acessos = 40; });
+      await recarregar(jogo);
+      await pagina.waitForFunction(() => globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].estatisticas.acessos === 41);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
+  it('rastreio (#66): só o administrador vê o botão Jogadores; a lista mostra as contas e baixa o CSV', async () => {
+    const outra = { perfil: { nome: 'Bia', email: 'bia@exemplo.com', metodo: 'email' }, desbloqueadas: { primeira: 1, dez: 2 }, verbetesLidos: 4,
+      estatisticas: { acessos: 9, primeiroAcesso: 1794000000000, ultimoAcesso: 1794600000000, partidas: { iniciadas: 5, terminadas: 4, vencidas: 3, abandonadas: 1 }, maos: { jogadas: 30, vencidas: 17 } } };
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: { 'contas/uid-bia': outra, 'contas/uid-antiga': { maos: 12, vitorias: 5 } } });
+    const { pagina } = jogo;
+    try {
+      await entrar(pagina);
+      await pagina.waitForTimeout(400);
+      assert.equal(await pagina.locator('#o-jogadores').isHidden(), true, 'conta comum não vê o botão');
+      /* vira administradora (documento em admins/, criado no console) e reabre a tela */
+      await pagina.evaluate(() => { globalThis.__FIREBASE_FALSO__.docs['admins/uid-teste'] = { desde: 1 }; });
+      await pagina.click('.folha.online [data-fechar]');
+      await pagina.click('#m-online');
+      await pagina.waitForSelector('#o-jogadores:not([hidden])');
+      await pagina.click('#o-jogadores');
+      await pagina.waitForSelector('.jogadores-lista tbody tr');
+      const linhas = await pagina.locator('.jogadores-lista tbody tr').allTextContents();
+      assert.equal(linhas.length, 3);
+      assert.match(await pagina.locator('#j-estado').textContent(), /^3 contas, 1 com conquistas/);
+      assert.match(linhas[0], /^Ada/, 'último acesso mais recente primeiro');
+      assert.match(linhas[1], /^Bia.*9.*2.*4.*3.*30$/);
+      assert.match(linhas[2], /^\(sem nome\).*12$/, 'conta gravada antes das estatísticas aparece com o que tem');
+      const [baixado] = await Promise.all([pagina.waitForEvent('download'), pagina.click('#j-csv')]);
+      assert.match(baixado.suggestedFilename(), /^truco-de-turing-jogadores-\d{4}-\d{2}-\d{2}\.csv$/);
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });

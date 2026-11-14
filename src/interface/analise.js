@@ -56,19 +56,34 @@ export const EVENTOS = {
   login: 'login', // evento recomendado do GA4 (method: google, email, email_novo)
   logout: 'logout',
   salaOnline: 'sala_online', // criar, entrar ou começar uma sala
+  acesso: 'acesso', // abertura do jogo (numero: quantas vezes este jogador já abriu; conta: 0 ou 1)
+  contaRetomada: 'conta_retomada', // a conta voltou sozinha ao recarregar a página
 };
+
+/** Eventos de partida que levam `conta` (1 com conta conectada, 0 sem), para separar os dois grupos. */
+const EVENTOS_DE_PARTIDA = ['jogo_iniciado', 'jogo_finalizado', 'vitoria_do_jogador', 'derrota_jogador', 'fim_mao', 'jogo_abandonado', 'truco'];
 
 /**
  * Propriedades do usuário (no Google Analytics: dimensões personalizadas com escopo "Usuário").
  * `id_jogador` separa os jogadores; as outras ajudam a comparar grupos.
  */
-export const PROPRIEDADES_DO_JOGADOR = ['id_jogador', 'tipo_conta', 'experiencia', 'conquistas', 'avatar', 'verbetes_lidos'];
+export const PROPRIEDADES_DO_JOGADOR = ['id_jogador', 'tipo_conta', 'experiencia', 'conquistas', 'avatar', 'verbetes_lidos', 'acessos', 'partidas', 'vitorias'];
 
 /** Chave do código anônimo do aparelho no `localStorage`. */
 export const CHAVE_DO_JOGADOR = 'truco-de-turing:id-jogador';
 
 /** Estado do módulo: a janela onde o Analytics foi ligado (ou null). */
 const estado = { janela: null, carregado: false, conta: null, perfil: {} };
+
+/** Quem acompanha os eventos do jogo dentro do próprio jogo (as estatísticas da conta, issue #66). */
+const ouvintesDeEventos = new Set();
+
+/**
+ * Avisa `cb(nome, dados)` a cada evento do jogo, com a medição ligada ou não: os contadores do
+ * jogador (online/estatisticas.js) usam os mesmos eventos que vão para o Google Analytics.
+ * @returns {Function} Para de ouvir.
+ */
+export function aoRegistrarEvento(cb) { ouvintesDeEventos.add(cb); return () => ouvintesDeEventos.delete(cb); }
 
 /** Código anônimo deste aparelho (criado na primeira vez que a medição liga). */
 export function idDoAparelho(janela = globalThis) {
@@ -106,7 +121,8 @@ export function atualizarJogador(dados) {
 /**
  * Entrou numa conta (`uid` e o método) ou saiu dela (`uid` null). O uid do Firebase é aleatório e
  * não identifica a pessoa fora do jogo; nome e e-mail não são enviados. A conta retomada ao
- * recarregar a página (`retomada`) volta a valer sem contar um evento `login` novo.
+ * recarregar a página (`retomada`) volta a valer com o evento `conta_retomada`, sem contar um
+ * `login` novo.
  * @param {string|null} uid
  * @param {string} [metodo] 'google', 'email' ou 'email_novo'
  * @param {{retomada?: boolean}} [opcoes]
@@ -116,7 +132,7 @@ export function definirConta(uid, metodo, { retomada = false } = {}) {
   estado.conta = uid || null;
   estado.perfil.tipo_conta = uid ? (metodo && metodo.startsWith('email') ? 'email' : metodo || 'conta') : 'local';
   if (!medindo()) return;
-  if (uid) { enviarJogador(estado.janela); if (!retomada) registrarEvento(EVENTOS.login, { method: metodo || 'conta' }); }
+  if (uid) { enviarJogador(estado.janela); registrarEvento(retomada ? EVENTOS.contaRetomada : EVENTOS.login, { method: metodo || 'conta' }); }
   else if (antes) { registrarEvento(EVENTOS.logout); enviarJogador(estado.janela); }
 }
 
@@ -229,14 +245,17 @@ export function iniciarAnalise(janela = globalThis) {
 }
 
 /**
- * Envia um evento do jogo ao Google Analytics (se a medição estiver ligada).
+ * Registra um evento do jogo: avisa quem ouve dentro do jogo (`aoRegistrarEvento`) e envia ao
+ * Google Analytics se a medição estiver ligada.
  * @param {string} nome Nome do evento (minúsculas e _, até 40 caracteres).
  * @param {object} [dados] Parâmetros (texto curto ou número).
  */
 export function registrarEvento(nome, dados = {}) {
+  if (EVENTOS_DE_PARTIDA.includes(nome) && dados.conta === undefined) dados = { ...dados, conta: estado.conta ? 1 : 0 };
+  for (const cb of [...ouvintesDeEventos]) { try { cb(nome, dados); } catch (e) { /* idem */ } }
   if (!medindo()) return;
   try { estado.janela.gtag('event', nome, dados); } catch (e) { /* estatística nunca atrapalha o jogo */ }
 }
 
 /** Volta ao estado inicial (para os testes). */
-export function reiniciarAnalise() { estado.janela = null; estado.carregado = false; estado.conta = null; estado.perfil = {}; }
+export function reiniciarAnalise() { estado.janela = null; estado.carregado = false; estado.conta = null; estado.perfil = {}; ouvintesDeEventos.clear(); }

@@ -180,7 +180,7 @@ Eventos (`EVENTOS` em `analise.js`):
 | `jogo_abandonado` | saiu da partida antes do fim | baralho, terreno, oponente, maos, tentos, online |
 | `fim_mao` | fim de cada mão | baralho, terreno, oponente, jogadores, online, venceu, completa, valor, soma, dicas |
 | `acao_jogada` | cada jogada de quem está no aparelho | acao (inicio, ativar, tunagem, overfit, earlystop, stackoverflow, dropout, transfer, passar), baralho, terreno, camada, mao |
-| `truco` | pedido de truco | valor, quem |
+| `truco` | pedido de truco | valor, quem, meu (1 se foi de quem joga no aparelho) |
 | `menu_clique` | botões do menu inicial | botao (jogar, jogar_online, como_jogar, glossario, conquistas, avatar, mods, sobre) |
 | `menu_opcao` | mudança numa escolha do menu | campo, valor |
 | `mesa_clique` | REGRAS e MENU da mesa e as opções deles | botao |
@@ -191,13 +191,23 @@ Eventos (`EVENTOS` em `analise.js`):
 | `avatar_escolhido` | troca de avatar | avatar |
 | `audio_alterado` | som ou música | tipo, ligado |
 | `login` / `logout` | entrar ou sair da conta | method |
+| `conta_retomada` | a conta voltou sozinha ao recarregar a página | method |
+| `acesso` | cada abertura do jogo | numero (quantas vezes o jogador já abriu), conta |
 | `sala_online` | criar, entrar ou começar uma sala | acao, pessoas, conta |
 
 **Jogadores diferentes.** Cada aparelho recebe um código anônimo (`a-…`); quem entra numa conta vira
 `c-<uid da conta>` e o uid vai também como `user_id`. O código e o perfil vão como propriedades do
 usuário: `id_jogador`, `tipo_conta` (local, google, email), `experiencia` (novato, iniciante,
-intermediario, veterano), `conquistas`, `avatar` e `verbetes_lidos`. Nome, e-mail e nome na mesa não
-são enviados.
+intermediario, veterano), `conquistas`, `avatar`, `verbetes_lidos`, `acessos`, `partidas` e `vitorias`.
+Nome, e-mail e nome na mesa não são enviados. Os eventos de partida (`jogo_iniciado`,
+`jogo_finalizado`, vitória, derrota, `fim_mao`, `jogo_abandonado` e `truco`) levam `conta`: 1 com
+conta conectada, 0 sem.
+
+**Na conta, o registro exato.** O Analytics só conta quem aceitou a medição. Os mesmos eventos
+alimentam as estatísticas de cada jogador (`src/online/estatisticas.js`), que valem sempre: ficam no
+aparelho e, com conta, em `contas/<uid>` no Firestore, junto com o perfil (nome, e-mail e método de
+login) e um resumo. Administradores veem a lista na tela **Jogadores** (em "Jogar online") e baixam
+o CSV. Detalhes em [docs/FIREBASE.md](docs/FIREBASE.md).
 
 O jogo envia esses nomes direto: no Google Analytics não é preciso regra em "Criar eventos" (uma
 regra que recria um evento com o próprio nome o conta em dobro). Para separar os dados por jogador,

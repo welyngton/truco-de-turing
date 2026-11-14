@@ -5,9 +5,22 @@ service cloud.firestore {
   match /databases/{db}/documents {
     function conectado() { return request.auth != null; }
 
-    // Progresso: cada conta lê e grava só o próprio documento.
+    // Administrador: quem tem um documento em admins/<uid>, criado à mão no console do Firebase.
+    function administrador() {
+      return conectado() && exists(/databases/$(db)/documents/admins/$(request.auth.uid));
+    }
+
+    // Progresso e estatísticas: cada conta lê e grava só o próprio documento. Administradores
+    // leem todas as contas (tela Jogadores), sem gravar em nenhuma.
     match /contas/{uid} {
       allow read, write: if conectado() && request.auth.uid == uid;
+      allow read: if administrador();
+    }
+
+    // Cada conta só consegue saber se ela mesma é administradora. Ninguém grava pelo jogo.
+    match /admins/{uid} {
+      allow get: if conectado() && request.auth.uid == uid;
+      allow list, write: if false;
     }
 
     // Mensagem nova de uma sala: leva o uid de quem envia (ninguém fala em nome de outra conta),

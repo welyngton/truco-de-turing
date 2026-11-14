@@ -10,7 +10,9 @@ import { VERBETES } from './conteudo/grimorio.js';
 import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, mostrarAviso } from './interface/paineis.js';
-import { registrarEvento, atualizarJogador, EVENTOS } from './interface/analise.js';
+import { registrarEvento, atualizarJogador, aoRegistrarEvento, EVENTOS } from './interface/analise.js';
+import { estatisticasDe, registrarAcesso, contarEvento, tipoDeAparelho } from './online/estatisticas.js';
+import { VERSAO } from './versao.js';
 
 /**
  * Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles
@@ -61,15 +63,26 @@ export const Aplicacao = {
     if (!this.progresso.musicaEscolhida) this.progresso.musica = true;
     this.opcoes = normalizarOpcoes(this.progresso.opcoes);
     Som.definirMudo(!!this.progresso.mudo);
+    /* estatísticas do jogador (#66): conta esta abertura e passa a contar partidas, mãos, truco e
+       salas pelos mesmos eventos que vão para o Google Analytics */
+    registrarAcesso(this.progresso, { versao: VERSAO, aparelho: tipoDeAparelho() });
+    this.salvar();
+    if (this.pararDeContar) this.pararDeContar();
+    this.pararDeContar = aoRegistrarEvento((nome, dados) => {
+      if (!contarEvento(this.progresso, nome, dados)) return;
+      this.salvar();
+      this.atualizarJogadorNasEstatisticas();
+    });
     this.atualizarJogadorNasEstatisticas();
   },
 
-  /** Passa às estatísticas de uso a experiência, as conquistas, o avatar e os verbetes lidos. */
+  /** Passa às estatísticas de uso a experiência, as conquistas, o avatar, os verbetes lidos, os acessos e as partidas. */
   atualizarJogadorNasEstatisticas() {
-    const p = this.progresso;
+    const p = this.progresso, e = estatisticasDe(p);
     atualizarJogador({
       experiencia: faixaDeExperiencia(p.maos), conquistas: Object.keys(p.desbloqueadas || {}).length,
       avatar: p.avatar || 'padrao', verbetes_lidos: p.verbetesLidos || 0,
+      acessos: e.acessos, partidas: e.partidas.terminadas, vitorias: e.partidas.vencidas,
     });
   },
 

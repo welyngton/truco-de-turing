@@ -4,7 +4,9 @@
  * (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado.
  *
  * Dados no Firestore (ver firestore.rules):
- * - `contas/{uid}`: o progresso da conta (ver contas.js, `progressoDaConta`);
+ * - `contas/{uid}`: o progresso, as estatísticas, o perfil e o resumo da conta (contas.js,
+ *   `documentoDaConta`); cada conta lê e grava a própria, e administradores leem todas;
+ * - `admins/{uid}`: quem é administrador (documento criado à mão no console);
  * - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao
  *   servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação. Cada
  *   mensagem leva o `uid` de quem enviou (as regras conferem) e vence em `expira`; mensagens
@@ -93,6 +95,31 @@ export async function carregarProgressoDaConta(uid) {
 export async function salvarProgressoNaConta(uid, progresso) {
   const { fs, banco } = await carregar();
   await fs.setDoc(fs.doc(banco, 'contas', uid), JSON.parse(JSON.stringify(progresso)));
+}
+
+/* ------------------------------------------------------------ administração */
+
+/**
+ * A conta é administradora? Vale quem tem um documento em `admins/<uid>` (criado à mão no
+ * console do Firebase); as regras deixam cada conta ler só o próprio. Qualquer falha conta como
+ * "não", para a tela Jogadores simplesmente não aparecer.
+ */
+export async function ehAdministrador(uid) {
+  try {
+    const { fs, banco } = await carregar();
+    return (await fs.getDoc(fs.doc(banco, 'admins', uid))).exists();
+  } catch (e) { return false; }
+}
+
+/**
+ * Todas as contas, com o `uid` de cada uma (issue #66). As regras só deixam administradores ler;
+ * para as outras contas a leitura falha com `permission-denied`.
+ * @returns {Promise<object[]>}
+ */
+export async function listarContas() {
+  const { fs, banco } = await carregar();
+  const resultado = await fs.getDocs(fs.collection(banco, 'contas'));
+  return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
 }
 
 /* ------------------------------------------------------------------ salas */
