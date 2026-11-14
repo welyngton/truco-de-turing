@@ -202,6 +202,15 @@ describe('jogadores diferentes', () => {
     assert.ok(comandos(w).some((c) => c[0] === 'event' && c[1] === 'logout'));
   });
 
+  it('conta retomada ao recarregar (#60): volta o user_id, sem contar um login novo', () => {
+    const w = janela(SITE, { escolha: 'sim' });
+    iniciarAnalise(w);
+    definirConta('uidFirebase123', 'google', { retomada: true });
+    assert.equal(idDoJogador(w), 'c-uidFirebase123');
+    assert.equal(userIds(w).at(-1), 'uidFirebase123');
+    assert.equal(comandos(w).some((c) => c[0] === 'event' && c[1] === 'login'), false);
+  });
+
   it('conta de e-mail fica como tipo_conta "email"; atualizar o jogador reenvia as propriedades', () => {
     const w = janela(SITE, { escolha: 'sim' });
     iniciarAnalise(w);

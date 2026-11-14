@@ -12,6 +12,7 @@ import { CenaCarregamento } from './cenas/CenaCarregamento.js';
 import { CenaMenu } from './cenas/CenaMenu.js';
 import { CenaMesa } from './cenas/mesa/CenaMesa.js';
 import { iniciarAnalise } from './interface/analise.js';
+import { retomarConta } from './interface/conta.js';
 
 /** Celular na vertical (o aviso para girar aparece no lugar do jogo; ver #girar em estilo.css). */
 const celularEmPe = globalThis.matchMedia ? matchMedia('(orientation: portrait) and (max-width: 600px)') : null;
@@ -67,6 +68,8 @@ function iniciarJogo() {
 prepararTextoNitido();
 Aplicacao.iniciar();
 iniciarJogo();
+/* quem já entrou numa conta neste navegador continua conectado depois de recarregar (#60) */
+retomarConta(Aplicacao);
 /* estatísticas de uso: só no site publicado e com consentimento (ver interface/analise.js) */
 iniciarAnalise();
 

@@ -497,6 +497,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 /* jogar online */
 .jogar-linha { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 .jogar-online { font-size: 15px; }
+/* quem está conectado, abaixo de "Jogar" (só aparece com conta) */
+.menu-capa .menu-conta { margin: -2px 0 0; font: 600 14px var(--fonte-interface); color: #cdbf9e; line-height: 1.3; max-width: none; }
+.menu-capa .menu-conta::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; background: #6fbf5a; }
+.menu-capa .menu-conta b { color: var(--pergaminho); }
+.menu-capa .menu-conta[hidden] { display: none; }
+@media (max-height: 420px) and (min-width: 560px) { .menu-capa .menu-conta { font-size: 12px; display: block; } }
 .folha.online { width: min(640px, 100%); }
 /* cor do texto explícita: a página usa `color-scheme: dark`, e sem isso o navegador escreve em branco no campo claro */
 .online input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; color: var(--tinta); caret-color: var(--tinta); color-scheme: light; border: 1.5px solid #2b1608; border-radius: 8px; background: #fff8e6; }
