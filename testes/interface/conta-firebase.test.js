@@ -181,14 +181,17 @@ describe('conta retomada ao recarregar a página (#60)', () => {
     const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: { 'contas/uid-teste': { lidos: { overfit: true }, verbetesLidos: 1 } } });
     const { pagina } = jogo;
     try {
+      const avatarDoAparelho = await pagina.locator('#m-avatar-img').getAttribute('src');
       await entrar(pagina);
       assert.equal(await marca(pagina), 'google');
       assert.match(await pagina.locator('#m-conta').textContent(), /Conectado como Ada/, 'o menu mostra quem entrou');
-      /* outro aparelho avança o progresso da conta enquanto esta aba está fechada */
-      await pagina.evaluate(() => { globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].lidos.backprop = true; });
+      /* outro aparelho avança o progresso da conta e troca o avatar enquanto esta aba está fechada */
+      await pagina.evaluate(() => { const d = globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste']; d.lidos.backprop = true; d.avatar = 'robo'; });
       await recarregar(jogo);
       await pagina.waitForSelector('#m-conta:not([hidden])');
       assert.match(await pagina.locator('#m-conta').textContent(), /Conectado como Ada/);
+      assert.equal(await pagina.evaluate(() => globalThis.__TRUCO_DE_TURING__.progresso.avatar), 'robo');
+      assert.notEqual(await pagina.locator('#m-avatar-img').getAttribute('src'), avatarDoAparelho, 'o botão Avatar mostra o avatar da conta');
       const lidos = await pagina.evaluate(() => globalThis.__TRUCO_DE_TURING__.progresso.lidos);
       assert.equal(lidos.overfit && lidos.backprop, true, 'a retomada junta o progresso da conta com o do aparelho');
       /* depois da retomada, salvar continua indo para a conta */

@@ -187,13 +187,14 @@ export function abrirMenu(app) {
   mostrarAvatar();
   campo('m-avatar').addEventListener('click', () => { lerEscolhas(); abrirAvatares(app, mostrarAvatar); });
   campo('m-sobre').addEventListener('click', () => { lerEscolhas(); abrirSobre(); });
-  /* quem está conectado (a conta pode voltar alguns instantes depois de abrir o jogo, ver conta.js) */
+  /* quem está conectado (a conta pode voltar alguns instantes depois de abrir o jogo, ver conta.js);
+     ao entrar, o avatar pode passar a ser o da conta */
   const mostrarConta = () => {
     const conta = contaAtual(), linha = campo('m-conta');
     linha.hidden = !conta;
     linha.innerHTML = conta ? 'Conectado como <b>' + escaparHtml(conta.nome) + '</b>. O progresso vai para a conta.' : '';
   };
   mostrarConta();
-  const pararDeOuvir = aoMudarDeConta(() => { if (elemento.isConnected) mostrarConta(); else pararDeOuvir(); });
+  const pararDeOuvir = aoMudarDeConta(() => { if (!elemento.isConnected) { pararDeOuvir(); return; } mostrarConta(); mostrarAvatar(); });
   return painel;
 }
