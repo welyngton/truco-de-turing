@@ -14,6 +14,7 @@
 import { mesclarProgresso, progressoDaConta } from '../online/contas.js';
 import { firebaseConfigurado, contaGuardada, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta } from '../online/firebase.js';
 import { explicarErroFirebase } from '../online/errosFirebase.js';
+import { registrarAcesso, resumoDaConta } from '../online/estatisticas.js';
 import { mostrarAviso } from './paineis.js';
 import { definirConta } from './analise.js';
 
@@ -54,6 +55,10 @@ export async function usarConta(app, conta, metodo, { retomada = false } = {}) {
   const naConta = await carregarProgressoDaConta(conta.uid);
   const mesclado = mesclarProgresso(app.progresso, naConta);
   mesclado.nomeOnline = mesclado.nomeOnline || conta.nome;
+  /* perfil e resumo atualizados a cada login */
+  mesclado.perfil = { nome: conta.nome, email: conta.email, metodo: metodo || 'conta' };
+  mesclado.resumo = resumoDaConta(mesclado);
+  if (!retomada) registrarAcesso(mesclado);
   await salvarProgressoNaConta(conta.uid, progressoDaConta(mesclado));
   app.progresso = mesclado;
   avisouFalhaAoSalvar = false;

@@ -11,7 +11,7 @@ import { prepararTextoNitido } from './cenas/recursos.js';
 import { CenaCarregamento } from './cenas/CenaCarregamento.js';
 import { CenaMenu } from './cenas/CenaMenu.js';
 import { CenaMesa } from './cenas/mesa/CenaMesa.js';
-import { iniciarAnalise } from './interface/analise.js';
+import { iniciarAnalise, registrarEvento, EVENTOS } from './interface/analise.js';
 import { retomarConta } from './interface/conta.js';
 
 /** Celular na vertical (o aviso para girar aparece no lugar do jogo; ver #girar em estilo.css). */
@@ -68,10 +68,14 @@ function iniciarJogo() {
 prepararTextoNitido();
 Aplicacao.iniciar();
 iniciarJogo();
-/* quem já entrou numa conta neste navegador continua conectado depois de recarregar (#60) */
-retomarConta(Aplicacao);
 /* estatísticas de uso: só no site publicado e com consentimento (ver interface/analise.js) */
 iniciarAnalise();
+/* evento de acesso: número do acesso registrado localmente (conta ainda não retomada) */
+const _acessoTotal = Aplicacao.progresso.acessos ? Aplicacao.progresso.acessos.total : 1;
+registrarEvento(EVENTOS.acesso, { numero: _acessoTotal, conta: 0 });
+/* quem já entrou numa conta neste navegador continua conectado depois de recarregar (#60).
+ * Quando a conta for retomada, dispara conta_retomada para o GA. */
+retomarConta(Aplicacao).then((c) => { if (c) registrarEvento(EVENTOS.contaRetomada, { numero: _acessoTotal }); });
 
 /* acesso para testes automatizados e depuração no console */
 globalThis.__TRUCO_DE_TURING__ = Aplicacao;

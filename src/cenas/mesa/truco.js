@@ -3,6 +3,7 @@
  * (ao humano numa caixa, ao oponente pelo seu perfil) e aplicar aceitar, correr ou aumentar.
  */
 import { podeTrucar, pedirTruco, responderTruco, proximoValor, GRITO_TRUCO } from '../../nucleo/truco.js';
+import { registrarTruco } from '../../online/estatisticas.js';
 import { registrarEvento, EVENTOS } from '../../interface/analise.js';
 import { responderAoTruco } from '../../nucleo/oponentes/index.js';
 import { provocar } from '../../conteudo/textos.js';
@@ -21,6 +22,7 @@ export const metodosDoTruco = {
     if (this.online && !daRede) return this.enviarOnline({ tipo: 'truco', cadeira: j });
     pedirTruco(this.partida, j);
     registrarEvento(EVENTOS.truco, { valor: this.partida.pedido.para, quem: this.mao.jogadores[j].tipo });
+    if (this.mao.jogadores[j].tipo === 'humano') { registrarTruco(this.app.progresso); this.app.salvar(); }
     this.impactoDoTruco(this.partida.pedido.para);
     this.avisarVerbete('truco');
     this.faixa(GRITO_TRUCO[this.partida.pedido.para], COR_JOGADOR_CSS[j], 72);

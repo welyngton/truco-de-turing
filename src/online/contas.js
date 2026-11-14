@@ -3,9 +3,10 @@
  * conta e vale em qualquer aparelho. Ao entrar, o progresso do aparelho e o da conta se juntam
  * sem perder nada nem contar em dobro (`mesclarProgresso`); depois, cada mão salva na conta.
  */
+import { mesclarEstatisticas, CAMPOS_DE_ESTATISTICAS } from './estatisticas.js';
 
 /** Contadores que só crescem: na mescla vale o maior. */
-const CONTADORES = ['vitorias', 'maos', 'dropouts', 'vitoriasZen'];
+const CONTADORES = ['vitorias', 'maos', 'dropouts', 'vitoriasZen', 'trucos'];
 /** Conjuntos marcados (id → valor): na mescla vale a união. */
 const CONJUNTOS = ['lidos', 'terrenos', 'baralhos', 'arquiteturas'];
 
@@ -30,12 +31,14 @@ export function mesclarProgresso(local, conta) {
   }
   m.verbetesLidos = Object.keys(m.lidos).length;
   if (conta.avatar) m.avatar = conta.avatar;
+  mesclarEstatisticas(m, conta);
   return m;
 }
 
 /** Parte do progresso que vai para a conta (sem preferências do aparelho). */
 export function progressoDaConta(progresso) {
   const p = {};
-  for (const k of [...CONTADORES, ...CONJUNTOS, 'desbloqueadas', 'verbetesLidos', 'avatar']) if (progresso[k] !== undefined) p[k] = progresso[k];
+  const campos = [...CONTADORES, ...CONJUNTOS, 'desbloqueadas', 'verbetesLidos', 'avatar', ...CAMPOS_DE_ESTATISTICAS];
+  for (const k of campos) if (progresso[k] !== undefined) p[k] = progresso[k];
   return p;
 }

@@ -4,7 +4,8 @@
  */
 import { abrirPainel } from '../paineis.js';
 import { VERSAO, DATA_DA_VERSAO } from '../../versao.js';
-import { podeMedir, consentimento, definirConsentimento, TEXTO_DAS_ESTATISTICAS } from '../analise.js';
+import { podeMedir, consentimento, definirConsentimento, TEXTO_DAS_ESTATISTICAS, TEXTO_DA_PRIVACIDADE_DA_CONTA } from '../analise.js';
+import { abrirJogadores, verificarAdmin } from './jogadores.js';
 
 /** Situação das estatísticas de uso neste aparelho, em texto. */
 function situacaoDasEstatisticas() {
@@ -49,10 +50,13 @@ export function abrirSobre() {
       '<li><b>Suzy Arcanjo</b>: verbetes das ações no Glossário.</li>' +
       '</ul>' +
       '<p class="contribuicoes">Contribuições são bem-vindas: o código está aberto no repositório.</p>' +
-      '<h3>Estatísticas de uso</h3>' +
+      '<h3>Privacidade — conta</h3>' +
+      '<p>' + TEXTO_DA_PRIVACIDADE_DA_CONTA + '</p>' +
+      '<h3>Privacidade — estatísticas de uso (Google Analytics)</h3>' +
       '<p>' + TEXTO_DAS_ESTATISTICAS + '</p>' +
       '<p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + '</p>' +
       (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : '') +
+      '<div class="linha"><button class="botao pequeno discreto" id="s-jogadores" hidden>Jogadores (admin)</button></div>' +
       '<h3>Créditos e licença</h3>' +
       '<p>Código aberto sob a licença <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no repositório <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras é o do NeuroDeck, incluído com a concordância do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas é gerada por código; fontes Cinzel e Spectral.</p>' +
       '<div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
@@ -63,6 +67,12 @@ export function abrirSobre() {
       definirConsentimento(escolha);
       painel.elemento.querySelector('#s-estatisticas').textContent = situacaoDasEstatisticas();
     });
+  }
+  /* botão "Jogadores" aparece somente para admins (verificação assíncrona) */
+  const botaoJogadores = painel.elemento.querySelector('#s-jogadores');
+  if (botaoJogadores) {
+    verificarAdmin().then((admin) => { if (admin) botaoJogadores.hidden = false; }).catch(() => {});
+    botaoJogadores.addEventListener('click', () => abrirJogadores());
   }
   return painel;
 }

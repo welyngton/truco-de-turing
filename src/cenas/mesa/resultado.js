@@ -13,6 +13,7 @@ import { medalhaHtml } from '../../interface/telas/conquistas.js';
 import { avataresDaConquista } from '../../conteudo/avatares.js';
 import { abrirRevisao } from '../../interface/telas/revisao.js';
 import { registrarEvento, EVENTOS } from '../../interface/analise.js';
+import { registrarFimDePartida, registrarMaoPorContexto } from '../../online/estatisticas.js';
 import { COR_JOGADOR_CSS, NOME_SITUACAO } from './layout.js';
 
 /** Troféu desenhado em SVG para a tela de vitória. */
@@ -79,10 +80,18 @@ export const metodosDoResultado = {
       ...resumo, venceu: venceu ? 1 : 0, completa: completa ? 1 : 0, valor: valorDaMao,
       soma: this.pontuacoes[eu] ? this.pontuacoes[eu].total : 0, dicas: this.dicasNaMao ? 1 : 0,
     });
+    /* estatísticas por contexto no progresso */
+    registrarMaoPorContexto(this.app.progresso, {
+      oponente: this.opcoes ? this.opcoes.oponente : '', baralho: config.baralho, terreno: config.terreno, venceu,
+    });
+    this.app.salvar();
     if (!partida.encerrada) return;
-    const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0 };
+    const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0,
+      conta: this.app.progresso.perfil ? 1 : 0 };
     registrarEvento(EVENTOS.jogoFinalizado, { ...final, venceu: venceu ? 1 : 0 });
     registrarEvento(venceu ? EVENTOS.vitoria : EVENTOS.derrota, final);
+    registrarFimDePartida(this.app.progresso, { venceu });
+    this.app.salvar();
   },
 
   /**

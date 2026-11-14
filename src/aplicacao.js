@@ -11,6 +11,7 @@ import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, mostrarAviso } from './interface/paineis.js';
 import { registrarEvento, atualizarJogador, EVENTOS } from './interface/analise.js';
+import { registrarAcesso, registrarInicioDePartida, registrarFimDePartida, registrarMaoPorContexto, registrarTruco, registrarSalaOnline, resumoDaConta } from './online/estatisticas.js';
 
 /**
  * Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles
@@ -61,6 +62,8 @@ export const Aplicacao = {
     if (!this.progresso.musicaEscolhida) this.progresso.musica = true;
     this.opcoes = normalizarOpcoes(this.progresso.opcoes);
     Som.definirMudo(!!this.progresso.mudo);
+    registrarAcesso(this.progresso);
+    this.salvar();
     this.atualizarJogadorNasEstatisticas();
   },
 
@@ -70,11 +73,17 @@ export const Aplicacao = {
     atualizarJogador({
       experiencia: faixaDeExperiencia(p.maos), conquistas: Object.keys(p.desbloqueadas || {}).length,
       avatar: p.avatar || 'padrao', verbetes_lidos: p.verbetesLidos || 0,
+      acessos: (p.acessos && p.acessos.total) || 0,
+      partidas: (p.partidas && p.partidas.terminadas) || 0,
+      vitorias: p.vitorias || 0,
     });
   },
 
-  /** Grava o progresso. */
-  salvar() { salvarProgresso(this.progresso); },
+  /** Grava o progresso — se houver conta conectada, atualiza o resumo antes de gravar. */
+  salvar() {
+    if (this.progresso.perfil) this.progresso.resumo = resumoDaConta(this.progresso);
+    salvarProgresso(this.progresso);
+  },
 
   /** Grava as escolhas do menu para a próxima visita. */
   salvarOpcoes() { this.progresso.opcoes = this.opcoes; this.salvar(); },
@@ -102,10 +111,14 @@ export const Aplicacao = {
   /** Sai do menu e abre a mesa. */
   jogar() {
     const o = this.opcoes || OPCOES_PADRAO;
+    const online = !!this.online;
     registrarEvento(EVENTOS.jogoIniciado, {
       baralho: o.baralho, terreno: o.terreno, oponente: o.oponente, arquitetura: o.arquitetura,
-      jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: this.online ? 1 : 0,
+      jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: online ? 1 : 0,
+      conta: this.progresso.perfil ? 1 : 0,
     });
+    registrarInicioDePartida(this.progresso, { online });
+    this.salvar();
     fecharTodos();
     this.modoImersivo();
     document.body.classList.add('em-partida');
@@ -113,11 +126,13 @@ export const Aplicacao = {
     this.jogo.scene.start('Mesa');
   },
 
-  /** Volta da mesa para o menu. */
+  /** Volta da mesa para o menu (abandono de partida). */
   irParaMenu() {
     fecharTodos();
     /* sair da mesa online sai da sala (os outros veem a cadeira passar para o computador) */
     if (this.online) { try { this.online.sala.sair(); } catch (e) { /* já fechada */ } this.online = null; }
+    registrarFimDePartida(this.progresso, { abandonada: true });
+    this.salvar();
     document.body.classList.remove('em-partida');
     this.jogo.scene.stop('Mesa');
     this.jogo.scene.start('Menu');

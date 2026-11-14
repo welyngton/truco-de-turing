@@ -18,8 +18,9 @@ import { firebaseConfigurado, entrarComGoogle, entrarComEmail, transporteFirebas
 import { explicarErroFirebase } from '../../online/errosFirebase.js';
 import { avatarDoJogador } from '../../conteudo/avatares.js';
 import { abrirPainel, escaparHtml, mostrarAviso } from '../paineis.js';
-import { registrarEvento, EVENTOS } from '../analise.js';
+import { registrarEvento, EVENTOS, TEXTO_DA_PRIVACIDADE_DA_CONTA } from '../analise.js';
 import { contaAtual, aoMudarDeConta, usarConta, sairDaContaAtual } from '../conta.js';
+import { registrarSalaOnline } from '../../online/estatisticas.js';
 
 /** Identificador deste aparelho, o mesmo depois de recarregar a aba (para voltar à cadeira). */
 function clienteDaAba() {
@@ -66,7 +67,8 @@ export function abrirOnline(app) {
       ? '<p id="o-conta-estado">' + (contaAtual() ? 'Conectado como <b>' + escaparHtml(contaAtual().nome) + '</b>. O progresso fica na conta.' : 'Entre para guardar conquistas, avatares e progresso na conta e jogar pela internet.') + '</p>' +
         '<div class="linha"><button class="botao" id="o-google">Entrar com Google</button><button class="botao discreto" id="o-sair"' + (contaAtual() ? '' : ' hidden') + '>Sair da conta</button></div>' +
         '<div class="campos-duplos"><input id="o-email" type="email" placeholder="e-mail" autocomplete="email"><input id="o-senha" type="password" placeholder="senha" autocomplete="current-password"></div>' +
-        '<div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>'
+        '<div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>' +
+        '<p class="nota privacidade-conta">' + TEXTO_DA_PRIVACIDADE_DA_CONTA + '</p>'
       : '<p class="nota">As contas na nuvem e as salas pela internet entram quando o projeto Firebase do grupo for configurado. Por enquanto o progresso fica neste navegador, e as salas funcionam entre abas e janelas dele (abra o jogo em outra janela para testar).</p>') +
     '<div class="campo"><label for="o-nome">Seu nome na mesa</label><input id="o-nome" maxlength="20" value="' + escaparHtml(nome) + '" placeholder="Como os outros vão ver você"></div>' +
     '</section>' +
@@ -160,6 +162,7 @@ export function abrirOnline(app) {
     try { s = await abrirSala(codigo); } catch (e) { falhaAoAbrir(e); return; }
     s.criar(codigo, { ...app.opcoes }, Number($('o-pessoas').value), Math.floor(Math.random() * 2 ** 31));
     registrarEvento(EVENTOS.salaOnline, { acao: 'criar', pessoas: Number($('o-pessoas').value), conta: contaAtual() ? 1 : 0 });
+    registrarSalaOnline(app.progresso, { criou: true }); app.salvar();
     esperar(s);
     mostrarAviso('Sala ' + codigo + ' criada', 'Aguardando o(s) outro(s) jogador(es). O código da sala é ' + codigo + '.', null, 8000);
   });
@@ -180,6 +183,7 @@ export function abrirOnline(app) {
         (pelaInternet() ? '.' : firebaseConfigurado() ? '. Sem conta, só dá para entrar em salas abertas neste navegador.' : ' neste navegador.'), 'erro');
     }, ESPERA_PELA_SALA);
     registrarEvento(EVENTOS.salaOnline, { acao: 'entrar', conta: contaAtual() ? 1 : 0 });
+    registrarSalaOnline(app.progresso, { criou: false }); app.salvar();
   });
   $('o-comecar').addEventListener('click', () => {
     if (!sala) return;

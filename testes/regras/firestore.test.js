@@ -1,8 +1,9 @@
 /**
- * @file Regras do Firestore (firestore.rules) no emulador, issue #62: cada conta só grava e lê o
- * próprio progresso; mensagens de sala levam o uid de quem envia, a hora do servidor e um prazo
- * de validade; ninguém edita mensagens; só as vencidas podem ser apagadas e achadas na busca de
- * todas as salas (a limpeza de src/online/firebase.js, `limparMensagensVencidas`).
+ * @file Regras do Firestore (firestore.rules) no emulador.
+ * - Issue #62: cada conta só grava e lê o próprio progresso; mensagens de sala levam o uid de
+ *   quem envia, a hora do servidor e um prazo de validade; ninguém edita mensagens; só as vencidas
+ *   podem ser apagadas e achadas na busca de todas as salas (a limpeza de src/online/firebase.js).
+ * - Issue #66: admin (documento em /admins/<uid>) lê qualquer conta para a tela Jogadores.
  *
  * Rodar (precisa de Java 21; o emulador é baixado na primeira vez): npm run testar:regras
  * Sem o emulador (FIRESTORE_EMULATOR_HOST vazio), a suíte é pulada.
@@ -48,6 +49,29 @@ describe('firestore.rules (emulador)', { skip: SEM_EMULADOR }, () => {
       await assertFails(getDoc(doc(banco('beto'), 'contas', 'ana')));
       await assertFails(setDoc(doc(banco('beto'), 'contas', 'ana'), { vitorias: 99 }));
       await assertFails(getDoc(doc(banco(null), 'contas', 'ana')));
+    });
+  });
+
+  describe('admins (#66)', () => {
+    it('admin lê qualquer conta, não-admin não lê conta alheia', async () => {
+      /* cria documento de admin e conta de outra pessoa sem passar pelas regras */
+      await semRegras(async (db) => {
+        await setDoc(doc(db, 'admins', 'prof'), {});
+        await setDoc(doc(db, 'contas', 'aluno'), { vitorias: 3 });
+      });
+      /* admin lê conta de outra pessoa */
+      await assertSucceeds(getDoc(doc(banco('prof'), 'contas', 'aluno')));
+      /* não-admin continua sem acesso a conta alheia */
+      await assertFails(getDoc(doc(banco('beto'), 'contas', 'aluno')));
+      /* admin não grava conta alheia (só leitura para a tela Jogadores) */
+      await assertFails(setDoc(doc(banco('prof'), 'contas', 'aluno'), { vitorias: 999 }));
+    });
+
+    it('admin lê o próprio documento de admin; ninguém escreve na coleção admins pelas regras', async () => {
+      await semRegras(async (db) => { await setDoc(doc(db, 'admins', 'prof'), {}); });
+      await assertSucceeds(getDoc(doc(banco('prof'), 'admins', 'prof')));
+      await assertFails(getDoc(doc(banco('beto'), 'admins', 'prof')));
+      await assertFails(setDoc(doc(banco('prof'), 'admins', 'beto'), {}));
     });
   });
 

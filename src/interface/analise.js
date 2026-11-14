@@ -56,13 +56,15 @@ export const EVENTOS = {
   login: 'login', // evento recomendado do GA4 (method: google, email, email_novo)
   logout: 'logout',
   salaOnline: 'sala_online', // criar, entrar ou começar uma sala
+  acesso: 'acesso', // abertura do jogo (numero: número do acesso, conta: 0 ou 1)
+  contaRetomada: 'conta_retomada', // conta voltou ao recarregar a página (sem contar login novo)
 };
 
 /**
  * Propriedades do usuário (no Google Analytics: dimensões personalizadas com escopo "Usuário").
  * `id_jogador` separa os jogadores; as outras ajudam a comparar grupos.
  */
-export const PROPRIEDADES_DO_JOGADOR = ['id_jogador', 'tipo_conta', 'experiencia', 'conquistas', 'avatar', 'verbetes_lidos'];
+export const PROPRIEDADES_DO_JOGADOR = ['id_jogador', 'tipo_conta', 'experiencia', 'conquistas', 'avatar', 'verbetes_lidos', 'acessos', 'partidas', 'vitorias'];
 
 /** Chave do código anônimo do aparelho no `localStorage`. */
 export const CHAVE_DO_JOGADOR = 'truco-de-turing:id-jogador';
@@ -116,8 +118,11 @@ export function definirConta(uid, metodo, { retomada = false } = {}) {
   estado.conta = uid || null;
   estado.perfil.tipo_conta = uid ? (metodo && metodo.startsWith('email') ? 'email' : metodo || 'conta') : 'local';
   if (!medindo()) return;
-  if (uid) { enviarJogador(estado.janela); if (!retomada) registrarEvento(EVENTOS.login, { method: metodo || 'conta' }); }
-  else if (antes) { registrarEvento(EVENTOS.logout); enviarJogador(estado.janela); }
+  if (uid) {
+    enviarJogador(estado.janela);
+    if (retomada) registrarEvento(EVENTOS.contaRetomada, { method: metodo || 'conta' });
+    else registrarEvento(EVENTOS.login, { method: metodo || 'conta' });
+  } else if (antes) { registrarEvento(EVENTOS.logout); enviarJogador(estado.janela); }
 }
 
 /**
@@ -193,7 +198,13 @@ export function definirConsentimento(escolha, janela = globalThis) {
 }
 
 /** Texto da faixa de consentimento (também usado na tela "Sobre"). */
-export const TEXTO_DAS_ESTATISTICAS = 'O Truco de Turing usa o Google Analytics para entender como o jogo é jogado (partidas, jogadas, botões, verbetes lidos e conquistas) e, assim, melhorá-lo. Cada jogador é contado por um código anônimo, deste aparelho ou da conta; nome e e-mail não são enviados. Ele guarda um cookie neste aparelho e não usa nada para publicidade.';
+export const TEXTO_DAS_ESTATISTICAS = 'O Truco de Turing usa o Google Analytics para entender como o jogo é jogado (partidas, jogadas, botões, verbetes lidos e conquistas) e, assim, melhorá-lo. Cada jogador é contado por um código anônimo, deste aparelho ou da conta; nome e e-mail não são enviados ao Analytics. Ele guarda um cookie neste aparelho e não usa nada para publicidade.';
+
+/**
+ * Texto de privacidade sobre o que é armazenado na conta (Firebase/Firestore), usado na tela
+ * "Sobre" e na tela de login. Aparece somente quando o jogador criou ou está criando uma conta.
+ */
+export const TEXTO_DA_PRIVACIDADE_DA_CONTA = 'Quando você cria ou usa uma conta, o jogo salva na nuvem (Firebase/Firestore): nome, e-mail e método de login; número de acessos, data do primeiro e do último acesso; número de partidas jogadas, vencidas e abandonadas; número de trucos pedidos; contagens por oponente, baralho e terreno; e conquistas desbloqueadas. Esses dados são usados para restaurar seu progresso em qualquer aparelho e para o professor acompanhar a evolução da turma. Você pode apagar sua conta a qualquer momento na tela de login.';
 
 /** Mostra a faixa de consentimento no rodapé da página. */
 function mostrarFaixa(janela) {
