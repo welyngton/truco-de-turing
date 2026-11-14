@@ -1,0 +1,45 @@
+# Publicação do Truco de Turing no Firebase Hosting.
+#
+# Roda depois que o workflow "Versão" termina com sucesso na main (ou seja, depois que o robô
+# subiu a versão e gerou o dist/), e também pode ser disparado à mão na aba Actions.
+# Empacota o jogo de novo a partir da main mais recente e publica dist/truco-de-turing.html
+# no canal "live" do projeto truco-e26e8-703bc (https://truco-e26e8-703bc.web.app e o domínio próprio).
+#
+# Precisa do segredo FIREBASE_SERVICE_ACCOUNT (JSON da conta de serviço) em
+# Settings → Secrets and variables → Actions.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [Versão]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-hosting
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: truco-e26e8-703bc
+          channelId: live
