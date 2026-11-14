@@ -510,7 +510,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .jogar-linha { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 .jogar-online { font-size: 15px; }
 .folha.online { width: min(640px, 100%); }
-.online input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; border: 1.5px solid #2b1608; border-radius: 8px; background: #fff8e6; }
+/* cor do texto explícita: a página usa `color-scheme: dark`, e sem isso o navegador escreve em branco no campo claro */
+.online input { width: 100%; box-sizing: border-box; padding: 8px 10px; font: inherit; color: var(--tinta); caret-color: var(--tinta); color-scheme: light; border: 1.5px solid #2b1608; border-radius: 8px; background: #fff8e6; }
+.online input::placeholder { color: #8a7a5c; opacity: 1; }
+.online input:-webkit-autofill { -webkit-text-fill-color: var(--tinta); box-shadow: 0 0 0 100px #fff8e6 inset; }
+.espera-estado { margin: 8px 0; padding: 8px 12px; border-radius: 8px; border-left: 4px solid #c99a3a; background: #f9eeda; font-weight: 600; }
+.espera-estado.aguardando::before { content: ''; display: inline-block; width: 0.7em; height: 0.7em; margin-right: 8px; border-radius: 50%; background: #c99a3a; animation: pulsar-espera 1.2s ease-in-out infinite; }
+.espera-estado.pronta { border-left-color: #2f7d4f; background: #e6f1e3; }
+.espera-estado.erro { border-left-color: #a3242f; background: #f6dfd8; color: #6b1a22; }
+@keyframes pulsar-espera { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .espera-estado.aguardando::before { animation: none; } }
+.botao.inativo { filter: grayscale(0.7); opacity: 0.55; box-shadow: none; }
+.online-espera h3 .botao { margin-left: 12px; vertical-align: middle; }
 .online .campos-duplos { margin: 8px 0; }
 .codigo-sala { font: 900 26px var(--fonte-titulo); letter-spacing: 0.18em; color: #6b1a22; margin-left: 8px; }
 .cadeiras { margin: 8px 0 14px; padding-left: 26px; }
@@ -8410,7 +8421,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.4.4";
+  var VERSAO = "2.4.5";
   var DATA_DA_VERSAO = "2026-11-14";
 
   // src/interface/telas/sobre.js
@@ -8838,6 +8849,10 @@ export default function (NeuroDeck) {
     const colecao = fs.collection(banco, "salas", codigo, "mensagens");
     const ouvintes = /* @__PURE__ */ new Set();
     const vistos = /* @__PURE__ */ new Set();
+    const falhas = /* @__PURE__ */ new Set();
+    const falhou = (erro) => {
+      for (const cb of falhas) cb(erro);
+    };
     const parar = fs.onSnapshot(fs.query(colecao, fs.orderBy("em")), (instantaneo) => {
       for (const mudanca of instantaneo.docChanges()) {
         if (mudanca.type !== "added" || vistos.has(mudanca.doc.id)) continue;
@@ -8845,21 +8860,65 @@ export default function (NeuroDeck) {
         const { em, ...msg } = mudanca.doc.data();
         for (const cb of ouvintes) cb(msg);
       }
-    });
+    }, falhou);
     return {
       /* JSON tira os `undefined`, que o Firestore recusa */
       enviar: (msg) => {
-        fs.addDoc(colecao, { ...JSON.parse(JSON.stringify(msg)), em: fs.serverTimestamp() });
+        Promise.resolve(fs.addDoc(colecao, { ...JSON.parse(JSON.stringify(msg)), em: fs.serverTimestamp() })).catch(falhou);
       },
       aoReceber: (cb) => {
         ouvintes.add(cb);
         return () => ouvintes.delete(cb);
       },
+      aoFalhar: (cb) => {
+        falhas.add(cb);
+        return () => falhas.delete(cb);
+      },
       fechar: () => {
         ouvintes.clear();
+        falhas.clear();
         parar();
       }
     };
+  }
+
+  // src/online/errosFirebase.js
+  var MENSAGENS = {
+    /* configuração do projeto no console (docs/FIREBASE.md) */
+    "auth/operation-not-allowed": "Esse jeito de entrar ainda n\xE3o est\xE1 ativado no projeto Firebase (Authentication > M\xE9todo de login).",
+    "auth/unauthorized-domain": "Este endere\xE7o ainda n\xE3o est\xE1 autorizado no projeto Firebase (Authentication > Configura\xE7\xF5es > Dom\xEDnios autorizados).",
+    "auth/configuration-not-found": "O Authentication ainda n\xE3o foi ativado no projeto Firebase.",
+    "auth/invalid-api-key": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
+    "permission-denied": "O Firestore recusou o pedido: confira se as regras de firestore.rules foram publicadas e se a conta est\xE1 conectada.",
+    "not-found": "O banco Firestore do projeto ainda n\xE3o foi criado (Firestore Database > Criar banco de dados).",
+    "failed-precondition": "O banco Firestore do projeto ainda n\xE3o foi criado ou n\xE3o est\xE1 pronto.",
+    /* o que acontece com qualquer pessoa */
+    "auth/popup-blocked": "O navegador bloqueou a janela do Google. Libere as janelas deste site e tente de novo.",
+    "auth/operation-not-supported-in-environment": "Este navegador n\xE3o abre a janela do Google aqui. Entre com e-mail e senha.",
+    "auth/network-request-failed": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
+    "unavailable": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
+    "auth/too-many-requests": "Muitas tentativas seguidas. Espere um pouco e tente de novo.",
+    "auth/invalid-email": "Esse e-mail n\xE3o parece v\xE1lido.",
+    "auth/missing-email": "Escreva o e-mail.",
+    "auth/missing-password": "Escreva a senha.",
+    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+    "auth/email-already-in-use": 'J\xE1 existe uma conta com esse e-mail. Use "Entrar com e-mail".',
+    "auth/invalid-credential": "E-mail ou senha n\xE3o conferem.",
+    "auth/invalid-login-credentials": "E-mail ou senha n\xE3o conferem.",
+    "auth/wrong-password": "E-mail ou senha n\xE3o conferem.",
+    "auth/user-not-found": 'N\xE3o h\xE1 conta com esse e-mail. Use "Criar conta".',
+    "auth/user-disabled": "Esta conta foi desativada.",
+    "auth/account-exists-with-different-credential": "Esse e-mail j\xE1 entra de outro jeito (Google ou e-mail e senha). Use o mesmo de antes."
+  };
+  var DESISTIU = /* @__PURE__ */ new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request", "auth/user-cancelled"]);
+  function explicarErroFirebase(erro) {
+    const noTexto = /\(([a-z-]+\/[a-z0-9.-]+)\)/i.exec(String(erro && erro.message || ""));
+    const codigo = String(erro && erro.code || noTexto && noTexto[1] || "").toLowerCase();
+    if (DESISTIU.has(codigo)) return null;
+    if (MENSAGENS[codigo]) return MENSAGENS[codigo];
+    const texto = String(erro && erro.message || erro || "").replace(/^Firebase:\s*/, "").trim();
+    return texto || "Algo deu errado com o Firebase.";
   }
 
   // src/interface/telas/online.js
@@ -8875,34 +8934,47 @@ export default function (NeuroDeck) {
     }
   }
   var contaAtual = null;
+  var ESPERA_PELA_SALA = 8e3;
+  var avisouFalhaAoSalvar = false;
   async function usarConta(app, conta2, metodo) {
-    contaAtual = conta2;
-    definirConta(conta2.uid, metodo);
     const naConta = await carregarProgressoDaConta(conta2.uid);
-    app.progresso = mesclarProgresso(app.progresso, naConta);
-    app.progresso.nomeOnline = app.progresso.nomeOnline || conta2.nome;
-    app.salvar();
-    await salvarProgressoNaConta(conta2.uid, progressoDaConta(app.progresso));
+    const mesclado = mesclarProgresso(app.progresso, naConta);
+    mesclado.nomeOnline = mesclado.nomeOnline || conta2.nome;
+    await salvarProgressoNaConta(conta2.uid, progressoDaConta(mesclado));
+    app.progresso = mesclado;
+    contaAtual = conta2;
+    avisouFalhaAoSalvar = false;
+    definirConta(conta2.uid, metodo);
     if (!app.salvarSoLocal) {
       app.salvarSoLocal = app.salvar;
       app.salvar = function() {
         this.salvarSoLocal();
-        if (contaAtual) salvarProgressoNaConta(contaAtual.uid, progressoDaConta(this.progresso)).catch(() => {
+        if (!contaAtual) return;
+        salvarProgressoNaConta(contaAtual.uid, progressoDaConta(this.progresso)).then(() => {
+          avisouFalhaAoSalvar = false;
+        }, (e) => {
+          if (avisouFalhaAoSalvar) return;
+          avisouFalhaAoSalvar = true;
+          mostrarAviso("Conta", "O progresso ficou s\xF3 neste aparelho. " + (explicarErroFirebase(e) || ""), null, 7e3);
         });
       };
     }
+    app.salvar();
   }
+  var pelaInternet = () => firebaseConfigurado() && !!contaAtual;
   async function transporte(codigo) {
-    if (firebaseConfigurado() && contaAtual) return transporteFirebase(codigo);
+    if (pelaInternet()) return transporteFirebase(codigo);
     return transporteLocal(codigo);
   }
   function abrirOnline(app) {
     const nuvem = firebaseConfigurado();
     const nome = app.progresso.nomeOnline || "";
     const maxPessoas = app.opcoes.jogadores;
-    const html = '<div class="folha online"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Jogar online</h2><section class="online-conta"><h3>Conta</h3>' + (nuvem ? '<p id="o-conta-estado">' + (contaAtual ? "Conectado como <b>" + escaparHtml(contaAtual.nome) + "</b>. O progresso fica na conta." : "Entre para guardar conquistas, avatares e progresso na conta e jogar pela internet.") + '</p><div class="linha"><button class="botao" id="o-google">Entrar com Google</button><button class="botao discreto" id="o-sair"' + (contaAtual ? "" : " hidden") + '>Sair da conta</button></div><div class="campos-duplos"><input id="o-email" type="email" placeholder="e-mail" autocomplete="email"><input id="o-senha" type="password" placeholder="senha" autocomplete="current-password"></div><div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>' : '<p class="nota">As contas na nuvem e as salas pela internet entram quando o projeto Firebase do grupo for configurado. Por enquanto o progresso fica neste navegador, e as salas funcionam entre abas e janelas dele (abra o jogo em outra janela para testar).</p>') + '<div class="campo"><label for="o-nome">Seu nome na mesa</label><input id="o-nome" maxlength="20" value="' + escaparHtml(nome) + '" placeholder="Como os outros v\xE3o ver voc\xEA"></div></section><section class="online-sala" id="o-escolha"><h3>Sala</h3><p>A sala usa as op\xE7\xF5es do menu (jogadores, oponente, arquitetura, baralho, terreno e partida). Cadeiras sem pessoa ficam com o computador.</p><div class="campos-duplos"><div class="campo"><label for="o-pessoas">Pessoas na sala</label><select id="o-pessoas">' + Array.from({ length: maxPessoas - 1 }, (_, i) => '<option value="' + (i + 2) + '">' + (i + 2) + " de " + maxPessoas + " cadeiras</option>").join("") + '</select></div><div class="campo"><label>&nbsp;</label><button class="botao vinho" id="o-criar">Criar sala</button></div></div><div class="campos-duplos"><div class="campo"><label for="o-codigo">C\xF3digo da sala</label><input id="o-codigo" maxlength="5" placeholder="ABCDE" autocapitalize="characters"></div><div class="campo"><label>&nbsp;</label><button class="botao" id="o-entrar">Entrar na sala</button></div></div></section><section class="online-espera" id="o-espera" hidden><h3>Sala <span class="codigo-sala" id="o-codigo-sala"></span></h3><p id="o-espera-nota"></p><ol class="cadeiras" id="o-cadeiras"></ol><div class="linha fim"><button class="botao discreto" id="o-desistir">Sair da sala</button><button class="botao vinho" id="o-comecar" hidden>Come\xE7ar partida</button></div></section></div>';
+    const html = '<div class="folha online"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Jogar online</h2><section class="online-conta"><h3>Conta</h3>' + (nuvem ? '<p id="o-conta-estado">' + (contaAtual ? "Conectado como <b>" + escaparHtml(contaAtual.nome) + "</b>. O progresso fica na conta." : "Entre para guardar conquistas, avatares e progresso na conta e jogar pela internet.") + '</p><div class="linha"><button class="botao" id="o-google">Entrar com Google</button><button class="botao discreto" id="o-sair"' + (contaAtual ? "" : " hidden") + '>Sair da conta</button></div><div class="campos-duplos"><input id="o-email" type="email" placeholder="e-mail" autocomplete="email"><input id="o-senha" type="password" placeholder="senha" autocomplete="current-password"></div><div class="linha"><button class="botao discreto" id="o-email-entrar">Entrar com e-mail</button><button class="botao discreto" id="o-email-criar">Criar conta</button></div>' : '<p class="nota">As contas na nuvem e as salas pela internet entram quando o projeto Firebase do grupo for configurado. Por enquanto o progresso fica neste navegador, e as salas funcionam entre abas e janelas dele (abra o jogo em outra janela para testar).</p>') + '<div class="campo"><label for="o-nome">Seu nome na mesa</label><input id="o-nome" maxlength="20" value="' + escaparHtml(nome) + '" placeholder="Como os outros v\xE3o ver voc\xEA"></div></section><section class="online-sala" id="o-escolha"><h3>Sala</h3><p>A sala usa as op\xE7\xF5es do menu (jogadores, oponente, arquitetura, baralho, terreno e partida). Cadeiras sem pessoa ficam com o computador.</p><div class="campos-duplos"><div class="campo"><label for="o-pessoas">Pessoas na sala</label><select id="o-pessoas">' + Array.from({ length: maxPessoas - 1 }, (_, i) => '<option value="' + (i + 2) + '">' + (i + 2) + " de " + maxPessoas + " cadeiras</option>").join("") + '</select></div><div class="campo"><label>&nbsp;</label><button class="botao vinho" id="o-criar">Criar sala</button></div></div><div class="campos-duplos"><div class="campo"><label for="o-codigo">C\xF3digo da sala</label><input id="o-codigo" maxlength="5" placeholder="ABCDE" autocapitalize="characters"></div><div class="campo"><label>&nbsp;</label><button class="botao" id="o-entrar">Entrar na sala</button></div></div></section><section class="online-espera" id="o-espera" hidden><h3>Sala <span class="codigo-sala" id="o-codigo-sala"></span><button class="botao discreto pequeno" id="o-copiar" type="button">Copiar c\xF3digo</button></h3><p class="espera-estado" id="o-espera-nota" role="status" aria-live="polite"></p><ol class="cadeiras" id="o-cadeiras"></ol><p class="nota" id="o-espera-alcance"></p><div class="linha fim"><button class="botao discreto" id="o-desistir">Sair da sala</button><button class="botao vinho" id="o-comecar" hidden>Come\xE7ar partida</button></div></section></div>';
     let sala = null;
+    let procurando = null;
     const painel = abrirPainel(html, { aoFechar: () => {
+      clearTimeout(procurando);
       if (sala && !app.online) sala.sair();
     } });
     const $2 = (id) => painel.elemento.querySelector("#" + id);
@@ -8914,18 +8986,45 @@ export default function (NeuroDeck) {
       }
       return { cliente: clienteDaAba(), nome: nomeMesa, avatar: avatarDoJogador(app.progresso) };
     };
+    const pessoasNaSala = () => sala && sala.config ? sala.config.cadeiras.filter((c) => c.tipo === "humano").length : 0;
+    const estadoDaEspera = (texto, classe) => {
+      const nota2 = $2("o-espera-nota");
+      nota2.textContent = texto;
+      nota2.className = "espera-estado " + classe;
+    };
+    async function abrirSala(codigo) {
+      const t = await transporte(codigo);
+      if (t.aoFalhar) {
+        let avisou = false;
+        t.aoFalhar((erro) => {
+          const texto = "A sala perdeu a conex\xE3o. " + (explicarErroFirebase(erro) || "");
+          if ($2("o-espera-nota")) estadoDaEspera(texto, "erro");
+          if (!avisou) {
+            avisou = true;
+            mostrarAviso("Sala", texto, null, 8e3);
+          }
+        });
+      }
+      return new Sala(t, eu());
+    }
     function esperar(novaSala) {
       sala = novaSala;
       $2("o-escolha").hidden = true;
       $2("o-espera").hidden = false;
+      $2("o-espera-alcance").textContent = pelaInternet() ? "Sala pela internet: quem entrar precisa estar conectado numa conta." : firebaseConfigurado() ? "Sem conta, esta sala s\xF3 funciona entre abas e janelas deste navegador. Para jogar pela internet, saia da sala e entre numa conta." : "Esta sala funciona entre abas e janelas deste navegador.";
       const desenhar = (config) => {
         if (!config) return;
+        clearTimeout(procurando);
         $2("o-codigo-sala").textContent = config.codigo;
         const humanos = config.cadeiras.filter((c) => c.tipo === "humano").length;
-        $2("o-espera-nota").textContent = sala.souAnfitriao ? "Passe o c\xF3digo para quem vai jogar. Come\xE7e quando todos tiverem entrado (" + humanos + " na sala)." : "Voc\xEA est\xE1 na cadeira " + (sala.minhaCadeira + 1) + ". Esperando o anfitri\xE3o come\xE7ar.";
+        if (sala.souAnfitriao && humanos < 2) estadoDaEspera("Aguardando o(s) outro(s) jogador(es). O c\xF3digo da sala \xE9 " + config.codigo + ": passe para quem vai jogar.", "aguardando");
+        else if (sala.souAnfitriao) estadoDaEspera(humanos + " pessoas na sala. Comece quando todos tiverem entrado; as vagas que sobrarem ficam com o computador.", "pronta");
+        else if (sala.minhaCadeira < 0) estadoDaEspera("A sala " + config.codigo + " n\xE3o tem vaga livre ou a partida j\xE1 come\xE7ou.", "erro");
+        else estadoDaEspera("Voc\xEA est\xE1 na cadeira " + (sala.minhaCadeira + 1) + ". Aguardando o anfitri\xE3o come\xE7ar a partida.", "aguardando");
         $2("o-cadeiras").innerHTML = config.cadeiras.map((c, j) => '<li class="' + c.tipo + '">' + (c.tipo === "humano" ? escaparHtml(c.nome) + (c.cliente === sala.eu.cliente ? " (voc\xEA)" : "") + (j === 0 ? " \xB7 anfitri\xE3o" : "") : c.tipo === "vaga" ? "vaga livre" : "computador") + "</li>").join("");
         $2("o-comecar").hidden = !sala.souAnfitriao;
-        $2("o-comecar").disabled = humanos < 2;
+        $2("o-comecar").setAttribute("aria-disabled", String(humanos < 2));
+        $2("o-comecar").classList.toggle("inativo", humanos < 2);
         if (config.iniciada) {
           app.online = { sala };
           painel.fechar();
@@ -8935,12 +9034,20 @@ export default function (NeuroDeck) {
       sala.on("sala", desenhar).on("aviso", (t) => mostrarAviso("Sala", t, null, 4e3));
       desenhar(sala.config);
     }
+    const falhaAoAbrir = (erro) => mostrarAviso("Sala", "N\xE3o deu para abrir a sala. " + (explicarErroFirebase(erro) || ""), null, 8e3);
     $2("o-criar").addEventListener("click", async () => {
       const codigo = codigoDeSala();
-      const s = new Sala(await transporte(codigo), eu());
+      let s;
+      try {
+        s = await abrirSala(codigo);
+      } catch (e) {
+        falhaAoAbrir(e);
+        return;
+      }
       s.criar(codigo, { ...app.opcoes }, Number($2("o-pessoas").value), Math.floor(Math.random() * 2 ** 31));
       registrarEvento(EVENTOS.salaOnline, { acao: "criar", pessoas: Number($2("o-pessoas").value), conta: contaAtual ? 1 : 0 });
       esperar(s);
+      mostrarAviso("Sala " + codigo + " criada", "Aguardando o(s) outro(s) jogador(es). O c\xF3digo da sala \xE9 " + codigo + ".", null, 8e3);
     });
     $2("o-entrar").addEventListener("click", async () => {
       const codigo = $2("o-codigo").value.trim().toUpperCase();
@@ -8948,19 +9055,44 @@ export default function (NeuroDeck) {
         mostrarAviso("C\xF3digo da sala", "S\xE3o 5 letras e n\xFAmeros, como ABCDE.");
         return;
       }
-      const s = new Sala(await transporte(codigo), eu());
+      let s;
+      try {
+        s = await abrirSala(codigo);
+      } catch (e) {
+        falhaAoAbrir(e);
+        return;
+      }
       esperar(s);
-      $2("o-espera-nota").textContent = "Procurando a sala " + codigo + "\u2026";
+      estadoDaEspera("Procurando a sala " + codigo + "\u2026", "aguardando");
       $2("o-codigo-sala").textContent = codigo;
       s.entrar();
+      clearTimeout(procurando);
+      procurando = setTimeout(() => {
+        if (sala !== s || s.config) return;
+        estadoDaEspera("N\xE3o achei a sala " + codigo + ". Confira o c\xF3digo e se quem criou a sala continua com ela aberta" + (pelaInternet() ? "." : firebaseConfigurado() ? ". Sem conta, s\xF3 d\xE1 para entrar em salas abertas neste navegador." : " neste navegador."), "erro");
+      }, ESPERA_PELA_SALA);
       registrarEvento(EVENTOS.salaOnline, { acao: "entrar", conta: contaAtual ? 1 : 0 });
     });
     $2("o-comecar").addEventListener("click", () => {
       if (!sala) return;
+      if (pessoasNaSala() < 2) {
+        mostrarAviso("Aguardando jogadores", "Ainda n\xE3o entrou mais ningu\xE9m. O c\xF3digo da sala \xE9 " + sala.config.codigo + ": a partida come\xE7a quando outra pessoa entrar.", null, 7e3);
+        return;
+      }
       registrarEvento(EVENTOS.salaOnline, { acao: "comecar" });
       sala.comecar();
     });
+    $2("o-copiar").addEventListener("click", async () => {
+      const codigo = $2("o-codigo-sala").textContent.trim();
+      try {
+        await navigator.clipboard.writeText(codigo);
+        mostrarAviso("C\xF3digo copiado", "Sala " + codigo + ".", null, 2500);
+      } catch (e) {
+        mostrarAviso("C\xF3digo da sala", codigo + " (n\xE3o deu para copiar sozinho; anote ou selecione o c\xF3digo).", null, 6e3);
+      }
+    });
     $2("o-desistir").addEventListener("click", () => {
+      clearTimeout(procurando);
       if (sala) sala.sair();
       sala = null;
       $2("o-escolha").hidden = false;
@@ -8977,7 +9109,8 @@ export default function (NeuroDeck) {
           await usarConta(app, await acao(), metodo);
           mostrarConta();
         } catch (e) {
-          mostrarAviso("Conta", e.message || String(e));
+          const texto = explicarErroFirebase(e);
+          if (texto) mostrarAviso("Conta", texto, null, 8e3);
         }
       };
       $2("o-google").addEventListener("click", tentar(() => entrarComGoogle(), "google"));
