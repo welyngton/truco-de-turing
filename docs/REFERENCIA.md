@@ -801,7 +801,8 @@ Tela "Jogar online": conta e sala. - Conta: com o projeto Firebase configurado (
 | `clienteDaAba()` | função | Identificador deste aparelho, o mesmo depois de recarregar a aba (para voltar à cadeira). |
 | `ESPERA_PELA_SALA` | constante (exportada) | Tempo sem resposta do anfitrião até a tela dizer que não achou a sala. |
 | `pelaInternet` | constante | A sala deste aparelho vai pela internet (Firebase configurado e conta conectada)? |
-| `transporte(codigo)` | função | Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. |
+| `limpouSalas` | constante | Já limpou as mensagens vencidas do Firestore nesta visita? (uma vez só; ver firebase.js) |
+| `transporte(codigo)` | função | Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. Na primeira sala pela internet da visita, apaga em segundo plano as mensagens vencidas das salas antigas. |
 | `abrirOnline(app)` | função (exportada) | Abre a tela "Jogar online". |
 | `pessoasNaSala` | constante | Quantas pessoas estão sentadas na sala. |
 | `estadoDaEspera` | constante | Estado da espera, por escrito (e com a classe que dá a cor: 'aguardando', 'pronta' ou 'erro'). |
@@ -1108,10 +1109,12 @@ Erros do Firebase em português, dizendo o que fazer. Os códigos que vêm de co
 
 ## `src/online/firebase.js`
 
-Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte das salas pela internet (Firestore). O SDK só é baixado do CDN quando o projeto está configurado (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado. Dados no Firestore (ver firestore.rules): - `contas/{uid}`: o progresso da conta (ver contas.js, `progressoDaConta`); - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação.
+Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte das salas pela internet (Firestore). O SDK só é baixado do CDN quando o projeto está configurado (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado. Dados no Firestore (ver firestore.rules): - `contas/{uid}`: o progresso da conta (ver contas.js, `progressoDaConta`); - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação. Cada mensagem leva o `uid` de quem enviou (as regras conferem) e vence em `expira`; mensagens vencidas são apagadas por `limparMensagensVencidas` (issue #62).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
+| `VALIDADE_DAS_MENSAGENS` | constante (exportada) | Validade das mensagens das salas, em ms. Depois disso qualquer conta pode apagá-las (as regras aceitam até 1 dia). Seis horas cobrem com folga uma partida até 12 tentos. |
+| `LIMPEZA_POR_VEZ` | constante (exportada) | Quantas mensagens vencidas cada limpeza apaga, no máximo (um lote do Firestore aceita 500). |
 | `firebaseConfigurado()` | função (exportada) | O projeto Firebase do grupo está configurado? |
 | `carregar()` | função | Baixa e inicia o SDK (uma vez). |
 | `entrarComGoogle()` | função (exportada) | Entra com a conta Google (janela do Google). Devolve `{ uid, nome, email }`. |
@@ -1120,11 +1123,12 @@ Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte d
 | `contaGuardada()` | função (exportada) | Conta da sessão que o Firebase guardou neste navegador (quem entrou e não saiu), ou null. Espera o Firebase terminar de ler a sessão: o primeiro aviso de `onAuthStateChanged`. |
 | `carregarProgressoDaConta(uid)` | função (exportada) | Progresso salvo na conta, ou null. |
 | `salvarProgressoNaConta(uid, progresso)` | função (exportada) | Salva o progresso na conta. |
-| `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. `aoFalhar(cb)` avisa quando o Firestore recusa ler ou gravar (regras, conexão), para a tela dizer ao jogador em vez de a sala ficar parada em silêncio. |
+| `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. Cada mensagem enviada leva o `uid` da conta conectada (as regras recusam outro) e a data em que vence (`expira`); a sala recebe o `uid` junto e o usa para saber quem é quem (sala.js). `aoFalhar(cb)` avisa quando o Firestore recusa ler ou gravar (regras, conexão), para a tela dizer ao jogador em vez de a sala ficar parada em silêncio. |
+| `limparMensagensVencidas(limite = LIMPEZA_POR_VEZ)` | função (exportada) | Apaga mensagens vencidas (`expira` no passado) de todas as salas, até `limite` por vez. As regras deixam qualquer conta achar e apagar só as vencidas. O Firestore do plano gratuito não tem a limpeza automática (TTL), então o jogo faz isso quando alguém abre uma sala pela internet. A margem de 10 minutos cobre o relógio do aparelho adiantado em relação ao do servidor. |
 
 ## `src/online/sala.js`
 
-Sala de jogo online: quem está na mesa, em que cadeira, e a ordem das ações. Modelo: **passo a passo com anfitrião** (lockstep). Todos os aparelhos criam a mesma mão com a mesma semente e aplicam as mesmas ações na mesma ordem, então o estado é idêntico em todas as telas sem precisar enviar o estado inteiro. Quem cria a sala é o anfitrião: ele numera as ações (`seq`) e as repassa a todos, inclusive a quem pediu. Cada aparelho aplica a ação de número `n` só depois da `n - 1`. Uma ação inválida é rejeitada igualmente em todas as telas, porque todas têm o mesmo estado. O anfitrião também joga pelos oponentes do computador. Se uma pessoa some (sem sinal de vida por `TEMPO_SEM_SINAL`), o anfitrião passa a cadeira dela para um oponente do computador. Se o anfitrião some, a pessoa na menor cadeira assume (todos fazem a mesma conta) e continua a numeração de onde parou. A sala não sabe nada de Phaser nem de rede: recebe um `transporte` com `enviar(msg)`, `aoReceber(cb)` e `fechar()` (ver transportes.js) e avisa a interface por callbacks.
+Sala de jogo online: quem está na mesa, em que cadeira, e a ordem das ações. Modelo: **passo a passo com anfitrião** (lockstep). Todos os aparelhos criam a mesma mão com a mesma semente e aplicam as mesmas ações na mesma ordem, então o estado é idêntico em todas as telas sem precisar enviar o estado inteiro. Quem cria a sala é o anfitrião: ele numera as ações (`seq`) e as repassa a todos, inclusive a quem pediu. Cada aparelho aplica a ação de número `n` só depois da `n - 1`. Uma ação inválida é rejeitada igualmente em todas as telas, porque todas têm o mesmo estado. O anfitrião também joga pelos oponentes do computador. Se uma pessoa some (sem sinal de vida por `TEMPO_SEM_SINAL`), o anfitrião passa a cadeira dela para um oponente do computador. Se o anfitrião some, a pessoa na menor cadeira assume (todos fazem a mesma conta) e continua a numeração de onde parou. A sala não sabe nada de Phaser nem de rede: recebe um `transporte` com `enviar(msg)`, `aoReceber(cb)` e `fechar()` (ver transportes.js) e avisa a interface por callbacks. Contas (issue #62): pela internet, cada mensagem chega com o `uid` da conta que a enviou (o transporte do Firebase grava, e firestore.rules recusa um uid que não seja o de quem envia). Cada código de cliente (`de`) fica com a primeira conta que o usou, e mensagens com o mesmo código vindas de outra conta são ignoradas. A cadeira guarda o uid de quem sentou, e o anfitrião só numera pedidos desse uid. Os convidados só aceitam ações numeradas do anfitrião, e um anfitrião novo só de quem está sentado. Entre abas do mesmo navegador não há uid, e tudo funciona como antes.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1143,6 +1147,7 @@ Sala de jogo online: quem está na mesa, em que cadeira, e a ordem das ações. 
 | `enviar(acao)` | método | Envia uma ação para ser numerada (direto, se for o anfitrião). |
 | `sair()` | método | Sai da sala avisando os outros. |
 | `ao_ola(msg)` | método | Alguém quer entrar: o anfitrião dá uma vaga (ou devolve a cadeira de quem voltou). |
+| `sentado(cliente, uid)` | método | `cliente` (da conta `uid`) está sentado numa cadeira humana da sala? |
 | `aceitar(evento)` | método | Entrega as ações em ordem: a de número n só sai depois da n - 1. |
 | `ausente(cliente)` | método | Está sem sinal de vida há mais de TEMPO_SEM_SINAL? |
 | `verificarAusentes()` | método | O anfitrião troca quem sumiu por um oponente do computador (uma ação numerada, para todos trocarem no mesmo ponto da partida). Se quem sumiu foi o anfitrião, a menor cadeira humana presente assume. |
@@ -1156,7 +1161,7 @@ Transportes da sala online: por onde as mensagens passam. Todos têm a mesma for
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `transporteLocal(codigo)` | função (exportada) | Abas e janelas do mesmo navegador, pelo canal `truco-de-turing:<codigo>`. |
-| `centralEmMemoria({ atrasar = false } = {})` | função (exportada) | Central em memória: `central.conectar()` devolve um transporte; tudo o que um envia chega aos outros (cópia por JSON, como na rede). Com `atrasar: true` as mensagens só saem em `central.entregar()`, para os testes controlarem a ordem. |
+| `centralEmMemoria({ atrasar = false } = {})` | função (exportada) | Central em memória: `central.conectar(uid?)` devolve um transporte; tudo o que um envia chega aos outros (cópia por JSON, como na rede). Com `uid`, cada mensagem leva o uid dessa conta, como no Firebase (onde as regras garantem que é o de quem envia). Com `atrasar: true` as mensagens só saem em `central.entregar()`, para os testes controlarem a ordem. |
 
 ## `src/principal.js`
 

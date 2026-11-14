@@ -10,6 +10,7 @@
     "testar": "node --test \"testes/unidade/*.test.js\"",
     "testar:interface": "node --test \"testes/interface/*.test.js\"",
     "testar:performance": "node --test --test-concurrency=1 \"testes/performance/*.test.js\"",
+    "testar:regras": "npx --yes firebase-tools@15 emulators:exec --only firestore --project demo-truco-de-turing \"node --test testes/regras/*.test.js\"",
     "testar:tudo": "npm run testar && npm run testar:interface && npm run testar:performance",
     "relatorios": "node ferramentas/relatorios.js",
     "docs": "node ferramentas/documentar.js"
@@ -34,9 +35,11 @@
     "phaser": "^3.80.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@napi-rs/canvas": "^0.1.100",
     "c8": "^11.0.0",
     "esbuild": "^0.24.2",
+    "firebase": "^12.19.0",
     "jsdom": "^26.1.0",
     "playwright": "^1.63.0"
   },

@@ -1,20 +1,42 @@
 rules_version = '2';
 // Regras do Firestore do Truco de Turing (contas e salas online). Publique no console do Firebase
-// (Firestore > Regras) ou com `firebase deploy --only firestore:rules`.
+// (Firestore > Regras) ou com `firebase deploy --only firestore`. Testes: testes/regras/ (emulador).
 service cloud.firestore {
   match /databases/{db}/documents {
+    function conectado() { return request.auth != null; }
+
     // Progresso: cada conta lê e grava só o próprio documento.
     match /contas/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if conectado() && request.auth.uid == uid;
     }
-    // Salas: quem está logado lê as mensagens e cria mensagens novas, sem editar nem apagar as
-    // dos outros. A validação das jogadas é feita pelas regras do jogo em cada aparelho.
+
+    // Mensagem nova de uma sala: leva o uid de quem envia (ninguém fala em nome de outra conta),
+    // a hora do servidor (`em`, a ordem da coleção) e a data em que vence (`expira`, até 1 dia).
+    function mensagemValida() {
+      return request.resource.data.uid == request.auth.uid
+        && request.resource.data.de is string && request.resource.data.de.size() <= 64
+        && request.resource.data.tipo in ['sala', 'ola', 'pedido', 'acao', 'vivo', 'tchau']
+        && request.resource.data.em == request.time
+        && request.resource.data.expira is timestamp
+        && request.resource.data.expira > request.time
+        && request.resource.data.expira < request.time + duration.value(1, 'd');
+    }
+
+    // Salas: quem está logado e sabe o código lê as mensagens e cria mensagens novas em nome
+    // próprio. Ninguém edita; depois de vencidas, qualquer conta pode apagá-las (limpeza das salas
+    // antigas, src/online/firebase.js). A validação das jogadas é feita pelas regras do jogo em
+    // cada aparelho, e a sala confere o uid de cada cadeira (src/online/sala.js).
     match /salas/{codigo}/mensagens/{id} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null
-        && request.resource.data.de is string
-        && request.resource.data.tipo in ['sala', 'ola', 'pedido', 'acao', 'vivo', 'tchau'];
-      allow update, delete: if false;
+      allow read: if conectado();
+      allow create: if conectado() && mensagemValida();
+      allow update: if false;
+      allow delete: if conectado() && resource.data.expira < request.time;
+    }
+
+    // Limpeza: a busca nas mensagens de todas as salas (grupo de coleções) só acha as vencidas.
+    // Sem isso, ninguém lista mensagens sem saber o código da sala.
+    match /{caminho=**}/mensagens/{id} {
+      allow list: if conectado() && resource.data.expira < request.time;
     }
   }
 }

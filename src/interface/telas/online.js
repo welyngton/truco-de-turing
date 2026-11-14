@@ -14,7 +14,7 @@
  */
 import { Sala, codigoDeSala, idDeCliente } from '../../online/sala.js';
 import { transporteLocal } from '../../online/transportes.js';
-import { firebaseConfigurado, entrarComGoogle, entrarComEmail, transporteFirebase } from '../../online/firebase.js';
+import { firebaseConfigurado, entrarComGoogle, entrarComEmail, transporteFirebase, limparMensagensVencidas } from '../../online/firebase.js';
 import { explicarErroFirebase } from '../../online/errosFirebase.js';
 import { avatarDoJogador } from '../../conteudo/avatares.js';
 import { abrirPainel, escaparHtml, mostrarAviso } from '../paineis.js';
@@ -38,10 +38,17 @@ export const ESPERA_PELA_SALA = 8000;
 /** A sala deste aparelho vai pela internet (Firebase configurado e conta conectada)? */
 const pelaInternet = () => firebaseConfigurado() && !!contaAtual();
 
-/** Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. */
+/** Já limpou as mensagens vencidas do Firestore nesta visita? (uma vez só; ver firebase.js) */
+let limpouSalas = false;
+
+/**
+ * Cria o transporte da sala: Firebase com conta, senão entre abas deste navegador. Na primeira
+ * sala pela internet da visita, apaga em segundo plano as mensagens vencidas das salas antigas.
+ */
 async function transporte(codigo) {
-  if (pelaInternet()) return transporteFirebase(codigo);
-  return transporteLocal(codigo);
+  if (!pelaInternet()) return transporteLocal(codigo);
+  if (!limpouSalas) { limpouSalas = true; limparMensagensVencidas().catch(() => { /* fica para a próxima visita */ }); }
+  return transporteFirebase(codigo);
 }
 
 /**
@@ -86,7 +93,8 @@ export function abrirOnline(app) {
   const eu = () => {
     const nomeMesa = ($('o-nome').value.trim() || app.progresso.nomeOnline || 'Jogador').slice(0, 20);
     if (nomeMesa !== app.progresso.nomeOnline) { app.progresso.nomeOnline = nomeMesa; app.salvar(); }
-    return { cliente: clienteDaAba(), nome: nomeMesa, avatar: avatarDoJogador(app.progresso) };
+    /* pela internet, a sala amarra a cadeira à conta (ver sala.js) */
+    return { cliente: clienteDaAba(), nome: nomeMesa, avatar: avatarDoJogador(app.progresso), uid: pelaInternet() ? contaAtual().uid : undefined };
   };
 
   /** Quantas pessoas estão sentadas na sala. */

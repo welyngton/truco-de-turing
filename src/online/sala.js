@@ -15,6 +15,14 @@
  *
  * A sala não sabe nada de Phaser nem de rede: recebe um `transporte` com `enviar(msg)`,
  * `aoReceber(cb)` e `fechar()` (ver transportes.js) e avisa a interface por callbacks.
+ *
+ * Contas (issue #62): pela internet, cada mensagem chega com o `uid` da conta que a enviou (o
+ * transporte do Firebase grava, e firestore.rules recusa um uid que não seja o de quem envia).
+ * Cada código de cliente (`de`) fica com a primeira conta que o usou, e mensagens com o mesmo
+ * código vindas de outra conta são ignoradas. A cadeira guarda o uid de quem sentou, e o
+ * anfitrião só numera pedidos desse uid. Os convidados só aceitam ações numeradas do anfitrião, e
+ * um anfitrião novo só de quem está sentado. Entre abas do mesmo navegador não há uid, e tudo
+ * funciona como antes.
  */
 
 /** Intervalo do sinal de vida, em ms. */
@@ -36,7 +44,7 @@ export function idDeCliente(sortear = Math.random) {
 export class Sala {
   /**
    * @param {object} transporte `{ enviar(msg), aoReceber(cb), fechar() }`.
-   * @param {object} eu `{ cliente, nome, avatar }`.
+   * @param {object} eu `{ cliente, nome, avatar, uid? }` (`uid`: a conta, quando a sala vai pela internet).
    * @param {object} [relogio] `{ agora(), intervalo(fn, ms), parar(id) }` (os testes trocam por um relógio falso).
    */
   constructor(transporte, eu, relogio = RELOGIO_REAL) {
@@ -50,6 +58,7 @@ export class Sala {
     this.pendentes = new Map();  /* seq → ação, à espera das anteriores */
     this.historico = [];         /* todas as ações numeradas, para quem chega atrasado */
     this.vistos = new Map();     /* cliente → último sinal de vida */
+    this.donos = new Map();      /* cliente → uid da conta que usou esse código primeiro */
     this.ouvintes = { sala: [], acao: [], aviso: [] };
     this.desligar = transporte.aoReceber((msg) => this.receber(msg));
     this.batimento = relogio.intervalo(() => this.pulsar(), BATIMENTO);
@@ -75,7 +84,7 @@ export class Sala {
   criar(codigo, opcoes, pessoas, semente) {
     const total = opcoes.jogadores;
     const cadeiras = Array.from({ length: total }, (_, j) => {
-      if (j === 0) return { tipo: 'humano', cliente: this.eu.cliente, nome: this.eu.nome, avatar: this.eu.avatar };
+      if (j === 0) return { tipo: 'humano', cliente: this.eu.cliente, uid: this.eu.uid, nome: this.eu.nome, avatar: this.eu.avatar };
       if (j < pessoas) return { tipo: 'vaga', nome: 'Vaga ' + (j + 1) };
       return { tipo: 'oponente', nome: '' };
     });
@@ -133,6 +142,9 @@ export class Sala {
 
   receber(msg) {
     if (!msg || msg.de === this.eu.cliente) return;
+    /* o código de cliente é da primeira conta que o usou: outra conta não fala em nome dele */
+    if (!this.donos.has(msg.de)) this.donos.set(msg.de, msg.uid);
+    else if (this.donos.get(msg.de) !== msg.uid) return;
     this.vistos.set(msg.de, this.relogio.agora());
     const metodo = this['ao_' + msg.tipo];
     if (metodo) metodo.call(this, msg);
@@ -143,18 +155,22 @@ export class Sala {
     if (!this.souAnfitriao) return;
     const c = this.config.cadeiras;
     let j = c.findIndex((x) => x.cliente === msg.de);
+    /* a cadeira de quem volta é só da mesma conta */
+    if (j >= 0 && c[j].uid !== msg.uid) return;
     if (j < 0 && !this.config.iniciada) j = c.findIndex((x) => x.tipo === 'vaga');
     if (j >= 0) {
-      Object.assign(c[j], { tipo: 'humano', cliente: msg.de, nome: msg.nome || 'Jogador ' + (j + 1), avatar: msg.avatar });
+      Object.assign(c[j], { tipo: 'humano', cliente: msg.de, uid: msg.uid, nome: msg.nome || 'Jogador ' + (j + 1), avatar: msg.avatar });
       this.emitir('aviso', c[j].nome + ' entrou na sala.');
     }
     this.anunciarSala();
-    /* quem volta no meio da partida recebe as ações que perdeu */
-    for (const evento of this.historico) this.transporte.enviar({ ...evento, para: msg.de });
+    /* quem volta no meio da partida recebe as ações que perdeu (reenviadas por este anfitrião) */
+    for (const evento of this.historico) this.transporte.enviar({ ...evento, de: this.eu.cliente, para: msg.de });
   }
 
   ao_sala(msg) {
     if (this.souAnfitriao && msg.de !== this.anfitriao) return;
+    /* anfitrião novo (o antigo saiu): só alguém sentado na sala */
+    if (this.anfitriao && msg.de !== this.anfitriao && !this.sentado(msg.de, msg.uid)) return;
     this.anfitriao = msg.de;
     this.config = msg.config;
     this.seq = Math.max(this.seq, msg.seq || 0);
@@ -163,13 +179,20 @@ export class Sala {
 
   ao_pedido(msg) {
     if (!this.souAnfitriao) return;
-    /* só aceita ações de quem está sentado e em nome da própria cadeira */
-    const cadeira = this.config.cadeiras.findIndex((c) => c.cliente === msg.de);
-    if (cadeira < 0 || (msg.acao && msg.acao.cadeira !== cadeira)) return;
+    /* só aceita ações de quem está sentado (a mesma conta que sentou) e em nome da própria cadeira */
+    const cadeira = this.config.cadeiras.findIndex((c) => c.tipo === 'humano' && c.cliente === msg.de);
+    if (cadeira < 0 || this.config.cadeiras[cadeira].uid !== msg.uid || (msg.acao && msg.acao.cadeira !== cadeira)) return;
     this.ordenar(msg.acao);
   }
 
+  /** `cliente` (da conta `uid`) está sentado numa cadeira humana da sala? */
+  sentado(cliente, uid) {
+    return !!this.config && this.config.cadeiras.some((c) => c.tipo === 'humano' && c.cliente === cliente && c.uid === uid);
+  }
+
   ao_acao(msg) {
+    /* ações numeradas só valem vindas do anfitrião */
+    if (msg.de !== this.anfitriao) return;
     if (msg.para && msg.para !== this.eu.cliente) return;
     this.seq = Math.max(this.seq, msg.seq);
     if (!this.historico.some((e) => e.seq === msg.seq)) this.historico.push(msg);

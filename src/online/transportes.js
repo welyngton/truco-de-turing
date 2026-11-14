@@ -24,20 +24,21 @@ export function transporteLocal(codigo) {
 }
 
 /**
- * Central em memória: `central.conectar()` devolve um transporte; tudo o que um envia chega aos
- * outros (cópia por JSON, como na rede). Com `atrasar: true` as mensagens só saem em
- * `central.entregar()`, para os testes controlarem a ordem.
+ * Central em memória: `central.conectar(uid?)` devolve um transporte; tudo o que um envia chega
+ * aos outros (cópia por JSON, como na rede). Com `uid`, cada mensagem leva o uid dessa conta,
+ * como no Firebase (onde as regras garantem que é o de quem envia). Com `atrasar: true` as
+ * mensagens só saem em `central.entregar()`, para os testes controlarem a ordem.
  */
 export function centralEmMemoria({ atrasar = false } = {}) {
   const clientes = new Set();
   const fila = [];
   const despachar = (de, msg) => { for (const c of clientes) if (c !== de && c.aberto) for (const cb of c.ouvintes) cb(JSON.parse(msg)); };
   return {
-    conectar() {
+    conectar(uid) {
       const cliente = { ouvintes: new Set(), aberto: true };
       clientes.add(cliente);
       return {
-        enviar: (msg) => { if (!cliente.aberto) return; const texto = JSON.stringify(msg); if (atrasar) fila.push([cliente, texto]); else despachar(cliente, texto); },
+        enviar: (msg) => { if (!cliente.aberto) return; const texto = JSON.stringify(uid === undefined ? msg : { ...msg, uid }); if (atrasar) fila.push([cliente, texto]); else despachar(cliente, texto); },
         aoReceber: (cb) => { cliente.ouvintes.add(cb); return () => cliente.ouvintes.delete(cb); },
         fechar: () => { cliente.aberto = false; clientes.delete(cliente); },
       };

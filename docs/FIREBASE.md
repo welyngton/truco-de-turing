@@ -38,22 +38,60 @@ login com Google no site publicado mostra o aviso de "endereço não autorizado"
 3. Comece no **modo de produção**, que recusa tudo até as regras serem publicadas.
 4. Na aba **Regras**, apague o que houver, cole o conteúdo de [`firestore.rules`](../firestore.rules)
    e clique em **Publicar**.
+5. Na aba **Índices**, em **Isenções de campo único** (*Single field*), clique em **Adicionar
+   isenção**: coleção `mensagens`, campo `expira`, marque **Grupo de coleções** e deixe os índices
+   **Crescente** ligados para *Coleção* e para *Grupo de coleções*. É o índice da limpeza das salas
+   antigas (veja abaixo). Sem ele, a limpeza falha em silêncio e as mensagens vencidas ficam.
 
-Também dá para publicar as regras pela linha de comando, porque o repositório já tem
-`firebase.json` e `.firebaserc` apontando para o projeto:
+Também dá para publicar as regras e o índice pela linha de comando, porque o repositório já tem
+`firebase.json`, `firestore.indexes.json` e `.firebaserc` apontando para o projeto:
 
 ```bash
 npx firebase-tools login
-npx firebase-tools deploy --only firestore:rules
+npx firebase-tools deploy --only firestore
 ```
+
+**Publique as regras depois que o site com a versão nova estiver no ar** (o merge na `main`
+publica o GitHub Pages em alguns minutos). As regras novas recusam mensagens sem `uid` e
+`expira`, e quem ainda estiver com a versão antiga aberta perde a sala até recarregar a página.
 
 O que as regras deixam fazer:
 
 - `contas/{uid}`: cada conta lê e grava só o próprio progresso.
-- `salas/{codigo}/mensagens/{id}`: quem está conectado lê as mensagens e cria mensagens novas dos
-  tipos que a sala usa (`sala`, `ola`, `pedido`, `acao`, `vivo`, `tchau`). Ninguém edita nem apaga.
-  Um teste (`testes/unidade/firebase-config.test.js`) confere que essa lista acompanha o que
-  `src/online/sala.js` envia.
+- `salas/{codigo}/mensagens/{id}`: quem está conectado e sabe o código da sala lê as mensagens.
+  Mensagem nova só dos tipos que a sala usa (`sala`, `ola`, `pedido`, `acao`, `vivo`, `tchau`), com
+  o `uid` de quem envia (ninguém grava em nome de outra conta), a hora do servidor em `em` e a data
+  em que vence em `expira` (o jogo usa 6 horas; as regras aceitam até 1 dia). Ninguém edita.
+  Depois de vencida, qualquer conta pode apagar a mensagem.
+- Busca nas mensagens de todas as salas (grupo de coleções `mensagens`): só acha as vencidas. Sem
+  o código, ninguém lista as salas abertas.
+
+Os testes das regras rodam no emulador do Firestore (`npm run testar:regras`, precisa de Java 21;
+no GitHub Actions é o job **regras**). Outro teste (`testes/unidade/firebase-config.test.js`)
+confere que a lista de tipos acompanha o que `src/online/sala.js` envia.
+
+### Quem é quem na sala (#62)
+
+Cada aparelho tem um código de cliente (`de`), e cada mensagem chega com o `uid` da conta. A sala
+(`src/online/sala.js`) guarda a primeira conta que usou cada código e ignora mensagens com o mesmo
+código vindas de outra conta. A cadeira guarda o `uid` de quem sentou, e o anfitrião só numera
+pedidos desse `uid`, em nome da própria cadeira. Os convidados só aceitam ações numeradas do
+anfitrião, e só aceitam um anfitrião novo que esteja sentado na sala.
+
+### Limpeza das salas antigas (#62)
+
+O TTL do Firestore (apagar documentos sozinho depois de uma data) não funciona no plano gratuito
+(Spark): ele só apaga com faturamento ativado. Por isso o próprio jogo limpa as salas antigas. Na
+primeira sala pela internet de cada visita, o jogo busca até 200 mensagens vencidas de todas as
+salas e as apaga (`limparMensagensVencidas` em `src/online/firebase.js`). Assim as salas
+terminadas somem do banco algumas horas depois, sempre que alguém volta a jogar online.
+
+Se o projeto passar para o plano Blaze, dá para ligar também o TTL: em **Firestore Database >
+TTL**, crie uma política para o grupo de coleções `mensagens` no campo `expira`.
+
+As mensagens gravadas antes desta versão (por exemplo, das salas de teste `ZZTST`, `TPTYY` e
+`TKGTE`) não têm `expira` e não são achadas pela limpeza. Apague a coleção `salas` uma vez no
+console (**Firestore Database > Dados**, menu ⋮ de `salas` > **Excluir coleção**).
 
 ## 4. Conferir o app da Web
 
@@ -123,7 +161,14 @@ tela avisa isso.
 
 ## Limites conhecidos
 
-- As mensagens das salas ficam guardadas no Firestore, e nada as apaga. Para a disciplina, cabem
-  com folga na cota gratuita. Se precisar limpar, apague a coleção `salas` no console.
+- A limpeza das salas antigas depende de alguém abrir uma sala pela internet (veja acima). Sem
+  ninguém jogando, as mensagens vencidas esperam a próxima visita.
 - Cada aparelho tem o estado completo da mão, porque é assim que a sincronia funciona sem servidor
   próprio. Quem abrir o console do navegador consegue ver as cartas dos outros.
+- **Leitura das salas (avaliado na #62, não restringido):** qualquer conta que saiba o código lê as
+  mensagens da sala. Restringir a leitura a quem está sentado exigiria guardar as cadeiras num
+  documento da sala e consultá-lo nas regras a cada mensagem, o que conta uma leitura a mais por
+  mensagem (o sinal de vida vai a cada 3 segundos por jogador) e gasta a cota gratuita mais rápido.
+  O ganho é pequeno: quem está sentado já tem as cartas de todos no aparelho, e quem não está
+  precisa adivinhar um código entre cerca de 33 milhões, porque as regras não deixam listar as
+  salas. E o anfitrião, que numera as ações, continua sendo de confiança.
