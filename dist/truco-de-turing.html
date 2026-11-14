@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Spectral:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css">
 <style>
 /**
  * Estilo dos painéis HTML do Truco de Turing (menu, regras, grimório, conquistas, sobre, avisos).
@@ -451,9 +450,8 @@ html, body { overscroll-behavior: none; }
 /* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
 .grimorio-verbete .aprofundar { margin-top: 14px; border-top: 1px solid rgba(43, 22, 8, 0.2); padding-top: 4px; }
 .grimorio-verbete .aprofundar h3 { margin: 8px 0 4px; }
-.grimorio-verbete .katex-display { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
-.grimorio-verbete .formula-bloco { margin: 10px 0; overflow-x: auto; }
-.grimorio-verbete .formula-tex { font-size: 0.92em; white-space: nowrap; }
+.grimorio-verbete .aprofundar .formula { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.grimorio-verbete .aprofundar .formula math { font-size: 1.05em; }
 .grimorio-verbete .autoria { font-size: 13px; font-style: italic; color: #6b5536; }
 
 /* painéis de leitura da mesa (placar por camada, registro completo, cemitério) */
@@ -520,6 +518,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .cadeiras li.vaga { color: #9a8c6c; font-style: italic; font-weight: 400; }
 .cadeiras li.oponente { color: #5a4630; font-weight: 400; }
 
+/* faixa de consentimento das estatísticas de uso (interface/analise.js) */
+.faixa-estatisticas {
+  position: fixed; left: 50%; bottom: max(10px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 15;
+  width: min(760px, calc(100vw - 20px)); display: flex; align-items: center; gap: 14px;
+  background: #f3e6c8; color: #2b1608; border: 2px solid #0d0a08; border-radius: 12px; padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); font-family: var(--fonte-texto); font-size: 14px; line-height: 1.35;
+}
+.faixa-estatisticas p { margin: 0; flex: 1; }
+.faixa-estatisticas-botoes { display: flex; gap: 6px; flex: none; }
+@media (max-width: 560px) { .faixa-estatisticas { flex-direction: column; align-items: stretch; } }
+.estatisticas-situacao { font-weight: 600; }
+
 </style>
 <!-- /empacotar:cabecalho -->
 </head>
@@ -536,7 +546,6 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     <span>O jogo é feito para a tela na horizontal. Vire o aparelho para começar.</span>
   </div>
 </div>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
 <script>
 (() => {
@@ -1975,6 +1984,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   // src/conteudo/grimorio.js
   var NOME_DA_BIBLIOTECA = "Gloss\xE1rio";
   var bloco = (...partes) => '<math display="block">' + partes.join("") + "</math>";
+  var na = (...partes) => "<math>" + partes.join("") + "</math>";
   var mi = (x) => "<mi>" + x + "</mi>";
   var mo = (x) => "<mo>" + x + "</mo>";
   var mn = (x) => "<mn>" + x + "</mn>";
@@ -2090,8 +2100,19 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       equacao: bloco(mt("lacuna de generaliza\xE7\xE3o"), mo("="), sub(mi("L"), mt("valida\xE7\xE3o")), mo("\u2212"), sub(mi("L"), mt("treino"))),
       figura: "sobreajuste",
       noJogo: "Jogue 1 carta do mesmo valor sobre o \xFAltimo neur\xF4nio oculto do rival, deixando a pilha com 2 cartas: o neur\xF4nio vai para o cemit\xE9rio e a rede dele recua uma camada.",
-      aprofundar: String.raw`O sinal típico é o erro de treino continuar caindo enquanto o erro em dados novos (validação) começa a subir. Um remédio clássico é a regularização, que soma ao erro uma "multa" quando os pesos crescem demais ($\lambda$ controla a força dessa multa):`,
-      formula: String.raw`L(w) = \frac{1}{n}\sum_{i=1}^{n} (y_i - \hat{y}_i)^2 + \lambda \sum_j w_j^2`,
+      aprofundar: 'O sinal t\xEDpico \xE9 o erro de treino continuar caindo enquanto o erro em dados novos (valida\xE7\xE3o) come\xE7a a subir. Um rem\xE9dio cl\xE1ssico \xE9 a regulariza\xE7\xE3o, que soma ao erro uma "multa" quando os pesos crescem demais (' + na(mi("\u03BB")) + " controla a for\xE7a dessa multa):",
+      formula: bloco(
+        mi("L"),
+        par(mi("w")),
+        mo("="),
+        frac(mn("1"), mi("n")),
+        soma(linha(mi("i"), mo("="), mn("1")), mi("n")),
+        sup(par(sub(mi("y"), mi("i")), mo("\u2212"), sub(chapeu("y"), mi("i"))), mn("2")),
+        mo("+"),
+        mi("\u03BB"),
+        "<munder>" + mo("\u2211") + mi("j") + "</munder>",
+        sup(sub(mi("w"), mi("j")), mn("2"))
+      ),
       limite: "Na vida real ningu\xE9m ataca a rede dos outros com overfitting: \xE9 um defeito do pr\xF3prio treino. O jogo transforma o defeito em ataque."
     },
     {
@@ -2128,8 +2149,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       conceito: "Stack overflow n\xE3o \xE9 um conceito de redes neurais: \xE9 um erro de programa\xE7\xE3o. Cada chamada de fun\xE7\xE3o ocupa um quadro na pilha de chamadas; uma recurs\xE3o sem fim empilha quadros at\xE9 estourar a mem\xF3ria reservada, e o programa para. O parente mais pr\xF3ximo em redes neurais \xE9 a explos\xE3o de gradientes, quando o produto de muitos fatores maiores que 1 cresce at\xE9 virar infinito ou NaN, mas \xE9 outro fen\xF4meno e tem outra cura (gradient clipping, normaliza\xE7\xE3o).",
       equacao: bloco(mt("chamadas"), mo("\xD7"), mt("quadro"), mo("&gt;"), mt("pilha"), mspace(), mo("\u21D2"), mspace(), mt("estouro")) + bloco(mt("explos\xE3o de gradientes (outro fen\xF4meno):"), mspace(), linha("<mo>\u2016</mo>", prod(linha(mi("k"), mo("="), mn("1")), mi("L")), sub(negrito("J"), mi("k")), "<mo>\u2016</mo>"), mo("\u2192"), mi("\u221E")),
       noJogo: 'Deixe o \xFAltimo neur\xF4nio oculto do rival com 4 cartas no total: a pilha "estoura", a rede dele \xE9 finalizada e ele perde todas as cartas da m\xE3o.',
-      aprofundar: String.raw`A recursão precisa de um caso de parada. O fatorial, por exemplo, para em $0! = 1$. Sem essa linha, as chamadas nunca terminariam e a pilha estouraria:`,
-      formula: String.raw`n! = n \cdot (n-1)!, \qquad 0! = 1`,
+      aprofundar: "A recurs\xE3o precisa de um caso de parada. O fatorial, por exemplo, para em " + na(mn("0"), mo("!"), mo("="), mn("1")) + ". Sem essa linha, as chamadas nunca terminariam e a pilha estouraria:",
+      formula: bloco(mi("n"), mo("!"), mo("="), mi("n"), mo("\xB7"), par(mi("n"), mo("\u2212"), mn("1")), mo("!"), mo(","), mspace(), mn("0"), mo("!"), mo("="), mn("1")),
       limite: "\xC9 uma piada de programador: a pilha de 4 cartas lembra a pilha de chamadas. N\xE3o descreve nada que aconte\xE7a no treino de uma rede."
     },
     {
@@ -2152,8 +2173,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       conceito: "Aprendizado por transfer\xEAncia reaproveita um modelo pr\xE9-treinado em outra tarefa: as camadas iniciais, que aprenderam padr\xF5es gerais, ficam congeladas, e s\xF3 as \xFAltimas s\xE3o treinadas de novo. Economiza dados e tempo de treino.",
       equacao: bloco(mi("\u03B8"), mo("="), par(sub(mi("\u03B8"), mt("base")), mt(" (congelado)"), mo(","), sub(mi("\u03B8"), mt("cabe\xE7a")), mt(" (treinado)"))),
       noJogo: "Com 4 cartas do mesmo valor na m\xE3o, revele-as e troque-as por 4 cartas do limbo. Uma vez por partida e n\xE3o gasta o turno.",
-      aprofundar: String.raw`A rede da tarefa B começa com os pesos $\theta_A$ aprendidos na tarefa A, que ficam "congelados" na parte $g$; só a parte final $h$ é treinada com os dados da tarefa B:`,
-      formula: String.raw`\min_{\theta_h} \; L_B\big(h_{\theta_h}(g_{\theta_A}(x))\big)`,
+      aprofundar: "A rede da tarefa B come\xE7a com os pesos " + na(sub(mi("\u03B8"), mi("A"))) + ' aprendidos na tarefa A, que ficam "congelados" na parte ' + na(mi("g")) + "; s\xF3 a parte final " + na(mi("h")) + " \xE9 treinada com os dados da tarefa B:",
+      formula: bloco(
+        "<munder>" + mo("min") + sub(mi("\u03B8"), mi("h")) + "</munder>",
+        sub(mi("L"), mi("B")),
+        par(sub(mi("h"), sub(mi("\u03B8"), mi("h"))), par(sub(mi("g"), sub(mi("\u03B8"), mi("A"))), par(mi("x"))))
+      ),
       limite: "A compara\xE7\xE3o \xE9 fraca: o ponto em comum \xE9 trazer algo de fora em vez de come\xE7ar do zero."
     },
     {
@@ -2934,6 +2959,183 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     dicaFlutuante = null;
   }
 
+  // src/interface/analise.js
+  var ID_GOOGLE_ANALYTICS = "G-VWSGVWJK6Q";
+  var HOSTS_MEDIDOS = ["welyngton.github.io"];
+  var CHAVE_DO_CONSENTIMENTO = "truco-de-turing:estatisticas";
+  var EVENTOS = {
+    jogoIniciado: "jogo_iniciado",
+    // botão Jogar ou partida online
+    jogoFinalizado: "jogo_finalizado",
+    // partida encerrada (alguém chegou aos tentos)
+    vitoria: "vitoria_do_jogador",
+    // partida vencida por quem joga neste aparelho
+    derrota: "derrota_jogador",
+    // partida perdida por quem joga neste aparelho
+    fimDaMao: "fim_mao",
+    truco: "truco",
+    verbeteLido: "verbete_lido",
+    conquista: "conquista",
+    // conquista desbloqueada (id, nome, graduação, quantas a pessoa já tem)
+    menuClique: "menu_clique",
+    // botões do menu inicial (botao: jogar, jogar_online, como_jogar…)
+    menuOpcao: "menu_opcao",
+    // mudança numa escolha do menu (campo, valor)
+    mesaClique: "mesa_clique",
+    // botões REGRAS e MENU da mesa e as opções das janelas deles
+    acaoJogada: "acao_jogada",
+    // jogada de quem está neste aparelho (acao: ativar, tunagem, overfit…)
+    jogoAbandonado: "jogo_abandonado",
+    // saiu da partida antes do fim
+    dicas: "dicas",
+    // ligou ou desligou as dicas (ligadas: 1 ou 0)
+    revisao: "revisao_aberta",
+    // abriu a revisão da mão ou da partida
+    avatar: "avatar_escolhido",
+    audio: "audio_alterado",
+    // som ou música ligados/desligados
+    login: "login",
+    // evento recomendado do GA4 (method: google, email, email_novo)
+    logout: "logout",
+    salaOnline: "sala_online"
+    // criar, entrar ou começar uma sala
+  };
+  var PROPRIEDADES_DO_JOGADOR = ["id_jogador", "tipo_conta", "experiencia", "conquistas", "avatar", "verbetes_lidos"];
+  var CHAVE_DO_JOGADOR = "truco-de-turing:id-jogador";
+  var estado = { janela: null, carregado: false, conta: null, perfil: {} };
+  function idDoAparelho(janela = globalThis) {
+    try {
+      const salvo = janela.localStorage.getItem(CHAVE_DO_JOGADOR);
+      if (salvo) return salvo;
+    } catch (e) {
+    }
+    const cripto = janela.crypto;
+    const novo = cripto && cripto.randomUUID ? cripto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try {
+      janela.localStorage.setItem(CHAVE_DO_JOGADOR, novo);
+    } catch (e) {
+    }
+    return novo;
+  }
+  function idDoJogador(janela = globalThis) {
+    return estado.conta ? "c-" + estado.conta : "a-" + idDoAparelho(janela);
+  }
+  function enviarJogador(janela) {
+    janela.gtag("set", { user_id: estado.conta || null });
+    janela.gtag("set", "user_properties", { ...estado.perfil, id_jogador: idDoJogador(janela), tipo_conta: estado.perfil.tipo_conta || (estado.conta ? "conta" : "local") });
+  }
+  function atualizarJogador(dados) {
+    for (const [k, v] of Object.entries(dados || {})) if (PROPRIEDADES_DO_JOGADOR.includes(k) && k !== "id_jogador") estado.perfil[k] = v;
+    if (medindo()) enviarJogador(estado.janela);
+  }
+  function definirConta(uid, metodo) {
+    const antes = estado.conta;
+    estado.conta = uid || null;
+    estado.perfil.tipo_conta = uid ? metodo && metodo.startsWith("email") ? "email" : metodo || "conta" : "local";
+    if (!medindo()) return;
+    if (uid) {
+      enviarJogador(estado.janela);
+      registrarEvento(EVENTOS.login, { method: metodo || "conta" });
+    } else if (antes) {
+      registrarEvento(EVENTOS.logout);
+      enviarJogador(estado.janela);
+    }
+  }
+  function podeMedir(janela = globalThis) {
+    const local = janela.location;
+    if (!local || local.protocol !== "https:" || !HOSTS_MEDIDOS.includes(local.hostname)) return false;
+    return !(janela.navigator && janela.navigator.webdriver);
+  }
+  function consentimento(janela = globalThis) {
+    try {
+      const valor = janela.localStorage.getItem(CHAVE_DO_CONSENTIMENTO);
+      return valor === "sim" || valor === "nao" ? valor : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function medindo() {
+    return !!estado.janela && estado.carregado;
+  }
+  function carregar(janela) {
+    if (estado.carregado) return;
+    janela.dataLayer = janela.dataLayer || [];
+    janela.gtag = janela.gtag || function gtag() {
+      janela.dataLayer.push(arguments);
+    };
+    janela.gtag("consent", "default", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+    janela.gtag("js", /* @__PURE__ */ new Date());
+    enviarJogador(janela);
+    janela.gtag("config", ID_GOOGLE_ANALYTICS, { allow_google_signals: false, allow_ad_personalization_signals: false });
+    const script = janela.document.createElement("script");
+    script.async = true;
+    script.src = "https://www.googletagmanager.com/gtag/js?id=" + ID_GOOGLE_ANALYTICS;
+    janela.document.head.appendChild(script);
+    estado.janela = janela;
+    estado.carregado = true;
+  }
+  function apagarCookies(janela) {
+    const doc = janela.document;
+    for (const parte of String(doc.cookie || "").split(";")) {
+      const nome = parte.split("=")[0].trim();
+      if (!/^_ga(_|$)/.test(nome)) continue;
+      for (const dominio of ["", "; domain=" + janela.location.hostname, "; domain=." + janela.location.hostname]) {
+        doc.cookie = nome + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/" + dominio;
+      }
+    }
+  }
+  function definirConsentimento(escolha, janela = globalThis) {
+    try {
+      janela.localStorage.setItem(CHAVE_DO_CONSENTIMENTO, escolha);
+    } catch (e) {
+    }
+    removerFaixa(janela);
+    if (!podeMedir(janela)) return;
+    if (escolha === "sim") {
+      if (estado.carregado) janela.gtag("consent", "update", { analytics_storage: "granted" });
+      else carregar(janela);
+      estado.janela = janela;
+    } else {
+      if (estado.carregado) janela.gtag("consent", "update", { analytics_storage: "denied" });
+      estado.janela = null;
+      apagarCookies(janela);
+      try {
+        janela.localStorage.removeItem(CHAVE_DO_JOGADOR);
+      } catch (e) {
+      }
+    }
+  }
+  var TEXTO_DAS_ESTATISTICAS = "O Truco de Turing usa o Google Analytics para entender como o jogo \xE9 jogado (partidas, jogadas, bot\xF5es, verbetes lidos e conquistas) e, assim, melhor\xE1-lo. Cada jogador \xE9 contado por um c\xF3digo an\xF4nimo, deste aparelho ou da conta; nome e e-mail n\xE3o s\xE3o enviados. Ele guarda um cookie neste aparelho e n\xE3o usa nada para publicidade.";
+  function mostrarFaixa(janela) {
+    const doc = janela.document;
+    if (doc.getElementById("faixa-estatisticas")) return;
+    const faixa = doc.createElement("div");
+    faixa.id = "faixa-estatisticas";
+    faixa.className = "faixa-estatisticas";
+    faixa.setAttribute("role", "dialog");
+    faixa.setAttribute("aria-label", "Estat\xEDsticas de uso");
+    faixa.innerHTML = "<p>" + TEXTO_DAS_ESTATISTICAS + ' Voc\xEA pode mudar a escolha na tela "Sobre".</p><div class="faixa-estatisticas-botoes"><button class="botao pequeno" data-escolha="sim">Aceitar</button><button class="botao pequeno discreto" data-escolha="nao">Recusar</button></div>';
+    faixa.querySelectorAll("[data-escolha]").forEach((b) => b.addEventListener("click", () => definirConsentimento(b.dataset.escolha, janela)));
+    doc.body.appendChild(faixa);
+  }
+  function removerFaixa(janela) {
+    const faixa = janela.document && janela.document.getElementById("faixa-estatisticas");
+    if (faixa) faixa.remove();
+  }
+  function iniciarAnalise(janela = globalThis) {
+    if (!podeMedir(janela)) return;
+    const escolha = consentimento(janela);
+    if (escolha === "sim") carregar(janela);
+    else if (escolha === null) mostrarFaixa(janela);
+  }
+  function registrarEvento(nome, dados = {}) {
+    if (!medindo()) return;
+    try {
+      estado.janela.gtag("event", nome, dados);
+    } catch (e) {
+    }
+  }
+
   // src/aplicacao.js
   var OPCOES_PADRAO = {
     oponente: "guloso",
@@ -2946,6 +3148,10 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     arquitetura: "padrao",
     baralhos: 1
   };
+  function faixaDeExperiencia(maos) {
+    const n = Number(maos) || 0;
+    return n === 0 ? "novato" : n < 10 ? "iniciante" : n < 50 ? "intermediario" : "veterano";
+  }
   function normalizarOpcoes(opcoes) {
     const o = { ...OPCOES_PADRAO, ...opcoes || {} };
     if (o.oponente === "doisHumanos") {
@@ -2975,6 +3181,17 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       if (!this.progresso.musicaEscolhida) this.progresso.musica = true;
       this.opcoes = normalizarOpcoes(this.progresso.opcoes);
       Som.definirMudo(!!this.progresso.mudo);
+      this.atualizarJogadorNasEstatisticas();
+    },
+    /** Passa às estatísticas de uso a experiência, as conquistas, o avatar e os verbetes lidos. */
+    atualizarJogadorNasEstatisticas() {
+      const p = this.progresso;
+      atualizarJogador({
+        experiencia: faixaDeExperiencia(p.maos),
+        conquistas: Object.keys(p.desbloqueadas || {}).length,
+        avatar: p.avatar || "padrao",
+        verbetes_lidos: p.verbetesLidos || 0
+      });
     },
     /** Grava o progresso. */
     salvar() {
@@ -2990,6 +3207,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       this.progresso.mudo = !Som.estaMudo();
       Som.definirMudo(this.progresso.mudo);
       this.salvar();
+      registrarEvento(EVENTOS.audio, { tipo: "som", ligado: this.progresso.mudo ? 0 : 1 });
     },
     /**
      * Liga ou desliga a música de fundo e lembra a escolha.
@@ -2999,11 +3217,24 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       this.progresso.musica = !this.progresso.musica;
       this.progresso.musicaEscolhida = true;
       this.salvar();
+      registrarEvento(EVENTOS.audio, { tipo: "musica", ligado: this.progresso.musica ? 1 : 0 });
       if (this.progresso.musica && terreno) Musica.tocar(terreno);
       else Musica.parar();
     },
     /** Sai do menu e abre a mesa. */
     jogar() {
+      const o = this.opcoes || OPCOES_PADRAO;
+      registrarEvento(EVENTOS.jogoIniciado, {
+        baralho: o.baralho,
+        terreno: o.terreno,
+        oponente: o.oponente,
+        arquitetura: o.arquitetura,
+        jogadores: o.jogadores,
+        humanos: o.humanos,
+        baralhos: o.baralhos,
+        alvo: o.alvo,
+        online: this.online ? 1 : 0
+      });
       fecharTodos();
       this.modoImersivo();
       document.body.classList.add("em-partida");
@@ -3077,6 +3308,9 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       }
       this.salvar();
       if (novas.length) Som.medalha();
+      const total = Object.keys(p.desbloqueadas).length;
+      for (const conquista of novas) registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total, maos: p.maos });
+      this.atualizarJogadorNasEstatisticas();
       return novas;
     },
     /** Marca um verbete como lido e concede "Bibliotecário" quando todos foram lidos. */
@@ -3085,13 +3319,16 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       if (p.lidos[id]) return;
       p.lidos[id] = true;
       p.verbetesLidos = Object.keys(p.lidos).length;
+      registrarEvento(EVENTOS.verbeteLido, { verbete: id, lidos: p.verbetesLidos });
       if (!p.desbloqueadas.biblio && p.verbetesLidos >= VERBETES.length) {
         p.desbloqueadas.biblio = Date.now();
         const conquista = CONQUISTAS.find((c) => c.id === "biblio");
         mostrarAviso("Conquista: " + conquista.nome, conquista.descricao, "medalha-aviso");
         Som.medalha();
+        registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total: Object.keys(p.desbloqueadas).length, maos: p.maos });
       }
       this.salvar();
+      this.atualizarJogadorNasEstatisticas();
     }
   };
 
@@ -6668,7 +6905,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return o.c;
   }
   var MARGEM_BOTAO = 5;
-  function desenharBotao(w, h, S, variante, estado) {
+  function desenharBotao(w, h, S, variante, estado2) {
     let pad = MARGEM_BOTAO, o = criarTela(w + pad * 2, h + pad * 2, S || 1), ctx = o.ctx;
     let x = pad, y = pad - 1, r = Math.min(10, h / 3.2);
     let V = {
@@ -6676,11 +6913,11 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       vinho: ["#f08a8a", "#c0303e", "#7a1424", "#3a0810"],
       pedra: ["#cbbd9a", "#8a7a5a", "#5a4c32", "#2a2214"]
     }[variante] || [];
-    if (estado === "inativo") V = variante === "vinho" ? ["#5a2a30", "#3e1a1f", "#2c1015", "#160709"] : ["#4a4232", "#342e22", "#262118", "#120f0a"];
-    if (estado === "foco") V = V.map(function(c) {
+    if (estado2 === "inativo") V = variante === "vinho" ? ["#5a2a30", "#3e1a1f", "#2c1015", "#160709"] : ["#4a4232", "#342e22", "#262118", "#120f0a"];
+    if (estado2 === "foco") V = V.map(function(c) {
       return tonalizar(c, 0.18);
     });
-    sombraSuave(ctx, 5, 2.5, estado === "inativo" ? 0.35 : 0.6);
+    sombraSuave(ctx, 5, 2.5, estado2 === "inativo" ? 0.35 : 0.6);
     ctx.fillStyle = "#0b0907";
     caminhoArredondado(ctx, x, y + 1.5, w, h, r);
     ctx.fill();
@@ -6691,7 +6928,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     ctx.save();
     caminhoArredondado(ctx, x, y, w, h, r);
     ctx.clip();
-    if (estado !== "inativo") {
+    if (estado2 !== "inativo") {
       ctx.fillStyle = "rgba(255,255,255,.18)";
       ctx.beginPath();
       ctx.ellipse(x + w / 2, y - h * 0.15, w * 0.62, h * 0.5, 0, 0, Math.PI * 2);
@@ -6704,7 +6941,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     caminhoArredondado(ctx, x, y, w, h, r);
     ctx.stroke();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = estado === "inativo" ? "rgba(217,178,96,.22)" : "rgba(255,255,255,.45)";
+    ctx.strokeStyle = estado2 === "inativo" ? "rgba(217,178,96,.22)" : "rgba(255,255,255,.45)";
     caminhoArredondado(ctx, x + 1.6, y + 1.6, w - 3.2, h - 3.2, r - 1.5);
     ctx.stroke();
     return o.c;
@@ -6757,18 +6994,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   };
 
   // src/nucleo/aleatorio.js
-  function sortear(estado) {
-    let t = estado.semente = estado.semente + 1831565813 | 0;
+  function sortear(estado2) {
+    let t = estado2.semente = estado2.semente + 1831565813 | 0;
     t = Math.imul(t ^ t >>> 15, t | 1);
     t ^= t + Math.imul(t ^ t >>> 7, t | 61);
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   }
-  function sortearInteiro(estado, n) {
-    return Math.floor(sortear(estado) * n);
+  function sortearInteiro(estado2, n) {
+    return Math.floor(sortear(estado2) * n);
   }
-  function embaralhar(lista, estado) {
+  function embaralhar(lista, estado2) {
     for (let i = lista.length - 1; i > 0; i--) {
-      const j = sortearInteiro(estado, i + 1);
+      const j = sortearInteiro(estado2, i + 1);
       [lista[i], lista[j]] = [lista[j], lista[i]];
     }
     return lista;
@@ -7309,9 +7546,9 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     if (mao.fase === "inicio") return 0.5;
     let vitorias = 0;
     for (let i = 0; i < n; i++) {
-      const estado = determinize(mao.nd, j, novoGerador());
-      playout(estado, estado.rng);
-      if (estado.winner === j) vitorias++;
+      const estado2 = determinize(mao.nd, j, novoGerador());
+      playout(estado2, estado2.rng);
+      if (estado2.winner === j) vitorias++;
     }
     return vitorias / n;
   }
@@ -7746,31 +7983,9 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return FIGURAS[nome] ? FIGURAS[nome]() : "";
   }
 
-  // src/interface/formulas.js
-  var FORMULA = /\$\$([\s\S]+?)\$\$|\$([^$]+?)\$/g;
-  function formulaHtml(tex, destaque, katex = globalThis.katex) {
-    if (katex && typeof katex.renderToString === "function") {
-      try {
-        return katex.renderToString(tex, { displayMode: destaque, throwOnError: false, output: "htmlAndMathml" });
-      } catch (e) {
-      }
-    }
-    const codigo = '<code class="formula-tex">' + escaparHtml(tex) + "</code>";
-    return destaque ? '<div class="formula-bloco">' + codigo + "</div>" : codigo;
-  }
-  function textoComFormulas(texto, katex = globalThis.katex) {
-    let html = "", ultimo = 0;
-    for (const m of String(texto).matchAll(FORMULA)) {
-      html += escaparHtml(texto.slice(ultimo, m.index));
-      html += m[1] !== void 0 ? formulaHtml(m[1].trim(), true, katex) : formulaHtml(m[2].trim(), false, katex);
-      ultimo = m.index + m[0].length;
-    }
-    return html + escaparHtml(String(texto).slice(ultimo));
-  }
-
   // src/interface/telas/grimorio.js
   function htmlDoVerbete(v) {
-    return (v.ideia ? '<p class="ideia"><b>A ideia:</b> ' + escaparHtml(v.ideia) + "</p>" : "") + "<p>" + escaparHtml(v.conceito) + "</p>" + (v.equacao ? '<div class="equacao">' + v.equacao + "</div>" : "") + (v.figura ? '<figure class="figura">' + figuraDaBiblioteca(v.figura) + "</figure>" : "") + '<p class="no-jogo"><b>No jogo:</b> ' + escaparHtml(v.noJogo) + "</p>" + (v.limite ? '<p class="limite"><b>At\xE9 onde vale a compara\xE7\xE3o:</b> ' + escaparHtml(v.limite) + "</p>" : "") + (v.aprofundar ? '<div class="aprofundar"><h3>Para se aprofundar</h3><p>' + textoComFormulas(v.aprofundar) + "</p>" + (v.formula ? textoComFormulas("$$" + v.formula + "$$") : "") + "</div>" : "") + (v.fonte ? '<p class="fonte">Fonte: ' + escaparHtml(v.fonte) + "</p>" : "") + (v.autoria ? '<p class="autoria">Colabora\xE7\xE3o de ' + escaparHtml(v.autoria) + ".</p>" : "");
+    return (v.ideia ? '<p class="ideia"><b>A ideia:</b> ' + escaparHtml(v.ideia) + "</p>" : "") + "<p>" + escaparHtml(v.conceito) + "</p>" + (v.equacao ? '<div class="equacao">' + v.equacao + "</div>" : "") + (v.figura ? '<figure class="figura">' + figuraDaBiblioteca(v.figura) + "</figure>" : "") + '<p class="no-jogo"><b>No jogo:</b> ' + escaparHtml(v.noJogo) + "</p>" + (v.limite ? '<p class="limite"><b>At\xE9 onde vale a compara\xE7\xE3o:</b> ' + escaparHtml(v.limite) + "</p>" : "") + (v.aprofundar ? '<div class="aprofundar"><h3>Para se aprofundar</h3><p>' + v.aprofundar + "</p>" + (v.formula ? '<div class="formula">' + v.formula + "</div>" : "") + "</div>" : "") + (v.fonte ? '<p class="fonte">Fonte: ' + escaparHtml(v.fonte) + "</p>" : "") + (v.autoria ? '<p class="autoria">Colabora\xE7\xE3o de ' + escaparHtml(v.autoria) + ".</p>" : "");
   }
   function abrirGrimorio(app, idInicial, aoFechar) {
     const html = '<div class="folha"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>' + NOME_DA_BIBLIOTECA + '</h2><p>Cada mec\xE2nica do jogo \xE9 um conceito de aprendizado de m\xE1quina. Os verbetes aparecem destacados quando acontecem na mesa, e a ajuda de cada a\xE7\xE3o leva ao verbete dela.</p><div class="grimorio"><nav class="grimorio-lista" id="g-lista"></nav><article class="grimorio-verbete" id="g-verbete"></article></div></div>';
@@ -7979,6 +8194,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       if (!avatarLiberado(avatar, app.progresso)) return;
       app.progresso.avatar = avatar.id;
       app.salvar();
+      registrarEvento(EVENTOS.avatar, { avatar: avatar.id });
+      if (app.atualizarJogadorNasEstatisticas) app.atualizarJogadorNasEstatisticas();
       painel.elemento.querySelectorAll(".avatar-opcao").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
       if (aoMudar) aoMudar(avatar.id);
     }));
@@ -8193,13 +8410,26 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.4.0";
+  var VERSAO = "2.4.1";
   var DATA_DA_VERSAO = "2026-11-13";
 
   // src/interface/telas/sobre.js
+  function situacaoDasEstatisticas() {
+    if (!podeMedir()) return "Nesta c\xF3pia do jogo (fora do site publicado) nada \xE9 medido.";
+    const escolha = consentimento();
+    return escolha === "sim" ? "Neste aparelho: ligadas." : escolha === "nao" ? "Neste aparelho: desligadas." : "Neste aparelho: ainda sem escolha.";
+  }
   function abrirSobre() {
-    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>Dois jogos que viraram um</h3><p>A turma fez dois jogos para o mesmo tema, e o professor decidiu juntar o melhor de cada um:</p><ul><li><b>NeuroDeck</b> (<a href="https://neurodeck-fpo.web.app/" target="_blank" rel="noopener">neurodeck-fpo.web.app</a>): as <b>regras</b>. O motor do NeuroDeck decide tudo o que acontece na mesa: jogadas, pontua\xE7\xE3o, terrenos, desempates, as arquiteturas de rede, de 2 a 5 jogadores, os oponentes do computador e a API de mods.</li><li><b>Truco de Turing</b>: a <b>interface</b>. Arte das cartas, menu, mesa, efeitos, sons, m\xFAsica, avatares, conquistas, o Gloss\xE1rio e o modo truco.</li></ul><p>O motor do NeuroDeck foi copiado para o projeto sem altera\xE7\xF5es e conferido contra o site publicado em 1.000 partidas; depois recebeu as decis\xF5es de regra do professor e do grupo, registradas no reposit\xF3rio.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><h3>Autores</h3><ul class="autores"><li><b>Francisco Lima</b>: NeuroDeck (regras, motor, oponentes e mods).</li><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes, valida\xE7\xE3o das regras e fus\xE3o dos dois jogos.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es da fus\xE3o.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras \xE9 o do NeuroDeck, inclu\xEDdo com a concord\xE2ncia do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
-    return abrirPainel(html, { fechaAoClicarFora: true });
+    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>Dois jogos que viraram um</h3><p>A turma fez dois jogos para o mesmo tema, e o professor decidiu juntar o melhor de cada um:</p><ul><li><b>NeuroDeck</b> (<a href="https://neurodeck-fpo.web.app/" target="_blank" rel="noopener">neurodeck-fpo.web.app</a>): as <b>regras</b>. O motor do NeuroDeck decide tudo o que acontece na mesa: jogadas, pontua\xE7\xE3o, terrenos, desempates, as arquiteturas de rede, de 2 a 5 jogadores, os oponentes do computador e a API de mods.</li><li><b>Truco de Turing</b>: a <b>interface</b>. Arte das cartas, menu, mesa, efeitos, sons, m\xFAsica, avatares, conquistas, o Gloss\xE1rio e o modo truco.</li></ul><p>O motor do NeuroDeck foi copiado para o projeto sem altera\xE7\xF5es e conferido contra o site publicado em 1.000 partidas; depois recebeu as decis\xF5es de regra do professor e do grupo, registradas no reposit\xF3rio.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><h3>Autores</h3><ul class="autores"><li><b>Francisco Lima</b>: NeuroDeck (regras, motor, oponentes e mods).</li><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes, valida\xE7\xE3o das regras e fus\xE3o dos dois jogos.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es da fus\xE3o.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras \xE9 o do NeuroDeck, inclu\xEDdo com a concord\xE2ncia do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const painel = abrirPainel(html, { fechaAoClicarFora: true });
+    for (const escolha of ["sim", "nao"]) {
+      const botao = painel.elemento.querySelector("#s-estatisticas-" + escolha);
+      if (botao) botao.addEventListener("click", () => {
+        definirConsentimento(escolha);
+        painel.elemento.querySelector("#s-estatisticas").textContent = situacaoDasEstatisticas();
+      });
+    }
+    return painel;
   }
 
   // src/conteudo/modExemplo.js
@@ -8556,7 +8786,7 @@ export default function (NeuroDeck) {
     storageBucket: "truco-e26e8.firebasestorage.app",
     messagingSenderId: "932294943078",
     appId: "1:932294943078:web:e5d0edf14d5a44de45a8a7"
-    /* sem measurementId: o jogo não usa o Google Analytics */
+    /* sem measurementId: o Google Analytics é carregado à parte, com consentimento (interface/analise.js) */
   };
   var VERSAO_FIREBASE = "10.12.2";
 
@@ -8565,7 +8795,7 @@ export default function (NeuroDeck) {
   function firebaseConfigurado() {
     return !!FIREBASE;
   }
-  async function carregar() {
+  async function carregar2() {
     if (sdk) return sdk;
     if (!FIREBASE) throw new Error("O projeto Firebase ainda n\xE3o foi configurado (src/online/configuracao.js).");
     const base = "https://www.gstatic.com/firebasejs/" + VERSAO_FIREBASE + "/";
@@ -8578,32 +8808,32 @@ export default function (NeuroDeck) {
     return sdk;
   }
   async function entrarComGoogle() {
-    const { auth, autenticacao } = await carregar();
+    const { auth, autenticacao } = await carregar2();
     const { user } = await auth.signInWithPopup(autenticacao, new auth.GoogleAuthProvider());
     return conta(user);
   }
   async function entrarComEmail(email, senha, criar = false) {
-    const { auth, autenticacao } = await carregar();
+    const { auth, autenticacao } = await carregar2();
     const fazer = criar ? auth.createUserWithEmailAndPassword : auth.signInWithEmailAndPassword;
     const { user } = await fazer(autenticacao, email, senha);
     return conta(user);
   }
   async function sairDaConta() {
-    const { auth, autenticacao } = await carregar();
+    const { auth, autenticacao } = await carregar2();
     await auth.signOut(autenticacao);
   }
   var conta = (user) => ({ uid: user.uid, nome: user.displayName || (user.email || "").split("@")[0] || "Jogador", email: user.email || "" });
   async function carregarProgressoDaConta(uid) {
-    const { fs, banco } = await carregar();
+    const { fs, banco } = await carregar2();
     const doc = await fs.getDoc(fs.doc(banco, "contas", uid));
     return doc.exists() ? doc.data() : null;
   }
   async function salvarProgressoNaConta(uid, progresso) {
-    const { fs, banco } = await carregar();
+    const { fs, banco } = await carregar2();
     await fs.setDoc(fs.doc(banco, "contas", uid), JSON.parse(JSON.stringify(progresso)));
   }
   async function transporteFirebase(codigo) {
-    const { fs, banco } = await carregar();
+    const { fs, banco } = await carregar2();
     const colecao = fs.collection(banco, "salas", codigo, "mensagens");
     const ouvintes = /* @__PURE__ */ new Set();
     const vistos = /* @__PURE__ */ new Set();
@@ -8644,8 +8874,9 @@ export default function (NeuroDeck) {
     }
   }
   var contaAtual = null;
-  async function usarConta(app, conta2) {
+  async function usarConta(app, conta2, metodo) {
     contaAtual = conta2;
+    definirConta(conta2.uid, metodo);
     const naConta = await carregarProgressoDaConta(conta2.uid);
     app.progresso = mesclarProgresso(app.progresso, naConta);
     app.progresso.nomeOnline = app.progresso.nomeOnline || conta2.nome;
@@ -8707,6 +8938,7 @@ export default function (NeuroDeck) {
       const codigo = codigoDeSala();
       const s = new Sala(await transporte(codigo), eu());
       s.criar(codigo, { ...app.opcoes }, Number($2("o-pessoas").value), Math.floor(Math.random() * 2 ** 31));
+      registrarEvento(EVENTOS.salaOnline, { acao: "criar", pessoas: Number($2("o-pessoas").value), conta: contaAtual ? 1 : 0 });
       esperar(s);
     });
     $2("o-entrar").addEventListener("click", async () => {
@@ -8720,8 +8952,13 @@ export default function (NeuroDeck) {
       $2("o-espera-nota").textContent = "Procurando a sala " + codigo + "\u2026";
       $2("o-codigo-sala").textContent = codigo;
       s.entrar();
+      registrarEvento(EVENTOS.salaOnline, { acao: "entrar", conta: contaAtual ? 1 : 0 });
     });
-    $2("o-comecar").addEventListener("click", () => sala && sala.comecar());
+    $2("o-comecar").addEventListener("click", () => {
+      if (!sala) return;
+      registrarEvento(EVENTOS.salaOnline, { acao: "comecar" });
+      sala.comecar();
+    });
     $2("o-desistir").addEventListener("click", () => {
       if (sala) sala.sair();
       sala = null;
@@ -8734,20 +8971,21 @@ export default function (NeuroDeck) {
         $2("o-sair").hidden = !contaAtual;
         if (contaAtual && !$2("o-nome").value) $2("o-nome").value = contaAtual.nome;
       };
-      const tentar = (acao) => async () => {
+      const tentar = (acao, metodo) => async () => {
         try {
-          await usarConta(app, await acao());
+          await usarConta(app, await acao(), metodo);
           mostrarConta();
         } catch (e) {
           mostrarAviso("Conta", e.message || String(e));
         }
       };
-      $2("o-google").addEventListener("click", tentar(() => entrarComGoogle()));
-      $2("o-email-entrar").addEventListener("click", tentar(() => entrarComEmail($2("o-email").value, $2("o-senha").value)));
-      $2("o-email-criar").addEventListener("click", tentar(() => entrarComEmail($2("o-email").value, $2("o-senha").value, true)));
+      $2("o-google").addEventListener("click", tentar(() => entrarComGoogle(), "google"));
+      $2("o-email-entrar").addEventListener("click", tentar(() => entrarComEmail($2("o-email").value, $2("o-senha").value), "email"));
+      $2("o-email-criar").addEventListener("click", tentar(() => entrarComEmail($2("o-email").value, $2("o-senha").value, true), "email_novo"));
       $2("o-sair").addEventListener("click", async () => {
         await sairDaConta();
         contaAtual = null;
+        definirConta(null);
         mostrarConta();
       });
     }
@@ -8793,6 +9031,16 @@ export default function (NeuroDeck) {
       return '<option value="' + valor + '"' + (valor === String(selecionado) ? " selected" : "") + ">" + escaparHtml(rotulo) + "</option>";
     }).join("");
   }
+  var BOTOES_DO_MENU = {
+    "m-jogar": "jogar",
+    "m-online": "jogar_online",
+    "m-regras": "como_jogar",
+    "m-grimorio": "glossario",
+    "m-conquistas": "conquistas",
+    "m-avatar": "avatar",
+    "m-mods": "mods",
+    "m-sobre": "sobre"
+  };
   function htmlDoMenu(opcoes) {
     return '<div class="menu"><section class="menu-capa"><h1>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Regras do NeuroDeck com a interface do Truco de Turing. Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
   }
@@ -8835,7 +9083,13 @@ export default function (NeuroDeck) {
       });
       app.salvarOpcoes();
     }
-    elemento.querySelectorAll("select").forEach((s) => s.addEventListener("change", atualizarDicas));
+    elemento.querySelectorAll("select").forEach((s) => s.addEventListener("change", () => {
+      atualizarDicas();
+      registrarEvento(EVENTOS.menuOpcao, { campo: s.id.replace(/^m-/, ""), valor: s.value });
+    }));
+    for (const [id, botao] of Object.entries(BOTOES_DO_MENU)) {
+      campo(id).addEventListener("click", () => registrarEvento(EVENTOS.menuClique, { botao }), { capture: true });
+    }
     atualizarDicas();
     campo("m-jogar").addEventListener("click", () => {
       Som.desbloquear();
@@ -9131,9 +9385,9 @@ export default function (NeuroDeck) {
      */
     criarBotao(x, y, l, a, rotulo, acao, opcoes = {}) {
       const variante = opcoes.variante || "ouro";
-      const textura = (estado) => {
-        const chave = "botao:" + variante + ":" + l + "x" + a + ":" + estado;
-        if (!this.textures.exists(chave)) this.textures.addCanvas(chave, desenharBotao(l, a, Math.min(RESOLUCAO, 2.5), variante, estado));
+      const textura = (estado2) => {
+        const chave = "botao:" + variante + ":" + l + "x" + a + ":" + estado2;
+        if (!this.textures.exists(chave)) this.textures.addCanvas(chave, desenharBotao(l, a, Math.min(RESOLUCAO, 2.5), variante, estado2));
         return chave;
       };
       const botao = this.add.container(x, y).setDepth(8);
@@ -9149,7 +9403,7 @@ export default function (NeuroDeck) {
         useHandCursor: true
       });
       botao.habilitado = true;
-      const pintar = (estado) => fundo.setTexture(textura(estado)).setDisplaySize(l + MARGEM_BOTAO * 2, a + MARGEM_BOTAO * 2);
+      const pintar = (estado2) => fundo.setTexture(textura(estado2)).setDisplaySize(l + MARGEM_BOTAO * 2, a + MARGEM_BOTAO * 2);
       const temDica = () => opcoes.dica && this.app.dicasLigadas;
       const mostrarDica = () => this.mostrarDicaDoBotao(opcoes.dica, x, y, l, a);
       let segurando = null, segurou = false;
@@ -10068,6 +10322,7 @@ export default function (NeuroDeck) {
      */
     abrirRegrasDaMesa() {
       const dicas = this.app.dicasLigadas;
+      registrarEvento(EVENTOS.mesaClique, { botao: "regras" });
       const painel = abrirPainel(
         '<div class="folha estreita janela-da-mesa"><h2>Regras</h2><p>Consulte as regras, a ajuda de cada a\xE7\xE3o, os conceitos de redes neurais do Gloss\xE1rio ou ligue as dicas durante a partida.</p><div class="grade-de-botoes"><button class="botao" data-opcao="regras">Como jogar</button><button class="botao" data-opcao="ajuda">Ajuda das a\xE7\xF5es</button><button class="botao" data-opcao="grimorio">Gloss\xE1rio</button><button class="botao ' + (dicas ? "discreto" : "vinho") + '" data-opcao="dicas" data-chave="dicas">' + (dicas ? "Desligar dicas" : "Ativar dicas") + '</button><button class="botao discreto" data-fechar>Voltar ao jogo</button></div></div>',
         { fechaAoClicarFora: true }
@@ -10080,6 +10335,7 @@ export default function (NeuroDeck) {
       };
       painel.elemento.querySelectorAll("[data-opcao]").forEach((b) => b.addEventListener("click", () => {
         painel.fechar();
+        registrarEvento(EVENTOS.mesaClique, { botao: "regras_" + b.dataset.opcao });
         acoes[b.dataset.opcao]();
       }));
       return painel;
@@ -10093,6 +10349,7 @@ export default function (NeuroDeck) {
      * ou abandonar a partida.
      */
     abrirMenuDaMesa() {
+      registrarEvento(EVENTOS.mesaClique, { botao: "menu" });
       const painel = abrirPainel(
         '<div class="folha estreita janela-da-mesa"><h2>Menu</h2><div class="grade-de-botoes"><button class="botao" data-chave="som"></button><button class="botao" data-chave="musica"></button><button class="botao discreto" data-fechar>Voltar ao jogo</button><button class="botao vinho" data-opcao="sair">Sair da partida</button></div></div>',
         { fechaAoClicarFora: true }
@@ -10113,10 +10370,25 @@ export default function (NeuroDeck) {
       this.atualizarChaves();
       return painel;
     },
+    /** Estatísticas de uso: saiu da partida antes do fim (`jogo_abandonado`). */
+    registrarAbandono() {
+      const config = this.mao ? this.mao.config : {}, eu = this.online ? this.cadeiraOnline() : 0;
+      registrarEvento(EVENTOS.jogoAbandonado, {
+        baralho: config.baralho,
+        terreno: config.terreno,
+        oponente: this.opcoes ? this.opcoes.oponente : "",
+        maos: this.partida ? this.partida.numeroMao + 1 : 0,
+        tentos: this.partida ? this.partida.tentos[eu] || 0 : 0,
+        online: this.online ? 1 : 0
+      });
+    },
     perguntarSeVoltaAoMenu() {
       confirmar("Abandonar a partida?", "O placar de tentos desta partida ser\xE1 perdido. Conquistas j\xE1 desbloqueadas ficam salvas.", [
         { rotulo: "Continuar jogando", classe: "discreto" },
-        { rotulo: "Voltar ao menu", classe: "vinho", acao: () => this.app.irParaMenu() }
+        { rotulo: "Voltar ao menu", classe: "vinho", acao: () => {
+          this.registrarAbandono();
+          this.app.irParaMenu();
+        } }
       ]);
     }
   };
@@ -10253,11 +10525,30 @@ export default function (NeuroDeck) {
       this.acaoEscolhida = null;
       if (this.modo !== "inicio") this.modo = "livre";
       const eventos = this.mao.eventos.splice(0);
+      this.registrarJogadaNasEstatisticas(jogada, eventos);
       this.ocupada = true;
       this.redesenhar();
       this.anotarNaLinhaDoTempo(jogada, eventos);
       const espera = this.animarEventos(eventos, jogada);
       this.time.delayedCall(espera, () => this.avancar());
+    },
+    /**
+     * Estatísticas de uso: a jogada de quem está neste aparelho vira o evento `acao_jogada`. Empilhar
+     * vira o efeito que a pilha teve (tunagem, overfit, early stop ou stack overflow).
+     */
+    registrarJogadaNasEstatisticas(jogada, eventos) {
+      const j = jogada.jogador;
+      const doAparelho = this.online ? j === this.cadeiraOnline() : this.mao.jogadores[j] && this.mao.jogadores[j].tipo === "humano";
+      if (!doAparelho) return;
+      const efeito = jogada.tipo === "empilhar" && eventos.find((e) => ["tunagem", "overfit", "earlystop", "stackoverflow"].includes(e.tipo));
+      const config = this.mao.config;
+      registrarEvento(EVENTOS.acaoJogada, {
+        acao: efeito ? efeito.tipo : jogada.tipo,
+        baralho: config.baralho,
+        terreno: config.terreno,
+        camada: Math.max(0, this.mao.jogadores[j].caminho.length - 1),
+        mao: this.partida.numeroMao + 1
+      });
     },
     /** Decide o próximo passo: fim da mão, escolha de quem começa, vez do humano ou do oponente. */
     avancar() {
@@ -10391,6 +10682,7 @@ export default function (NeuroDeck) {
     anunciarTruco(j, daRede = false) {
       if (this.online && !daRede) return this.enviarOnline({ tipo: "truco", cadeira: j });
       pedirTruco(this.partida, j);
+      registrarEvento(EVENTOS.truco, { valor: this.partida.pedido.para, quem: this.mao.jogadores[j].tipo });
       this.impactoDoTruco(this.partida.pedido.para);
       this.avisarVerbete("truco");
       this.faixa(GRITO_TRUCO[this.partida.pedido.para], COR_JOGADOR_CSS[j], 72);
@@ -10969,6 +11261,7 @@ export default function (NeuroDeck) {
       this.oponenteCorreu = false;
       const humanoVenceu = mao.jogadores[vencedor].tipo === "humano";
       const venceuAPartida = humanoVenceu && partida.encerrada && partida.alvo > 1;
+      this.registrarEstatisticas(vencedor, humanoVenceu, completa, valorDaMao);
       let espera = completa ? 1100 : 300;
       if (humanoVenceu) espera = this.comemorar(venceuAPartida ? "partida" : "mao", mao.jogadores[vencedor].nome);
       else {
@@ -10978,6 +11271,35 @@ export default function (NeuroDeck) {
       if (humanoVenceu && !this.variosHumanos) this.time.delayedCall(400, () => this.falar(provocar("perdeu")));
       this.ultimoResultado = { vencedor, ganho, completa, novas, valeConquistas, humanoVenceu };
       this.time.delayedCall(espera, () => this.mostrarResultado());
+    },
+    /**
+     * Estatísticas de uso do fim da mão (interface/analise.js): `fim_mao` sempre e, se a partida
+     * acabou, `jogo_finalizado` mais `vitoria_do_jogador` ou `derrota_jogador`. "Jogador" é quem joga
+     * neste aparelho: a cadeira dele na partida online, ou qualquer humano no jogo local.
+     */
+    registrarEstatisticas(vencedor, humanoVenceu, completa, valorDaMao) {
+      const mao = this.mao, partida = this.partida, config = mao.config;
+      const eu = this.online ? this.cadeiraOnline() : this.quemVe >= 0 ? this.quemVe : 0;
+      const venceu = this.online ? vencedor === eu : humanoVenceu;
+      const resumo = {
+        baralho: config.baralho,
+        terreno: config.terreno,
+        oponente: this.opcoes ? this.opcoes.oponente : "",
+        jogadores: mao.jogadores.length,
+        online: this.online ? 1 : 0
+      };
+      registrarEvento(EVENTOS.fimDaMao, {
+        ...resumo,
+        venceu: venceu ? 1 : 0,
+        completa: completa ? 1 : 0,
+        valor: valorDaMao,
+        soma: this.pontuacoes[eu] ? this.pontuacoes[eu].total : 0,
+        dicas: this.dicasNaMao ? 1 : 0
+      });
+      if (!partida.encerrada) return;
+      const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0 };
+      registrarEvento(EVENTOS.jogoFinalizado, { ...final, venceu: venceu ? 1 : 0 });
+      registrarEvento(venceu ? EVENTOS.vitoria : EVENTOS.derrota, final);
     },
     /**
      * Comemoração da vitória: fanfarra, clarão dourado, faixa grande, fogos e chuva de confete.
@@ -11108,10 +11430,12 @@ export default function (NeuroDeck) {
       const painel = abrirPainel(html);
       painel.elemento.querySelector("#r-menu").addEventListener("click", () => {
         painel.fechar();
+        if (!partidaAcabou) this.registrarAbandono();
         this.app.irParaMenu();
       });
       painel.elemento.querySelector("#r-revisar").addEventListener("click", () => {
         painel.fechar();
+        registrarEvento(EVENTOS.revisao, { escopo: partidaAcabou && this.historicoDaPartida.length > 1 ? "partida" : "mao" });
         abrirRevisao({
           mao,
           linhaDoTempo: this.linhaDoTempo,
@@ -11145,6 +11469,7 @@ export default function (NeuroDeck) {
     alternarDicas() {
       if (this.app.dicasLigadas) {
         this.app.dicasLigadas = false;
+        registrarEvento(EVENTOS.dicas, { ligadas: 0 });
         this.dicaAtual = null;
         esconderDicaFlutuante();
         this.atualizarChaves();
@@ -11159,6 +11484,7 @@ export default function (NeuroDeck) {
           { rotulo: "Ativar dicas", classe: "vinho", acao: () => {
             this.app.dicasLigadas = true;
             this.dicasNaMao = true;
+            registrarEvento(EVENTOS.dicas, { ligadas: 1 });
             this.atualizarChaves();
             if (this.mao) {
               this.darDicaDoTurno();
@@ -12018,6 +12344,7 @@ export default function (NeuroDeck) {
   prepararTextoNitido();
   Aplicacao.iniciar();
   iniciarJogo();
+  iniciarAnalise();
   globalThis.__TRUCO_DE_TURING__ = Aplicacao;
 })();
 

@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.4.1 — 2026-11-13
+
+- fix: fórmulas do "Para se aprofundar" em MathML, sem depender do CDN (#43) ([#53](https://github.com/welyngton/truco-de-turing/pull/53), por [@welyngton](https://github.com/welyngton))
+
 ## 2.4.0 — 2026-11-13
 
 - feat: aviso de saída saturada no Backprop (#41), Glossário, botões do menu iguais e links nos Mods ([#51](https://github.com/welyngton/truco-de-turing/pull/51), por [@welyngton](https://github.com/welyngton))

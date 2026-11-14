@@ -5,7 +5,7 @@
  */
 
 /** Número da versão (MAIOR.MENOR.CORREÇÃO). */
-export const VERSAO = '2.4.0';
+export const VERSAO = '2.4.1';
 
 /** Data da versão (AAAA-MM-DD). */
 export const DATA_DA_VERSAO = '2026-11-13';
