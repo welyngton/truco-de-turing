@@ -251,6 +251,9 @@ describe('telas', () => {
     abrirMenu(app);
     assert.equal($('#m-baralho').value, 'truco');
     assert.equal($('#m-oponente').options.length, 3);
+    /* a carta da logo enfeita o título (escondida de leitores de tela), e o título continua em texto */
+    assert.ok($('.menu-capa h1 .menu-emblema[aria-hidden="true"] svg'));
+    assert.equal($('.menu-capa h1').textContent.trim(), 'TRUCO DE TURING');
     $('#m-terreno').value = 'montanha';
     $('#m-terreno').dispatchEvent(new window.Event('change'));
     assert.ok($$('.miniatura img').length >= 1);
@@ -433,6 +436,9 @@ describe('telas', () => {
     const texto = $('.camada').textContent;
     assert.ok(texto.includes('Versão ' + VERSAO));
     assert.match(texto, /Peng Yaohao/);
+    /* a logo completa abre a tela, com nome acessível e sem depender de fonte (as letras são curvas) */
+    assert.match($('.sobre-logo svg').getAttribute('aria-label'), /Truco de Turing/);
+    assert.equal($('.sobre-logo svg text'), null);
     assert.match($('.homenagem').textContent, /Convergência global.*homenagem ao prof\. Peng.*Singularidade/s);
     for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
     /* bugs e sugestões: o botão leva às issues do repositório, em outra aba */
