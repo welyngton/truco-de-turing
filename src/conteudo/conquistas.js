@@ -1,5 +1,6 @@
 /**
- * @file Conquistas e suas graduações (bronze a antimatéria, como sugere a especificação).
+ * @file Conquistas e suas graduações (bronze a antimatéria, como sugere a especificação, e a
+ * Singularidade da conquista final, "Convergência global", em homenagem ao prof. Peng).
  *
  * Cada conquista tem um `teste(ctx)` avaliado ao fim de cada mão contra oponentes. O contexto é:
  * ```
@@ -8,6 +9,8 @@
  *   oponenteCorreu, opcoes,              // se o oponente correu do truco; opções do menu
  *   progresso }                          // contadores acumulados (ver progresso.js)
  * ```
+ * As de `VALEM_NA_HORA` também são avaliadas logo depois de cada jogada, no meio da mão, com um
+ * contexto menor: `{ mao, eu, opcoes, progresso }`.
  */
 import { pontuarRede } from '../nucleo/pontuacao.js';
 import { TERRENOS } from '../nucleo/terrenos.js';
@@ -15,7 +18,10 @@ import { BARALHOS } from '../nucleo/baralhos.js';
 import { VERBETES } from './grimorio.js';
 import { ARQUITETURAS } from '../nucleo/rede.js';
 
-/** Graduações com nome e cor da medalha. */
+/**
+ * Graduações com nome e cor da medalha. `especial` ganha medalha furta-cor e aviso maior: é a
+ * Singularidade, só da conquista final.
+ */
 export const GRADUACOES = {
   bronze: { nome: 'Bronze', cor: '#c0834a' },
   prata: { nome: 'Prata', cor: '#b8c2cc' },
@@ -23,7 +29,22 @@ export const GRADUACOES = {
   platina: { nome: 'Platina', cor: '#9fe3e0' },
   adamantium: { nome: 'Adamantium', cor: '#b48cff' },
   antimateria: { nome: 'Antimatéria', cor: '#ff6fb1' },
+  singularidade: { nome: 'Singularidade', cor: '#efe2ff', especial: true },
 };
+
+/** Id da conquista final, a que desbloqueia quando todas as outras estão desbloqueadas. */
+export const CONQUISTA_FINAL = 'convergencia';
+
+/**
+ * Progresso até a conquista final: quantas das outras conquistas já estão desbloqueadas. Conta a
+ * lista atual, então uma conquista nova (de uma versão futura ou de um mod) entra na conta sozinha.
+ * @param {object} [desbloqueadas] id → data do desbloqueio (ver progresso.js)
+ * @returns {{feitas: number, total: number}}
+ */
+export function progressoDaFinal(desbloqueadas = {}) {
+  const outras = CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL);
+  return { feitas: outras.filter((c) => desbloqueadas[c.id]).length, total: outras.length };
+}
 
 /** Atalho: dados do jogador humano na mão encerrada. */
 const meu = (c) => c.mao.jogadores[c.eu];
@@ -65,7 +86,15 @@ export const CONQUISTAS = [
   { id: 'bigdata', nome: 'Big data', descricao: 'Vença uma mão jogada com 3 baralhos.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.config.baralhos >= 3 },
   { id: 'profunda', nome: 'Deep learning de verdade', descricao: 'Vença uma mão na arquitetura profunda.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.config.arquitetura === 'profunda' },
   { id: 'arquiteto', nome: 'Arquiteto de redes', descricao: 'Vença mãos em todas as arquiteturas (padrão, curta, profunda e larga).', graduacao: 'platina', teste: (c) => Object.keys(ARQUITETURAS).every((a) => c.progresso.arquiteturas && c.progresso.arquiteturas[a]) },
+  /* conquista final (CONQUISTA_FINAL), sempre a última da lista: a Aplicacao a concede logo depois da última que faltava */
+  { id: 'convergencia', nome: 'Convergência global', descricao: 'Desbloqueie todas as outras conquistas. Em homenagem ao prof. Peng Yaohao.', graduacao: 'singularidade', teste: (c) => { const { feitas, total } = progressoDaFinal(c.progresso.desbloqueadas); return feitas === total; } },
 ];
 
 /** Conquistas que podem ser ganhas mesmo quando a mão termina porque alguém correu do truco. */
 export const VALEM_SEM_MAO_COMPLETA = new Set(['correu', 'campeao', 'maquina', 'primeira', 'dez', 'cinquenta', 'gato10', 'gato100', 'biblio', 'truco', 'doze', 'cartografo', 'colecionador', 'arquiteto']);
+
+/**
+ * Conquistas que valem na hora da jogada, sem esperar a mão acabar: dependem só do que o jogador já
+ * fez (ações e dropouts). Na jogada, `progresso.dropouts` já soma os dropouts da mão em andamento.
+ */
+export const VALEM_NA_HORA = new Set(['gato10', 'gato100', 'desk', 'transfer', 'overfit', 'earlystop', 'overflow', 'tunador']);

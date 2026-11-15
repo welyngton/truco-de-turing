@@ -1,6 +1,7 @@
 /**
- * @file Parte da CenaMesa: fim da mão. Marca os tentos, registra conquistas e mostra a tela de
- * resultado com a soma detalhada de cada rede.
+ * @file Parte da CenaMesa: conquistas e fim da mão. Confere as conquistas que valem na hora de cada
+ * jogada, marca os tentos, registra as conquistas do fim da mão e mostra a tela de resultado com a
+ * soma detalhada de cada rede.
  */
 import { rotuloCarta } from '../../nucleo/cartas.js';
 import { pontuarRede } from '../../nucleo/pontuacao.js';
@@ -43,13 +44,14 @@ export const metodosDoResultado = {
       numero: partida.numeroMao + 1, vencedor, ganho, valor: valorDaMao, completa,
       somas: this.pontuacoes.map((p) => p.total), tentos: partida.tentos.slice(),
     });
-    /* mãos com dicas e partidas entre duas pessoas não valem conquistas */
-    const valeConquistas = !this.variosHumanos && !this.dicasNaMao;
-    const novas = valeConquistas ? this.app.registrarMao({
-      mao, eu: 0, venceu: vencedor === 0, completa, partida,
-      venceuPartida: partida.encerrada && partida.vencedor === 0, valorDaMao,
+    const valeConquistas = this.valemConquistas(), eu = this.cadeiraDasConquistas();
+    const novasNoFim = valeConquistas ? this.app.registrarMao({
+      mao, eu, venceu: vencedor === eu, completa, partida,
+      venceuPartida: partida.encerrada && partida.vencedor === eu, valorDaMao,
       oponenteCorreu: this.oponenteCorreu, opcoes: this.opcoes,
     }) : [];
+    /* a lista do resultado tem as da mão inteira: as que vieram na hora da jogada e as do fim */
+    const novas = [...(this.conquistasDaMao || []), ...novasNoFim];
     this.oponenteCorreu = false;
     const humanoVenceu = mao.jogadores[vencedor].tipo === 'humano';
     const venceuAPartida = humanoVenceu && partida.encerrada && partida.alvo > 1;
@@ -60,6 +62,26 @@ export const metodosDoResultado = {
     if (humanoVenceu && !this.variosHumanos) this.time.delayedCall(400, () => this.falar(provocar('perdeu')));
     this.ultimoResultado = { vencedor, ganho, completa, novas, valeConquistas, humanoVenceu };
     this.time.delayedCall(espera, () => this.mostrarResultado());
+  },
+
+  /** A mão vale conquistas? Mãos com dicas e partidas entre pessoas no mesmo aparelho não valem. */
+  valemConquistas() {
+    return !this.variosHumanos && !this.dicasNaMao;
+  },
+
+  /** Cadeira de quem ganha as conquistas neste aparelho: online, a da sala; no jogo local, a 0. */
+  cadeiraDasConquistas() {
+    return this.online ? this.cadeiraOnline() : 0;
+  },
+
+  /**
+   * Logo depois de cada jogada: as conquistas que valem na hora (transfer, overfit, tunagens,
+   * dropouts…) sobem no alto da tela sem esperar a mão acabar e entram na lista do resultado.
+   */
+  conferirConquistasDaJogada() {
+    if (this.encerrada || !this.valemConquistas()) return;
+    const novas = this.app.registrarJogada({ mao: this.mao, eu: this.cadeiraDasConquistas(), opcoes: this.opcoes });
+    if (novas.length) this.conquistasDaMao = (this.conquistasDaMao || []).concat(novas);
   },
 
   /**

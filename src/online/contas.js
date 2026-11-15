@@ -1,7 +1,8 @@
 /**
  * @file Contas: o progresso (conquistas, avatares, verbetes lidos e contadores) passa a ficar na
  * conta e vale em qualquer aparelho. Ao entrar, o progresso do aparelho e o da conta se juntam
- * sem perder nada nem contar em dobro (`mesclarProgresso`); depois, cada mão salva na conta.
+ * sem perder nada nem contar em dobro (`mesclarProgresso`); depois, cada gravação junta de novo
+ * com o que está na conta (`juntarParaGravar`), para um aparelho não apagar o que outro gravou.
  * O documento da conta (`documentoDaConta`) leva também as estatísticas do jogador
  * (estatisticas.js), o perfil (nome, e-mail e método de login) e um resumo para a lista de
  * jogadores (issue #66).
@@ -38,6 +39,21 @@ export function mesclarProgresso(local, conta) {
   m.verbetesLidos = Object.keys(m.lidos).length;
   if (conta.avatar) m.avatar = conta.avatar;
   m.estatisticas = mesclarEstatisticas(local.estatisticas, conta.estatisticas);
+  return m;
+}
+
+/**
+ * Junta o progresso do aparelho com o que está na conta na hora de gravar (cada gravação, não só
+ * ao entrar): como `mesclarProgresso`, mas o avatar é o do aparelho, que é a escolha mais recente.
+ * Assim um aparelho não apaga da conta as conquistas que outro gravou nesse meio-tempo, e como
+ * tudo fica com a união ou o maior valor, juntar de novo não conta nada em dobro.
+ * @param {object} local Progresso deste aparelho.
+ * @param {object|null} conta Documento que está na conta agora.
+ * @returns {object} Progresso junto (novo objeto).
+ */
+export function juntarParaGravar(local, conta) {
+  const m = mesclarProgresso(local, conta);
+  if (local.avatar) m.avatar = local.avatar;
   return m;
 }
 

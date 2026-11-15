@@ -39,6 +39,13 @@ const SDK = {
     export const doc = (_b, ...partes) => partes.join('/');
     export const getDoc = async (c) => { banco(); const d = f().docs[c]; return { exists: () => !!d, data: () => d }; };
     export const setDoc = async (c, dados) => { banco(); f().docs[c] = dados; };
+    /* transação: lê uma cópia e só grava no fim, como a de verdade (ver juntarNaConta) */
+    export const runTransaction = async (_b, fn) => {
+      banco(); const escritas = [];
+      const r = await fn({ get: async (c) => { banco(); const d = f().docs[c]; return { exists: () => !!d, data: () => JSON.parse(JSON.stringify(d)) }; }, set: (c, dados) => { escritas.push([c, dados]); } });
+      banco(); for (const [c, dados] of escritas) f().docs[c] = dados; f().transacoes = (f().transacoes || 0) + 1;
+      return r;
+    };
     export const collection = (_b, ...partes) => partes.join('/');
     export const collectionGroup = (_b, nome) => 'grupo:' + nome;
     export const query = (c) => c, orderBy = () => null, where = () => null, limit = () => null, serverTimestamp = () => 0;
@@ -167,9 +174,9 @@ describe('conta pelo Firebase (#40)', () => {
       await pagina.evaluate(() => { const app = globalThis.__TRUCO_DE_TURING__; app.progresso.lidos.dropout = true; app.salvar(); });
       await pagina.waitForFunction(() => globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].lidos.dropout);
       assert.equal(await pagina.locator('#avisos .aviso').count(), 0);
-      /* o banco passa a recusar: um aviso só, mesmo com vários salvamentos */
+      /* o banco passa a recusar por falta de conexão: um aviso só, mesmo com vários salvamentos */
       await pagina.evaluate(() => { globalThis.__FIREBASE_FALSO__.banco = 'unavailable'; globalThis.__TRUCO_DE_TURING__.salvar(); });
-      assert.match(await aviso(pagina), /ficou só neste aparelho.*Sem conexão/);
+      assert.match(await aviso(pagina), /Sem conexão.*sobe para a conta quando a conexão voltar/);
       await pagina.evaluate(() => { document.querySelector('#avisos').innerHTML = ''; const app = globalThis.__TRUCO_DE_TURING__; app.salvar(); app.salvar(); });
       await pagina.waitForTimeout(800);
       assert.equal(await pagina.locator('#avisos .aviso').count(), 0);
@@ -366,6 +373,60 @@ describe('sala pela internet com conta (#62)', () => {
       assert.match(linhas[2], /^\(sem nome\).*12$/, 'conta gravada antes das estatísticas aparece com o que tem');
       const [baixado] = await Promise.all([pagina.waitForEvent('download'), pagina.click('#j-csv')]);
       assert.match(baixado.suggestedFilename(), /^truco-de-turing-jogadores-\d{4}-\d{2}-\d{2}\.csv$/);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+});
+
+/** Fecha a tela "Jogar online" que `abrirConta` deixa aberta (o menu continua). */
+const fecharTelas = (pagina) => pagina.locator('.folha.online [data-fechar]').click();
+
+describe('conquistas na conta (#57)', () => {
+  it('chegam da conta sem aviso, o quadro diz de quem são, e o que foi ganho sem conexão sobe quando ela volta, sem apagar o de outro aparelho', async () => {
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: { 'contas/uid-teste': { desbloqueadas: { zap: 1 } } } });
+    const { pagina, contexto } = jogo;
+    try {
+      await entrar(pagina);
+      /* a conquista da conta veio para o aparelho, sem aviso */
+      assert.equal(await pagina.evaluate(() => !!globalThis.__TRUCO_DE_TURING__.progresso.desbloqueadas.zap), true);
+      await pagina.waitForTimeout(500);
+      assert.equal(await pagina.locator('#avisos .aviso').count(), 0, 'nenhum aviso pelas conquistas que chegam da conta');
+      /* o quadro diz de quem são */
+      await fecharTelas(pagina);
+      await pagina.click('#m-conquistas');
+      assert.match(await pagina.locator('.conquistas-origem').textContent(), /da conta de Ada/);
+      /* sem conexão, este aparelho ganha "Big data"; enquanto isso, outro aparelho grava "Ensemble" na conta */
+      await contexto.setOffline(true);
+      await pagina.evaluate(() => { const app = globalThis.__TRUCO_DE_TURING__; app.progresso.desbloqueadas.bigdata = Date.now(); app.salvar(); });
+      assert.match(await aviso(pagina), /Sem conexão.*sobe para a conta quando a conexão voltar/);
+      await pagina.evaluate(() => { globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].desbloqueadas.ensemble = 5; });
+      assert.equal(await pagina.evaluate(() => !!globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].desbloqueadas.bigdata), false, 'sem conexão, nada sobe');
+      /* a conexão volta: sobe sozinho, junto com o que o outro aparelho gravou */
+      await pagina.evaluate(() => { document.querySelector('#avisos').innerHTML = ''; });
+      await contexto.setOffline(false);
+      await pagina.waitForFunction(() => !!globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].desbloqueadas.bigdata);
+      const naConta = await pagina.evaluate(() => globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].desbloqueadas);
+      assert.deepEqual(Object.keys(naConta).sort(), ['bigdata', 'ensemble', 'zap'], 'nada se perde: nem o deste aparelho, nem o do outro');
+      assert.equal(await pagina.evaluate(() => !!globalThis.__TRUCO_DE_TURING__.progresso.desbloqueadas.ensemble), true, 'e o do outro aparelho chega a este');
+      assert.match(await aviso(pagina), /A conexão voltou/);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
+  it('o quadro de conquistas aberto se atualiza quando a conta entra', async () => {
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: { 'contas/uid-teste': { desbloqueadas: { zap: 1 } } } });
+    const { pagina } = jogo;
+    try {
+      await fecharTelas(pagina);
+      await pagina.click('#m-conquistas');
+      assert.match(await pagina.locator('.conquistas-origem').textContent(), /só deste aparelho/);
+      const antes = await pagina.locator('.conquista:not(.bloqueada)').count();
+      await pagina.evaluate(async () => {
+        const { usarConta } = await import('/src/interface/conta.js');
+        await usarConta(globalThis.__TRUCO_DE_TURING__, { uid: 'uid-teste', nome: 'Ada', email: 'ada@exemplo.com' }, 'google');
+      });
+      await pagina.waitForFunction(() => /da conta de Ada/.test(document.querySelector('.conquistas-origem').textContent));
+      assert.equal(await pagina.locator('.conquista:not(.bloqueada)').count(), antes + 1, 'a conquista da conta aparece no quadro');
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });

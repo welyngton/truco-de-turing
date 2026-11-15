@@ -134,7 +134,7 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
   - *Gradiente Guloso* (médio): como a descida de gradiente, escolhe o lance que mais melhora o placar agora, sem olhar adiante.
   - *Mestre Monte Carlo* (difícil): sorteia as cartas ocultas, simula dezenas de partidas para cada lance e escolhe o que mais venceu; mostra a própria chance de vitória e truca com base nas simulações.
 - **7 baralhos e 4 terrenos**: Clássico, Truco com manilhas, Nobreza, Backprop (o naipe é o peso, as figuras são ativações e a rede vale a saída do forward pass), Fraternidade, Yin-yang e Power BI; mesa neutra, Montanha, Pântano e Oceano, cada terreno com ambiente animado (sombras de nuvens e sementes ao vento na Planície; neve, névoa e rajadas na Montanha; neblina, vaga-lumes, bolhas e fogo-fátuo no Pântano; cáusticas, brilhos e vento no Oceano). As cartas da mesa são sempre opacas: por cima delas passam só partículas pequenas (flocos, sementes, bolhas, brilhos, riscos de vento); neblina, cáusticas, sombras e halos ficam por trás.
-- **35 conquistas** em graduações de bronze a antimatéria, incluindo as do enunciado (Desk rejection, Marcha dos patos, Contra tudo e contra todos, Artilheiro dos gols inúteis, 100 dropouts…) e as da fusão (baralhos Nobreza e Backprop, mesas de 4 e 5 jogadores, 3 baralhos, arquiteturas).
+- **36 conquistas** em graduações de bronze a antimatéria, incluindo as do enunciado (Desk rejection, Marcha dos patos, Contra tudo e contra todos, Artilheiro dos gols inúteis, 100 dropouts…) e as da fusão (baralhos Nobreza e Backprop, mesas de 4 e 5 jogadores, 3 baralhos, arquiteturas), e a conquista final, **Convergência global** (graduação Singularidade), para quem desbloqueia todas as outras, em homenagem ao prof. Peng Yaohao. Cada conquista sobe num aviso no alto da tela, com a medalha, na hora em que acontece.
 - **9 avatares** para o jogador, 6 deles liberados por conquistas (Menu > Avatar).
 - **Modo dicas**: dicas de estratégia a cada vez, sempre com o conceito de redes neurais por trás, e explicações nos botões (mouse ou segurar no celular); só usam o que está à vista e nunca dizem qual carta virada escolher. Mãos com dicas não valem conquistas.
 - **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Glossário e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
@@ -214,6 +214,9 @@ Botão **Jogar online** no menu:
   que vale em qualquer aparelho; o progresso do aparelho e o da conta se juntam sem contar nada em dobro.
   A conta continua conectada ao recarregar a página ou voltar outro dia (até sair dela), e o menu
   mostra quem está conectado. Quem nunca entrou numa conta não baixa nada do Firebase.
+  Cada gravação junta o progresso com o que já está na conta, então um aparelho não apaga as
+  conquistas que outro gravou; sem conexão, o progresso fica no aparelho e sobe sozinho quando a
+  conexão volta. A tela **Conquistas** diz se elas são da conta (com o nome) ou só deste aparelho.
 - **Sala**: quem cria a sala escolhe quantas pessoas vão jogar e passa o código de 5 letras; as
   cadeiras que sobrarem ficam com o computador. A sala usa as opções do menu, e o truco vale entre 2 jogadores.
 - **Como funciona**: todos os aparelhos criam a mesma mão com a mesma semente e aplicam as mesmas

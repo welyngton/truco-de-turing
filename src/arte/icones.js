@@ -55,6 +55,12 @@ export const ICONES_CONQUISTAS = {
   bigdata: svg('<ellipse cx="24" cy="10" rx="15" ry="5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><path d="M9 10v28c0 3 7 5 15 5s15-2 15-5V10" fill="#e2d2a8" stroke="' + I + '" stroke-width="1.8"/><path d="M9 19c0 3 7 5 15 5s15-2 15-5M9 28c0 3 7 5 15 5s15-2 15-5" fill="none" stroke="' + I + '" stroke-width="1.6"/><circle cx="33" cy="22" r="1.6" fill="#3fae6a"/><circle cx="33" cy="31" r="1.6" fill="#3fae6a"/>'),
   profunda: svg('<g fill="#fff6dc" stroke="' + I + '" stroke-width="1.4"><circle cx="6" cy="24" r="3.5"/><circle cx="13" cy="16" r="3.5"/><circle cx="13" cy="32" r="3.5"/><circle cx="20" cy="24" r="3.5"/><circle cx="27" cy="16" r="3.5"/><circle cx="27" cy="32" r="3.5"/><circle cx="34" cy="24" r="3.5"/><circle cx="42" cy="24" r="3.5"/></g><path d="M9 24h7M23 24h7M37 24h2" stroke="#4aa3df" stroke-width="1.8"/><path d="M4 44h40" stroke="#6b1a22" stroke-width="2.5"/><path d="M40 40l4 4-4 4" fill="none" stroke="#6b1a22" stroke-width="2.5"/>'),
   arquiteto: svg('<path d="M6 42h36" stroke="' + I + '" stroke-width="2"/><path d="M10 42V18l14-10 14 10v24" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><g fill="#4aa3df" stroke="' + I + '" stroke-width="1.2"><circle cx="17" cy="24" r="2.6"/><circle cx="17" cy="34" r="2.6"/><circle cx="24" cy="19" r="2.6"/><circle cx="24" cy="29" r="2.6"/><circle cx="31" cy="24" r="2.6"/><circle cx="31" cy="34" r="2.6"/></g><path d="M38 6l4 4-16 16-5 1 1-5z" fill="#e7c35a" stroke="' + I + '" stroke-width="1.6"/>'),
+  /* conquista final: na curva de perda, uma bola fica presa no mínimo local e a outra chega ao mínimo global */
+  convergencia: svg('<path d="M4 12c5 0 7 14 12 14s6-9 10-9 6 22 12 22 5-17 6-19V44H4z" fill="#b48cff" opacity=".3"/>' +
+    '<path d="M4 12c5 0 7 14 12 14s6-9 10-9 6 22 12 22 5-17 6-19" fill="none" stroke="' + I + '" stroke-width="2.4"/>' +
+    '<circle cx="16" cy="22.4" r="2.4" fill="#c9bc9f" stroke="' + I + '" stroke-width="1.4"/>' +
+    '<circle cx="38" cy="34.6" r="3.6" fill="#ff6fb1" stroke="' + I + '" stroke-width="1.6"/>' +
+    '<path d="M38 15l1.7 4.3 4.3 1.7-4.3 1.7L38 27l-1.7-4.3-4.3-1.7 4.3-1.7z" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/>'),
 };
 /** Cadeado das conquistas bloqueadas. */
 export const ICONE_CADEADO = svg('<rect x="12" y="21" width="24" height="19" rx="3" fill="#6b5a40" stroke="' + I + '" stroke-width="2"/><path d="M17 21v-5a7 7 0 0114 0v5" fill="none" stroke="' + I + '" stroke-width="3"/><circle cx="24" cy="30" r="2.6" fill="#24140a"/>');

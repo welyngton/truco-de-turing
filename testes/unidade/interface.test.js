@@ -23,7 +23,7 @@ const { abrirRevisao } = await import('../../src/interface/telas/revisao.js');
 const { Aplicacao } = await import('../../src/aplicacao.js');
 const { VERSAO } = await import('../../src/versao.js');
 const { VERBETES } = await import('../../src/conteudo/grimorio.js');
-const { CONQUISTAS } = await import('../../src/conteudo/conquistas.js');
+const { CONQUISTAS, CONQUISTA_FINAL } = await import('../../src/conteudo/conquistas.js');
 const { novaPartida, marcarTentos } = await import('../../src/nucleo/truco.js');
 const { maoAteOFim } = await import('../apoio/estados.js');
 
@@ -31,7 +31,15 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const clicar = (el) => el.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 
-beforeEach(() => { paineis.fecharTodos(); $('#avisos').innerHTML = ''; paineis.esconderDicaFlutuante(); });
+beforeEach(() => { paineis.fecharTodos(); paineis.limparAvisosDeConquista(); $('#avisos').innerHTML = ''; paineis.esconderDicaFlutuante(); });
+
+/** Aviso de conquista de teste, com a medalha de verdade e um contador de vezes que apareceu. */
+const avisoDeTeste = (conquista, duracaoMs = 60) => {
+  const aviso = { rotulo: 'Conquista · teste', titulo: conquista.nome, texto: conquista.descricao, medalha: medalhaHtml(conquista, true), duracaoMs, vezes: 0 };
+  aviso.aoMostrar = () => { aviso.vezes++; };
+  return aviso;
+};
+const medalhasNaTela = () => $$('#avisos .aviso-conquista').map((a) => a.querySelector('b').textContent);
 
 describe('paineis.js', () => {
   it('escaparHtml', () => {
@@ -81,6 +89,72 @@ describe('paineis.js', () => {
     paineis.confirmar('Sem texto', '', [{ rotulo: 'Ok' }]);
     clicar($('[data-indice="0"]'));
     assert.equal($$('.camada').length, 0);
+  });
+  it('avisarConquista: medalha com nome e descrição, uma de cada vez e em fila; um toque passa para a próxima', async () => {
+    const [a, b, c] = CONQUISTAS.map((k) => avisoDeTeste(k, 5000));
+    paineis.avisarConquista(a); paineis.avisarConquista(b); paineis.avisarConquista(c);
+    assert.deepEqual(medalhasNaTela(), [a.titulo], 'só a primeira na tela');
+    const aviso = $('#avisos .aviso-conquista');
+    assert.ok(aviso.querySelector('.medalha svg'), 'com o ícone da medalha');
+    assert.match(aviso.querySelector('.medalha').getAttribute('style'), /--graduacao:#/, 'na cor da graduação');
+    assert.match(aviso.textContent, new RegExp(a.texto.replace(/[.]/g, '\\.')));
+    assert.match(aviso.textContent, /Conquista · teste/);
+    assert.equal(aviso.getAttribute('role'), 'status');
+    assert.deepEqual([a.vezes, b.vezes], [1, 0], 'o som toca quando o aviso aparece');
+    /* um aviso comum não apaga a medalha, e a medalha fica acima dele */
+    paineis.mostrarAviso('Glossário · Dropout', 'texto');
+    paineis.mostrarDicaDeJogo('Corrida', 'Ataque agora.', '', '');
+    assert.deepEqual(medalhasNaTela(), [a.titulo]);
+    assert.equal($('#avisos').firstElementChild, $('#avisos .aviso-conquista'));
+    assert.equal($$('#avisos .aviso:not(.aviso-conquista)').length, 1);
+    clicar($('#avisos .aviso-conquista'));
+    assert.deepEqual(medalhasNaTela(), [b.titulo], 'o toque fecha e entra a próxima');
+    clicar($('#avisos .aviso-conquista'));
+    clicar($('#avisos .aviso-conquista'));
+    assert.deepEqual(medalhasNaTela(), []);
+    assert.deepEqual([a.vezes, b.vezes, c.vezes], [1, 1, 1]);
+  });
+  it('avisarConquista: cada medalha some sozinha e chama a próxima', async () => {
+    const [a, b] = CONQUISTAS.map((k) => avisoDeTeste(k, 50));
+    paineis.avisarConquista(a); paineis.avisarConquista(b);
+    assert.deepEqual(medalhasNaTela(), [a.titulo]);
+    await esperar(80);
+    assert.deepEqual(medalhasNaTela(), [b.titulo]);
+    await esperar(80);
+    assert.deepEqual(medalhasNaTela(), []);
+  });
+  it('avisarConquista: espera a resposta do truco e volta depois, sem tocar o som de novo', async () => {
+    const [a, b] = CONQUISTAS.map((k) => avisoDeTeste(k, 5000));
+    paineis.avisarConquista(a);
+    paineis.confirmar('TRUCO!', '', [{ rotulo: 'Aceitar', classe: 'vinho' }], { grito: true });
+    assert.deepEqual(medalhasNaTela(), [], 'a medalha sai de cima da caixa do truco');
+    paineis.avisarConquista(b);
+    assert.deepEqual(medalhasNaTela(), [], 'e a fila espera a resposta');
+    clicar($('.grito-truco .botao.vinho'));
+    await esperar(450);
+    assert.deepEqual(medalhasNaTela(), [a.titulo], 'depois da resposta, volta a que estava na tela');
+    assert.equal(a.vezes, 1);
+    /* telas que não são do truco não seguram a fila */
+    paineis.abrirPainel('<div class="folha">regras</div>');
+    clicar($('#avisos .aviso-conquista'));
+    assert.deepEqual(medalhasNaTela(), [b.titulo]);
+  });
+  it('avisarConquista: com "reduzir movimento", some sem animação; limpar esvazia a fila', async () => {
+    const original = globalThis.matchMedia;
+    globalThis.matchMedia = (consulta) => ({ matches: consulta.includes('reduce'), media: consulta, addEventListener() {}, removeEventListener() {} });
+    try {
+      const [a, b] = CONQUISTAS.map((k) => avisoDeTeste(k, 60));
+      paineis.avisarConquista(a);
+      await esperar(30);
+      assert.equal($('#avisos .aviso-conquista').style.transition, '', 'sem a transição de saída');
+      await esperar(60);
+      assert.deepEqual(medalhasNaTela(), []);
+      paineis.avisarConquista(b); paineis.avisarConquista(avisoDeTeste(CONQUISTAS[2]));
+      paineis.limparAvisosDeConquista();
+      assert.deepEqual(medalhasNaTela(), []);
+      await esperar(100);
+      assert.deepEqual(medalhasNaTela(), [], 'a fila ficou vazia');
+    } finally { globalThis.matchMedia = original; }
   });
   it('dica flutuante: à esquerda, acima ou abaixo do alvo conforme o espaço', () => {
     for (const alvo of [{ x: 900, y: 300, l: 100, a: 40 }, { x: 10, y: 400, l: 100, a: 40 }, { x: 10, y: 5, l: 100, a: 40 }]) {
@@ -337,8 +411,18 @@ describe('telas', () => {
   it('conquistas: medalhas bloqueadas e desbloqueadas, contagem e retrato', async () => {
     const app = appFalso();
     abrirConquistas(app);
-    assert.match($('.conquistas-resumo').textContent, /1 de 35/);
+    assert.match($('.conquistas-resumo').textContent, new RegExp('1 de ' + CONQUISTAS.length));
     assert.equal($$('.conquista').length, CONQUISTAS.length);
+    /* sem conta: a tela diz que as conquistas são só deste aparelho e como levá-las para a conta */
+    assert.match($('.conquistas-origem').textContent, /só deste aparelho.*Jogar online/);
+    /* a conquista final fica em destaque no alto, bloqueada, com o progresso até ela */
+    const final = $('.conquista.final');
+    assert.ok(final && final.classList.contains('bloqueada'));
+    assert.equal(final.nextElementSibling, $('.conquistas-lista'), 'acima da lista');
+    assert.match(final.textContent, /Conquista final · Singularidade.*Convergência global.*prof\. Peng Yaohao/s);
+    assert.match(final.querySelector('.progresso-final').textContent, new RegExp('1 de ' + (CONQUISTAS.length - 1)));
+    assert.equal(final.querySelector('.barra').getAttribute('aria-valuenow'), '1');
+    assert.equal($$('.conquistas-lista .conquista.final').length, 0, 'e não se repete na lista');
     await esperar(50);
     assert.ok($('#c-retrato canvas'));
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
@@ -349,6 +433,7 @@ describe('telas', () => {
     const texto = $('.camada').textContent;
     assert.ok(texto.includes('Versão ' + VERSAO));
     assert.match(texto, /Peng Yaohao/);
+    assert.match($('.homenagem').textContent, /Convergência global.*homenagem ao prof\. Peng.*Singularidade/s);
     for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
     /* estatísticas de uso: o texto sempre aparece; fora do site publicado não há botões e nada é medido */
     assert.match(texto, /Estatísticas de uso/);
@@ -444,6 +529,75 @@ describe('aplicacao.js', () => {
     for (const v of VERBETES) { Aplicacao.marcarVerbeteLido(v.id); Aplicacao.marcarVerbeteLido(v.id); }
     assert.equal(p.verbetesLidos, VERBETES.length);
     assert.ok(p.desbloqueadas.biblio);
-    assert.match($('#avisos').textContent, /Bibliotecário/);
+    assert.deepEqual(medalhasNaTela(), ['Bibliotecário'], 'aviso com a medalha, uma vez só');
+    assert.ok($('#avisos .aviso-conquista .medalha svg'));
+  });
+  it('registrarMao: as conquistas novas sobem em fila no alto da tela, com o som da medalha', () => {
+    const p = Aplicacao.progresso;
+    p.desbloqueadas = {};
+    Som.definirMudo(false);
+    limparRegistroDeAudio();
+    const mao = maoAteOFim();
+    mao.jogadores[0].acoesUsadas = 0;
+    const novas = Aplicacao.registrarMao({ mao, eu: 0, venceu: true, completa: true, partida: novaPartida(12), venceuPartida: false, valorDaMao: 3, oponenteCorreu: true, opcoes: { oponente: 'guloso' } });
+    assert.ok(novas.length >= 2);
+    assert.deepEqual(medalhasNaTela(), [novas[0].nome], 'a primeira na tela, as outras na fila');
+    assert.match($('#avisos .aviso-conquista').textContent, /Conquista · (Bronze|Prata|Ouro|Platina|Adamantium|Antimatéria)/);
+    assert.ok(registroDeAudio.osciladores.length > 0, 'som da medalha');
+    clicar($('#avisos .aviso-conquista'));
+    assert.deepEqual(medalhasNaTela(), [novas[1].nome]);
+  });
+  it('registrarJogada: na hora da jogada valem só as conquistas de ação e dropout, sem contar a mão', () => {
+    const p = Aplicacao.progresso;
+    p.desbloqueadas = {}; p.maos = 3; p.vitorias = 1; p.dropouts = 8;
+    const mao = maoAteOFim();
+    const eu = mao.jogadores[0];
+    Object.assign(eu.estatisticas, { tunagens: 3, overfits: 1, earlyStops: 0, overflows: 0, autoParadas: 0 });
+    eu.transferUsado = true; eu.dropouts = 2; eu.acoesUsadas = 0;
+    const novas = Aplicacao.registrarJogada({ mao, eu: 0, opcoes: { oponente: 'guloso' } }).map((c) => c.id).sort();
+    assert.deepEqual(novas, ['gato10', 'overfit', 'transfer', 'tunador'], 'os 8 dropouts salvos + 2 desta mão fazem 10');
+    assert.deepEqual([p.maos, p.vitorias, p.dropouts], [3, 1, 8], 'os contadores só contam a mão quando ela acaba');
+    assert.ok(p.desbloqueadas.overfit && !p.desbloqueadas.primeira, 'nada do fim da mão');
+    assert.deepEqual(medalhasNaTela().length, 1);
+    assert.deepEqual(Aplicacao.registrarJogada({ mao, eu: 0, opcoes: {} }), [], 'cada uma vale uma vez');
+    /* no fim da mão, as que já vieram na jogada não se repetem */
+    const fim = Aplicacao.registrarMao({ mao, eu: 0, venceu: true, completa: true, partida: novaPartida(12), venceuPartida: false, valorDaMao: 1, oponenteCorreu: false, opcoes: {} });
+    assert.ok(!fim.some((c) => novas.includes(c.id)));
+    assert.equal(p.dropouts, 10);
+  });
+  it('conquista final: a última que faltava destrava "Convergência global", que sobe por último com aviso especial', () => {
+    const p = Aplicacao.progresso;
+    const final = CONQUISTAS.find((c) => c.id === CONQUISTA_FINAL);
+    p.desbloqueadas = Object.fromEntries(CONQUISTAS.filter((c) => !['biblio', CONQUISTA_FINAL].includes(c.id)).map((c) => [c.id, 1]));
+    assert.deepEqual(Aplicacao.conferirConquistaFinal(), [], 'faltando uma, nada');
+    /* o Bibliotecário era a última que faltava */
+    p.lidos = {}; p.verbetesLidos = 0;
+    Som.definirMudo(false);
+    limparRegistroDeAudio();
+    for (const v of VERBETES) Aplicacao.marcarVerbeteLido(v.id);
+    assert.ok(p.desbloqueadas.biblio && p.desbloqueadas[CONQUISTA_FINAL]);
+    assert.deepEqual(medalhasNaTela(), ['Bibliotecário'], 'primeiro a que destravou');
+    clicar($('#avisos .aviso-conquista'));
+    const aviso = $('#avisos .aviso-conquista');
+    assert.equal(aviso.querySelector('b').textContent, final.nome, 'depois a final');
+    assert.ok(aviso.classList.contains('especial'));
+    assert.ok(aviso.querySelector('.medalha.especial svg'), 'medalha furta-cor com o ícone');
+    assert.match(aviso.textContent, /Conquista final · Singularidade/);
+    assert.ok(registroDeAudio.osciladores.length > 0);
+    /* já recebida: não volta */
+    assert.deepEqual(Aplicacao.conferirConquistaFinal(), []);
+  });
+  it('conquista final: vem na lista do fim da mão e, para quem já tinha todas, ao abrir o jogo', () => {
+    const p = Aplicacao.progresso;
+    const mao = maoAteOFim();
+    p.desbloqueadas = Object.fromEntries(CONQUISTAS.filter((c) => !['primeira', CONQUISTA_FINAL].includes(c.id)).map((c) => [c.id, 1]));
+    const novas = Aplicacao.registrarMao({ mao, eu: 0, venceu: true, completa: true, partida: novaPartida(12), venceuPartida: false, valorDaMao: 1, oponenteCorreu: false, opcoes: {} });
+    assert.deepEqual(novas.map((c) => c.id), ['primeira', CONQUISTA_FINAL], 'a final por último, na lista do resultado');
+    /* quem completou todas antes de existir a final recebe a final ao abrir o jogo */
+    paineis.limparAvisosDeConquista();
+    p.desbloqueadas = Object.fromEntries(CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL).map((c) => [c.id, 1]));
+    Aplicacao.iniciar();
+    assert.ok(p.desbloqueadas[CONQUISTA_FINAL]);
+    assert.deepEqual(medalhasNaTela(), ['Convergência global']);
   });
 });

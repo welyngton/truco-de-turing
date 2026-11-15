@@ -129,6 +129,21 @@ Só com a marca o jogo baixa o SDK do Firebase ao abrir (`src/interface/conta.js
 Firebase tiver acabado, a marca é apagada em silêncio. Se o Firestore falhar na retomada, aparece o
 aviso "Não deu para retomar a conta…" e o jogo tenta de novo na próxima visita.
 
+**Conquistas da conta (#57)**
+
+1. Entre numa conta e abra **Conquistas**: a linha de cima diz "Conquistas da conta de …". Sem
+   conta, ela diz "Conquistas só deste aparelho".
+2. Com a conta aberta em dois aparelhos, ganhe uma conquista em cada um (por exemplo, leia todos os
+   verbetes num deles para ganhar o Bibliotecário). No console, `contas/<uid>` fica com as duas:
+   cada gravação junta o aparelho com o que está na conta (`juntarNaConta`, uma transação), e o que
+   o outro aparelho gravou também chega a este, sem aviso de conquista.
+3. Desligue a internet do celular e ganhe uma conquista. Aparece "Sem conexão: o progresso fica
+   neste aparelho e sobe para a conta quando a conexão voltar". Religue: aparece "A conexão voltou",
+   e a conquista está em `contas/<uid>`.
+
+Cada gravação na conta agora faz uma leitura além da escrita (a transação). As gravações não se
+acumulam: enquanto uma corre, as próximas viram uma só, logo depois.
+
 **Partida entre dois aparelhos pelo código da sala**
 
 1. Entre numa conta nos dois aparelhos (pode ser a mesma ou outra).

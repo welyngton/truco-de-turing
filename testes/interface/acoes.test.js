@@ -1,8 +1,8 @@
 /**
  * @file Testes de interface das ações da mesa: inspeção e seleção, tunagem, overfit, stack
  * overflow, early stop na própria rede, dropout, transfer learning, passar a vez, truco (pedir,
- * aceitar, aumentar, correr), modo dicas (dica de jogo, dicas dos botões com mouse e segurando no
- * toque), som e música, comemorações e volta ao menu.
+ * aceitar, aumentar, correr), aviso de conquista no alto da tela, modo dicas (dica de jogo, dicas dos
+ * botões com mouse e segurando no toque), som e música, comemorações e volta ao menu.
  */
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -202,6 +202,65 @@ describe('ações da mesa', () => {
       assert.equal(await naCena(pagina, 'return cena.painel.botaoPassar.habilitado'), true);
       await apertar(pagina, 'botaoPassar');
       await esperarCena(pagina, 'return cena.mao.registro.some((l) => /passou a vez/.test(l)) || !!document.querySelector("#r-proxima")');
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
+  it('aviso de conquista no celular: sobe na hora do transfer, sem cobrir os botões nem a caixa do truco, e entra no resultado', async () => {
+    const jogo = await abrirJogo(servidor.url, { dispositivo: 'Pixel 7', deitado: true, consulta: '?res=1' });
+    const { pagina } = jogo;
+    try {
+      await comecarPartida(pagina, { oponente: 'aleatorio', partida: '12', inicio: 'sorteio' });
+      await carregarMontagem(pagina);
+      await esperarMinhaVez(pagina);
+      /* "Pré-treinado" (fazer um transfer learning) vale na hora da jogada, sem esperar a mão acabar */
+      await naCena(pagina, 'M.darMao(cena.mao, 0, ["7E", "7C", "7P", "7O"]); cena.redesenhar();');
+      await apertar(pagina, 'botaoTransfer');
+      const aviso = pagina.locator('#avisos .aviso-conquista');
+      await aviso.waitFor({ timeout: 10000 });
+      /* lê tudo de uma vez: o aviso some sozinho depois de alguns segundos */
+      const lido = await pagina.evaluate(() => {
+        const a = document.querySelector('#avisos .aviso-conquista'), r = a.getBoundingClientRect();
+        return { texto: a.textContent, icone: !!a.querySelector('.medalha svg'), caixa: { x: r.left, y: r.top, width: r.width, height: r.height } };
+      });
+      assert.equal(await naCena(pagina, 'return cena.encerrada'), false, 'no meio da mão');
+      assert.match(lido.texto, /Conquista · Prata.*Pré-treinado.*Faça um transfer learning\./s);
+      assert.ok(lido.icone, 'com o ícone da medalha');
+      await capturar(pagina, '40-aviso-de-conquista');
+      /* não cobre nenhum botão da mesa */
+      const caixa = lido.caixa;
+      const botoes = await naCena(pagina, `
+        const p = cena.painel, canvas = jogo.canvas, r = canvas.getBoundingClientRect(), cam = cena.cameras.main, k = r.width / canvas.width;
+        const lista = [p.botaoRegras, p.botaoMenu, p.truco, p.botaoAjuda, ...Object.values(p.acoes || {})].filter(Boolean);
+        return lista.map((b) => ({
+          x: r.left + (b.x - b.width / 2 - cam.worldView.x) * cam.zoom * k, y: r.top + (b.y - b.height / 2 - cam.worldView.y) * cam.zoom * k,
+          l: b.width * cam.zoom * k, a: b.height * cam.zoom * k,
+        }));`);
+      assert.ok(botoes.length >= 6);
+      for (const b of botoes) {
+        const cruza = caixa.x < b.x + b.l && b.x < caixa.x + caixa.width && caixa.y < b.y + b.a && b.y < caixa.y + caixa.height;
+        assert.ok(!cruza, 'o aviso cobre o botão em ' + JSON.stringify(b));
+      }
+      /* some sozinho depois de alguns segundos */
+      await aviso.waitFor({ state: 'detached', timeout: 10000 });
+      /* pedido de truco do oponente: a medalha sai de cima da caixa e volta depois da resposta (um aviso
+         longo na mesma fila do jogo, para não depender de quanto a máquina demora até a caixa abrir) */
+      await pagina.evaluate(async () => {
+        const { avisarConquista } = await import('/src/interface/paineis.js');
+        avisarConquista({ rotulo: 'Conquista · teste', titulo: 'Segura o truco', texto: 'Aviso longo.', medalha: '', duracaoMs: 60000 });
+      });
+      await aviso.waitFor({ timeout: 5000 });
+      await naCena(pagina, 'cena.partida.aumentadoPor = -1; cena.partida.valor = 1; cena.anunciarTruco(1);');
+      await pagina.waitForSelector('.grito-truco .botao.vinho');
+      assert.equal(await aviso.count(), 0, 'nenhuma medalha por cima da caixa do truco');
+      await pagina.locator('.grito-truco .botao.vinho').click();
+      await aviso.waitFor({ timeout: 10000 });
+      assert.match(await aviso.textContent(), /Segura o truco/);
+      await aviso.click();
+      assert.equal(await aviso.count(), 0, 'um toque fecha');
+      /* a tela de resultado continua com a lista da mão */
+      await jogarAteOResultado(pagina);
+      assert.match(await pagina.locator('.desbloqueios').textContent(), /Pré-treinado/);
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });

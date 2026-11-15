@@ -104,7 +104,8 @@ src/
   interface/
     som.js                    efeitos sonoros sintetizados (WebAudio), fanfarras de vitória
     musica.js                 música de fundo por terreno (blues, valsa, épica, gótica)
-    paineis.js                abrir/fechar painéis, avisos e confirmações
+    paineis.js                abrir/fechar painéis, avisos, fila de avisos de conquista e confirmações
+    medalha.js                HTML da medalha de uma conquista (quadro, resultado e aviso do alto)
     menu.js                   menu inicial e configuração da mesa
     analise.js                Google Analytics: consentimento, carga do gtag.js e eventos
     telas/                    regras, grimório, conquistas, sobre e revisão da mão
@@ -259,7 +260,7 @@ copiados para o protótipo com `Object.assign` no fim de `CenaMesa.js`. Dentro d
 | `turnos.js` | fluxo da mão: `iniciarMao`, `executarJogada`, `avancar`, vez do oponente, troca de aparelho |
 | `truco.js` | pedir, anunciar e responder truco |
 | `efeitos.js` | animação de cada evento, faíscas, faixas, balão de fala e avisos do Glossário |
-| `resultado.js` | fim da mão, tentos, conquistas, comemoração da vitória e tela de resultado |
+| `resultado.js` | conquistas na hora da jogada e no fim da mão, tentos, comemoração da vitória e tela de resultado |
 | `dicas.js` | modo dicas: sugestão de jogada (busca gulosa) e dicas flutuantes dos botões |
 
 O ciclo de uma jogada:
@@ -267,6 +268,7 @@ O ciclo de uma jogada:
 ```
 clique → entrada.js → executarJogada(jogada)
                        ├─ nucleo: aplicarJogada(mao, jogada)
+                       ├─ conferirConquistasDaJogada() → aviso no alto da tela
                        ├─ redesenhar()
                        ├─ animarEventos(eventos) → espera N ms
                        └─ avancar()
@@ -394,7 +396,12 @@ as escritas à mão, ficam como estão: a pessoa é reconhecida pelo `[@login]` 
 ### Nova conquista
 Acrescente em `CONQUISTAS` (`conteudo/conquistas.js`) um objeto `{ id, nome, descricao, graduacao,
 teste(ctx) }` e um ícone com o mesmo `id` em `arte/icones.js`. Se ela puder ser obtida numa mão
-encerrada por truco, inclua o `id` em `VALEM_SEM_MAO_COMPLETA`.
+encerrada por truco, inclua o `id` em `VALEM_SEM_MAO_COMPLETA`. Se ela depender só do que o jogador já fez
+(ações e dropouts, sem olhar o resultado da mão), inclua o `id` também em `VALEM_NA_HORA`: assim ela é
+conferida logo depois de cada jogada e o aviso sobe na hora. Toda conquista nova aparece no alto da tela
+(`avisarConquista`, em `interface/paineis.js`), uma de cada vez, e na lista da tela de resultado.
+A conquista final (`CONQUISTA_FINAL`, "Convergência global") conta todas as outras sozinha (`progressoDaFinal`):
+a conquista nova entra na conta sem mais nada. Mantenha a final no fim de `CONQUISTAS`.
 
 ### Novo verbete do Glossário
 Acrescente em `VERBETES` (`conteudo/grimorio.js`) `{ id, titulo, categoria, conceito, equacao, noJogo, limite }`
