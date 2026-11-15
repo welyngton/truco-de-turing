@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.5.2 — 2026-11-15
+
+- Update CNAME
+
 ## 2.5.1 — 2026-11-15
 
 - Create CNAME
