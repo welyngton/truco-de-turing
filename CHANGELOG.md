@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.5.1 — 2026-11-15
+
+- Create CNAME
+
 ## 2.5.0 — 2026-11-14
 
 - feat: rastreio dos jogadores na conta (Firebase) e no Google Analytics (#66) ([#67](https://github.com/welyngton/truco-de-turing/pull/67), por [@welyngton](https://github.com/welyngton))
