@@ -1,6 +1,6 @@
 /**
  * @file Tela "Sobre": versão, a disciplina, as regras
- * originais, o professor, os autores, as estatísticas de uso (ligar e desligar) e a licença.
+ * originais, o professor (e a conquista final em homenagem a ele), os autores, as estatísticas de uso (ligar e desligar) e a licença.
  */
 import { TEXTO_DA_CONTA } from '../../online/contas.js';
 import { abrirPainel } from '../paineis.js';
@@ -34,6 +34,7 @@ export function abrirSobre() {
       '</ul>' +
       '<h3>O professor</h3>' +
       '<p><b>Peng Yaohao</b> é professor da Universidade de Brasília, mestre e doutor pela UnB na área de Finanças e Métodos Quantitativos. Pesquisa aprendizado de máquina, modelos não lineares e econometria financeira, com trabalhos sobre previsão de volatilidade e de preços de ações e um estudo empírico sobre não linearidade e overfitting em machine learning com dados da COVID-19.</p>' +
+      '<p class="homenagem"><b>Convergência global</b>, a conquista final do jogo, é uma homenagem ao prof. Peng: ela vem para quem desbloqueia todas as outras. No treino de uma rede, convergir para o mínimo global é chegar ao melhor ponto da função de perda, em vez de parar num mínimo local. A medalha tem uma graduação só dela, a Singularidade, acima de Antimatéria.</p>' +
       '<h3>Autores</h3>' +
       '<ul class="autores">' +
       '<li><b>Welyngton José Vinicius Dal Prá</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li>' +

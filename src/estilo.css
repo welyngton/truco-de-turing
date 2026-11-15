@@ -239,6 +239,18 @@ html, body { overscroll-behavior: none; }
 .conquista small { display: block; font-family: var(--fonte-interface); font-size: 13px; color: #5a4630; line-height: 1.3; }
 .conquista .graduacao { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6b1a22; font-weight: 700; }
 .conquistas-rodape { font-size: 13px; color: #7a6a4c; margin-top: 12px; }
+/* graduação Singularidade (conquista final): medalha furta-cor, com aro claro e brilho */
+.medalha.especial {
+  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 50%),
+    conic-gradient(from 20deg, #ff6fb1, #b48cff, #9fe3e0, #e7c35a, #ff6fb1);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px #fff6d0, 0 0 16px rgba(180, 140, 255, 0.75);
+}
+/* conquista final em destaque no quadro, acima da lista, com o progresso até ela */
+.conquista.final { margin-top: 12px; border: 2px solid #b48cff; background: linear-gradient(135deg, rgba(255, 111, 177, 0.12), rgba(159, 227, 224, 0.18)); }
+.conquista.final .graduacao { color: #5a2a8a; }
+.progresso-final { display: flex; align-items: center; gap: 8px; margin-top: 6px; font: 700 13px var(--fonte-interface); color: #3a2a50; }
+.progresso-final .barra { flex: 1; height: 8px; border-radius: 4px; background: rgba(43, 22, 8, 0.15); overflow: hidden; }
+.progresso-final .barra i { display: block; height: 100%; background: linear-gradient(90deg, #ff6fb1, #b48cff, #9fe3e0); }
 .desbloqueio .medalha { width: 38px; height: 38px; flex: none; }
 .desbloqueio .medalha > svg { width: 26px; height: 26px; }
 .folha.sobre h3:first-of-type { margin-top: 14px; }
@@ -311,6 +323,14 @@ html, body { overscroll-behavior: none; }
 .aviso-conquista .medalha > svg { width: 30px; height: 30px; }
 .aviso-conquista-texto { min-width: 0; }
 .aviso-conquista-texto small { display: block; font: 700 11px var(--fonte-interface); letter-spacing: 0.12em; text-transform: uppercase; color: #d9b260; }
+/* aviso da conquista final: borda furta-cor que pulsa (parado com "reduzir movimento") */
+.aviso.aviso-conquista.especial {
+  border: 3px solid #b48cff; background: linear-gradient(135deg, #1d1030, #2b1608 65%);
+  box-shadow: 0 0 0 2px rgba(255, 111, 177, 0.45), 0 0 30px rgba(180, 140, 255, 0.55), 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: subir 0.25s ease-out, brilhar-singularidade 2.4s ease-in-out 0.25s infinite;
+}
+.aviso-conquista.especial .aviso-conquista-texto small { color: #d9c2ff; }
+@keyframes brilhar-singularidade { 50% { box-shadow: 0 0 0 2px rgba(159, 227, 224, 0.6), 0 0 42px rgba(255, 111, 177, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5); } }
 .aviso.dica-de-jogo { border-color: var(--latao); }
 .aviso.dica-de-jogo .conceito { display: block; margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(60, 40, 20, 0.35); font-size: 13px; color: #4b3a26; }
 
@@ -442,7 +462,7 @@ html, body { overscroll-behavior: none; }
   .grito-truco .grito { font-size: 46px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .camada, .folha, .aviso, .trofeu, .folha.vitoria { animation: none; }
+  .camada, .folha, .aviso, .trofeu, .folha.vitoria, .aviso.aviso-conquista.especial { animation: none; }
 }
 
 /* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */

@@ -23,7 +23,7 @@ const { abrirRevisao } = await import('../../src/interface/telas/revisao.js');
 const { Aplicacao } = await import('../../src/aplicacao.js');
 const { VERSAO } = await import('../../src/versao.js');
 const { VERBETES } = await import('../../src/conteudo/grimorio.js');
-const { CONQUISTAS } = await import('../../src/conteudo/conquistas.js');
+const { CONQUISTAS, CONQUISTA_FINAL } = await import('../../src/conteudo/conquistas.js');
 const { novaPartida, marcarTentos } = await import('../../src/nucleo/truco.js');
 const { maoAteOFim } = await import('../apoio/estados.js');
 
@@ -411,8 +411,16 @@ describe('telas', () => {
   it('conquistas: medalhas bloqueadas e desbloqueadas, contagem e retrato', async () => {
     const app = appFalso();
     abrirConquistas(app);
-    assert.match($('.conquistas-resumo').textContent, /1 de 35/);
+    assert.match($('.conquistas-resumo').textContent, new RegExp('1 de ' + CONQUISTAS.length));
     assert.equal($$('.conquista').length, CONQUISTAS.length);
+    /* a conquista final fica em destaque no alto, bloqueada, com o progresso até ela */
+    const final = $('.conquista.final');
+    assert.ok(final && final.classList.contains('bloqueada'));
+    assert.equal(final.nextElementSibling, $('.conquistas-lista'), 'acima da lista');
+    assert.match(final.textContent, /Conquista final · Singularidade.*Convergência global.*prof\. Peng Yaohao/s);
+    assert.match(final.querySelector('.progresso-final').textContent, new RegExp('1 de ' + (CONQUISTAS.length - 1)));
+    assert.equal(final.querySelector('.barra').getAttribute('aria-valuenow'), '1');
+    assert.equal($$('.conquistas-lista .conquista.final').length, 0, 'e não se repete na lista');
     await esperar(50);
     assert.ok($('#c-retrato canvas'));
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
@@ -423,6 +431,7 @@ describe('telas', () => {
     const texto = $('.camada').textContent;
     assert.ok(texto.includes('Versão ' + VERSAO));
     assert.match(texto, /Peng Yaohao/);
+    assert.match($('.homenagem').textContent, /Convergência global.*homenagem ao prof\. Peng.*Singularidade/s);
     for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
     /* estatísticas de uso: o texto sempre aparece; fora do site publicado não há botões e nada é medido */
     assert.match(texto, /Estatísticas de uso/);
@@ -553,5 +562,40 @@ describe('aplicacao.js', () => {
     const fim = Aplicacao.registrarMao({ mao, eu: 0, venceu: true, completa: true, partida: novaPartida(12), venceuPartida: false, valorDaMao: 1, oponenteCorreu: false, opcoes: {} });
     assert.ok(!fim.some((c) => novas.includes(c.id)));
     assert.equal(p.dropouts, 10);
+  });
+  it('conquista final: a última que faltava destrava "Convergência global", que sobe por último com aviso especial', () => {
+    const p = Aplicacao.progresso;
+    const final = CONQUISTAS.find((c) => c.id === CONQUISTA_FINAL);
+    p.desbloqueadas = Object.fromEntries(CONQUISTAS.filter((c) => !['biblio', CONQUISTA_FINAL].includes(c.id)).map((c) => [c.id, 1]));
+    assert.deepEqual(Aplicacao.conferirConquistaFinal(), [], 'faltando uma, nada');
+    /* o Bibliotecário era a última que faltava */
+    p.lidos = {}; p.verbetesLidos = 0;
+    Som.definirMudo(false);
+    limparRegistroDeAudio();
+    for (const v of VERBETES) Aplicacao.marcarVerbeteLido(v.id);
+    assert.ok(p.desbloqueadas.biblio && p.desbloqueadas[CONQUISTA_FINAL]);
+    assert.deepEqual(medalhasNaTela(), ['Bibliotecário'], 'primeiro a que destravou');
+    clicar($('#avisos .aviso-conquista'));
+    const aviso = $('#avisos .aviso-conquista');
+    assert.equal(aviso.querySelector('b').textContent, final.nome, 'depois a final');
+    assert.ok(aviso.classList.contains('especial'));
+    assert.ok(aviso.querySelector('.medalha.especial svg'), 'medalha furta-cor com o ícone');
+    assert.match(aviso.textContent, /Conquista final · Singularidade/);
+    assert.ok(registroDeAudio.osciladores.length > 0);
+    /* já recebida: não volta */
+    assert.deepEqual(Aplicacao.conferirConquistaFinal(), []);
+  });
+  it('conquista final: vem na lista do fim da mão e, para quem já tinha todas, ao abrir o jogo', () => {
+    const p = Aplicacao.progresso;
+    const mao = maoAteOFim();
+    p.desbloqueadas = Object.fromEntries(CONQUISTAS.filter((c) => !['primeira', CONQUISTA_FINAL].includes(c.id)).map((c) => [c.id, 1]));
+    const novas = Aplicacao.registrarMao({ mao, eu: 0, venceu: true, completa: true, partida: novaPartida(12), venceuPartida: false, valorDaMao: 1, oponenteCorreu: false, opcoes: {} });
+    assert.deepEqual(novas.map((c) => c.id), ['primeira', CONQUISTA_FINAL], 'a final por último, na lista do resultado');
+    /* quem completou todas antes de existir a final recebe a final ao abrir o jogo */
+    paineis.limparAvisosDeConquista();
+    p.desbloqueadas = Object.fromEntries(CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL).map((c) => [c.id, 1]));
+    Aplicacao.iniciar();
+    assert.ok(p.desbloqueadas[CONQUISTA_FINAL]);
+    assert.deepEqual(medalhasNaTela(), ['Convergência global']);
   });
 });

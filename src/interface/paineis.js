@@ -129,6 +129,7 @@ function decisaoNaTela() {
  * @param {string} aviso.medalha HTML da medalha, j\u00e1 pronto (ver telas/conquistas.js \u2192 medalhaHtml).
  * @param {() => void} [aviso.aoMostrar] Chamado na primeira vez que o aviso aparece (o som da medalha).
  * @param {number} [aviso.duracaoMs]
+ * @param {string} [aviso.classe] Classe extra do aviso (`especial`: o da conquista final).
  */
 export function avisarConquista(aviso) {
   filaDeConquistas.push(aviso);
@@ -142,7 +143,7 @@ function mostrarProximaConquista() {
   if (!filaDeConquistas.length || decisaoNaTela()) return;
   const aviso = filaDeConquistas.shift();
   const elemento = document.createElement('div');
-  elemento.className = 'aviso medalha-aviso aviso-conquista';
+  elemento.className = 'aviso medalha-aviso aviso-conquista' + (aviso.classe ? ' ' + aviso.classe : '');
   elemento.setAttribute('role', 'status');
   elemento.innerHTML = aviso.medalha + '<div class="aviso-conquista-texto">' +
     (aviso.rotulo ? '<small>' + escaparHtml(aviso.rotulo) + '</small>' : '') +

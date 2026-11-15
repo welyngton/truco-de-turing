@@ -9,7 +9,7 @@ import { FIGURAS, figuraDaBiblioteca } from '../../src/conteudo/figurasDaBibliot
 import { ACOES_DA_AJUDA } from '../../src/interface/telas/ajudaDasAcoes.js';
 import { Motor } from '../../src/motor/engine.js';
 import { AMBIENTACAO, PROVOCACOES, provocar } from '../../src/conteudo/textos.js';
-import { GRADUACOES, CONQUISTAS, VALEM_SEM_MAO_COMPLETA } from '../../src/conteudo/conquistas.js';
+import { GRADUACOES, CONQUISTAS, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA, CONQUISTA_FINAL, progressoDaFinal } from '../../src/conteudo/conquistas.js';
 import { AVATARES_DO_JOGADOR, avatarLiberado, avatarDoJogador, conquistaQueLibera, avataresDaConquista } from '../../src/conteudo/avatares.js';
 import { DICAS_GERAIS, escolherDicaDeJogo } from '../../src/conteudo/dicasDeJogo.js';
 import { carregarProgresso, salvarProgresso } from '../../src/conteudo/progresso.js';
@@ -113,6 +113,8 @@ describe('conquistas.js', () => {
     mudar(ctx);
     return ctx;
   }
+  /** Todas as conquistas desbloqueadas, menos a final e as de `faltando`. */
+  const todasMenos = (...faltando) => Object.fromEntries(CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL && !faltando.includes(c.id)).map((c) => [c.id, 1]));
   /** Para cada conquista: um contexto em que ela vale e outro em que não vale. */
   const CASOS = {
     primeira: [(c) => { c.venceu = true; }],
@@ -153,9 +155,25 @@ describe('conquistas.js', () => {
     bigdata: [(c) => { c.venceu = true; c.mao.config.baralhos = 3; }, (c) => { c.venceu = true; c.mao.config.baralhos = 2; }],
     profunda: [(c) => { c.venceu = true; c.mao.config.arquitetura = 'profunda'; }, (c) => { c.venceu = true; c.mao.config.arquitetura = 'larga'; }],
     arquiteto: [(c) => { c.progresso.arquiteturas = { padrao: true, curta: true, profunda: true, larga: true }; }, (c) => { c.progresso.arquiteturas = { padrao: true, curta: true, profunda: true }; }],
+    /* conquista final: todas as outras desbloqueadas; faltando uma, não vale */
+    convergencia: [(c) => { c.progresso.desbloqueadas = todasMenos(); }, (c) => { c.progresso.desbloqueadas = todasMenos('zap'); }],
   };
   it('graduações com nome e cor', () => {
     for (const g of Object.values(GRADUACOES)) assert.ok(g.nome && /^#/.test(g.cor));
+  });
+  it('conquista final: é a última da lista, tem graduação especial e conta as outras, inclusive uma nova', () => {
+    assert.equal(CONQUISTAS[CONQUISTAS.length - 1].id, CONQUISTA_FINAL);
+    assert.ok(GRADUACOES.singularidade.especial && CONQUISTAS.find((c) => c.id === CONQUISTA_FINAL).graduacao === 'singularidade');
+    assert.ok(!VALEM_NA_HORA.has(CONQUISTA_FINAL));
+    const outras = CONQUISTAS.length - 1;
+    assert.deepEqual(progressoDaFinal(), { feitas: 0, total: outras });
+    assert.deepEqual(progressoDaFinal({ primeira: 1, zap: 2, [CONQUISTA_FINAL]: 3 }), { feitas: 2, total: outras }, 'a final não conta para ela mesma');
+    /* uma conquista nova (versão futura ou mod) entra na conta sem mexer na final */
+    CONQUISTAS.splice(CONQUISTAS.length - 1, 0, { id: 'nova', nome: 'Nova', descricao: '', graduacao: 'bronze', teste: () => false });
+    try {
+      assert.deepEqual(progressoDaFinal(todasMenos('nova')), { feitas: outras, total: outras + 1 });
+      assert.ok(!CONQUISTAS.find((c) => c.id === CONQUISTA_FINAL).teste({ progresso: { desbloqueadas: todasMenos('nova') } }));
+    } finally { CONQUISTAS.splice(CONQUISTAS.findIndex((c) => c.id === 'nova'), 1); }
   });
   it('toda conquista tem caso de teste, e VALEM_SEM_MAO_COMPLETA só cita conquistas existentes', () => {
     assert.deepEqual(CONQUISTAS.map((c) => c.id).sort(), Object.keys(CASOS).sort());

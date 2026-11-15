@@ -12,7 +12,8 @@ import { ICONES_CONQUISTAS, ICONE_CADEADO } from '../arte/icones.js';
  * @param {boolean} desbloqueada Bloqueada leva o cadeado.
  */
 export function medalhaHtml(conquista, desbloqueada) {
-  const cor = GRADUACOES[conquista.graduacao].cor;
-  return '<div class="medalha" style="--graduacao:' + cor + '">' + (ICONES_CONQUISTAS[conquista.id] || '') +
+  const graduacao = GRADUACOES[conquista.graduacao];
+  /* graduação especial (Singularidade): medalha furta-cor, ver estilo.css */
+  return '<div class="medalha' + (graduacao.especial ? ' especial' : '') + '" style="--graduacao:' + graduacao.cor + '">' + (ICONES_CONQUISTAS[conquista.id] || '') +
     (desbloqueada ? '' : '<span class="cadeado">' + ICONE_CADEADO + '</span>') + '</div>';
 }

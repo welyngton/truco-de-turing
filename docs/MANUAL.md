@@ -400,6 +400,8 @@ encerrada por truco, inclua o `id` em `VALEM_SEM_MAO_COMPLETA`. Se ela depender 
 (ações e dropouts, sem olhar o resultado da mão), inclua o `id` também em `VALEM_NA_HORA`: assim ela é
 conferida logo depois de cada jogada e o aviso sobe na hora. Toda conquista nova aparece no alto da tela
 (`avisarConquista`, em `interface/paineis.js`), uma de cada vez, e na lista da tela de resultado.
+A conquista final (`CONQUISTA_FINAL`, "Convergência global") conta todas as outras sozinha (`progressoDaFinal`):
+a conquista nova entra na conta sem mais nada. Mantenha a final no fim de `CONQUISTAS`.
 
 ### Novo verbete do Glossário
 Acrescente em `VERBETES` (`conteudo/grimorio.js`) `{ id, titulo, categoria, conceito, equacao, noJogo, limite }`

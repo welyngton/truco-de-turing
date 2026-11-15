@@ -5,7 +5,7 @@
  * É um objeto único (`Aplicacao`) compartilhado pelas cenas e pelas telas HTML.
  */
 import { carregarProgresso, salvarProgresso } from './conteudo/progresso.js';
-import { CONQUISTAS, GRADUACOES, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA } from './conteudo/conquistas.js';
+import { CONQUISTAS, GRADUACOES, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA, CONQUISTA_FINAL, progressoDaFinal } from './conteudo/conquistas.js';
 import { VERBETES } from './conteudo/grimorio.js';
 import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
@@ -75,6 +75,8 @@ export const Aplicacao = {
       this.atualizarJogadorNasEstatisticas();
     });
     this.atualizarJogadorNasEstatisticas();
+    /* quem completou as conquistas antes de existir a final recebe a final ao abrir o jogo */
+    this.conferirConquistaFinal();
   },
 
   /** Passa às estatísticas de uso a experiência, as conquistas, o avatar, os verbetes lidos, os acessos e as partidas. */
@@ -172,8 +174,7 @@ export const Aplicacao = {
       }
     }
     ctx.progresso = p;
-    const novas = conquistasNovas(CONQUISTAS.filter((c) => ctx.completa || VALEM_SEM_MAO_COMPLETA.has(c.id)), ctx, p);
-    this.desbloquear(novas);
+    const novas = this.desbloquear(conquistasNovas(CONQUISTAS.filter((c) => ctx.completa || VALEM_SEM_MAO_COMPLETA.has(c.id)), ctx, p));
     this.salvar();
     this.atualizarJogadorNasEstatisticas();
     return novas;
@@ -191,28 +192,51 @@ export const Aplicacao = {
     const contexto = { ...ctx, progresso: { ...p, dropouts: p.dropouts + (jogador ? jogador.dropouts : 0) } };
     const novas = conquistasNovas(CONQUISTAS.filter((c) => VALEM_NA_HORA.has(c.id)), contexto, p);
     if (!novas.length) return novas;
-    this.desbloquear(novas);
+    const desbloqueadas = this.desbloquear(novas);
     this.salvar();
     this.atualizarJogadorNasEstatisticas();
-    return novas;
+    return desbloqueadas;
   },
 
   /**
    * Desbloqueia conquistas: marca a data, avisa no alto da tela (uma medalha por vez, com o som) e
-   * registra cada uma nas estatísticas de uso. Quem chama grava o progresso.
+   * registra cada uma nas estatísticas de uso. Se com elas todas as outras estiverem desbloqueadas,
+   * a conquista final (`CONQUISTA_FINAL`) entra também, por último. Quem chama grava o progresso.
    * @param {object[]} conquistas Conquistas ainda bloqueadas (ver conteudo/conquistas.js).
+   * @returns {object[]} As desbloqueadas agora, com a final no fim, se for o caso.
    */
   desbloquear(conquistas) {
     const p = this.progresso, agora = Date.now();
-    for (const conquista of conquistas) p.desbloqueadas[conquista.id] = agora;
+    const lista = conquistas.slice();
+    for (const conquista of lista) p.desbloqueadas[conquista.id] = agora;
+    const { feitas, total: outras } = progressoDaFinal(p.desbloqueadas);
+    if (!p.desbloqueadas[CONQUISTA_FINAL] && feitas === outras) {
+      const final = CONQUISTAS.find((c) => c.id === CONQUISTA_FINAL);
+      p.desbloqueadas[final.id] = agora;
+      lista.push(final);
+    }
     const total = Object.keys(p.desbloqueadas).length;
-    for (const conquista of conquistas) {
+    for (const conquista of lista) {
+      const graduacao = GRADUACOES[conquista.graduacao], ehFinal = conquista.id === CONQUISTA_FINAL;
       avisarConquista({
-        rotulo: 'Conquista · ' + GRADUACOES[conquista.graduacao].nome, titulo: conquista.nome, texto: conquista.descricao,
-        medalha: medalhaHtml(conquista, true), aoMostrar: () => Som.medalha(),
+        rotulo: (ehFinal ? 'Conquista final · ' : 'Conquista · ') + graduacao.nome, titulo: conquista.nome, texto: conquista.descricao,
+        medalha: medalhaHtml(conquista, true), classe: graduacao.especial ? 'especial' : '',
+        duracaoMs: graduacao.especial ? 8000 : undefined,
+        aoMostrar: () => (graduacao.especial ? Som.campeao() : Som.medalha()),
       });
       registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total, maos: p.maos });
     }
+    return lista;
+  },
+
+  /**
+   * Concede a conquista final a quem já tem todas as outras e ainda não a recebeu (por exemplo, quem
+   * completou as conquistas antes de ela existir). Devolve as desbloqueadas agora.
+   */
+  conferirConquistaFinal() {
+    const novas = this.progresso.desbloqueadas[CONQUISTA_FINAL] ? [] : this.desbloquear([]);
+    if (novas.length) { this.salvar(); this.atualizarJogadorNasEstatisticas(); }
+    return novas;
   },
 
   /** Marca um verbete como lido e concede "Bibliotecário" quando todos foram lidos. */
