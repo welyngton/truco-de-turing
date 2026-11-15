@@ -1,6 +1,6 @@
 /**
  * @file Tela "Sobre": versão, a disciplina, as regras
- * originais, o professor (e a conquista final em homenagem a ele), os autores, as estatísticas de uso (ligar e desligar) e a licença.
+ * originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
  */
 import { TEXTO_DA_CONTA } from '../../online/contas.js';
 import { abrirPainel } from '../paineis.js';
@@ -49,6 +49,10 @@ export function abrirSobre() {
       (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : '') +
       '<h3>Dados da conta</h3>' +
       '<p id="s-conta">' + TEXTO_DA_CONTA + '</p>' +
+      '<h3>Bugs e sugestões</h3>' +
+      '<p>Encontrou um erro ou tem uma ideia? Conte pelas issues do projeto no GitHub (é preciso ter uma conta lá). Dá para ver antes o que já foi relatado.</p>' +
+      '<div class="linha"><a class="botao pequeno" id="s-reportar" href="https://github.com/welyngton/truco-de-turing/issues/new" target="_blank" rel="noopener">Reportar bug ou sugestão</a>' +
+      '<a class="botao pequeno discreto" id="s-issues" href="https://github.com/welyngton/truco-de-turing/issues" target="_blank" rel="noopener">Ver issues abertas</a></div>' +
       '<h3>Créditos e licença</h3>' +
       '<p>Código aberto sob a licença <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no repositório <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas é gerada por código; fontes Cinzel e Spectral.</p>' +
       '<div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';

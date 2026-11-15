@@ -435,6 +435,12 @@ describe('telas', () => {
     assert.match(texto, /Peng Yaohao/);
     assert.match($('.homenagem').textContent, /Convergência global.*homenagem ao prof\. Peng.*Singularidade/s);
     for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
+    /* bugs e sugestões: o botão leva às issues do repositório, em outra aba */
+    const reportar = $('#s-reportar');
+    assert.equal(reportar.getAttribute('href'), 'https://github.com/welyngton/truco-de-turing/issues/new');
+    assert.equal(reportar.getAttribute('target'), '_blank');
+    assert.match(reportar.getAttribute('rel'), /noopener/);
+    assert.equal($('#s-issues').getAttribute('href'), 'https://github.com/welyngton/truco-de-turing/issues');
     /* estatísticas de uso: o texto sempre aparece; fora do site publicado não há botões e nada é medido */
     assert.match(texto, /Estatísticas de uso/);
     assert.match(texto, /Google Analytics/);
