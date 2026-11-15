@@ -657,7 +657,7 @@ Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", 
 
 ## `src/interface/conta.js`
 
-Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao recarregar a página (issue #60). O Firebase guarda a sessão no navegador, mas a conta só passa a valer para o jogo depois de ler e gravar o progresso no Firestore (`usarConta`). Para retomar a conta sem baixar o SDK para quem nunca entrou, o login grava a marca `MARCA_DE_CONTA` no `localStorage` (com o método de login) e sair da conta apaga a marca. Ao abrir o jogo, `retomarConta` só carrega o Firebase se a marca existir; aí espera a sessão guardada e junta o progresso da conta com o do aparelho, como no login. Com a conta valendo, cada gravação junta o progresso do aparelho com o da conta numa transação (`sincronizar`): um aparelho não apaga o que outro gravou, e o que foi ganho sem conexão sobe quando ela volta (issue #57). O menu, a tela "Jogar online" e a tela "Conquistas" acompanham a conta por `aoMudarDeConta`.
+Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao recarregar a página (issue #60). O Firebase guarda a sessão no navegador, mas a conta só passa a valer para o jogo depois de ler e gravar o progresso no Firestore (`usarConta`). Para retomar a conta sem baixar o SDK para quem nunca entrou, o login grava a marca `MARCA_DE_CONTA` no `localStorage` (com o método de login) e sair da conta apaga a marca. Ao abrir o jogo, `retomarConta` só carrega o Firebase se a marca existir; aí espera a sessão guardada e junta o progresso da conta com o do aparelho, como no login. Com a conta valendo, cada gravação junta o progresso do aparelho com o da conta numa transação (`sincronizar`): um aparelho não apaga o que outro gravou, e o que foi ganho sem conexão sobe quando ela volta (issue #57). Quando o que vem da conta completa as outras conquistas, a conquista final é concedida na hora (`conferirConquistaFinal`), ao entrar e a cada gravação. O menu, a tela "Jogar online" e a tela "Conquistas" acompanham a conta por `aoMudarDeConta`.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -903,7 +903,7 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre": versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, as estatísticas de uso (ligar e desligar) e a licença.
+Tela "Sobre": versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
 
 | Nome | Tipo | Descrição |
 |---|---|---|

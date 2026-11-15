@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.7.0 — 2026-11-15
+
+- feat: conquista final na hora ao juntar com a conta e botão de bugs e sugestões no Sobre ([#77](https://github.com/welyngton/truco-de-turing/pull/77), por [@welyngton](https://github.com/welyngton))
+
 ## 2.6.1 — 2026-11-15
 
 - teste: espera da vez do humano no teste de truco não depende mais do tempo da máquina ([#69](https://github.com/welyngton/truco-de-turing/pull/69), por [@welyngton](https://github.com/welyngton))
