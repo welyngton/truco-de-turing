@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.5.5 — 2026-11-15
+
+- refactor: textos e manuais ([#74](https://github.com/welyngton/truco-de-turing/pull/74), por [@welyngton](https://github.com/welyngton))
+
 ## 2.5.4 — 2026-11-15
 
 - ci: deploy automático no Firebase Hosting ([#71](https://github.com/welyngton/truco-de-turing/pull/71), por [@welyngton](https://github.com/welyngton))
