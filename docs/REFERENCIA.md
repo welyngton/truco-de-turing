@@ -21,7 +21,11 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 | `irParaMenu()` | método | Volta da mesa para o menu. |
 | `modoImersivo()` | método | Em celulares e tablets: tela cheia e trava na horizontal, onde o navegador permite (Chrome no Android). No iPhone isso não existe; ali vale o aviso para girar o aparelho. |
 | `registrarMao(ctx)` | método | Registra o fim de uma mão contra o computador e devolve as conquistas novas. |
+| `registrarJogada(ctx)` | método | Confere, logo depois de uma jogada, as conquistas que valem na hora (`VALEM_NA_HORA`: ações e dropouts) e devolve as novas. Não mexe nos contadores, que só contam a mão quando ela acaba. |
+| `desbloquear(conquistas)` | método | Desbloqueia conquistas: marca a data, avisa no alto da tela (uma medalha por vez, com o som) e registra cada uma nas estatísticas de uso. Se com elas todas as outras estiverem desbloqueadas, a conquista final (`CONQUISTA_FINAL`) entra também, por último. Quem chama grava o progresso. |
+| `conferirConquistaFinal()` | método | Concede a conquista final a quem já tem todas as outras e ainda não a recebeu (por exemplo, quem completou as conquistas antes de ela existir). Devolve as desbloqueadas agora. |
 | `marcarVerbeteLido(id)` | método | Marca um verbete como lido e concede "Bibliotecário" quando todos foram lidos. |
+| `conquistasNovas(candidatas, ctx, progresso)` | função | Conquistas de `candidatas` que ainda estão bloqueadas e cujo teste passa no contexto `ctx`. Um teste que dá erro conta como não cumprido. |
 
 ## `src/arte/avatares.js`
 
@@ -436,12 +440,15 @@ Painéis de leitura da mesa: placar por camada (clique num bloco do placar), reg
 
 ## `src/cenas/mesa/resultado.js`
 
-Parte da CenaMesa: fim da mão. Marca os tentos, registra conquistas e mostra a tela de resultado com a soma detalhada de cada rede.
+Parte da CenaMesa: conquistas e fim da mão. Confere as conquistas que valem na hora de cada jogada, marca os tentos, registra as conquistas do fim da mão e mostra a tela de resultado com a soma detalhada de cada rede.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `TROFEU` | constante | Troféu desenhado em SVG para a tela de vitória. |
 | `encerrarMao(corrida)` | método | Encerra a mão. truco, ou null quando a mão foi jogada até o fim. |
+| `valemConquistas()` | método | A mão vale conquistas? Mãos com dicas e partidas entre pessoas no mesmo aparelho não valem. |
+| `cadeiraDasConquistas()` | método | Cadeira de quem ganha as conquistas neste aparelho: online, a da sala; no jogo local, a 0. |
+| `conferirConquistasDaJogada()` | método | Logo depois de cada jogada: as conquistas que valem na hora (transfer, overfit, tunagens, dropouts…) sobem no alto da tela sem esperar a mão acabar e entram na lista do resultado. |
 | `registrarEstatisticas(vencedor, humanoVenceu, completa, valorDaMao)` | método | Estatísticas de uso do fim da mão (interface/analise.js): `fim_mao` sempre e, se a partida acabou, `jogo_finalizado` mais `vitoria_do_jogador` ou `derrota_jogador`. "Jogador" é quem joga neste aparelho: a cadeira dele na partida online, ou qualquer humano no jogo local. |
 | `comemorar(nivel, nome)` | método | Comemoração da vitória: fanfarra, clarão dourado, faixa grande, fogos e chuva de confete. |
 | `faixaDeVitoria(titulo, subtitulo, duracao)` | método | Faixa dourada de vitória com título e subtítulo, que cresce e pulsa. |
@@ -534,13 +541,16 @@ Avatares que o jogador pode escolher. Os livres valem desde o início; os outros
 
 ## `src/conteudo/conquistas.js`
 
-Conquistas e suas graduações (bronze a antimatéria, como sugere a especificação). Cada conquista tem um `teste(ctx)` avaliado ao fim de cada mão contra oponentes. O contexto é: ``` { mao, eu, venceu, completa, // estado final da mão, índice do humano, resultado, se foi jogada até o fim partida, venceuPartida, valorDaMao, // camada de truco oponenteCorreu, opcoes, // se o oponente correu do truco; opções do menu progresso } // contadores acumulados (ver progresso.js) ```
+Conquistas e suas graduações (bronze a antimatéria, como sugere a especificação, e a Singularidade da conquista final, "Convergência global", em homenagem ao prof. Peng). Cada conquista tem um `teste(ctx)` avaliado ao fim de cada mão contra oponentes. O contexto é: ``` { mao, eu, venceu, completa, // estado final da mão, índice do humano, resultado, se foi jogada até o fim partida, venceuPartida, valorDaMao, // camada de truco oponenteCorreu, opcoes, // se o oponente correu do truco; opções do menu progresso } // contadores acumulados (ver progresso.js) ``` As de `VALEM_NA_HORA` também são avaliadas logo depois de cada jogada, no meio da mão, com um contexto menor: `{ mao, eu, opcoes, progresso }`.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `GRADUACOES` | constante (exportada) | Graduações com nome e cor da medalha. |
+| `GRADUACOES` | constante (exportada) | Graduações com nome e cor da medalha. `especial` ganha medalha furta-cor e aviso maior: é a Singularidade, só da conquista final. |
+| `CONQUISTA_FINAL` | constante (exportada) | Id da conquista final, a que desbloqueia quando todas as outras estão desbloqueadas. |
+| `progressoDaFinal(desbloqueadas = {})` | função (exportada) | Progresso até a conquista final: quantas das outras conquistas já estão desbloqueadas. Conta a lista atual, então uma conquista nova (de uma versão futura ou de um mod) entra na conta sozinha. |
 | `meu` | constante | Atalho: dados do jogador humano na mão encerrada. |
 | `VALEM_SEM_MAO_COMPLETA` | constante (exportada) | Conquistas que podem ser ganhas mesmo quando a mão termina porque alguém correu do truco. |
+| `VALEM_NA_HORA` | constante (exportada) | Conquistas que valem na hora da jogada, sem esperar a mão acabar: dependem só do que o jogador já fez (ações e dropouts). Na jogada, `progresso.dropouts` já soma os dropouts da mão em andamento. |
 
 ## `src/conteudo/dicasDeJogo.js`
 
@@ -647,7 +657,7 @@ Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", 
 
 ## `src/interface/conta.js`
 
-Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao recarregar a página (issue #60). O Firebase guarda a sessão no navegador, mas a conta só passa a valer para o jogo depois de ler e gravar o progresso no Firestore (`usarConta`). Para retomar a conta sem baixar o SDK para quem nunca entrou, o login grava a marca `MARCA_DE_CONTA` no `localStorage` (com o método de login) e sair da conta apaga a marca. Ao abrir o jogo, `retomarConta` só carrega o Firebase se a marca existir; aí espera a sessão guardada e junta o progresso da conta com o do aparelho, como no login. O menu e a tela "Jogar online" acompanham a conta por `aoMudarDeConta`.
+Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao recarregar a página (issue #60). O Firebase guarda a sessão no navegador, mas a conta só passa a valer para o jogo depois de ler e gravar o progresso no Firestore (`usarConta`). Para retomar a conta sem baixar o SDK para quem nunca entrou, o login grava a marca `MARCA_DE_CONTA` no `localStorage` (com o método de login) e sair da conta apaga a marca. Ao abrir o jogo, `retomarConta` só carrega o Firebase se a marca existir; aí espera a sessão guardada e junta o progresso da conta com o do aparelho, como no login. Com a conta valendo, cada gravação junta o progresso do aparelho com o da conta numa transação (`sincronizar`): um aparelho não apaga o que outro gravou, e o que foi ganho sem conexão sobe quando ela volta (issue #57). O menu, a tela "Jogar online" e a tela "Conquistas" acompanham a conta por `aoMudarDeConta`.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -656,12 +666,27 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 | `metodoAtual` | constante | Método de login da conta que vale agora ('google', 'email'…). |
 | `acessoContadoNaConta` | constante | O acesso desta abertura do jogo já foi contado na conta? (uma vez por abertura) |
 | `avisouFalhaAoSalvar` | constante | Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) |
+| `gravacao` | constante | Gravação na conta em andamento (uma por vez), ou null. |
+| `gravarDeNovo` | constante | Alguém pediu para gravar enquanto outra gravação corria? (vira uma gravação só, logo depois) |
+| `pendente` | constante | O progresso ficou sem subir por falta de conexão? Sobe sozinho quando a conexão voltar. |
+| `semConexao` | constante | O erro é de falta de conexão (e vale tentar de novo quando ela voltar)? |
+| `navegadorSemConexao` | constante | O navegador diz que está sem conexão? |
+| `sincronizar(app)` | função | Sobe o progresso para a conta juntando com o que já está lá (`juntarParaGravar`, numa transação), para um aparelho não apagar o que outro gravou. O que vier da conta (conquistas ganhas em outro aparelho) entra também neste aparelho, sem aviso. Uma gravação por vez: pedidos que chegam no meio viram uma gravação só, logo depois. Sem conexão, o progresso fica pendente, com um aviso só, e sobe sozinho quando a conexão volta (evento `online`, ligado em `usarConta`). |
+| `gravarNaConta(app, conta)` | função | Uma gravação de `sincronizar`: junta, grava, traz o que veio da conta e avisa o que for preciso. |
 | `contaAtual()` | função (exportada) | Conta conectada agora (`{ uid, nome, email }`), ou null. |
 | `aoMudarDeConta(cb)` | função (exportada) | Avisa `cb(conta \| null)` quando a conta muda. Devolve a função que para de ouvir. |
 | `haMarcaDeConta()` | função (exportada) | Alguém entrou numa conta neste navegador e não saiu? (a conta em si só vale depois de retomada) |
 | `usarConta(app, conta, metodo, { retomada = false } = {})` | função (exportada) | Passa a usar a conta: junta o progresso do aparelho com o da conta e passa a salvar nela. A conta só vale depois de ler e gravar no Firestore; se isso falhar, o erro sobe para quem chamou e o jogo continua com o progresso do aparelho, sem fingir que salvou na nuvem. |
 | `sairDaContaAtual()` | função (exportada) | Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. |
 | `retomarConta(app)` | função (exportada) | Ao abrir o jogo, retoma a conta de quem já entrou neste navegador. Sem a marca do login (ou sem o Firebase configurado), não faz nada e não baixa o SDK. Com a marca, espera a sessão que o Firebase guardou: - sessão encerrada (saiu em outro lugar, expirou): apaga a marca e segue sem conta; - sessão válida: junta o progresso como no login e volta a salvar na conta; - falha ao ler ou gravar a conta: avisa, segue com o progresso do aparelho e mantém a marca, para tentar de novo na próxima visita. |
+
+## `src/interface/medalha.js`
+
+HTML da medalha de uma conquista, na cor da graduação: usado no quadro de conquistas, na tela de resultado e no aviso do alto da tela. Fica num módulo leve, sem as telas, para a Aplicacao poder montar o aviso.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `medalhaHtml(conquista, desbloqueada)` | função (exportada) | HTML da medalha de uma conquista. |
 
 ## `src/interface/menu.js`
 
@@ -716,15 +741,27 @@ Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cad
 
 ## `src/interface/paineis.js`
 
-Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápidos e caixas de confirmação. As telas específicas (menu, regras, grimório…) usam estas funções. Os painéis vivem em `#paineis` e os avisos em `#avisos` (ver index.html).
+Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápidos, a fila de avisos de conquista e caixas de confirmação. As telas específicas (menu, regras, grimório…) usam estas funções. Os painéis vivem em `#paineis` e os avisos em `#avisos` (ver index.html).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `escaparHtml(texto)` | função (exportada) | Escapa texto para inserir em HTML com segurança. |
 | `abrirPainel(html, opcoes = {})` | função (exportada) | Abre uma tela sobre o jogo. |
 | `fecharTodos()` | função (exportada) | Fecha todas as telas abertas. |
-| `mostrarAviso(titulo, texto, tipo, duracaoMs = 5200)` | função (exportada) | Mostra um aviso rápido no topo da tela (só um por vez). |
+| `trocarAviso(aviso)` | função | Troca o aviso comum do topo pelo novo. As medalhas de conquista ficam, porque têm fila própria. |
+| `mostrarAviso(titulo, texto, tipo, duracaoMs = 5200)` | função (exportada) | Mostra um aviso rápido no topo da tela (um aviso comum por vez, abaixo da medalha de conquista, se houver). |
 | `mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito)` | função (exportada) | Dica de jogo do modo "dicas", no estilo do Glossário: título, conselho e o conceito de redes neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha). |
+| `DURACAO_DO_AVISO_DE_CONQUISTA` | constante (exportada) | Tempo de cada aviso de conquista na tela, em milissegundos (um toque fecha antes). |
+| `ESPERA_DEPOIS_DE_FECHAR` | constante | Espera depois de fechar uma tela, antes de voltar a mostrar medalhas (a resposta do truco pode abrir outro pedido). |
+| `filaDeConquistas` | constante | Avisos de conquista esperando a vez, na ordem em que foram ganhos. |
+| `conquistaNaTela` | constante | Aviso de conquista na tela agora: `{ aviso, elemento, relogios }`, ou null. |
+| `reduzirMovimento()` | função | Quem joga pediu para reduzir o movimento (prefer\u00eancia do sistema)? |
+| `decisaoNaTela()` | função | H\u00e1 uma caixa de resposta do truco na tela? A medalha n\u00e3o pode ficar por cima dela. |
+| `avisarConquista(aviso)` | função (exportada) | P\u00f5e um aviso de conquista na fila do alto da tela. Os avisos aparecem um de cada vez, na ordem em que chegaram, sem apagar os outros: cada um fica `duracaoMs` (ou at\u00e9 um toque) e ent\u00e3o entra o pr\u00f3ximo. Enquanto a caixa de resposta do truco est\u00e1 aberta, a fila espera, e a medalha que estava na tela volta para o come\u00e7o da fila. Com "reduzir movimento", o aviso entra e sai sem anima\u00e7\u00e3o. |
+| `mostrarProximaConquista()` | função | Mostra o pr\u00f3ximo aviso da fila, se a vez for dele. |
+| `recolherConquista()` | função | Abriu a caixa de resposta do truco: a medalha da tela volta para o come\u00e7o da fila e espera a resposta. |
+| `retomarConquistas()` | função | Uma tela fechou: se a fila estava esperando, ela volta a andar daqui a pouco. |
+| `limparAvisosDeConquista()` | função (exportada) | Esvazia a fila e tira da tela o aviso de conquista atual. |
 | `confirmar(titulo, texto, botoes, opcoes = {})` | função (exportada) | Caixa de confirmação com botões. |
 | `mostrarDicaFlutuante(titulo, html, alvo)` | função (exportada) | Mostra uma dica no estilo do Glossário ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
 | `esconderDicaFlutuante()` | função (exportada) | Esconde a dica flutuante, se houver. |
@@ -767,13 +804,15 @@ Tela de avatares: o jogador escolhe o retrato que aparece no placar. Os bloquead
 
 ## `src/interface/telas/conquistas.js`
 
-Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado).
+Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `medalhaHtml(conquista, desbloqueada)` | função (exportada) | HTML da medalha de uma conquista (também usado no resumo do fim da mão). |
 | `itemHtml(conquista, desbloqueada)` | função | HTML de um item da lista de conquistas. |
-| `abrirConquistas(app)` | função (exportada) | Abre o quadro de conquistas. |
+| `finalHtml(conquista, progresso)` | função | HTML da conquista final, em destaque: medalha, nome, descrição e quantas das outras já foram feitas. |
+| `origemDasConquistas()` | função (exportada) | De quem são as conquistas da tela: da conta conectada (com o nome), da conta que ainda está sendo retomada, ou só deste aparelho. |
+| `conteudoHtml(p)` | função | Origem, resumo e lista de medalhas (a parte que muda quando a conta entra ou sai). |
+| `abrirConquistas(app)` | função (exportada) | Abre o quadro de conquistas. Se a conta entrar (ou sair) com o quadro aberto, ele se atualiza. |
 
 ## `src/interface/telas/grimorio.js`
 
@@ -864,7 +903,7 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre": versão, a disciplina, as regras originais, o professor, os autores, as estatísticas de uso (ligar e desligar) e a licença.
+Tela "Sobre": versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, as estatísticas de uso (ligar e desligar) e a licença.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1108,7 +1147,7 @@ Configuração do projeto Firebase do grupo (Authentication + Firestore), usada 
 
 ## `src/online/contas.js`
 
-Contas: o progresso (conquistas, avatares, verbetes lidos e contadores) passa a ficar na conta e vale em qualquer aparelho. Ao entrar, o progresso do aparelho e o da conta se juntam sem perder nada nem contar em dobro (`mesclarProgresso`); depois, cada mão salva na conta. O documento da conta (`documentoDaConta`) leva também as estatísticas do jogador (estatisticas.js), o perfil (nome, e-mail e método de login) e um resumo para a lista de jogadores (issue #66).
+Contas: o progresso (conquistas, avatares, verbetes lidos e contadores) passa a ficar na conta e vale em qualquer aparelho. Ao entrar, o progresso do aparelho e o da conta se juntam sem perder nada nem contar em dobro (`mesclarProgresso`); depois, cada gravação junta de novo com o que está na conta (`juntarParaGravar`), para um aparelho não apagar o que outro gravou. O documento da conta (`documentoDaConta`) leva também as estatísticas do jogador (estatisticas.js), o perfil (nome, e-mail e método de login) e um resumo para a lista de jogadores (issue #66).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1116,6 +1155,7 @@ Contas: o progresso (conquistas, avatares, verbetes lidos e contadores) passa a 
 | `CONTADORES` | constante | Contadores que só crescem: na mescla vale o maior. |
 | `CONJUNTOS` | constante | Conjuntos marcados (id → valor): na mescla vale a união. |
 | `mesclarProgresso(local, conta)` | função (exportada) | Junta o progresso do aparelho com o da conta. - contadores: o maior dos dois (as mesmas mãos não contam duas vezes); - conquistas: a união, com a data mais antiga de cada uma; - verbetes, terrenos, baralhos e arquiteturas: a união; - avatar: o da conta, se houver; preferências do aparelho (som, música, opções do menu) ficam. |
+| `juntarParaGravar(local, conta)` | função (exportada) | Junta o progresso do aparelho com o que está na conta na hora de gravar (cada gravação, não só ao entrar): como `mesclarProgresso`, mas o avatar é o do aparelho, que é a escolha mais recente. Assim um aparelho não apaga da conta as conquistas que outro gravou nesse meio-tempo, e como tudo fica com a união ou o maior valor, juntar de novo não conta nada em dobro. |
 | `progressoDaConta(progresso)` | função (exportada) | Parte do progresso que vai para a conta (sem preferências do aparelho). |
 | `documentoDaConta(progresso, conta, metodo)` | função (exportada) | Documento gravado em `contas/<uid>`: o progresso da conta, o perfil de quem entrou e o resumo usado na lista de jogadores (tela Jogadores, só para administradores). |
 
@@ -1161,6 +1201,7 @@ Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte d
 | `contaGuardada()` | função (exportada) | Conta da sessão que o Firebase guardou neste navegador (quem entrou e não saiu), ou null. Espera o Firebase terminar de ler a sessão: o primeiro aviso de `onAuthStateChanged`. |
 | `carregarProgressoDaConta(uid)` | função (exportada) | Progresso salvo na conta, ou null. |
 | `salvarProgressoNaConta(uid, progresso)` | função (exportada) | Salva o progresso na conta. |
+| `juntarNaConta(uid, montar)` | função (exportada) | Grava na conta juntando com o que já está lá, numa transação: lê o documento, monta o novo com `montar(naConta)` e grava. Se outro aparelho gravar no meio, o Firestore repete a transação com o documento novo. Sem conexão, falha (código `unavailable`), e quem chama tenta de novo depois. |
 | `ehAdministrador(uid)` | função (exportada) | A conta é administradora? Vale quem tem um documento em `admins/<uid>` (criado à mão no console do Firebase); as regras deixam cada conta ler só o próprio. Qualquer falha conta como "não", para a tela Jogadores simplesmente não aparecer. |
 | `listarContas()` | função (exportada) | Todas as contas, com o `uid` de cada uma (issue #66). As regras só deixam administradores ler; para as outras contas a leitura falha com `permission-denied`. |
 | `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. Cada mensagem enviada leva o `uid` da conta conectada (as regras recusam outro) e a data em que vence (`expira`); a sala recebe o `uid` junto e o usa para saber quem é quem (sala.js). `aoFalhar(cb)` avisa quando o Firestore recusa ler ou gravar (regras, conexão), para a tela dizer ao jogador em vez de a sala ficar parada em silêncio. |

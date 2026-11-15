@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.6.0 — 2026-11-15
+
+- feat: aviso de conquista, conquistas da conta e conquista final (#70, #72, #73) ([#76](https://github.com/welyngton/truco-de-turing/pull/76), por [@welyngton](https://github.com/welyngton) e [@chiconatovini](https://github.com/chiconatovini))
+
 ## 2.5.5 — 2026-11-15
 
 - refactor: textos e manuais ([#74](https://github.com/welyngton/truco-de-turing/pull/74), por [@welyngton](https://github.com/welyngton))

@@ -229,6 +229,9 @@ html, body { overscroll-behavior: none; }
 .guilda .retrato canvas { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); }
 .guilda-nota { font-style: italic; font-size: 14px; color: #5a4630; margin: 6px auto 0; max-width: 26ch; }
 .conquistas-principal { min-width: 0; }
+/* de quem são as conquistas: da conta conectada ou só deste aparelho */
+.conquistas-origem { margin: 2px 0 0; font-size: 14px; color: #5a4630; }
+.conquistas-origem b { color: #6b1a22; }
 .conquistas-resumo { color: #5a4630; }
 .conquistas-resumo b { font-family: var(--fonte-titulo); font-size: 20px; color: #6b1a22; }
 .conquistas-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 12px; }
@@ -251,6 +254,18 @@ html, body { overscroll-behavior: none; }
 .conquista small { display: block; font-family: var(--fonte-interface); font-size: 13px; color: #5a4630; line-height: 1.3; }
 .conquista .graduacao { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6b1a22; font-weight: 700; }
 .conquistas-rodape { font-size: 13px; color: #7a6a4c; margin-top: 12px; }
+/* graduação Singularidade (conquista final): medalha furta-cor, com aro claro e brilho */
+.medalha.especial {
+  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 50%),
+    conic-gradient(from 20deg, #ff6fb1, #b48cff, #9fe3e0, #e7c35a, #ff6fb1);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px #fff6d0, 0 0 16px rgba(180, 140, 255, 0.75);
+}
+/* conquista final em destaque no quadro, acima da lista, com o progresso até ela */
+.conquista.final { margin-top: 12px; border: 2px solid #b48cff; background: linear-gradient(135deg, rgba(255, 111, 177, 0.12), rgba(159, 227, 224, 0.18)); }
+.conquista.final .graduacao { color: #5a2a8a; }
+.progresso-final { display: flex; align-items: center; gap: 8px; margin-top: 6px; font: 700 13px var(--fonte-interface); color: #3a2a50; }
+.progresso-final .barra { flex: 1; height: 8px; border-radius: 4px; background: rgba(43, 22, 8, 0.15); overflow: hidden; }
+.progresso-final .barra i { display: block; height: 100%; background: linear-gradient(90deg, #ff6fb1, #b48cff, #9fe3e0); }
 .desbloqueio .medalha { width: 38px; height: 38px; flex: none; }
 .desbloqueio .medalha > svg { width: 26px; height: 26px; }
 .folha.sobre h3:first-of-type { margin-top: 14px; }
@@ -317,6 +332,20 @@ html, body { overscroll-behavior: none; }
 .aviso b { font-family: var(--fonte-titulo); font-size: 14px; display: block; color: #6b1a22; letter-spacing: 0.04em; }
 .aviso.medalha-aviso { border-color: var(--latao); background: #2b1608; color: #f6dc8f; }
 .aviso.medalha-aviso b { color: var(--latao); }
+/* aviso de conquista: a medalha na cor da graduação, a graduação, o nome e a descrição (fila em paineis.js) */
+.aviso.aviso-conquista { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.aviso-conquista .medalha { width: 44px; height: 44px; flex: none; border-color: var(--latao); }
+.aviso-conquista .medalha > svg { width: 30px; height: 30px; }
+.aviso-conquista-texto { min-width: 0; }
+.aviso-conquista-texto small { display: block; font: 700 11px var(--fonte-interface); letter-spacing: 0.12em; text-transform: uppercase; color: #d9b260; }
+/* aviso da conquista final: borda furta-cor que pulsa (parado com "reduzir movimento") */
+.aviso.aviso-conquista.especial {
+  border: 3px solid #b48cff; background: linear-gradient(135deg, #1d1030, #2b1608 65%);
+  box-shadow: 0 0 0 2px rgba(255, 111, 177, 0.45), 0 0 30px rgba(180, 140, 255, 0.55), 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: subir 0.25s ease-out, brilhar-singularidade 2.4s ease-in-out 0.25s infinite;
+}
+.aviso-conquista.especial .aviso-conquista-texto small { color: #d9c2ff; }
+@keyframes brilhar-singularidade { 50% { box-shadow: 0 0 0 2px rgba(159, 227, 224, 0.6), 0 0 42px rgba(255, 111, 177, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5); } }
 .aviso.dica-de-jogo { border-color: var(--latao); }
 .aviso.dica-de-jogo .conceito { display: block; margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(60, 40, 20, 0.35); font-size: 13px; color: #4b3a26; }
 
@@ -430,6 +459,10 @@ html, body { overscroll-behavior: none; }
   .menu-acoes .botao.jogar { font-size: 16px; padding: 7px 14px; }
   .menu-mais .botao { padding: 6px 4px; }
   .creditos { display: none; } /* os créditos continuam na tela "Sobre" */
+  /* aviso de conquista mais baixo, para cobrir menos da rede durante a jogada */
+  .aviso.aviso-conquista { padding: 6px 12px; gap: 10px; }
+  .aviso-conquista .medalha { width: 34px; height: 34px; }
+  .aviso-conquista .medalha > svg { width: 24px; height: 24px; }
 }
 @media (max-width: 760px) and (min-height: 521px) {
   .menu { grid-template-columns: minmax(0, 1fr); }
@@ -444,7 +477,7 @@ html, body { overscroll-behavior: none; }
   .grito-truco .grito { font-size: 46px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .camada, .folha, .aviso, .trofeu, .folha.vitoria { animation: none; }
+  .camada, .folha, .aviso, .trofeu, .folha.vitoria, .aviso.aviso-conquista.especial { animation: none; }
 }
 
 /* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
@@ -2270,8 +2303,14 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     ouro: { nome: "Ouro", cor: "#e7c35a" },
     platina: { nome: "Platina", cor: "#9fe3e0" },
     adamantium: { nome: "Adamantium", cor: "#b48cff" },
-    antimateria: { nome: "Antimat\xE9ria", cor: "#ff6fb1" }
+    antimateria: { nome: "Antimat\xE9ria", cor: "#ff6fb1" },
+    singularidade: { nome: "Singularidade", cor: "#efe2ff", especial: true }
   };
+  var CONQUISTA_FINAL = "convergencia";
+  function progressoDaFinal(desbloqueadas = {}) {
+    const outras = CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL);
+    return { feitas: outras.filter((c) => desbloqueadas[c.id]).length, total: outras.length };
+  }
   var meu = (c) => c.mao.jogadores[c.eu];
   var CONQUISTAS = [
     { id: "primeira", nome: "Primeira \xE9poca", descricao: "Ven\xE7a sua primeira m\xE3o.", graduacao: "bronze", teste: (c) => c.venceu },
@@ -2312,9 +2351,15 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     { id: "ensemble", nome: "Ensemble", descricao: "Ven\xE7a uma m\xE3o contra quatro advers\xE1rios (5 jogadores).", graduacao: "ouro", teste: (c) => c.venceu && c.mao.jogadores.length >= 5 },
     { id: "bigdata", nome: "Big data", descricao: "Ven\xE7a uma m\xE3o jogada com 3 baralhos.", graduacao: "prata", teste: (c) => c.venceu && c.mao.config.baralhos >= 3 },
     { id: "profunda", nome: "Deep learning de verdade", descricao: "Ven\xE7a uma m\xE3o na arquitetura profunda.", graduacao: "prata", teste: (c) => c.venceu && c.mao.config.arquitetura === "profunda" },
-    { id: "arquiteto", nome: "Arquiteto de redes", descricao: "Ven\xE7a m\xE3os em todas as arquiteturas (padr\xE3o, curta, profunda e larga).", graduacao: "platina", teste: (c) => Object.keys(ARQUITETURAS).every((a) => c.progresso.arquiteturas && c.progresso.arquiteturas[a]) }
+    { id: "arquiteto", nome: "Arquiteto de redes", descricao: "Ven\xE7a m\xE3os em todas as arquiteturas (padr\xE3o, curta, profunda e larga).", graduacao: "platina", teste: (c) => Object.keys(ARQUITETURAS).every((a) => c.progresso.arquiteturas && c.progresso.arquiteturas[a]) },
+    /* conquista final (CONQUISTA_FINAL), sempre a última da lista: a Aplicacao a concede logo depois da última que faltava */
+    { id: "convergencia", nome: "Converg\xEAncia global", descricao: "Desbloqueie todas as outras conquistas. Em homenagem ao prof. Peng Yaohao.", graduacao: "singularidade", teste: (c) => {
+      const { feitas, total } = progressoDaFinal(c.progresso.desbloqueadas);
+      return feitas === total;
+    } }
   ];
   var VALEM_SEM_MAO_COMPLETA = /* @__PURE__ */ new Set(["correu", "campeao", "maquina", "primeira", "dez", "cinquenta", "gato10", "gato100", "biblio", "truco", "doze", "cartografo", "colecionador", "arquiteto"]);
+  var VALEM_NA_HORA = /* @__PURE__ */ new Set(["gato10", "gato100", "desk", "transfer", "overfit", "earlystop", "overflow", "tunador"]);
 
   // src/interface/som.js
   var contexto = null;
@@ -2890,10 +2935,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     camada2.className = "camada" + (opcoes.transparente ? " transparente" : "");
     camada2.innerHTML = html;
     $("#paineis").appendChild(camada2);
+    if (decisaoNaTela()) recolherConquista();
     const painel = {
       elemento: camada2,
       fechar() {
         camada2.remove();
+        retomarConquistas();
         if (opcoes.aoFechar) opcoes.aoFechar();
       }
     };
@@ -2907,14 +2954,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
   function fecharTodos() {
     $("#paineis").innerHTML = "";
+    retomarConquistas();
+  }
+  function trocarAviso(aviso) {
+    const caixa = $("#avisos");
+    caixa.querySelectorAll(".aviso:not(.aviso-conquista)").forEach((a) => a.remove());
+    caixa.appendChild(aviso);
   }
   function mostrarAviso(titulo, texto, tipo, duracaoMs = 5200) {
     const aviso = document.createElement("div");
     aviso.className = "aviso" + (tipo ? " " + tipo : "");
     aviso.innerHTML = "<b>" + escaparHtml(titulo) + "</b>" + escaparHtml(texto || "");
-    const caixa = $("#avisos");
-    caixa.innerHTML = "";
-    caixa.appendChild(aviso);
+    trocarAviso(aviso);
     setTimeout(() => {
       aviso.style.transition = "opacity .4s";
       aviso.style.opacity = "0";
@@ -2926,15 +2977,73 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     const aviso = document.createElement("div");
     aviso.className = "aviso dica-de-jogo";
     aviso.innerHTML = "<b>Dica \xB7 " + escaparHtml(titulo) + "</b>" + escaparHtml(texto) + (conceito ? '<span class="conceito"><i>Redes neurais \xB7 ' + escaparHtml(tituloDoConceito) + ":</i> " + escaparHtml(conceito) + "</span>" : "");
-    const caixa = $("#avisos");
-    caixa.innerHTML = "";
-    caixa.appendChild(aviso);
+    trocarAviso(aviso);
     setTimeout(() => {
       aviso.style.transition = "opacity .4s";
       aviso.style.opacity = "0";
     }, 8600);
     setTimeout(() => aviso.remove(), 9e3);
     aviso.addEventListener("click", () => aviso.remove());
+  }
+  var DURACAO_DO_AVISO_DE_CONQUISTA = 4500;
+  var ESPERA_DEPOIS_DE_FECHAR = 400;
+  var filaDeConquistas = [];
+  var conquistaNaTela = null;
+  function reduzirMovimento() {
+    try {
+      return !!(globalThis.matchMedia && globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    } catch (e) {
+      return false;
+    }
+  }
+  function decisaoNaTela() {
+    return !!document.querySelector("#paineis .grito-truco");
+  }
+  function avisarConquista(aviso) {
+    filaDeConquistas.push(aviso);
+    mostrarProximaConquista();
+  }
+  function mostrarProximaConquista() {
+    if (conquistaNaTela && conquistaNaTela.elemento.isConnected) return;
+    conquistaNaTela = null;
+    if (!filaDeConquistas.length || decisaoNaTela()) return;
+    const aviso = filaDeConquistas.shift();
+    const elemento = document.createElement("div");
+    elemento.className = "aviso medalha-aviso aviso-conquista" + (aviso.classe ? " " + aviso.classe : "");
+    elemento.setAttribute("role", "status");
+    elemento.innerHTML = aviso.medalha + '<div class="aviso-conquista-texto">' + (aviso.rotulo ? "<small>" + escaparHtml(aviso.rotulo) + "</small>" : "") + "<b>" + escaparHtml(aviso.titulo) + "</b>" + escaparHtml(aviso.texto || "") + "</div>";
+    $("#avisos").prepend(elemento);
+    const atual3 = { aviso, elemento, relogios: [] };
+    conquistaNaTela = atual3;
+    if (!aviso.mostrado) {
+      aviso.mostrado = true;
+      if (aviso.aoMostrar) aviso.aoMostrar();
+    }
+    const duracao = aviso.duracaoMs || DURACAO_DO_AVISO_DE_CONQUISTA;
+    const fechar = () => {
+      if (conquistaNaTela !== atual3) return;
+      atual3.relogios.forEach(clearTimeout);
+      elemento.remove();
+      conquistaNaTela = null;
+      mostrarProximaConquista();
+    };
+    elemento.addEventListener("click", fechar);
+    if (!reduzirMovimento()) atual3.relogios.push(setTimeout(() => {
+      elemento.style.transition = "opacity .4s";
+      elemento.style.opacity = "0";
+    }, Math.max(0, duracao - 400)));
+    atual3.relogios.push(setTimeout(fechar, duracao));
+  }
+  function recolherConquista() {
+    if (!conquistaNaTela) return;
+    const { aviso, elemento, relogios } = conquistaNaTela;
+    relogios.forEach(clearTimeout);
+    elemento.remove();
+    conquistaNaTela = null;
+    filaDeConquistas.unshift(aviso);
+  }
+  function retomarConquistas() {
+    if (filaDeConquistas.length) setTimeout(mostrarProximaConquista, ESPERA_DEPOIS_DE_FECHAR);
   }
   function confirmar(titulo, texto, botoes, opcoes = {}) {
     const html = '<div class="folha estreita' + (opcoes.grito ? " grito-truco" : "") + '">' + (opcoes.topo || "") + "<h2>" + escaparHtml(titulo) + "</h2>" + (texto ? "<p>" + texto + "</p>" : "") + '<div class="linha fim" style="margin-top:16px">' + botoes.map((b, i) => '<button class="botao ' + (b.classe || "") + '" data-indice="' + i + '">' + escaparHtml(b.rotulo) + "</button>").join("") + "</div></div>";
@@ -2976,6 +3085,81 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function esconderDicaFlutuante() {
     if (dicaFlutuante) dicaFlutuante.remove();
     dicaFlutuante = null;
+  }
+
+  // src/arte/icones.js
+  var I = "#24140a";
+  var svg = function(body) {
+    return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>";
+  };
+  var gato = function(extra) {
+    return '<path d="M10 20 9 7l9 7h12l9-7-1 13c2 3 3 6 3 9 0 9-8 14-17 14S7 38 7 29c0-3 1-6 3-9z" fill="#5a6b80" stroke="' + I + '" stroke-width="2"/><path d="M12 11l4 4M36 11l-4 4" stroke="#f59322" stroke-width="2.5"/><ellipse cx="18" cy="27" rx="3.2" ry="4" fill="#bff3ff"/><ellipse cx="30" cy="27" rx="3.2" ry="4" fill="#bff3ff"/><path d="M18 25v4M30 25v4" stroke="' + I + '" stroke-width="1.8"/><path d="M22 33h4l-2 2.5z" fill="#f59322"/><path d="M24 35.5c-1.5 2-4 2-5 1M24 35.5c1.5 2 4 2 5 1" stroke="' + I + '" stroke-width="1.4" fill="none"/><path d="M8 32l-6-1M8 35l-6 2M40 32l6-1M40 35l6 2" stroke="#e8eef5" stroke-width="1.2"/>' + (extra || "");
+  };
+  var ICONES_CONQUISTAS = {
+    primeira: svg('<ellipse cx="24" cy="41" rx="13" ry="3.5" fill="#7a4a1e"/><path d="M24 40V21" stroke="#2f6b2a" stroke-width="3"/><path d="M24 27c-9 0-13-6-13-13 8 0 13 5 13 13z" fill="#6fbf4a" stroke="' + I + '" stroke-width="1.6"/><path d="M24 22c0-8 6-12 13-12 0 7-5 12-13 12z" fill="#9be27a" stroke="' + I + '" stroke-width="1.6"/><circle cx="36" cy="34" r="6" fill="#f2c94c" stroke="' + I + '" stroke-width="1.6"/><text x="36" y="37.5" font-family="Cinzel,serif" font-weight="900" font-size="9" text-anchor="middle" fill="' + I + '">1</text>'),
+    dez: svg('<rect x="5" y="7" width="38" height="34" rx="4" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M9 13c5 18 10 22 30 23" stroke="#f59322" stroke-width="3" fill="none"/><path d="M9 36h31M9 12v24" stroke="' + I + '" stroke-width="1.4"/><circle cx="39" cy="36" r="3.2" fill="#4aa3df" stroke="' + I + '" stroke-width="1.4"/>'),
+    cinquenta: svg('<path d="M15 7h18v10c0 7-4 12-9 12s-9-5-9-12z" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><path d="M15 10H8c0 7 3 10 8 10M33 10h7c0 7-3 10-8 10" fill="none" stroke="' + I + '" stroke-width="2"/><path d="M24 29v6" stroke="' + I + '" stroke-width="3"/><path d="M15 41h18l-2-6H17z" fill="#b9801b" stroke="' + I + '" stroke-width="2"/><path d="M24 11l1.8 3.6 4 .6-2.9 2.8.7 4L24 20l-3.6 2 .7-4-2.9-2.8 4-.6z" fill="#fff6c8"/>'),
+    gato10: svg(gato("")),
+    gato100: svg(gato('<path d="M40 6c-2-3-6-1-4 2l4 4 4-4c2-3-2-5-4-2z" fill="#e0405a"/><path d="M6 6c-2-3-6-1-4 2l4 4 4-4c2-3-2-5-4-2z" fill="#e0405a" transform="translate(2 0)"/>')),
+    zen: svg('<path d="M24 12c4 5 5 10 0 18-5-8-4-13 0-18z" fill="#f6a7c1" stroke="' + I + '" stroke-width="1.6"/><path d="M24 30c-4-7-10-9-16-8 2 6 8 9 16 8zM24 30c4-7 10-9 16-8-2 6-8 9-16 8z" fill="#f08cad" stroke="' + I + '" stroke-width="1.6"/><path d="M24 30c-7-1-13 1-17 5 6 3 12 1 17-5zM24 30c7-1 13 1 17 5-6 3-12 1-17-5z" fill="#6fbf4a" stroke="' + I + '" stroke-width="1.6"/><path d="M10 40h28" stroke="#4aa3df" stroke-width="2.5"/>'),
+    zen10: svg('<circle cx="24" cy="24" r="20" fill="none" stroke="#f2c94c" stroke-width="2" stroke-dasharray="3 3"/><circle cx="24" cy="13" r="5" fill="#f1c9a5" stroke="' + I + '" stroke-width="1.6"/><path d="M24 18c-6 0-8 5-8 10l-6 6c4 3 24 3 28 0l-6-6c0-5-2-10-8-10z" fill="#e2802a" stroke="' + I + '" stroke-width="1.8"/><path d="M16 28c3 2 13 2 16 0" stroke="' + I + '" stroke-width="1.4" fill="none"/>'),
+    desk: svg('<path d="M6 30h36v4H6zM9 34v9M39 34v9" stroke="' + I + '" stroke-width="2" fill="#a8692e"/><path d="M15 8h16l5 5v17H15z" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><path d="M19 15h12M19 19h12M19 23h8" stroke="#9a8c6c" stroke-width="1.4"/><g transform="rotate(-18 26 20)"><rect x="12" y="15" width="28" height="10" rx="2" fill="none" stroke="#c0283c" stroke-width="2.4"/><text x="26" y="23.2" font-family="Cinzel,serif" font-weight="900" font-size="6.5" text-anchor="middle" fill="#c0283c">REJEITADO</text></g>'),
+    patos: svg('<path d="M30 30c0 7-6 10-14 10-6 0-10-3-10-7 4 1 7 0 9-3-1-3-1-7 2-10 3-3 8-2 10 1 2 2 3 5 3 9z" fill="#f6d24a" stroke="' + I + '" stroke-width="1.8"/><path d="M28 21l7-1-6 4z" fill="#f59322" stroke="' + I + '" stroke-width="1.4"/><circle cx="23" cy="20" r="1.6" fill="' + I + '"/><path d="M14 33c4 1 7 0 9-3" stroke="' + I + '" stroke-width="1.4" fill="none"/><path d="M38 41c0 0 2-6 6-6" stroke="#4aa3df" stroke-width="2"/><path d="M34 44h10M4 44h24" stroke="#4aa3df" stroke-width="2"/>'),
+    contra: svg('<path d="M24 5l16 6v11c0 11-7 18-16 21C15 40 8 33 8 22V11z" fill="#4f86c9" stroke="' + I + '" stroke-width="2"/><path d="M26 9l-6 13h6l-4 15 10-18h-6l4-10z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.4"/><path d="M12 16l6 4M36 28l-5-2" stroke="#1f2c3b" stroke-width="1.6"/>'),
+    artilheiro: svg('<path d="M4 10h40v26H4z" fill="none" stroke="#efe3c6" stroke-width="2"/><path d="M4 16h40M4 22h40M4 28h40M12 10v26M20 10v26M28 10v26M36 10v26" stroke="#efe3c6" stroke-width=".7" opacity=".6"/><circle cx="24" cy="31" r="9" fill="#fff" stroke="' + I + '" stroke-width="1.8"/><path d="M24 26.5l4 3-1.5 4.6h-5L20 29.5z" fill="' + I + '"/><path d="M24 22v4.5M32.5 28.5l-4.5 1M30 38l-3.5-3.9M18 38l3.5-3.9M15.5 28.5l4.5 1" stroke="' + I + '" stroke-width="1.2"/><path d="M38 44l-4-6" stroke="#9a8c6c" stroke-width="1.4"/>'),
+    transfer: svg('<circle cx="14" cy="18" r="9" fill="#f6a7c1" stroke="' + I + '" stroke-width="1.8"/><path d="M10 15c2-2 6-2 8 0M10 20c2 2 6 2 8 0" stroke="' + I + '" stroke-width="1.2" fill="none"/><circle cx="34" cy="30" r="9" fill="#9be27a" stroke="' + I + '" stroke-width="1.8"/><path d="M30 27c2-2 6-2 8 0M30 32c2 2 6 2 8 0" stroke="' + I + '" stroke-width="1.2" fill="none"/><path d="M24 12c6 0 10 3 11 8" stroke="#f2c94c" stroke-width="2.5" fill="none"/><path d="M36 16l-1 5-4-3z" fill="#f2c94c"/><path d="M24 36c-6 0-10-3-11-8" stroke="#4aa3df" stroke-width="2.5" fill="none"/><path d="M12 32l1-5 4 3z" fill="#4aa3df"/>'),
+    vanishing: svg('<path d="M8 10h32L24 38z" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><path d="M14 14h20L24 32z" fill="#fff6c8" opacity=".9"/><path d="M6 44h6M16 44h4M24 44h2M30 44h1" stroke="#efe3c6" stroke-width="2.5"/><circle cx="38" cy="38" r="4" fill="none" stroke="#c0283c" stroke-width="2" stroke-dasharray="2 2"/>'),
+    overfit: svg('<circle cx="8" cy="30" r="2" fill="#4aa3df"/><circle cx="14" cy="14" r="2" fill="#4aa3df"/><circle cx="20" cy="34" r="2" fill="#4aa3df"/><circle cx="26" cy="12" r="2" fill="#4aa3df"/><circle cx="32" cy="28" r="2" fill="#4aa3df"/><path d="M8 30C10 6 14 14 14 14s2 26 6 20 4-24 6-22 2 18 6 16" stroke="#f59322" stroke-width="2" fill="none"/><circle cx="33" cy="33" r="8" fill="rgba(191,243,255,.35)" stroke="' + I + '" stroke-width="2.4"/><path d="M39 39l6 6" stroke="' + I + '" stroke-width="3.5"/>'),
+    earlystop: svg('<circle cx="24" cy="27" r="15" fill="#fff6dc" stroke="' + I + '" stroke-width="2.4"/><path d="M20 6h8M24 6v6M36 13l3-3" stroke="' + I + '" stroke-width="2.4"/><path d="M24 27V17" stroke="#c0283c" stroke-width="2.6"/><path d="M24 27l6 4" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="27" r="2" fill="' + I + '"/><rect x="31" y="34" width="13" height="10" rx="2" fill="#c0283c" stroke="' + I + '" stroke-width="1.4"/><path d="M35 37v4M40 37v4" stroke="#fff" stroke-width="2"/>'),
+    overflow: svg('<rect x="10" y="30" width="22" height="12" rx="2" fill="#a3222e" stroke="' + I + '" stroke-width="1.6" transform="rotate(-4 21 36)"/><rect x="12" y="22" width="22" height="12" rx="2" fill="#2b4f9e" stroke="' + I + '" stroke-width="1.6" transform="rotate(5 23 28)"/><rect x="10" y="14" width="22" height="12" rx="2" fill="#2f7a46" stroke="' + I + '" stroke-width="1.6" transform="rotate(-6 21 20)"/><path d="M36 4l2 6 6-2-4 5 5 3-6 1 1 6-4-4-4 4 1-6-6-1 5-3-4-5 6 2z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.2"/>'),
+    trio: svg('<g stroke="' + I + '" stroke-width="1.6"><path d="M3 30l2-10 4 5 3-7 3 7 4-5 2 10z" fill="#f2c94c"/><path d="M15 22l2-11 4 5 3-8 3 8 4-5 2 11z" fill="#ffe08a"/><path d="M27 30l2-10 4 5 3-7 3 7 4-5 2 10z" fill="#f2c94c"/></g><circle cx="24" cy="18" r="1.8" fill="#c0283c"/><path d="M6 36h36" stroke="#efe3c6" stroke-width="2.5"/>'),
+    sessenta: svg('<g stroke="#9a8c6c" stroke-width="1"><path d="M6 12l12 6M6 12l12 18M6 24l12-6M6 24l12 6M6 36l12-18M6 36l12-6M18 18l12 6M18 30l12-6M30 24l12-8M30 24l12 8"/></g><g stroke="' + I + '" stroke-width="1.4"><circle cx="6" cy="12" r="3.2" fill="#4aa3df"/><circle cx="6" cy="24" r="3.2" fill="#4aa3df"/><circle cx="6" cy="36" r="3.2" fill="#4aa3df"/><circle cx="18" cy="18" r="3.2" fill="#f59322"/><circle cx="18" cy="30" r="3.2" fill="#f59322"/><circle cx="30" cy="24" r="3.2" fill="#f59322"/><circle cx="42" cy="16" r="3.2" fill="#9be27a"/><circle cx="42" cy="32" r="3.2" fill="#9be27a"/></g><text x="30" y="45" font-family="Cinzel,serif" font-weight="900" font-size="10" text-anchor="middle" fill="#f2c94c">60+</text>'),
+    truco: svg('<path d="M6 8h36a3 3 0 013 3v18a3 3 0 01-3 3H22l-9 8v-8H6a3 3 0 01-3-3V11a3 3 0 013-3z" fill="#c0303e" stroke="' + I + '" stroke-width="2"/><text x="24" y="25" font-family="Cinzel,serif" font-weight="900" font-size="11" text-anchor="middle" fill="#fff6dc">TRUCO!</text>'),
+    doze: svg('<circle cx="24" cy="24" r="19" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="24" r="15" fill="none" stroke="#9a6a14" stroke-width="1.2"/><text x="24" y="30" font-family="Cinzel,serif" font-weight="900" font-size="16" text-anchor="middle" fill="' + I + '">12</text><path d="M8 8l4 4M40 8l-4 4" stroke="#ffd23a" stroke-width="2"/>'),
+    correu: svg('<circle cx="29" cy="9" r="4.5" fill="#f1c9a5" stroke="' + I + '" stroke-width="1.6"/><path d="M27 15l-5 11 7 4-2 11M22 26l-8 6M27 15l7 6 6-2M25 18l-8-1-4 5" stroke="' + I + '" stroke-width="3" fill="none"/><path d="M4 40c3-3 6-3 9 0M2 33c2-2 4-2 6 0" stroke="#9a8c6c" stroke-width="2" fill="none"/><path d="M38 6l3-2M40 11h4" stroke="#c0283c" stroke-width="2"/>'),
+    campeao: svg('<path d="M8 34l3-20 8 9 5-13 5 13 8-9 3 20z" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><circle cx="11" cy="13" r="2.4" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/><circle cx="24" cy="9" r="2.4" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/><circle cx="37" cy="13" r="2.4" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/><circle cx="24" cy="27" r="3" fill="#c0283c"/><circle cx="15" cy="29" r="2" fill="#4aa3df"/><circle cx="33" cy="29" r="2" fill="#4aa3df"/><path d="M6 40h36" stroke="#7a1626" stroke-width="5"/>'),
+    maquina: svg('<rect x="10" y="12" width="28" height="24" rx="5" fill="#9fb0c4" stroke="' + I + '" stroke-width="2"/><path d="M24 12V6" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="5" r="2.5" fill="#c0283c"/><path d="M15 19l5 5M20 19l-5 5M28 19l5 5M33 19l-5 5" stroke="' + I + '" stroke-width="2"/><path d="M17 31c3-2 11-2 14 0" stroke="' + I + '" stroke-width="2" fill="none"/><path d="M6 22v8M42 22v8" stroke="' + I + '" stroke-width="3"/><path d="M36 38l4 6M12 38l-4 6" stroke="#ffd23a" stroke-width="2"/>'),
+    cartografo: svg('<path d="M4 10l12-4 16 4 12-4v32l-12 4-16-4-12 4z" fill="#f6e2b0" stroke="' + I + '" stroke-width="2"/><path d="M16 6v32M32 10v32" stroke="#c9a46a" stroke-width="1.4"/><path d="M8 30c5-6 9 2 14-4s8-2 12-8" stroke="#c0283c" stroke-width="1.8" stroke-dasharray="2.5 2.5" fill="none"/><path d="M34 18l3 3M37 18l-3 3" stroke="#c0283c" stroke-width="2"/><path d="M9 14l3 3 3-6" stroke="#2f7a46" stroke-width="2" fill="none"/>'),
+    colecionador: svg('<g stroke="' + I + '" stroke-width="1.6"><rect x="6" y="12" width="16" height="24" rx="2" fill="#a3222e" transform="rotate(-24 14 36)"/><rect x="12" y="9" width="16" height="24" rx="2" fill="#2b4f9e" transform="rotate(-9 20 33)"/><rect x="20" y="9" width="16" height="24" rx="2" fill="#2f7a46" transform="rotate(8 28 33)"/><rect x="26" y="12" width="16" height="24" rx="2" fill="#d79a2b" transform="rotate(22 34 36)"/></g><circle cx="34" cy="22" r="3" fill="#fff6dc"/>'),
+    zap: svg('<path d="M18 42c-1-10-6-20-5-28 1-9 12-9 13 0 1 8-4 18-5 28z" fill="#8a5424" stroke="' + I + '" stroke-width="2" transform="rotate(-18 19 28)"/><path d="M33 3l-9 18h7l-5 17 13-22h-7l5-13z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.6"/><text x="11" y="46" font-family="Cinzel,serif" font-weight="900" font-size="9" fill="#efe3c6">4\u2663</text>'),
+    biblio: svg('<path d="M4 12c7-3 14-3 20 2 6-5 13-5 20-2v28c-7-3-14-3-20 2-6-5-13-5-20-2z" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M24 14v28" stroke="' + I + '" stroke-width="1.6"/><path d="M8 18c4-1 8-1 12 1M8 23c4-1 8-1 12 1M28 19c4-2 8-2 12-1M28 24c4-2 8-2 12-1M8 28c4-1 8-1 12 1" stroke="#9a8c6c" stroke-width="1.2"/><path d="M33 8v12l3-2 3 2V8" fill="#c0283c"/>'),
+    nobreza: svg('<path d="M10 34l-2-20 9 9 7-14 7 14 9-9-2 20z" fill="#e7c35a" stroke="' + I + '" stroke-width="2"/><rect x="10" y="34" width="28" height="6" rx="1.5" fill="#b9801b" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="10" r="2.6" fill="#3fa7e0" stroke="' + I + '" stroke-width="1.2"/><circle cx="8" cy="14" r="2.4" fill="#e8304a"/><circle cx="40" cy="14" r="2.4" fill="#e8304a"/><path d="M18 30h12" stroke="#7a3cae" stroke-width="2"/>'),
+    backprop: svg('<circle cx="10" cy="14" r="5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><circle cx="10" cy="34" r="5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><path d="M15 15l9 7M15 33l9-7" stroke="#4aa3df" stroke-width="2"/><circle cx="28" cy="24" r="6" fill="#ffb347" stroke="' + I + '" stroke-width="1.8"/><path d="M34 24h6" stroke="' + I + '" stroke-width="2"/><path d="M38 20l5 4-5 4" fill="none" stroke="' + I + '" stroke-width="2"/><path d="M25 26h3l3-5" stroke="' + I + '" stroke-width="1.4" fill="none"/>'),
+    tunador: svg('<rect x="8" y="16" width="16" height="22" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8" transform="rotate(-12 16 27)"/><rect x="16" y="13" width="16" height="22" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><rect x="24" y="16" width="16" height="22" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8" transform="rotate(12 32 27)"/><path d="M27 3l-6 12h5l-3 12 10-15h-5l3-9z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.4"/>'),
+    batch: svg('<g stroke="' + I + '" stroke-width="1.6"><circle cx="14" cy="16" r="6" fill="#4aa3df"/><circle cx="34" cy="16" r="6" fill="#f59322"/><circle cx="14" cy="34" r="6" fill="#3fae6a"/><circle cx="34" cy="34" r="6" fill="#b48cff"/></g><path d="M20 16h8M14 22v6M34 22v6M20 34h8" stroke="' + I + '" stroke-width="1.4"/>'),
+    ensemble: svg('<g stroke="' + I + '" stroke-width="1.5"><circle cx="24" cy="10" r="5.5" fill="#4aa3df"/><circle cx="9" cy="21" r="5.5" fill="#f59322"/><circle cx="39" cy="21" r="5.5" fill="#3fae6a"/><circle cx="14" cy="38" r="5.5" fill="#b48cff"/><circle cx="34" cy="38" r="5.5" fill="#ff6fb1"/></g><circle cx="24" cy="25" r="5" fill="#e7c35a" stroke="' + I + '" stroke-width="1.6"/><path d="M24 15v5M13 22l7 2M35 22l-7 2M17 34l4-5M31 34l-4-5" stroke="' + I + '" stroke-width="1.3"/>'),
+    bigdata: svg('<ellipse cx="24" cy="10" rx="15" ry="5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><path d="M9 10v28c0 3 7 5 15 5s15-2 15-5V10" fill="#e2d2a8" stroke="' + I + '" stroke-width="1.8"/><path d="M9 19c0 3 7 5 15 5s15-2 15-5M9 28c0 3 7 5 15 5s15-2 15-5" fill="none" stroke="' + I + '" stroke-width="1.6"/><circle cx="33" cy="22" r="1.6" fill="#3fae6a"/><circle cx="33" cy="31" r="1.6" fill="#3fae6a"/>'),
+    profunda: svg('<g fill="#fff6dc" stroke="' + I + '" stroke-width="1.4"><circle cx="6" cy="24" r="3.5"/><circle cx="13" cy="16" r="3.5"/><circle cx="13" cy="32" r="3.5"/><circle cx="20" cy="24" r="3.5"/><circle cx="27" cy="16" r="3.5"/><circle cx="27" cy="32" r="3.5"/><circle cx="34" cy="24" r="3.5"/><circle cx="42" cy="24" r="3.5"/></g><path d="M9 24h7M23 24h7M37 24h2" stroke="#4aa3df" stroke-width="1.8"/><path d="M4 44h40" stroke="#6b1a22" stroke-width="2.5"/><path d="M40 40l4 4-4 4" fill="none" stroke="#6b1a22" stroke-width="2.5"/>'),
+    arquiteto: svg('<path d="M6 42h36" stroke="' + I + '" stroke-width="2"/><path d="M10 42V18l14-10 14 10v24" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><g fill="#4aa3df" stroke="' + I + '" stroke-width="1.2"><circle cx="17" cy="24" r="2.6"/><circle cx="17" cy="34" r="2.6"/><circle cx="24" cy="19" r="2.6"/><circle cx="24" cy="29" r="2.6"/><circle cx="31" cy="24" r="2.6"/><circle cx="31" cy="34" r="2.6"/></g><path d="M38 6l4 4-16 16-5 1 1-5z" fill="#e7c35a" stroke="' + I + '" stroke-width="1.6"/>'),
+    /* conquista final: na curva de perda, uma bola fica presa no mínimo local e a outra chega ao mínimo global */
+    convergencia: svg('<path d="M4 12c5 0 7 14 12 14s6-9 10-9 6 22 12 22 5-17 6-19V44H4z" fill="#b48cff" opacity=".3"/><path d="M4 12c5 0 7 14 12 14s6-9 10-9 6 22 12 22 5-17 6-19" fill="none" stroke="' + I + '" stroke-width="2.4"/><circle cx="16" cy="22.4" r="2.4" fill="#c9bc9f" stroke="' + I + '" stroke-width="1.4"/><circle cx="38" cy="34.6" r="3.6" fill="#ff6fb1" stroke="' + I + '" stroke-width="1.6"/><path d="M38 15l1.7 4.3 4.3 1.7-4.3 1.7L38 27l-1.7-4.3-4.3-1.7 4.3-1.7z" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/>')
+  };
+  var ICONE_CADEADO = svg('<rect x="12" y="21" width="24" height="19" rx="3" fill="#6b5a40" stroke="' + I + '" stroke-width="2"/><path d="M17 21v-5a7 7 0 0114 0v5" fill="none" stroke="' + I + '" stroke-width="3"/><circle cx="24" cy="30" r="2.6" fill="#24140a"/>');
+  var ICONES_DAS_ACOES = {
+    /* seta da camada atual para o neurônio destacado da próxima camada */
+    avancar: svg('<path d="M13 14L31 24M13 34L31 24" stroke="#f6dc8f" stroke-width="1.6" opacity=".6"/><circle cx="37" cy="24" r="10" fill="#f6dc8f" opacity=".4"/><g fill="#fff6dc" stroke="' + I + '" stroke-width="2"><circle cx="9" cy="14" r="4.5"/><circle cx="9" cy="34" r="4.5"/></g><circle cx="37" cy="24" r="6.5" fill="#ffb347" stroke="' + I + '" stroke-width="2"/><path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="' + I + '" stroke-width="6"/><path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="#fff6dc" stroke-width="3"/>'),
+    /* raio sobre duas cartas empilhadas */
+    tunagem: svg('<rect x="9" y="12" width="20" height="28" rx="3" fill="#fff6dc" stroke="' + I + '" stroke-width="2" transform="rotate(-8 19 26)"/><rect x="15" y="9" width="20" height="28" rx="3" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M29 4l-9 18h7l-4 20 15-24h-8l5-14z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.8"/>'),
+    /* curva que decora o ruído, passando por todos os pontos */
+    overfit: svg('<rect x="4" y="6" width="40" height="36" rx="4" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M8 34C11 14 14 40 18 22s6 14 9-4 6 18 9 0 4 6 5 4" fill="none" stroke="#e0602a" stroke-width="2.6"/><path d="M8 33L40 13" stroke="#4aa3df" stroke-width="1.8" stroke-dasharray="3 3"/><g fill="' + I + '"><circle cx="11" cy="23" r="2"/><circle cx="18" cy="22" r="2"/><circle cx="27" cy="18" r="2"/><circle cx="36" cy="18" r="2"/></g>'),
+    /* placa de pare */
+    earlystop: svg('<path d="M17 4h14l10 10v14L31 38H17L7 28V14z" fill="#c0283c" stroke="' + I + '" stroke-width="2"/><path d="M18 7h12l8 8v12l-8 8H18l-8-8V15z" fill="none" stroke="#fff6dc" stroke-width="1.6"/><text x="24" y="25.5" font-family="Cinzel,serif" font-weight="900" font-size="9" text-anchor="middle" fill="#fff6dc">STOP</text><path d="M24 38v8" stroke="' + I + '" stroke-width="3"/>'),
+    /* pilha de cartas que estoura */
+    stackoverflow: svg('<path d="M24 2l3 7 7-3-3 7 7 3-7 3 3 7-7-3-3 7-3-7-7 3 3-7-7-3 7-3-3-7 7 3z" fill="#ffb347" stroke="' + I + '" stroke-width="1.4"/><rect x="11" y="27" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6"/><rect x="11" y="32" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6"/><rect x="11" y="37" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6"/><rect x="13" y="22" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6" transform="rotate(12 26 24)"/>'),
+    /* o gato do GatoNet */
+    dropout: svg(gato("")),
+    /* duas setas trocando cartas com o limbo */
+    transfer: svg('<rect x="5" y="12" width="14" height="20" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><rect x="29" y="16" width="14" height="20" rx="2.5" fill="#3a3550" stroke="' + I + '" stroke-width="1.8"/><path d="M14 9c4-6 16-6 20 0" fill="none" stroke="#3fae6a" stroke-width="2.6"/><path d="M35 3l-1 7-7-2" fill="none" stroke="#3fae6a" stroke-width="2.6"/><path d="M34 39c-4 6-16 6-20 0" fill="none" stroke="#4aa3df" stroke-width="2.6"/><path d="M13 45l1-7 7 2" fill="none" stroke="#4aa3df" stroke-width="2.6"/>'),
+    /* ampulheta */
+    passar: svg('<path d="M12 5h24M12 43h24" stroke="' + I + '" stroke-width="3"/><path d="M14 6c0 10 8 12 8 18s-8 8-8 18h20c0-10-8-12-8-18s8-8 8-18z" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M17 11h14c-1 5-7 7-7 10-0-3-6-5-7-10zM16 41c1-6 8-8 8-11 0 3 7 5 8 11z" fill="#e2b04a"/>'),
+    /* setas que desbotam da saída para a entrada */
+    vanishing: svg('<path d="M42 24H30" stroke="#c0283c" stroke-width="4"/><path d="M33 18l-6 6 6 6" fill="none" stroke="#c0283c" stroke-width="4"/><path d="M27 24H17" stroke="#c0283c" stroke-width="3" opacity=".55"/><path d="M20 19l-5 5 5 5" fill="none" stroke="#c0283c" stroke-width="3" opacity=".55"/><path d="M14 24H6" stroke="#c0283c" stroke-width="2" opacity=".25"/><path d="M9 20l-4 4 4 4" fill="none" stroke="#c0283c" stroke-width="2" opacity=".25"/>')
+  };
+
+  // src/interface/medalha.js
+  function medalhaHtml(conquista, desbloqueada) {
+    const graduacao = GRADUACOES[conquista.graduacao];
+    return '<div class="medalha' + (graduacao.especial ? " especial" : "") + '" style="--graduacao:' + graduacao.cor + '">' + (ICONES_CONQUISTAS[conquista.id] || "") + (desbloqueada ? "" : '<span class="cadeado">' + ICONE_CADEADO + "</span>") + "</div>";
   }
 
   // src/interface/analise.js
@@ -3292,7 +3476,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.5.5";
+  var VERSAO = "2.6.0";
   var DATA_DA_VERSAO = "2026-11-15";
 
   // src/aplicacao.js
@@ -3349,6 +3533,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         this.atualizarJogadorNasEstatisticas();
       });
       this.atualizarJogadorNasEstatisticas();
+      this.conferirConquistaFinal();
     },
     /** Passa às estatísticas de uso a experiência, as conquistas, o avatar, os verbetes lidos, os acessos e as partidas. */
     atualizarJogadorNasEstatisticas() {
@@ -3461,26 +3646,70 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         }
       }
       ctx.progresso = p;
-      const novas = [];
-      for (const conquista of CONQUISTAS) {
-        if (p.desbloqueadas[conquista.id]) continue;
-        if (!ctx.completa && !VALEM_SEM_MAO_COMPLETA.has(conquista.id)) continue;
-        let ok = false;
-        try {
-          ok = !!conquista.teste(ctx);
-        } catch (e) {
-          ok = false;
-        }
-        if (ok) {
-          p.desbloqueadas[conquista.id] = Date.now();
-          novas.push(conquista);
-        }
-      }
+      const novas = this.desbloquear(conquistasNovas(CONQUISTAS.filter((c) => ctx.completa || VALEM_SEM_MAO_COMPLETA.has(c.id)), ctx, p));
       this.salvar();
-      if (novas.length) Som.medalha();
-      const total = Object.keys(p.desbloqueadas).length;
-      for (const conquista of novas) registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total, maos: p.maos });
       this.atualizarJogadorNasEstatisticas();
+      return novas;
+    },
+    /**
+     * Confere, logo depois de uma jogada, as conquistas que valem na hora (`VALEM_NA_HORA`: ações e
+     * dropouts) e devolve as novas. Não mexe nos contadores, que só contam a mão quando ela acaba.
+     * @param {{mao: object, eu: number, opcoes: object}} ctx Mão em andamento e a cadeira de quem joga neste aparelho.
+     */
+    registrarJogada(ctx) {
+      const p = this.progresso;
+      const jogador = ctx.mao.jogadores[ctx.eu];
+      const contexto2 = { ...ctx, progresso: { ...p, dropouts: p.dropouts + (jogador ? jogador.dropouts : 0) } };
+      const novas = conquistasNovas(CONQUISTAS.filter((c) => VALEM_NA_HORA.has(c.id)), contexto2, p);
+      if (!novas.length) return novas;
+      const desbloqueadas = this.desbloquear(novas);
+      this.salvar();
+      this.atualizarJogadorNasEstatisticas();
+      return desbloqueadas;
+    },
+    /**
+     * Desbloqueia conquistas: marca a data, avisa no alto da tela (uma medalha por vez, com o som) e
+     * registra cada uma nas estatísticas de uso. Se com elas todas as outras estiverem desbloqueadas,
+     * a conquista final (`CONQUISTA_FINAL`) entra também, por último. Quem chama grava o progresso.
+     * @param {object[]} conquistas Conquistas ainda bloqueadas (ver conteudo/conquistas.js).
+     * @returns {object[]} As desbloqueadas agora, com a final no fim, se for o caso.
+     */
+    desbloquear(conquistas) {
+      const p = this.progresso, agora = Date.now();
+      const lista = conquistas.slice();
+      for (const conquista of lista) p.desbloqueadas[conquista.id] = agora;
+      const { feitas, total: outras } = progressoDaFinal(p.desbloqueadas);
+      if (!p.desbloqueadas[CONQUISTA_FINAL] && feitas === outras) {
+        const final = CONQUISTAS.find((c) => c.id === CONQUISTA_FINAL);
+        p.desbloqueadas[final.id] = agora;
+        lista.push(final);
+      }
+      const total = Object.keys(p.desbloqueadas).length;
+      for (const conquista of lista) {
+        const graduacao = GRADUACOES[conquista.graduacao], ehFinal = conquista.id === CONQUISTA_FINAL;
+        avisarConquista({
+          rotulo: (ehFinal ? "Conquista final \xB7 " : "Conquista \xB7 ") + graduacao.nome,
+          titulo: conquista.nome,
+          texto: conquista.descricao,
+          medalha: medalhaHtml(conquista, true),
+          classe: graduacao.especial ? "especial" : "",
+          duracaoMs: graduacao.especial ? 8e3 : void 0,
+          aoMostrar: () => graduacao.especial ? Som.campeao() : Som.medalha()
+        });
+        registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total, maos: p.maos });
+      }
+      return lista;
+    },
+    /**
+     * Concede a conquista final a quem já tem todas as outras e ainda não a recebeu (por exemplo, quem
+     * completou as conquistas antes de ela existir). Devolve as desbloqueadas agora.
+     */
+    conferirConquistaFinal() {
+      const novas = this.progresso.desbloqueadas[CONQUISTA_FINAL] ? [] : this.desbloquear([]);
+      if (novas.length) {
+        this.salvar();
+        this.atualizarJogadorNasEstatisticas();
+      }
       return novas;
     },
     /** Marca um verbete como lido e concede "Bibliotecário" quando todos foram lidos. */
@@ -3490,17 +3719,21 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       p.lidos[id] = true;
       p.verbetesLidos = Object.keys(p.lidos).length;
       registrarEvento(EVENTOS.verbeteLido, { verbete: id, lidos: p.verbetesLidos });
-      if (!p.desbloqueadas.biblio && p.verbetesLidos >= VERBETES.length) {
-        p.desbloqueadas.biblio = Date.now();
-        const conquista = CONQUISTAS.find((c) => c.id === "biblio");
-        mostrarAviso("Conquista: " + conquista.nome, conquista.descricao, "medalha-aviso");
-        Som.medalha();
-        registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total: Object.keys(p.desbloqueadas).length, maos: p.maos });
-      }
+      if (!p.desbloqueadas.biblio && p.verbetesLidos >= VERBETES.length) this.desbloquear([CONQUISTAS.find((c) => c.id === "biblio")]);
       this.salvar();
       this.atualizarJogadorNasEstatisticas();
     }
   };
+  function conquistasNovas(candidatas, ctx, progresso) {
+    return candidatas.filter((conquista) => {
+      if (progresso.desbloqueadas[conquista.id]) return false;
+      try {
+        return !!conquista.teste(ctx);
+      } catch (e) {
+        return false;
+      }
+    });
+  }
 
   // src/arte/paleta.js
   var CARTA_L = 240;
@@ -5839,73 +6072,6 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     ({ montanha: mesaMontanha, pantano: mesaPantano, oceano: mesaOceano })[terreno](ctx, W, H, aleatorio);
     return o.c;
   }
-
-  // src/arte/icones.js
-  var I = "#24140a";
-  var svg = function(body) {
-    return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>";
-  };
-  var gato = function(extra) {
-    return '<path d="M10 20 9 7l9 7h12l9-7-1 13c2 3 3 6 3 9 0 9-8 14-17 14S7 38 7 29c0-3 1-6 3-9z" fill="#5a6b80" stroke="' + I + '" stroke-width="2"/><path d="M12 11l4 4M36 11l-4 4" stroke="#f59322" stroke-width="2.5"/><ellipse cx="18" cy="27" rx="3.2" ry="4" fill="#bff3ff"/><ellipse cx="30" cy="27" rx="3.2" ry="4" fill="#bff3ff"/><path d="M18 25v4M30 25v4" stroke="' + I + '" stroke-width="1.8"/><path d="M22 33h4l-2 2.5z" fill="#f59322"/><path d="M24 35.5c-1.5 2-4 2-5 1M24 35.5c1.5 2 4 2 5 1" stroke="' + I + '" stroke-width="1.4" fill="none"/><path d="M8 32l-6-1M8 35l-6 2M40 32l6-1M40 35l6 2" stroke="#e8eef5" stroke-width="1.2"/>' + (extra || "");
-  };
-  var ICONES_CONQUISTAS = {
-    primeira: svg('<ellipse cx="24" cy="41" rx="13" ry="3.5" fill="#7a4a1e"/><path d="M24 40V21" stroke="#2f6b2a" stroke-width="3"/><path d="M24 27c-9 0-13-6-13-13 8 0 13 5 13 13z" fill="#6fbf4a" stroke="' + I + '" stroke-width="1.6"/><path d="M24 22c0-8 6-12 13-12 0 7-5 12-13 12z" fill="#9be27a" stroke="' + I + '" stroke-width="1.6"/><circle cx="36" cy="34" r="6" fill="#f2c94c" stroke="' + I + '" stroke-width="1.6"/><text x="36" y="37.5" font-family="Cinzel,serif" font-weight="900" font-size="9" text-anchor="middle" fill="' + I + '">1</text>'),
-    dez: svg('<rect x="5" y="7" width="38" height="34" rx="4" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M9 13c5 18 10 22 30 23" stroke="#f59322" stroke-width="3" fill="none"/><path d="M9 36h31M9 12v24" stroke="' + I + '" stroke-width="1.4"/><circle cx="39" cy="36" r="3.2" fill="#4aa3df" stroke="' + I + '" stroke-width="1.4"/>'),
-    cinquenta: svg('<path d="M15 7h18v10c0 7-4 12-9 12s-9-5-9-12z" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><path d="M15 10H8c0 7 3 10 8 10M33 10h7c0 7-3 10-8 10" fill="none" stroke="' + I + '" stroke-width="2"/><path d="M24 29v6" stroke="' + I + '" stroke-width="3"/><path d="M15 41h18l-2-6H17z" fill="#b9801b" stroke="' + I + '" stroke-width="2"/><path d="M24 11l1.8 3.6 4 .6-2.9 2.8.7 4L24 20l-3.6 2 .7-4-2.9-2.8 4-.6z" fill="#fff6c8"/>'),
-    gato10: svg(gato("")),
-    gato100: svg(gato('<path d="M40 6c-2-3-6-1-4 2l4 4 4-4c2-3-2-5-4-2z" fill="#e0405a"/><path d="M6 6c-2-3-6-1-4 2l4 4 4-4c2-3-2-5-4-2z" fill="#e0405a" transform="translate(2 0)"/>')),
-    zen: svg('<path d="M24 12c4 5 5 10 0 18-5-8-4-13 0-18z" fill="#f6a7c1" stroke="' + I + '" stroke-width="1.6"/><path d="M24 30c-4-7-10-9-16-8 2 6 8 9 16 8zM24 30c4-7 10-9 16-8-2 6-8 9-16 8z" fill="#f08cad" stroke="' + I + '" stroke-width="1.6"/><path d="M24 30c-7-1-13 1-17 5 6 3 12 1 17-5zM24 30c7-1 13 1 17 5-6 3-12 1-17-5z" fill="#6fbf4a" stroke="' + I + '" stroke-width="1.6"/><path d="M10 40h28" stroke="#4aa3df" stroke-width="2.5"/>'),
-    zen10: svg('<circle cx="24" cy="24" r="20" fill="none" stroke="#f2c94c" stroke-width="2" stroke-dasharray="3 3"/><circle cx="24" cy="13" r="5" fill="#f1c9a5" stroke="' + I + '" stroke-width="1.6"/><path d="M24 18c-6 0-8 5-8 10l-6 6c4 3 24 3 28 0l-6-6c0-5-2-10-8-10z" fill="#e2802a" stroke="' + I + '" stroke-width="1.8"/><path d="M16 28c3 2 13 2 16 0" stroke="' + I + '" stroke-width="1.4" fill="none"/>'),
-    desk: svg('<path d="M6 30h36v4H6zM9 34v9M39 34v9" stroke="' + I + '" stroke-width="2" fill="#a8692e"/><path d="M15 8h16l5 5v17H15z" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><path d="M19 15h12M19 19h12M19 23h8" stroke="#9a8c6c" stroke-width="1.4"/><g transform="rotate(-18 26 20)"><rect x="12" y="15" width="28" height="10" rx="2" fill="none" stroke="#c0283c" stroke-width="2.4"/><text x="26" y="23.2" font-family="Cinzel,serif" font-weight="900" font-size="6.5" text-anchor="middle" fill="#c0283c">REJEITADO</text></g>'),
-    patos: svg('<path d="M30 30c0 7-6 10-14 10-6 0-10-3-10-7 4 1 7 0 9-3-1-3-1-7 2-10 3-3 8-2 10 1 2 2 3 5 3 9z" fill="#f6d24a" stroke="' + I + '" stroke-width="1.8"/><path d="M28 21l7-1-6 4z" fill="#f59322" stroke="' + I + '" stroke-width="1.4"/><circle cx="23" cy="20" r="1.6" fill="' + I + '"/><path d="M14 33c4 1 7 0 9-3" stroke="' + I + '" stroke-width="1.4" fill="none"/><path d="M38 41c0 0 2-6 6-6" stroke="#4aa3df" stroke-width="2"/><path d="M34 44h10M4 44h24" stroke="#4aa3df" stroke-width="2"/>'),
-    contra: svg('<path d="M24 5l16 6v11c0 11-7 18-16 21C15 40 8 33 8 22V11z" fill="#4f86c9" stroke="' + I + '" stroke-width="2"/><path d="M26 9l-6 13h6l-4 15 10-18h-6l4-10z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.4"/><path d="M12 16l6 4M36 28l-5-2" stroke="#1f2c3b" stroke-width="1.6"/>'),
-    artilheiro: svg('<path d="M4 10h40v26H4z" fill="none" stroke="#efe3c6" stroke-width="2"/><path d="M4 16h40M4 22h40M4 28h40M12 10v26M20 10v26M28 10v26M36 10v26" stroke="#efe3c6" stroke-width=".7" opacity=".6"/><circle cx="24" cy="31" r="9" fill="#fff" stroke="' + I + '" stroke-width="1.8"/><path d="M24 26.5l4 3-1.5 4.6h-5L20 29.5z" fill="' + I + '"/><path d="M24 22v4.5M32.5 28.5l-4.5 1M30 38l-3.5-3.9M18 38l3.5-3.9M15.5 28.5l4.5 1" stroke="' + I + '" stroke-width="1.2"/><path d="M38 44l-4-6" stroke="#9a8c6c" stroke-width="1.4"/>'),
-    transfer: svg('<circle cx="14" cy="18" r="9" fill="#f6a7c1" stroke="' + I + '" stroke-width="1.8"/><path d="M10 15c2-2 6-2 8 0M10 20c2 2 6 2 8 0" stroke="' + I + '" stroke-width="1.2" fill="none"/><circle cx="34" cy="30" r="9" fill="#9be27a" stroke="' + I + '" stroke-width="1.8"/><path d="M30 27c2-2 6-2 8 0M30 32c2 2 6 2 8 0" stroke="' + I + '" stroke-width="1.2" fill="none"/><path d="M24 12c6 0 10 3 11 8" stroke="#f2c94c" stroke-width="2.5" fill="none"/><path d="M36 16l-1 5-4-3z" fill="#f2c94c"/><path d="M24 36c-6 0-10-3-11-8" stroke="#4aa3df" stroke-width="2.5" fill="none"/><path d="M12 32l1-5 4 3z" fill="#4aa3df"/>'),
-    vanishing: svg('<path d="M8 10h32L24 38z" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><path d="M14 14h20L24 32z" fill="#fff6c8" opacity=".9"/><path d="M6 44h6M16 44h4M24 44h2M30 44h1" stroke="#efe3c6" stroke-width="2.5"/><circle cx="38" cy="38" r="4" fill="none" stroke="#c0283c" stroke-width="2" stroke-dasharray="2 2"/>'),
-    overfit: svg('<circle cx="8" cy="30" r="2" fill="#4aa3df"/><circle cx="14" cy="14" r="2" fill="#4aa3df"/><circle cx="20" cy="34" r="2" fill="#4aa3df"/><circle cx="26" cy="12" r="2" fill="#4aa3df"/><circle cx="32" cy="28" r="2" fill="#4aa3df"/><path d="M8 30C10 6 14 14 14 14s2 26 6 20 4-24 6-22 2 18 6 16" stroke="#f59322" stroke-width="2" fill="none"/><circle cx="33" cy="33" r="8" fill="rgba(191,243,255,.35)" stroke="' + I + '" stroke-width="2.4"/><path d="M39 39l6 6" stroke="' + I + '" stroke-width="3.5"/>'),
-    earlystop: svg('<circle cx="24" cy="27" r="15" fill="#fff6dc" stroke="' + I + '" stroke-width="2.4"/><path d="M20 6h8M24 6v6M36 13l3-3" stroke="' + I + '" stroke-width="2.4"/><path d="M24 27V17" stroke="#c0283c" stroke-width="2.6"/><path d="M24 27l6 4" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="27" r="2" fill="' + I + '"/><rect x="31" y="34" width="13" height="10" rx="2" fill="#c0283c" stroke="' + I + '" stroke-width="1.4"/><path d="M35 37v4M40 37v4" stroke="#fff" stroke-width="2"/>'),
-    overflow: svg('<rect x="10" y="30" width="22" height="12" rx="2" fill="#a3222e" stroke="' + I + '" stroke-width="1.6" transform="rotate(-4 21 36)"/><rect x="12" y="22" width="22" height="12" rx="2" fill="#2b4f9e" stroke="' + I + '" stroke-width="1.6" transform="rotate(5 23 28)"/><rect x="10" y="14" width="22" height="12" rx="2" fill="#2f7a46" stroke="' + I + '" stroke-width="1.6" transform="rotate(-6 21 20)"/><path d="M36 4l2 6 6-2-4 5 5 3-6 1 1 6-4-4-4 4 1-6-6-1 5-3-4-5 6 2z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.2"/>'),
-    trio: svg('<g stroke="' + I + '" stroke-width="1.6"><path d="M3 30l2-10 4 5 3-7 3 7 4-5 2 10z" fill="#f2c94c"/><path d="M15 22l2-11 4 5 3-8 3 8 4-5 2 11z" fill="#ffe08a"/><path d="M27 30l2-10 4 5 3-7 3 7 4-5 2 10z" fill="#f2c94c"/></g><circle cx="24" cy="18" r="1.8" fill="#c0283c"/><path d="M6 36h36" stroke="#efe3c6" stroke-width="2.5"/>'),
-    sessenta: svg('<g stroke="#9a8c6c" stroke-width="1"><path d="M6 12l12 6M6 12l12 18M6 24l12-6M6 24l12 6M6 36l12-18M6 36l12-6M18 18l12 6M18 30l12-6M30 24l12-8M30 24l12 8"/></g><g stroke="' + I + '" stroke-width="1.4"><circle cx="6" cy="12" r="3.2" fill="#4aa3df"/><circle cx="6" cy="24" r="3.2" fill="#4aa3df"/><circle cx="6" cy="36" r="3.2" fill="#4aa3df"/><circle cx="18" cy="18" r="3.2" fill="#f59322"/><circle cx="18" cy="30" r="3.2" fill="#f59322"/><circle cx="30" cy="24" r="3.2" fill="#f59322"/><circle cx="42" cy="16" r="3.2" fill="#9be27a"/><circle cx="42" cy="32" r="3.2" fill="#9be27a"/></g><text x="30" y="45" font-family="Cinzel,serif" font-weight="900" font-size="10" text-anchor="middle" fill="#f2c94c">60+</text>'),
-    truco: svg('<path d="M6 8h36a3 3 0 013 3v18a3 3 0 01-3 3H22l-9 8v-8H6a3 3 0 01-3-3V11a3 3 0 013-3z" fill="#c0303e" stroke="' + I + '" stroke-width="2"/><text x="24" y="25" font-family="Cinzel,serif" font-weight="900" font-size="11" text-anchor="middle" fill="#fff6dc">TRUCO!</text>'),
-    doze: svg('<circle cx="24" cy="24" r="19" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="24" r="15" fill="none" stroke="#9a6a14" stroke-width="1.2"/><text x="24" y="30" font-family="Cinzel,serif" font-weight="900" font-size="16" text-anchor="middle" fill="' + I + '">12</text><path d="M8 8l4 4M40 8l-4 4" stroke="#ffd23a" stroke-width="2"/>'),
-    correu: svg('<circle cx="29" cy="9" r="4.5" fill="#f1c9a5" stroke="' + I + '" stroke-width="1.6"/><path d="M27 15l-5 11 7 4-2 11M22 26l-8 6M27 15l7 6 6-2M25 18l-8-1-4 5" stroke="' + I + '" stroke-width="3" fill="none"/><path d="M4 40c3-3 6-3 9 0M2 33c2-2 4-2 6 0" stroke="#9a8c6c" stroke-width="2" fill="none"/><path d="M38 6l3-2M40 11h4" stroke="#c0283c" stroke-width="2"/>'),
-    campeao: svg('<path d="M8 34l3-20 8 9 5-13 5 13 8-9 3 20z" fill="#f2c94c" stroke="' + I + '" stroke-width="2"/><circle cx="11" cy="13" r="2.4" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/><circle cx="24" cy="9" r="2.4" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/><circle cx="37" cy="13" r="2.4" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/><circle cx="24" cy="27" r="3" fill="#c0283c"/><circle cx="15" cy="29" r="2" fill="#4aa3df"/><circle cx="33" cy="29" r="2" fill="#4aa3df"/><path d="M6 40h36" stroke="#7a1626" stroke-width="5"/>'),
-    maquina: svg('<rect x="10" y="12" width="28" height="24" rx="5" fill="#9fb0c4" stroke="' + I + '" stroke-width="2"/><path d="M24 12V6" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="5" r="2.5" fill="#c0283c"/><path d="M15 19l5 5M20 19l-5 5M28 19l5 5M33 19l-5 5" stroke="' + I + '" stroke-width="2"/><path d="M17 31c3-2 11-2 14 0" stroke="' + I + '" stroke-width="2" fill="none"/><path d="M6 22v8M42 22v8" stroke="' + I + '" stroke-width="3"/><path d="M36 38l4 6M12 38l-4 6" stroke="#ffd23a" stroke-width="2"/>'),
-    cartografo: svg('<path d="M4 10l12-4 16 4 12-4v32l-12 4-16-4-12 4z" fill="#f6e2b0" stroke="' + I + '" stroke-width="2"/><path d="M16 6v32M32 10v32" stroke="#c9a46a" stroke-width="1.4"/><path d="M8 30c5-6 9 2 14-4s8-2 12-8" stroke="#c0283c" stroke-width="1.8" stroke-dasharray="2.5 2.5" fill="none"/><path d="M34 18l3 3M37 18l-3 3" stroke="#c0283c" stroke-width="2"/><path d="M9 14l3 3 3-6" stroke="#2f7a46" stroke-width="2" fill="none"/>'),
-    colecionador: svg('<g stroke="' + I + '" stroke-width="1.6"><rect x="6" y="12" width="16" height="24" rx="2" fill="#a3222e" transform="rotate(-24 14 36)"/><rect x="12" y="9" width="16" height="24" rx="2" fill="#2b4f9e" transform="rotate(-9 20 33)"/><rect x="20" y="9" width="16" height="24" rx="2" fill="#2f7a46" transform="rotate(8 28 33)"/><rect x="26" y="12" width="16" height="24" rx="2" fill="#d79a2b" transform="rotate(22 34 36)"/></g><circle cx="34" cy="22" r="3" fill="#fff6dc"/>'),
-    zap: svg('<path d="M18 42c-1-10-6-20-5-28 1-9 12-9 13 0 1 8-4 18-5 28z" fill="#8a5424" stroke="' + I + '" stroke-width="2" transform="rotate(-18 19 28)"/><path d="M33 3l-9 18h7l-5 17 13-22h-7l5-13z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.6"/><text x="11" y="46" font-family="Cinzel,serif" font-weight="900" font-size="9" fill="#efe3c6">4\u2663</text>'),
-    biblio: svg('<path d="M4 12c7-3 14-3 20 2 6-5 13-5 20-2v28c-7-3-14-3-20 2-6-5-13-5-20-2z" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M24 14v28" stroke="' + I + '" stroke-width="1.6"/><path d="M8 18c4-1 8-1 12 1M8 23c4-1 8-1 12 1M28 19c4-2 8-2 12-1M28 24c4-2 8-2 12-1M8 28c4-1 8-1 12 1" stroke="#9a8c6c" stroke-width="1.2"/><path d="M33 8v12l3-2 3 2V8" fill="#c0283c"/>'),
-    nobreza: svg('<path d="M10 34l-2-20 9 9 7-14 7 14 9-9-2 20z" fill="#e7c35a" stroke="' + I + '" stroke-width="2"/><rect x="10" y="34" width="28" height="6" rx="1.5" fill="#b9801b" stroke="' + I + '" stroke-width="2"/><circle cx="24" cy="10" r="2.6" fill="#3fa7e0" stroke="' + I + '" stroke-width="1.2"/><circle cx="8" cy="14" r="2.4" fill="#e8304a"/><circle cx="40" cy="14" r="2.4" fill="#e8304a"/><path d="M18 30h12" stroke="#7a3cae" stroke-width="2"/>'),
-    backprop: svg('<circle cx="10" cy="14" r="5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><circle cx="10" cy="34" r="5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><path d="M15 15l9 7M15 33l9-7" stroke="#4aa3df" stroke-width="2"/><circle cx="28" cy="24" r="6" fill="#ffb347" stroke="' + I + '" stroke-width="1.8"/><path d="M34 24h6" stroke="' + I + '" stroke-width="2"/><path d="M38 20l5 4-5 4" fill="none" stroke="' + I + '" stroke-width="2"/><path d="M25 26h3l3-5" stroke="' + I + '" stroke-width="1.4" fill="none"/>'),
-    tunador: svg('<rect x="8" y="16" width="16" height="22" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8" transform="rotate(-12 16 27)"/><rect x="16" y="13" width="16" height="22" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><rect x="24" y="16" width="16" height="22" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8" transform="rotate(12 32 27)"/><path d="M27 3l-6 12h5l-3 12 10-15h-5l3-9z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.4"/>'),
-    batch: svg('<g stroke="' + I + '" stroke-width="1.6"><circle cx="14" cy="16" r="6" fill="#4aa3df"/><circle cx="34" cy="16" r="6" fill="#f59322"/><circle cx="14" cy="34" r="6" fill="#3fae6a"/><circle cx="34" cy="34" r="6" fill="#b48cff"/></g><path d="M20 16h8M14 22v6M34 22v6M20 34h8" stroke="' + I + '" stroke-width="1.4"/>'),
-    ensemble: svg('<g stroke="' + I + '" stroke-width="1.5"><circle cx="24" cy="10" r="5.5" fill="#4aa3df"/><circle cx="9" cy="21" r="5.5" fill="#f59322"/><circle cx="39" cy="21" r="5.5" fill="#3fae6a"/><circle cx="14" cy="38" r="5.5" fill="#b48cff"/><circle cx="34" cy="38" r="5.5" fill="#ff6fb1"/></g><circle cx="24" cy="25" r="5" fill="#e7c35a" stroke="' + I + '" stroke-width="1.6"/><path d="M24 15v5M13 22l7 2M35 22l-7 2M17 34l4-5M31 34l-4-5" stroke="' + I + '" stroke-width="1.3"/>'),
-    bigdata: svg('<ellipse cx="24" cy="10" rx="15" ry="5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><path d="M9 10v28c0 3 7 5 15 5s15-2 15-5V10" fill="#e2d2a8" stroke="' + I + '" stroke-width="1.8"/><path d="M9 19c0 3 7 5 15 5s15-2 15-5M9 28c0 3 7 5 15 5s15-2 15-5" fill="none" stroke="' + I + '" stroke-width="1.6"/><circle cx="33" cy="22" r="1.6" fill="#3fae6a"/><circle cx="33" cy="31" r="1.6" fill="#3fae6a"/>'),
-    profunda: svg('<g fill="#fff6dc" stroke="' + I + '" stroke-width="1.4"><circle cx="6" cy="24" r="3.5"/><circle cx="13" cy="16" r="3.5"/><circle cx="13" cy="32" r="3.5"/><circle cx="20" cy="24" r="3.5"/><circle cx="27" cy="16" r="3.5"/><circle cx="27" cy="32" r="3.5"/><circle cx="34" cy="24" r="3.5"/><circle cx="42" cy="24" r="3.5"/></g><path d="M9 24h7M23 24h7M37 24h2" stroke="#4aa3df" stroke-width="1.8"/><path d="M4 44h40" stroke="#6b1a22" stroke-width="2.5"/><path d="M40 40l4 4-4 4" fill="none" stroke="#6b1a22" stroke-width="2.5"/>'),
-    arquiteto: svg('<path d="M6 42h36" stroke="' + I + '" stroke-width="2"/><path d="M10 42V18l14-10 14 10v24" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><g fill="#4aa3df" stroke="' + I + '" stroke-width="1.2"><circle cx="17" cy="24" r="2.6"/><circle cx="17" cy="34" r="2.6"/><circle cx="24" cy="19" r="2.6"/><circle cx="24" cy="29" r="2.6"/><circle cx="31" cy="24" r="2.6"/><circle cx="31" cy="34" r="2.6"/></g><path d="M38 6l4 4-16 16-5 1 1-5z" fill="#e7c35a" stroke="' + I + '" stroke-width="1.6"/>')
-  };
-  var ICONE_CADEADO = svg('<rect x="12" y="21" width="24" height="19" rx="3" fill="#6b5a40" stroke="' + I + '" stroke-width="2"/><path d="M17 21v-5a7 7 0 0114 0v5" fill="none" stroke="' + I + '" stroke-width="3"/><circle cx="24" cy="30" r="2.6" fill="#24140a"/>');
-  var ICONES_DAS_ACOES = {
-    /* seta da camada atual para o neurônio destacado da próxima camada */
-    avancar: svg('<path d="M13 14L31 24M13 34L31 24" stroke="#f6dc8f" stroke-width="1.6" opacity=".6"/><circle cx="37" cy="24" r="10" fill="#f6dc8f" opacity=".4"/><g fill="#fff6dc" stroke="' + I + '" stroke-width="2"><circle cx="9" cy="14" r="4.5"/><circle cx="9" cy="34" r="4.5"/></g><circle cx="37" cy="24" r="6.5" fill="#ffb347" stroke="' + I + '" stroke-width="2"/><path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="' + I + '" stroke-width="6"/><path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="#fff6dc" stroke-width="3"/>'),
-    /* raio sobre duas cartas empilhadas */
-    tunagem: svg('<rect x="9" y="12" width="20" height="28" rx="3" fill="#fff6dc" stroke="' + I + '" stroke-width="2" transform="rotate(-8 19 26)"/><rect x="15" y="9" width="20" height="28" rx="3" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M29 4l-9 18h7l-4 20 15-24h-8l5-14z" fill="#ffd23a" stroke="' + I + '" stroke-width="1.8"/>'),
-    /* curva que decora o ruído, passando por todos os pontos */
-    overfit: svg('<rect x="4" y="6" width="40" height="36" rx="4" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M8 34C11 14 14 40 18 22s6 14 9-4 6 18 9 0 4 6 5 4" fill="none" stroke="#e0602a" stroke-width="2.6"/><path d="M8 33L40 13" stroke="#4aa3df" stroke-width="1.8" stroke-dasharray="3 3"/><g fill="' + I + '"><circle cx="11" cy="23" r="2"/><circle cx="18" cy="22" r="2"/><circle cx="27" cy="18" r="2"/><circle cx="36" cy="18" r="2"/></g>'),
-    /* placa de pare */
-    earlystop: svg('<path d="M17 4h14l10 10v14L31 38H17L7 28V14z" fill="#c0283c" stroke="' + I + '" stroke-width="2"/><path d="M18 7h12l8 8v12l-8 8H18l-8-8V15z" fill="none" stroke="#fff6dc" stroke-width="1.6"/><text x="24" y="25.5" font-family="Cinzel,serif" font-weight="900" font-size="9" text-anchor="middle" fill="#fff6dc">STOP</text><path d="M24 38v8" stroke="' + I + '" stroke-width="3"/>'),
-    /* pilha de cartas que estoura */
-    stackoverflow: svg('<path d="M24 2l3 7 7-3-3 7 7 3-7 3 3 7-7-3-3 7-3-7-7 3 3-7-7-3 7-3-3-7 7 3z" fill="#ffb347" stroke="' + I + '" stroke-width="1.4"/><rect x="11" y="27" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6"/><rect x="11" y="32" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6"/><rect x="11" y="37" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6"/><rect x="13" y="22" width="26" height="5" rx="1.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.6" transform="rotate(12 26 24)"/>'),
-    /* o gato do GatoNet */
-    dropout: svg(gato("")),
-    /* duas setas trocando cartas com o limbo */
-    transfer: svg('<rect x="5" y="12" width="14" height="20" rx="2.5" fill="#fff6dc" stroke="' + I + '" stroke-width="1.8"/><rect x="29" y="16" width="14" height="20" rx="2.5" fill="#3a3550" stroke="' + I + '" stroke-width="1.8"/><path d="M14 9c4-6 16-6 20 0" fill="none" stroke="#3fae6a" stroke-width="2.6"/><path d="M35 3l-1 7-7-2" fill="none" stroke="#3fae6a" stroke-width="2.6"/><path d="M34 39c-4 6-16 6-20 0" fill="none" stroke="#4aa3df" stroke-width="2.6"/><path d="M13 45l1-7 7 2" fill="none" stroke="#4aa3df" stroke-width="2.6"/>'),
-    /* ampulheta */
-    passar: svg('<path d="M12 5h24M12 43h24" stroke="' + I + '" stroke-width="3"/><path d="M14 6c0 10 8 12 8 18s-8 8-8 18h20c0-10-8-12-8-18s8-8 8-18z" fill="#fff6dc" stroke="' + I + '" stroke-width="2"/><path d="M17 11h14c-1 5-7 7-7 10-0-3-6-5-7-10zM16 41c1-6 8-8 8-11 0 3 7 5 8 11z" fill="#e2b04a"/>'),
-    /* setas que desbotam da saída para a entrada */
-    vanishing: svg('<path d="M42 24H30" stroke="#c0283c" stroke-width="4"/><path d="M33 18l-6 6 6 6" fill="none" stroke="#c0283c" stroke-width="4"/><path d="M27 24H17" stroke="#c0283c" stroke-width="3" opacity=".55"/><path d="M20 19l-5 5 5 5" fill="none" stroke="#c0283c" stroke-width="3" opacity=".55"/><path d="M14 24H6" stroke="#c0283c" stroke-width="2" opacity=".25"/><path d="M9 20l-4 4 4 4" fill="none" stroke="#c0283c" stroke-width="2" opacity=".25"/>')
-  };
 
   // src/cenas/recursos.js
   function prepararTextoNitido() {
@@ -8558,25 +8724,150 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   // src/recursos/retratoProfessor.js
   var FOTO_PROFESSOR = "data:image/jpeg;base64,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";
 
-  // src/interface/telas/conquistas.js
-  function medalhaHtml(conquista, desbloqueada) {
-    const cor = GRADUACOES[conquista.graduacao].cor;
-    return '<div class="medalha" style="--graduacao:' + cor + '">' + (ICONES_CONQUISTAS[conquista.id] || "") + (desbloqueada ? "" : '<span class="cadeado">' + ICONE_CADEADO + "</span>") + "</div>";
+  // src/online/configuracao.js
+  var FIREBASE = {
+    /* projeto "truco-e26e8" no console, de ID truco-e26e8-703bc; app da Web "truco-de-turing" */
+    apiKey: "AIzaSyCH3yfsmf0KJQ0hJ7aU4DhCBcBVOqwRSHs",
+    authDomain: "truco-e26e8-703bc.firebaseapp.com",
+    projectId: "truco-e26e8-703bc",
+    storageBucket: "truco-e26e8-703bc.firebasestorage.app",
+    messagingSenderId: "832619971345",
+    appId: "1:832619971345:web:b50cd62330112e05b942b0"
+    /* sem measurementId: o Google Analytics é carregado à parte, com consentimento (interface/analise.js) */
+  };
+  var VERSAO_FIREBASE = "10.12.2";
+
+  // src/online/firebase.js
+  var VALIDADE_DAS_MENSAGENS = 6 * 60 * 60 * 1e3;
+  var LIMPEZA_POR_VEZ = 200;
+  var sdk = null;
+  function firebaseConfigurado() {
+    return !!FIREBASE;
   }
-  function itemHtml(conquista, desbloqueada) {
-    return '<div class="conquista' + (desbloqueada ? "" : " bloqueada") + '">' + medalhaHtml(conquista, desbloqueada) + '<div><span class="graduacao">' + GRADUACOES[conquista.graduacao].nome + "</span><b>" + escaparHtml(conquista.nome) + "</b><small>" + escaparHtml(conquista.descricao) + "</small></div></div>";
+  async function carregar2() {
+    if (sdk) return sdk;
+    if (!FIREBASE) throw new Error("O projeto Firebase ainda n\xE3o foi configurado (src/online/configuracao.js).");
+    const base = "https://www.gstatic.com/firebasejs/" + VERSAO_FIREBASE + "/";
+    const [app, auth, fs] = await Promise.all(["firebase-app.js", "firebase-auth.js", "firebase-firestore.js"].map((arquivo) => import(
+      /* @vite-ignore */
+      base + arquivo
+    )));
+    const aplicativo = app.initializeApp(FIREBASE);
+    sdk = { auth, fs, autenticacao: auth.getAuth(aplicativo), banco: fs.getFirestore(aplicativo) };
+    return sdk;
   }
-  function abrirConquistas(app) {
-    const p = app.progresso;
-    const total = CONQUISTAS.filter((c) => p.desbloqueadas[c.id]).length;
-    const html = '<div class="folha larga"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="conquistas-salao"><aside class="guilda"><div class="retrato" id="c-retrato" role="img" aria-label="Retrato do prof. Peng Yaohao em moldura medieval"></div><p class="guilda-nota">Guardi\xE3o do sal\xE3o das conquistas. Cada medalha aqui foi conquistada contra os oponentes da mesa.</p></aside><div class="conquistas-principal"><h2>Conquistas</h2><p class="conquistas-resumo"><b>' + total + "</b> de " + CONQUISTAS.length + " desbloqueadas \xB7 " + p.vitorias + " m\xE3os vencidas \xB7 " + p.dropouts + ' dropouts</p><div class="conquistas-lista">' + CONQUISTAS.map((c) => itemHtml(c, !!p.desbloqueadas[c.id])).join("") + '</div><p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
-    const painel = abrirPainel(html, { fechaAoClicarFora: true });
-    painel.elemento.querySelector("#c-avatares").addEventListener("click", () => abrirAvatares(app));
-    const densidade = Math.min(3, Math.max(2, globalThis.devicePixelRatio || 1));
-    desenharRetratoEmMoldura(FOTO_PROFESSOR, densidade, "Prof. Peng Yaohao", "Gr\xE3o-mestre da guilda", (canvas) => {
-      painel.elemento.querySelector("#c-retrato")?.appendChild(canvas);
+  async function entrarComGoogle() {
+    const { auth, autenticacao } = await carregar2();
+    const { user } = await auth.signInWithPopup(autenticacao, new auth.GoogleAuthProvider());
+    return conta(user);
+  }
+  async function entrarComEmail(email, senha, criar = false) {
+    const { auth, autenticacao } = await carregar2();
+    const fazer = criar ? auth.createUserWithEmailAndPassword : auth.signInWithEmailAndPassword;
+    const { user } = await fazer(autenticacao, email, senha);
+    return conta(user);
+  }
+  async function sairDaConta() {
+    const { auth, autenticacao } = await carregar2();
+    await auth.signOut(autenticacao);
+  }
+  async function contaGuardada() {
+    const { auth, autenticacao } = await carregar2();
+    return new Promise((resolver) => {
+      let parar = null, lida = false;
+      parar = auth.onAuthStateChanged(autenticacao, (user) => {
+        if (lida) return;
+        lida = true;
+        if (parar) parar();
+        resolver(user ? conta(user) : null);
+      });
+      if (lida) parar();
     });
-    return painel;
+  }
+  var conta = (user) => ({ uid: user.uid, nome: user.displayName || (user.email || "").split("@")[0] || "Jogador", email: user.email || "" });
+  async function carregarProgressoDaConta(uid) {
+    const { fs, banco } = await carregar2();
+    const doc = await fs.getDoc(fs.doc(banco, "contas", uid));
+    return doc.exists() ? doc.data() : null;
+  }
+  async function salvarProgressoNaConta(uid, progresso) {
+    const { fs, banco } = await carregar2();
+    await fs.setDoc(fs.doc(banco, "contas", uid), JSON.parse(JSON.stringify(progresso)));
+  }
+  async function juntarNaConta(uid, montar2) {
+    const { fs, banco } = await carregar2();
+    const ref = fs.doc(banco, "contas", uid);
+    return fs.runTransaction(banco, async (transacao) => {
+      const atual3 = await transacao.get(ref);
+      const dados = JSON.parse(JSON.stringify(montar2(atual3.exists() ? atual3.data() : null)));
+      transacao.set(ref, dados);
+      return dados;
+    });
+  }
+  async function ehAdministrador(uid) {
+    try {
+      const { fs, banco } = await carregar2();
+      return (await fs.getDoc(fs.doc(banco, "admins", uid))).exists();
+    } catch (e) {
+      return false;
+    }
+  }
+  async function listarContas() {
+    const { fs, banco } = await carregar2();
+    const resultado = await fs.getDocs(fs.collection(banco, "contas"));
+    return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
+  }
+  async function transporteFirebase(codigo) {
+    const { fs, banco, autenticacao } = await carregar2();
+    const usuario = autenticacao.currentUser;
+    if (!usuario) throw new Error("Entre numa conta para jogar pela internet.");
+    const uid = usuario.uid;
+    const colecao = fs.collection(banco, "salas", codigo, "mensagens");
+    const ouvintes2 = /* @__PURE__ */ new Set();
+    const vistos = /* @__PURE__ */ new Set();
+    const falhas = /* @__PURE__ */ new Set();
+    const falhou = (erro) => {
+      for (const cb of falhas) cb(erro);
+    };
+    const parar = fs.onSnapshot(fs.query(colecao, fs.orderBy("em")), (instantaneo) => {
+      for (const mudanca of instantaneo.docChanges()) {
+        if (mudanca.type !== "added" || vistos.has(mudanca.doc.id)) continue;
+        vistos.add(mudanca.doc.id);
+        const { em, expira, ...msg } = mudanca.doc.data();
+        for (const cb of ouvintes2) cb(msg);
+      }
+    }, falhou);
+    return {
+      /* JSON tira os `undefined`, que o Firestore recusa */
+      enviar: (msg) => {
+        const doc = { ...JSON.parse(JSON.stringify(msg)), uid, em: fs.serverTimestamp(), expira: fs.Timestamp.fromMillis(Date.now() + VALIDADE_DAS_MENSAGENS) };
+        Promise.resolve(fs.addDoc(colecao, doc)).catch(falhou);
+      },
+      aoReceber: (cb) => {
+        ouvintes2.add(cb);
+        return () => ouvintes2.delete(cb);
+      },
+      aoFalhar: (cb) => {
+        falhas.add(cb);
+        return () => falhas.delete(cb);
+      },
+      fechar: () => {
+        ouvintes2.clear();
+        falhas.clear();
+        parar();
+      }
+    };
+  }
+  async function limparMensagensVencidas(limite = LIMPEZA_POR_VEZ) {
+    const { fs, banco } = await carregar2();
+    const antes = fs.Timestamp.fromMillis(Date.now() - 10 * 60 * 1e3);
+    const consulta = fs.query(fs.collectionGroup(banco, "mensagens"), fs.where("expira", "<", antes), fs.limit(limite));
+    const { docs } = await fs.getDocs(consulta);
+    if (!docs.length) return 0;
+    const lote = fs.writeBatch(banco);
+    for (const d of docs) lote.delete(d.ref);
+    await lote.commit();
+    return docs.length;
   }
 
   // src/online/contas.js
@@ -8597,6 +8888,11 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     m.estatisticas = mesclarEstatisticas(local.estatisticas, conta2.estatisticas);
     return m;
   }
+  function juntarParaGravar(local, conta2) {
+    const m = mesclarProgresso(local, conta2);
+    if (local.avatar) m.avatar = local.avatar;
+    return m;
+  }
   function progressoDaConta(progresso) {
     const p = {};
     for (const k of [...CONTADORES, ...CONJUNTOS, "desbloqueadas", "verbetesLidos", "avatar", "estatisticas"]) if (progresso[k] !== void 0) p[k] = progresso[k];
@@ -8609,6 +8905,222 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return doc;
   }
 
+  // src/online/errosFirebase.js
+  var MENSAGENS = {
+    /* configuração do projeto no console (docs/FIREBASE.md) */
+    "auth/operation-not-allowed": "Esse jeito de entrar ainda n\xE3o est\xE1 ativado no projeto Firebase (Authentication > M\xE9todo de login).",
+    "auth/unauthorized-domain": "Este endere\xE7o ainda n\xE3o est\xE1 autorizado no projeto Firebase (Authentication > Configura\xE7\xF5es > Dom\xEDnios autorizados).",
+    "auth/configuration-not-found": "O Authentication ainda n\xE3o foi ativado no projeto Firebase.",
+    "auth/invalid-api-key": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
+    "permission-denied": "O Firestore recusou o pedido: confira se as regras de firestore.rules foram publicadas e se a conta est\xE1 conectada.",
+    "not-found": "O banco Firestore do projeto ainda n\xE3o foi criado (Firestore Database > Criar banco de dados).",
+    "failed-precondition": "O banco Firestore do projeto ainda n\xE3o foi criado ou n\xE3o est\xE1 pronto.",
+    /* o que acontece com qualquer pessoa */
+    "auth/popup-blocked": "O navegador bloqueou a janela do Google. Libere as janelas deste site e tente de novo.",
+    "auth/operation-not-supported-in-environment": "Este navegador n\xE3o abre a janela do Google aqui. Entre com e-mail e senha.",
+    "auth/network-request-failed": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
+    "unavailable": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
+    "auth/too-many-requests": "Muitas tentativas seguidas. Espere um pouco e tente de novo.",
+    "auth/invalid-email": "Esse e-mail n\xE3o parece v\xE1lido.",
+    "auth/missing-email": "Escreva o e-mail.",
+    "auth/missing-password": "Escreva a senha.",
+    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+    "auth/email-already-in-use": 'J\xE1 existe uma conta com esse e-mail. Use "Entrar com e-mail".',
+    "auth/invalid-credential": "E-mail ou senha n\xE3o conferem.",
+    "auth/invalid-login-credentials": "E-mail ou senha n\xE3o conferem.",
+    "auth/wrong-password": "E-mail ou senha n\xE3o conferem.",
+    "auth/user-not-found": 'N\xE3o h\xE1 conta com esse e-mail. Use "Criar conta".',
+    "auth/user-disabled": "Esta conta foi desativada.",
+    "auth/account-exists-with-different-credential": "Esse e-mail j\xE1 entra de outro jeito (Google ou e-mail e senha). Use o mesmo de antes."
+  };
+  var DESISTIU = /* @__PURE__ */ new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request", "auth/user-cancelled"]);
+  function explicarErroFirebase(erro) {
+    const noTexto = /\(([a-z-]+\/[a-z0-9.-]+)\)/i.exec(String(erro && erro.message || ""));
+    const codigo = String(erro && erro.code || noTexto && noTexto[1] || "").toLowerCase();
+    if (DESISTIU.has(codigo)) return null;
+    if (MENSAGENS[codigo]) return MENSAGENS[codigo];
+    const texto = String(erro && erro.message || erro || "").replace(/^Firebase:\s*/, "").trim();
+    return texto || "Algo deu errado com o Firebase.";
+  }
+
+  // src/interface/conta.js
+  var MARCA_DE_CONTA = "truco-de-turing:conta";
+  var atual2 = null;
+  var metodoAtual = "";
+  var acessoContadoNaConta = false;
+  var ouvintes = /* @__PURE__ */ new Set();
+  var avisouFalhaAoSalvar = false;
+  var gravacao = null;
+  var gravarDeNovo = false;
+  var pendente = false;
+  var semConexao = (e) => !!e && (["unavailable", "deadline-exceeded"].includes(e.code) || /offline/i.test(e.message || ""));
+  var navegadorSemConexao = () => !!globalThis.navigator && globalThis.navigator.onLine === false;
+  function sincronizar(app) {
+    if (!atual2) return Promise.resolve();
+    if (gravacao) {
+      gravarDeNovo = true;
+      return gravacao;
+    }
+    gravacao = gravarNaConta(app, atual2).finally(() => {
+      gravacao = null;
+      if (gravarDeNovo) {
+        gravarDeNovo = false;
+        sincronizar(app);
+      }
+    });
+    return gravacao;
+  }
+  async function gravarNaConta(app, conta2) {
+    try {
+      if (navegadorSemConexao()) throw Object.assign(new Error("offline"), { code: "unavailable" });
+      const gravado = await juntarNaConta(conta2.uid, (naConta) => documentoDaConta(juntarParaGravar(app.progresso, naConta), conta2, metodoAtual));
+      if (atual2 !== conta2) return;
+      app.progresso = juntarParaGravar(app.progresso, gravado);
+      app.salvarSoLocal();
+      if (pendente) mostrarAviso("Conta", "A conex\xE3o voltou: o progresso deste aparelho subiu para a conta.", null, 5e3);
+      pendente = false;
+      avisouFalhaAoSalvar = false;
+    } catch (e) {
+      const offline = navegadorSemConexao() || semConexao(e);
+      if (offline) pendente = true;
+      if (avisouFalhaAoSalvar) return;
+      avisouFalhaAoSalvar = true;
+      mostrarAviso("Conta", offline ? "Sem conex\xE3o: o progresso fica neste aparelho e sobe para a conta quando a conex\xE3o voltar." : "O progresso ficou s\xF3 neste aparelho. " + (explicarErroFirebase(e) || ""), null, 7e3);
+    }
+  }
+  function contaAtual() {
+    return atual2;
+  }
+  function aoMudarDeConta(cb) {
+    ouvintes.add(cb);
+    return () => ouvintes.delete(cb);
+  }
+  function mudar(conta2) {
+    atual2 = conta2;
+    for (const cb of [...ouvintes]) cb(conta2);
+  }
+  function haMarcaDeConta() {
+    return !!lerMarca();
+  }
+  var lerMarca = () => {
+    try {
+      return globalThis.localStorage?.getItem(MARCA_DE_CONTA) || null;
+    } catch (e) {
+      return null;
+    }
+  };
+  var gravarMarca = (metodo) => {
+    try {
+      globalThis.localStorage?.setItem(MARCA_DE_CONTA, metodo || "conta");
+    } catch (e) {
+    }
+  };
+  var apagarMarca = () => {
+    try {
+      globalThis.localStorage?.removeItem(MARCA_DE_CONTA);
+    } catch (e) {
+    }
+  };
+  async function usarConta(app, conta2, metodo, { retomada = false } = {}) {
+    const naConta = await carregarProgressoDaConta(conta2.uid);
+    const mesclado = mesclarProgresso(app.progresso, naConta);
+    mesclado.nomeOnline = mesclado.nomeOnline || conta2.nome;
+    const jaNaConta = naConta && naConta.estatisticas ? naConta.estatisticas.acessos || 0 : 0;
+    const estatisticas = estatisticasDe(mesclado);
+    if (!acessoContadoNaConta) estatisticas.acessos = Math.max(estatisticas.acessos, jaNaConta + 1);
+    await salvarProgressoNaConta(conta2.uid, documentoDaConta(mesclado, conta2, metodo));
+    acessoContadoNaConta = true;
+    metodoAtual = metodo;
+    app.progresso = mesclado;
+    avisouFalhaAoSalvar = false;
+    gravarMarca(metodo);
+    definirConta(conta2.uid, metodo, { retomada });
+    mudar(conta2);
+    if (!app.salvarSoLocal) {
+      app.salvarSoLocal = app.salvar;
+      app.salvar = function() {
+        this.salvarSoLocal();
+        sincronizar(this);
+      };
+      globalThis.addEventListener?.("online", () => {
+        if (pendente && atual2) sincronizar(app);
+      });
+    }
+    app.salvar();
+  }
+  async function sairDaContaAtual() {
+    await sairDaConta();
+    apagarMarca();
+    definirConta(null);
+    mudar(null);
+  }
+  async function retomarConta(app) {
+    if (!firebaseConfigurado()) return null;
+    const metodo = lerMarca();
+    if (!metodo) return null;
+    let conta2;
+    try {
+      conta2 = await contaGuardada();
+    } catch (e) {
+      return null;
+    }
+    if (!conta2) {
+      apagarMarca();
+      return null;
+    }
+    if (atual2) return atual2;
+    try {
+      await usarConta(app, conta2, metodo, { retomada: true });
+      return conta2;
+    } catch (e) {
+      mostrarAviso("Conta", "N\xE3o deu para retomar a conta de " + conta2.nome + "; o progresso fica neste aparelho at\xE9 voc\xEA entrar de novo. " + (explicarErroFirebase(e) || ""), null, 8e3);
+      return null;
+    }
+  }
+
+  // src/interface/telas/conquistas.js
+  function itemHtml(conquista, desbloqueada) {
+    return '<div class="conquista' + (desbloqueada ? "" : " bloqueada") + '">' + medalhaHtml(conquista, desbloqueada) + '<div><span class="graduacao">' + GRADUACOES[conquista.graduacao].nome + "</span><b>" + escaparHtml(conquista.nome) + "</b><small>" + escaparHtml(conquista.descricao) + "</small></div></div>";
+  }
+  function finalHtml(conquista, progresso) {
+    const desbloqueada = !!progresso.desbloqueadas[conquista.id];
+    const { feitas, total } = progressoDaFinal(progresso.desbloqueadas);
+    const porcento = total ? Math.round(100 * feitas / total) : 100;
+    return '<div class="conquista final' + (desbloqueada ? "" : " bloqueada") + '">' + medalhaHtml(conquista, desbloqueada) + '<div><span class="graduacao">Conquista final \xB7 ' + GRADUACOES[conquista.graduacao].nome + "</span><b>" + escaparHtml(conquista.nome) + "</b><small>" + escaparHtml(conquista.descricao) + '</small><span class="progresso-final"><span class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + feitas + '" aria-label="Conquistas para a final"><i style="width:' + porcento + '%"></i></span>' + feitas + " de " + total + "</span></div></div>";
+  }
+  function origemDasConquistas() {
+    const conta2 = contaAtual();
+    if (conta2) return "Conquistas da conta de <b>" + escaparHtml(conta2.nome) + "</b>: valem em qualquer aparelho em que voc\xEA entrar.";
+    if (haMarcaDeConta()) return "Carregando as conquistas da sua conta\u2026";
+    if (!firebaseConfigurado()) return "Conquistas deste aparelho.";
+    return "Conquistas s\xF3 deste aparelho. Para guard\xE1-las e v\xEA-las em outros aparelhos, entre numa conta em <b>Jogar online</b>.";
+  }
+  function conteudoHtml(p) {
+    const total = CONQUISTAS.filter((c) => p.desbloqueadas[c.id]).length;
+    return '<p class="conquistas-origem">' + origemDasConquistas() + '</p><p class="conquistas-resumo"><b>' + total + "</b> de " + CONQUISTAS.length + " desbloqueadas \xB7 " + p.vitorias + " m\xE3os vencidas \xB7 " + p.dropouts + " dropouts</p>" + CONQUISTAS.filter((c) => c.id === CONQUISTA_FINAL).map((c) => finalHtml(c, p)).join("") + '<div class="conquistas-lista">' + CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL).map((c) => itemHtml(c, !!p.desbloqueadas[c.id])).join("") + "</div>";
+  }
+  function abrirConquistas(app) {
+    const html = '<div class="folha larga"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="conquistas-salao"><aside class="guilda"><div class="retrato" id="c-retrato" role="img" aria-label="Retrato do prof. Peng Yaohao em moldura medieval"></div><p class="guilda-nota">Guardi\xE3o do sal\xE3o das conquistas. Cada medalha aqui foi conquistada contra os oponentes da mesa.</p></aside><div class="conquistas-principal"><h2>Conquistas</h2><div class="conquistas-conteudo">' + conteudoHtml(app.progresso) + '</div><p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
+    let pararDeOuvir = () => {
+    };
+    const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar: () => pararDeOuvir() });
+    painel.elemento.querySelector("#c-avatares").addEventListener("click", () => abrirAvatares(app));
+    pararDeOuvir = aoMudarDeConta(() => {
+      const conteudo = painel.elemento.querySelector(".conquistas-conteudo");
+      if (!conteudo || !conteudo.isConnected) {
+        pararDeOuvir();
+        return;
+      }
+      conteudo.innerHTML = conteudoHtml(app.progresso);
+    });
+    const densidade = Math.min(3, Math.max(2, globalThis.devicePixelRatio || 1));
+    desenharRetratoEmMoldura(FOTO_PROFESSOR, densidade, "Prof. Peng Yaohao", "Gr\xE3o-mestre da guilda", (canvas) => {
+      painel.elemento.querySelector("#c-retrato")?.appendChild(canvas);
+    });
+    return painel;
+  }
+
   // src/interface/telas/sobre.js
   function situacaoDasEstatisticas() {
     if (!podeMedir()) return "Nesta c\xF3pia do jogo (fora do site publicado) nada \xE9 medido.";
@@ -8616,7 +9128,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return escolha === "sim" ? "Neste aparelho: ligadas." : escolha === "nao" ? "Neste aparelho: desligadas." : "Neste aparelho: ainda sem escolha.";
   }
   function abrirSobre() {
-    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><h3>Autores</h3><ul class="autores"><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes e valida\xE7\xE3o das regras.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es nas regras.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><p class="homenagem"><b>Converg\xEAncia global</b>, a conquista final do jogo, \xE9 uma homenagem ao prof. Peng: ela vem para quem desbloqueia todas as outras. No treino de uma rede, convergir para o m\xEDnimo global \xE9 chegar ao melhor ponto da fun\xE7\xE3o de perda, em vez de parar num m\xEDnimo local. A medalha tem uma gradua\xE7\xE3o s\xF3 dela, a Singularidade, acima de Antimat\xE9ria.</p><h3>Autores</h3><ul class="autores"><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes e valida\xE7\xE3o das regras.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es nas regras.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
     for (const escolha of ["sim", "nao"]) {
       const botao = painel.elemento.querySelector("#s-estatisticas-" + escolha);
@@ -8962,181 +9474,6 @@ export default function (Motor) {
     };
   }
 
-  // src/online/configuracao.js
-  var FIREBASE = {
-    /* projeto "truco-e26e8" no console, de ID truco-e26e8-703bc; app da Web "truco-de-turing" */
-    apiKey: "AIzaSyCH3yfsmf0KJQ0hJ7aU4DhCBcBVOqwRSHs",
-    authDomain: "truco-e26e8-703bc.firebaseapp.com",
-    projectId: "truco-e26e8-703bc",
-    storageBucket: "truco-e26e8-703bc.firebasestorage.app",
-    messagingSenderId: "832619971345",
-    appId: "1:832619971345:web:b50cd62330112e05b942b0"
-    /* sem measurementId: o Google Analytics é carregado à parte, com consentimento (interface/analise.js) */
-  };
-  var VERSAO_FIREBASE = "10.12.2";
-
-  // src/online/firebase.js
-  var VALIDADE_DAS_MENSAGENS = 6 * 60 * 60 * 1e3;
-  var LIMPEZA_POR_VEZ = 200;
-  var sdk = null;
-  function firebaseConfigurado() {
-    return !!FIREBASE;
-  }
-  async function carregar2() {
-    if (sdk) return sdk;
-    if (!FIREBASE) throw new Error("O projeto Firebase ainda n\xE3o foi configurado (src/online/configuracao.js).");
-    const base = "https://www.gstatic.com/firebasejs/" + VERSAO_FIREBASE + "/";
-    const [app, auth, fs] = await Promise.all(["firebase-app.js", "firebase-auth.js", "firebase-firestore.js"].map((arquivo) => import(
-      /* @vite-ignore */
-      base + arquivo
-    )));
-    const aplicativo = app.initializeApp(FIREBASE);
-    sdk = { auth, fs, autenticacao: auth.getAuth(aplicativo), banco: fs.getFirestore(aplicativo) };
-    return sdk;
-  }
-  async function entrarComGoogle() {
-    const { auth, autenticacao } = await carregar2();
-    const { user } = await auth.signInWithPopup(autenticacao, new auth.GoogleAuthProvider());
-    return conta(user);
-  }
-  async function entrarComEmail(email, senha, criar = false) {
-    const { auth, autenticacao } = await carregar2();
-    const fazer = criar ? auth.createUserWithEmailAndPassword : auth.signInWithEmailAndPassword;
-    const { user } = await fazer(autenticacao, email, senha);
-    return conta(user);
-  }
-  async function sairDaConta() {
-    const { auth, autenticacao } = await carregar2();
-    await auth.signOut(autenticacao);
-  }
-  async function contaGuardada() {
-    const { auth, autenticacao } = await carregar2();
-    return new Promise((resolver) => {
-      let parar = null, lida = false;
-      parar = auth.onAuthStateChanged(autenticacao, (user) => {
-        if (lida) return;
-        lida = true;
-        if (parar) parar();
-        resolver(user ? conta(user) : null);
-      });
-      if (lida) parar();
-    });
-  }
-  var conta = (user) => ({ uid: user.uid, nome: user.displayName || (user.email || "").split("@")[0] || "Jogador", email: user.email || "" });
-  async function carregarProgressoDaConta(uid) {
-    const { fs, banco } = await carregar2();
-    const doc = await fs.getDoc(fs.doc(banco, "contas", uid));
-    return doc.exists() ? doc.data() : null;
-  }
-  async function salvarProgressoNaConta(uid, progresso) {
-    const { fs, banco } = await carregar2();
-    await fs.setDoc(fs.doc(banco, "contas", uid), JSON.parse(JSON.stringify(progresso)));
-  }
-  async function ehAdministrador(uid) {
-    try {
-      const { fs, banco } = await carregar2();
-      return (await fs.getDoc(fs.doc(banco, "admins", uid))).exists();
-    } catch (e) {
-      return false;
-    }
-  }
-  async function listarContas() {
-    const { fs, banco } = await carregar2();
-    const resultado = await fs.getDocs(fs.collection(banco, "contas"));
-    return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
-  }
-  async function transporteFirebase(codigo) {
-    const { fs, banco, autenticacao } = await carregar2();
-    const usuario = autenticacao.currentUser;
-    if (!usuario) throw new Error("Entre numa conta para jogar pela internet.");
-    const uid = usuario.uid;
-    const colecao = fs.collection(banco, "salas", codigo, "mensagens");
-    const ouvintes2 = /* @__PURE__ */ new Set();
-    const vistos = /* @__PURE__ */ new Set();
-    const falhas = /* @__PURE__ */ new Set();
-    const falhou = (erro) => {
-      for (const cb of falhas) cb(erro);
-    };
-    const parar = fs.onSnapshot(fs.query(colecao, fs.orderBy("em")), (instantaneo) => {
-      for (const mudanca of instantaneo.docChanges()) {
-        if (mudanca.type !== "added" || vistos.has(mudanca.doc.id)) continue;
-        vistos.add(mudanca.doc.id);
-        const { em, expira, ...msg } = mudanca.doc.data();
-        for (const cb of ouvintes2) cb(msg);
-      }
-    }, falhou);
-    return {
-      /* JSON tira os `undefined`, que o Firestore recusa */
-      enviar: (msg) => {
-        const doc = { ...JSON.parse(JSON.stringify(msg)), uid, em: fs.serverTimestamp(), expira: fs.Timestamp.fromMillis(Date.now() + VALIDADE_DAS_MENSAGENS) };
-        Promise.resolve(fs.addDoc(colecao, doc)).catch(falhou);
-      },
-      aoReceber: (cb) => {
-        ouvintes2.add(cb);
-        return () => ouvintes2.delete(cb);
-      },
-      aoFalhar: (cb) => {
-        falhas.add(cb);
-        return () => falhas.delete(cb);
-      },
-      fechar: () => {
-        ouvintes2.clear();
-        falhas.clear();
-        parar();
-      }
-    };
-  }
-  async function limparMensagensVencidas(limite = LIMPEZA_POR_VEZ) {
-    const { fs, banco } = await carregar2();
-    const antes = fs.Timestamp.fromMillis(Date.now() - 10 * 60 * 1e3);
-    const consulta = fs.query(fs.collectionGroup(banco, "mensagens"), fs.where("expira", "<", antes), fs.limit(limite));
-    const { docs } = await fs.getDocs(consulta);
-    if (!docs.length) return 0;
-    const lote = fs.writeBatch(banco);
-    for (const d of docs) lote.delete(d.ref);
-    await lote.commit();
-    return docs.length;
-  }
-
-  // src/online/errosFirebase.js
-  var MENSAGENS = {
-    /* configuração do projeto no console (docs/FIREBASE.md) */
-    "auth/operation-not-allowed": "Esse jeito de entrar ainda n\xE3o est\xE1 ativado no projeto Firebase (Authentication > M\xE9todo de login).",
-    "auth/unauthorized-domain": "Este endere\xE7o ainda n\xE3o est\xE1 autorizado no projeto Firebase (Authentication > Configura\xE7\xF5es > Dom\xEDnios autorizados).",
-    "auth/configuration-not-found": "O Authentication ainda n\xE3o foi ativado no projeto Firebase.",
-    "auth/invalid-api-key": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
-    "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
-    "permission-denied": "O Firestore recusou o pedido: confira se as regras de firestore.rules foram publicadas e se a conta est\xE1 conectada.",
-    "not-found": "O banco Firestore do projeto ainda n\xE3o foi criado (Firestore Database > Criar banco de dados).",
-    "failed-precondition": "O banco Firestore do projeto ainda n\xE3o foi criado ou n\xE3o est\xE1 pronto.",
-    /* o que acontece com qualquer pessoa */
-    "auth/popup-blocked": "O navegador bloqueou a janela do Google. Libere as janelas deste site e tente de novo.",
-    "auth/operation-not-supported-in-environment": "Este navegador n\xE3o abre a janela do Google aqui. Entre com e-mail e senha.",
-    "auth/network-request-failed": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
-    "unavailable": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
-    "auth/too-many-requests": "Muitas tentativas seguidas. Espere um pouco e tente de novo.",
-    "auth/invalid-email": "Esse e-mail n\xE3o parece v\xE1lido.",
-    "auth/missing-email": "Escreva o e-mail.",
-    "auth/missing-password": "Escreva a senha.",
-    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
-    "auth/email-already-in-use": 'J\xE1 existe uma conta com esse e-mail. Use "Entrar com e-mail".',
-    "auth/invalid-credential": "E-mail ou senha n\xE3o conferem.",
-    "auth/invalid-login-credentials": "E-mail ou senha n\xE3o conferem.",
-    "auth/wrong-password": "E-mail ou senha n\xE3o conferem.",
-    "auth/user-not-found": 'N\xE3o h\xE1 conta com esse e-mail. Use "Criar conta".',
-    "auth/user-disabled": "Esta conta foi desativada.",
-    "auth/account-exists-with-different-credential": "Esse e-mail j\xE1 entra de outro jeito (Google ou e-mail e senha). Use o mesmo de antes."
-  };
-  var DESISTIU = /* @__PURE__ */ new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request", "auth/user-cancelled"]);
-  function explicarErroFirebase(erro) {
-    const noTexto = /\(([a-z-]+\/[a-z0-9.-]+)\)/i.exec(String(erro && erro.message || ""));
-    const codigo = String(erro && erro.code || noTexto && noTexto[1] || "").toLowerCase();
-    if (DESISTIU.has(codigo)) return null;
-    if (MENSAGENS[codigo]) return MENSAGENS[codigo];
-    const texto = String(erro && erro.message || erro || "").replace(/^Firebase:\s*/, "").trim();
-    return texto || "Algo deu errado com o Firebase.";
-  }
-
   // src/interface/telas/jogadores.js
   var COLUNAS = [
     ["Nome", (j) => j.nome],
@@ -9229,107 +9566,6 @@ export default function (Motor) {
       mostrarAviso("Jogadores", "CSV baixado com " + linhas.length + (linhas.length === 1 ? " conta." : " contas."), null, 3e3);
     });
     return painel;
-  }
-
-  // src/interface/conta.js
-  var MARCA_DE_CONTA = "truco-de-turing:conta";
-  var atual2 = null;
-  var metodoAtual = "";
-  var acessoContadoNaConta = false;
-  var ouvintes = /* @__PURE__ */ new Set();
-  var avisouFalhaAoSalvar = false;
-  function contaAtual() {
-    return atual2;
-  }
-  function aoMudarDeConta(cb) {
-    ouvintes.add(cb);
-    return () => ouvintes.delete(cb);
-  }
-  function mudar(conta2) {
-    atual2 = conta2;
-    for (const cb of [...ouvintes]) cb(conta2);
-  }
-  function haMarcaDeConta() {
-    return !!lerMarca();
-  }
-  var lerMarca = () => {
-    try {
-      return globalThis.localStorage?.getItem(MARCA_DE_CONTA) || null;
-    } catch (e) {
-      return null;
-    }
-  };
-  var gravarMarca = (metodo) => {
-    try {
-      globalThis.localStorage?.setItem(MARCA_DE_CONTA, metodo || "conta");
-    } catch (e) {
-    }
-  };
-  var apagarMarca = () => {
-    try {
-      globalThis.localStorage?.removeItem(MARCA_DE_CONTA);
-    } catch (e) {
-    }
-  };
-  async function usarConta(app, conta2, metodo, { retomada = false } = {}) {
-    const naConta = await carregarProgressoDaConta(conta2.uid);
-    const mesclado = mesclarProgresso(app.progresso, naConta);
-    mesclado.nomeOnline = mesclado.nomeOnline || conta2.nome;
-    const jaNaConta = naConta && naConta.estatisticas ? naConta.estatisticas.acessos || 0 : 0;
-    const estatisticas = estatisticasDe(mesclado);
-    if (!acessoContadoNaConta) estatisticas.acessos = Math.max(estatisticas.acessos, jaNaConta + 1);
-    await salvarProgressoNaConta(conta2.uid, documentoDaConta(mesclado, conta2, metodo));
-    acessoContadoNaConta = true;
-    metodoAtual = metodo;
-    app.progresso = mesclado;
-    avisouFalhaAoSalvar = false;
-    gravarMarca(metodo);
-    definirConta(conta2.uid, metodo, { retomada });
-    mudar(conta2);
-    if (!app.salvarSoLocal) {
-      app.salvarSoLocal = app.salvar;
-      app.salvar = function() {
-        this.salvarSoLocal();
-        if (!atual2) return;
-        salvarProgressoNaConta(atual2.uid, documentoDaConta(this.progresso, atual2, metodoAtual)).then(() => {
-          avisouFalhaAoSalvar = false;
-        }, (e) => {
-          if (avisouFalhaAoSalvar) return;
-          avisouFalhaAoSalvar = true;
-          mostrarAviso("Conta", "O progresso ficou s\xF3 neste aparelho. " + (explicarErroFirebase(e) || ""), null, 7e3);
-        });
-      };
-    }
-    app.salvar();
-  }
-  async function sairDaContaAtual() {
-    await sairDaConta();
-    apagarMarca();
-    definirConta(null);
-    mudar(null);
-  }
-  async function retomarConta(app) {
-    if (!firebaseConfigurado()) return null;
-    const metodo = lerMarca();
-    if (!metodo) return null;
-    let conta2;
-    try {
-      conta2 = await contaGuardada();
-    } catch (e) {
-      return null;
-    }
-    if (!conta2) {
-      apagarMarca();
-      return null;
-    }
-    if (atual2) return atual2;
-    try {
-      await usarConta(app, conta2, metodo, { retomada: true });
-      return conta2;
-    } catch (e) {
-      mostrarAviso("Conta", "N\xE3o deu para retomar a conta de " + conta2.nome + "; o progresso fica neste aparelho at\xE9 voc\xEA entrar de novo. " + (explicarErroFirebase(e) || ""), null, 8e3);
-      return null;
-    }
   }
 
   // src/interface/telas/online.js
@@ -11009,6 +11245,7 @@ export default function (Motor) {
       this.oponenteCorreu = false;
       this.dicaAtual = null;
       this.dicasNaMao = this.app.dicasLigadas;
+      this.conquistasDaMao = [];
       this.linhaDoTempo = [];
       this.linhasRegistradas = 0;
       for (const objeto of this.objetosDoTabuleiro || []) objeto.destroy();
@@ -11080,6 +11317,7 @@ export default function (Motor) {
       if (this.modo !== "inicio") this.modo = "livre";
       const eventos = this.mao.eventos.splice(0);
       this.registrarJogadaNasEstatisticas(jogada, eventos);
+      this.conferirConquistasDaJogada();
       this.ocupada = true;
       this.redesenhar();
       this.anotarNaLinhaDoTempo(jogada, eventos);
@@ -11801,18 +12039,19 @@ export default function (Motor) {
         somas: this.pontuacoes.map((p) => p.total),
         tentos: partida.tentos.slice()
       });
-      const valeConquistas = !this.variosHumanos && !this.dicasNaMao;
-      const novas = valeConquistas ? this.app.registrarMao({
+      const valeConquistas = this.valemConquistas(), eu = this.cadeiraDasConquistas();
+      const novasNoFim = valeConquistas ? this.app.registrarMao({
         mao,
-        eu: 0,
-        venceu: vencedor === 0,
+        eu,
+        venceu: vencedor === eu,
         completa,
         partida,
-        venceuPartida: partida.encerrada && partida.vencedor === 0,
+        venceuPartida: partida.encerrada && partida.vencedor === eu,
         valorDaMao,
         oponenteCorreu: this.oponenteCorreu,
         opcoes: this.opcoes
       }) : [];
+      const novas = [...this.conquistasDaMao || [], ...novasNoFim];
       this.oponenteCorreu = false;
       const humanoVenceu = mao.jogadores[vencedor].tipo === "humano";
       const venceuAPartida = humanoVenceu && partida.encerrada && partida.alvo > 1;
@@ -11826,6 +12065,23 @@ export default function (Motor) {
       if (humanoVenceu && !this.variosHumanos) this.time.delayedCall(400, () => this.falar(provocar("perdeu")));
       this.ultimoResultado = { vencedor, ganho, completa, novas, valeConquistas, humanoVenceu };
       this.time.delayedCall(espera, () => this.mostrarResultado());
+    },
+    /** A mão vale conquistas? Mãos com dicas e partidas entre pessoas no mesmo aparelho não valem. */
+    valemConquistas() {
+      return !this.variosHumanos && !this.dicasNaMao;
+    },
+    /** Cadeira de quem ganha as conquistas neste aparelho: online, a da sala; no jogo local, a 0. */
+    cadeiraDasConquistas() {
+      return this.online ? this.cadeiraOnline() : 0;
+    },
+    /**
+     * Logo depois de cada jogada: as conquistas que valem na hora (transfer, overfit, tunagens,
+     * dropouts…) sobem no alto da tela sem esperar a mão acabar e entram na lista do resultado.
+     */
+    conferirConquistasDaJogada() {
+      if (this.encerrada || !this.valemConquistas()) return;
+      const novas = this.app.registrarJogada({ mao: this.mao, eu: this.cadeiraDasConquistas(), opcoes: this.opcoes });
+      if (novas.length) this.conquistasDaMao = (this.conquistasDaMao || []).concat(novas);
     },
     /**
      * Estatísticas de uso do fim da mão (interface/analise.js): `fim_mao` sempre e, se a partida
@@ -12193,7 +12449,7 @@ export default function (Motor) {
   var FUNDO = 0.5;
   var FRENTE = 4.5;
   var MESA = { x: PAINEL_ESQ.x + PAINEL_ESQ.l, l: PAINEL_DIR.x - PAINEL_ESQ.x - PAINEL_ESQ.l };
-  function reduzirMovimento() {
+  function reduzirMovimento2() {
     try {
       return !!(globalThis.matchMedia && globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches);
     } catch (e) {
@@ -12216,7 +12472,7 @@ export default function (Motor) {
   var metodosDoAmbiente = {
     /** Cria o ambiente do terreno da partida. */
     criarAmbiente(terreno) {
-      this.ambiente = { terreno, objetos: [], ondas: null, causticas: [], parado: reduzirMovimento(), escala: escalaDaTela(this) };
+      this.ambiente = { terreno, objetos: [], ondas: null, causticas: [], parado: reduzirMovimento2(), escala: escalaDaTela(this) };
       this.criarTexturasDoAmbiente();
       const criar = { neutro: this.ambienteNeutro, montanha: this.ambienteMontanha, pantano: this.ambientePantano, oceano: this.ambienteOceano }[terreno];
       if (criar) criar.call(this);
