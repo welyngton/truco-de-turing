@@ -1,4 +1,4 @@
-// NeuroDeck - baralhos: cada um define como a rede e pontuada
+// Motor - baralhos: cada um define como a rede e pontuada
 //
 // O baralho classico soma os valores do caminho. Os demais baralhos do slide
 // ("decks com efeitos distintos") reutilizam a soma com um valor de carta ou
@@ -16,7 +16,7 @@ import { cardValue, stackValue, neuronBonus, rulesOf } from './core.js';
 // quadra zera a rede inteira (vanishing gradient). Exemplo do slide: 8-K-K-3 com
 // um K tunado tem tres Ks (trio) e vale 8 + 30 + 3 = 41. Tunar os dois Ks de um
 // par forma quadra. A figura empilhada conta so na sequencia (sem stackValue).
-// Regras originais (rules 'nd-2.0.0'): so as cartas do caminho formam a sequencia,
+// Regras originais (rules 'original'): so as cartas do caminho formam a sequencia,
 // par vale 10 por figura, trio 20 no total, e a figura empilhada soma stackValue.
 // Tunagem de carta numerica soma stackValue nos dois conjuntos.
 // opts.faceAsValue: figuras usam cardValue em vez da regra de par/trio (Truco, Nobreza).
@@ -106,7 +106,7 @@ export const backprop = {
     });
     const total = round2(a);
     // convencao do jogo: saida baixa depois de passar por funcao nao linear.
-    // O campo se chama `vanishing` desde o NeuroDeck, mas o que ele marca e saturacao da ativacao
+    // O campo se chama `vanishing` por herança, mas o que ele marca e saturacao da ativacao
     // no forward pass (sigmoide e tanh vao no maximo ate 20); a interface mostra "saida saturada".
     const vanishing = items.length >= 3 && items.some(it => it.fn !== 'Linear') && total < 20;
     return { total, items, vanishing, kind: 'forward', terrainDelta };

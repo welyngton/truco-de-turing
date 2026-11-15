@@ -1,7 +1,7 @@
 /**
- * @file Tela de regras, com o conteúdo do manual do NeuroDeck e as decisões da fusão, em abas:
+ * @file Tela de regras, com o conteúdo do manual de regras e as decisões da fusão, em abas:
  * Como jogar, Ações, Pontuação, Baralhos e terrenos (com a arte do Truco de Turing) e Dicas e
- * estratégias. As abas "Cartas" e "Decisões de regra" do NeuroDeck ficaram de fora a pedido do
+ * estratégias. As abas "Cartas" e "Decisões de regra" ficaram de fora a pedido do
  * professor; as decisões estão no repositório (docs e testes).
  */
 import { BARALHOS } from '../../nucleo/baralhos.js';

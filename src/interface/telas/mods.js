@@ -1,10 +1,10 @@
 /**
- * @file Tela "Mods": como criar baralhos, terrenos e ações para o motor do NeuroDeck, com um mod
+ * @file Tela "Mods": como criar baralhos, terrenos e ações para o motor, com um mod
  * de exemplo comentado (conteudo/modExemplo.js) e links para os arquivos e exemplos no repositório
  * do jogo no GitHub.
  *
  * A API é a do registro do motor (src/motor/engine/registry.js, apiVersion 2). A tela é honesta
- * sobre o estado atual: o motor aceita mods, mas a interface do jogo unificado ainda não os carrega.
+ * sobre o estado atual: o motor aceita mods, mas a interface do jogo ainda não os carrega.
  */
 import { abrirPainel, escaparHtml } from '../paineis.js';
 import { CODIGO_DO_MOD_DE_EXEMPLO } from '../../conteudo/modExemplo.js';
@@ -27,7 +27,7 @@ export const ARQUIVOS_DE_MODS = [
   { caminho: 'src/motor/engine/decks.js', texto: 'os 7 baralhos do jogo, cada um registrado como mod (Clássico, Truco, Nobreza, Backprop…).' },
   { caminho: 'src/motor/engine/terrains.js', texto: 'os terrenos Montanha, Pântano e Oceano, com os ganchos do turno.' },
   { caminho: 'src/motor/engine/actions.js', texto: 'as ações (tunagem, overfit, early stop, dropout, transfer learning…) com generate, isValid e execute.' },
-  { caminho: 'src/motor/ORIGEM.md', texto: 'de onde veio o motor do NeuroDeck e o que mudou na fusão.' },
+  { caminho: 'src/motor/MOTOR.md', texto: 'os arquivos do motor e as decisões de regra registradas.' },
 ];
 
 /** Campos de cada tipo de mod, resumidos do registro do motor. */
@@ -50,15 +50,15 @@ const TIPOS = [
 export function abrirMods() {
   const html = '<div class="folha mods"><button class="fechar-x" data-fechar aria-label="Fechar">×</button>' +
     '<h2>Mods</h2>' +
-    '<p>As regras do jogo vêm do motor do NeuroDeck, que foi feito para receber <b>mods</b>: pequenos módulos JavaScript que acrescentam baralhos, terrenos e ações sem mexer no código do jogo. Tudo o que varia no jogo entra por um registro, e os baralhos, terrenos e ações que já existem são registrados do mesmo jeito.</p>' +
+    '<p>As regras do jogo ficam no motor (<code>src/motor/</code>), que foi feito para receber <b>mods</b>: pequenos módulos JavaScript que acrescentam baralhos, terrenos e ações sem mexer no código do jogo. Tudo o que varia no jogo entra por um registro, e os baralhos, terrenos e ações que já existem são registrados do mesmo jeito.</p>' +
     '<h3>O que um mod pode criar</h3>' +
     '<div class="tipos-de-mod">' + TIPOS.map((t) => '<div class="tipo-de-mod"><h4>' + t.nome + '</h4><p>' + escaparHtml(t.texto) + '</p>' +
-      '<p class="campos"><code>NeuroDeck.' + t.funcao + '({ … })</code><br>Campos obrigatórios: <code>' + t.obrigatorios + '</code><br>Exemplos no repositório: ' + linkDoArquivo(t.exemplos) + '</p></div>').join('') + '</div>' +
+      '<p class="campos"><code>Motor.' + t.funcao + '({ … })</code><br>Campos obrigatórios: <code>' + t.obrigatorios + '</code><br>Exemplos no repositório: ' + linkDoArquivo(t.exemplos) + '</p></div>').join('') + '</div>' +
     '<h3>Como um mod é feito</h3>' +
     '<ol>' +
     '<li>Um arquivo <code>.js</code> que exporta <code>apiVersion = 2</code> e uma função padrão.</li>' +
-    '<li>A função recebe o registro do motor (<code>NeuroDeck</code>) e chama <code>registerDeck</code>, <code>registerTerrain</code> ou <code>registerAction</code>.</li>' +
-    '<li>O estado da partida é um objeto simples: mesa (<code>state.layers</code>), mãos, limbo, cemitério e a rede de cada jogador (<code>state.nets</code>). Para sortear, use <code>NeuroDeck.rand(state)</code>, que mantém a partida reproduzível.</li>' +
+    '<li>A função recebe o registro do motor (<code>Motor</code>) e chama <code>registerDeck</code>, <code>registerTerrain</code> ou <code>registerAction</code>.</li>' +
+    '<li>O estado da partida é um objeto simples: mesa (<code>state.layers</code>), mãos, limbo, cemitério e a rede de cada jogador (<code>state.nets</code>). Para sortear, use <code>Motor.rand(state)</code>, que mantém a partida reproduzível.</li>' +
     '</ol>' +
     '<h3>Exemplo comentado: terreno "Regularização L1"</h3>' +
     '<p class="campos">Arquivo no repositório: ' + linkDoArquivo('src/conteudo/modExemplo.js') + '</p>' +
@@ -66,10 +66,9 @@ export function abrirMods() {
     '<div class="linha"><button class="botao" id="mods-copiar">Copiar o exemplo</button><span class="mods-copiado" id="mods-copiado" aria-live="polite"></span></div>' +
     '<h3>Como testar um mod</h3>' +
     '<ul>' +
-    '<li><b>No NeuroDeck original:</b> publique o arquivo num endereço público e abra <code>https://neurodeck-fpo.web.app/?mod=</code> seguido do endereço do arquivo.</li>' +
-    '<li><b>No repositório:</b> o motor roda no Node. Importe <code>src/motor/engine.js</code> e o mod, chame a função do mod com <code>NeuroDeck</code> e jogue partidas com <code>newGame</code> e <code>applyMove</code> (o teste ' + linkDoArquivo('testes/unidade/mods.test.js') + ' faz isso com o exemplo acima).</li>' +
+    '<li><b>No repositório:</b> o motor roda no Node. Importe <code>src/motor/engine.js</code> e o mod, chame a função do mod com <code>Motor</code> e jogue partidas com <code>newGame</code> e <code>applyMove</code> (o teste ' + linkDoArquivo('testes/unidade/mods.test.js') + ' faz isso com o exemplo acima).</li>' +
     '</ul>' +
-    '<p class="aviso-mods"><b>Ainda não no jogo unificado:</b> o motor já aceita mods, mas a interface do Truco de Turing ainda não os carrega, porque cada baralho, terreno e ação precisa de arte, textos e animação próprios. Por enquanto, use o NeuroDeck original ou o Node para testar.</p>' +
+    '<p class="aviso-mods"><b>Ainda não no jogo:</b> o motor já aceita mods, mas a interface do Truco de Turing ainda não os carrega, porque cada baralho, terreno e ação precisa de arte, textos e animação próprios. Por enquanto, use o Node para testar.</p>' +
     '<h3>Arquivos e exemplos no repositório</h3>' +
     '<ul class="arquivos-de-mods">' + ARQUIVOS_DE_MODS.map((a) => '<li>' + linkDoArquivo(a.caminho) + ': ' + escaparHtml(a.texto) + '</li>').join('') + '</ul>' +
     '<p>Para ir além: o <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/MANUAL.md" target="_blank" rel="noopener">manual do código</a> explica como acrescentar baralho, terreno, oponente, conquista ou verbete no Truco de Turing, e a <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/REFERENCIA.md" target="_blank" rel="noopener">referência</a> lista cada função.</p>' +

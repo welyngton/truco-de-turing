@@ -1,6 +1,6 @@
 /**
  * @file Ponto de entrada dos oponentes: perfis (nome, nível, estilo), escolha de jogada e
- * decisões de truco. As jogadas vêm dos bots do NeuroDeck (ver estrategias.js); as decisões de
+ * decisões de truco. As jogadas vêm dos bots do motor (ver estrategias.js); as decisões de
  * truco são do Truco de Turing e usam a chance de vitória estimada por simulação.
  */
 import { pontosDaCarta } from '../baralhos.js';

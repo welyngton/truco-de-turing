@@ -100,7 +100,7 @@ function jogarAteOFim({ central, todos }, { atrasar = false, embaralhar = null, 
 }
 
 /** O estado do motor de cada aparelho, para comparar. */
-const foto = (x) => JSON.stringify({ nd: x.mao.nd.nets, mesa: x.mao.nd.layers, fase: x.mao.fase, resultado: x.mao.resultado && x.mao.resultado.somas });
+const foto = (x) => JSON.stringify({ estadoMotor: x.mao.estadoMotor.nets, mesa: x.mao.estadoMotor.layers, fase: x.mao.fase, resultado: x.mao.resultado && x.mao.resultado.somas });
 
 describe('sala online', () => {
   it('código de sala sem letras ambíguas; anfitrião na cadeira 0, convidado na primeira vaga, o resto vira bot ao começar', () => {

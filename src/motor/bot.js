@@ -1,10 +1,10 @@
-// NeuroDeck - oponentes artificiais
+// Motor - oponentes artificiais
 // Guloso: escolhe a jogada de melhor ganho imediato (sem olhar adiante).
 // Monte Carlo: simula partidas aleatorias para cada jogada e escolhe a de maior
 // taxa de vitoria. A informacao oculta e sorteada a cada simulacao (determinizacao).
 // Com mais de 2 jogadores, a margem e medida contra o melhor rival.
 
-import { NeuroDeck, legalMoves, applyMove, endGame, score, determinize, mulberry32, cardValue, strengthOf, opponents, lastSlot } from './engine.js';
+import { Motor, legalMoves, applyMove, endGame, score, determinize, mulberry32, cardValue, strengthOf, opponents, lastSlot } from './engine.js';
 
 export const BOTS = {
   random: { name: 'Aleatório', desc: 'Escolhe qualquer jogada legal. Linha de base.' },
@@ -17,7 +17,7 @@ const ATTACKS = new Set(['overfit', 'earlystop', 'stackoverflow']);
 // Os bots veem o mesmo passe que o humano: depois de sofrer early stop, guardar
 // as cartas pode valer mais que atacar (elas contam nos desempates pela mao).
 function botMoves(state, p) { return legalMoves(state, p, { maxDropout: 1 }); }
-const optionalPass = moves => moves.some(m => m.type !== 'pass' && NeuroDeck.actions[m.type]?.consumesTurn !== false);
+const optionalPass = moves => moves.some(m => m.type !== 'pass' && Motor.actions[m.type]?.consumesTurn !== false);
 
 // fase de revelacao: o bot esperto revela a carta de menor valor e guarda as boas;
 // se a carta volta para a mao ('reveal-keep'), revela a mais forte, que nao custa nada
@@ -39,7 +39,7 @@ export function randomPolicy(state, p, rng) {
   for (const m of moves) {
     let w = 1;
     if (m.type === 'transfer') w = 2;
-    else if (NeuroDeck.actions[m.type].consumesTurn === false) w = 0.05;
+    else if (Motor.actions[m.type].consumesTurn === false) w = 0.05;
     else if (ATTACKS.has(m.type)) w = 1 + (m.cardIds?.length || 1);
     else if (m.type === 'tune') w = m.cardIds.length === 1 ? 1.5 : 0.1;
     else if (m.type === 'pass' && optionalPass(moves)) w = 0.3; // ataque costuma valer mais que guardar a carta

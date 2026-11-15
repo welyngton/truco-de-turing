@@ -1,6 +1,6 @@
 # Validação das regras de negócio
 
-Testes das regras do jogo unificado (NeuroDeck + Truco de Turing), feitos em 10/11/2026, ao fim da Etapa 1 da fusão: a interface do Truco de Turing jogando com o motor de regras do NeuroDeck.
+Testes das regras do jogo, feitos em 10/11/2026, ao fim da Etapa 1 do novo motor de regras: a interface do Truco de Turing jogando com o motor em `src/motor/`.
 
 A rodada anterior (Truco de Turing 1.2.0, de 09/11/2026, com 24 testes funcionais no site publicado) está no histórico deste arquivo e da planilha.
 
@@ -9,7 +9,7 @@ A rodada anterior (Truco de Turing 1.2.0, de 09/11/2026, com 24 testes funcionai
 - [`testes-regras-de-negocio.xlsx`](testes-regras-de-negocio.xlsx): planilha com todos os testes e resultados.
   - **Resumo**: totais por bloco, totais das suítes completas e legenda do status.
   - **Testes TDD**: os 40 testes de regra de negócio (RN-01 a RN-40), com cenário, esperado, base da regra, o que mudou na fusão e o resultado.
-  - **Motor do NeuroDeck**: os 37 testes do motor em `src/motor/`: equivalência com o site publicado (1.000 partidas), as quatro mudanças de regra (B1, B2, R1, R2), a regra de início e a regressão.
+  - **Motor**: os 37 testes do motor em `src/motor/`: equivalência com o conjunto de regras original (1.000 partidas), as quatro mudanças de regra (B1, B2, R1, R2), a regra de início e a regressão.
   - **Testes funcionais**: 28 cenários refeitos no jogo unificado (F-01 a F-28).
   - **Robustez**: números de 3.000 mãos aleatórias.
   - **Decisões**: as regras que estavam em aberto, como eram em cada jogo e como ficaram.
@@ -21,7 +21,7 @@ A rodada anterior (Truco de Turing 1.2.0, de 09/11/2026, com 24 testes funcionai
 | Bloco | Testes | Passou | Atenção | Falhou |
 |---|---:|---:|---:|---:|
 | Regras de negócio (RN-01 a RN-40) | 40 | 40 | 0 | 0 |
-| Motor do NeuroDeck | 37 | 37 | 0 | 0 |
+| Motor | 37 | 37 | 0 | 0 |
 | Testes funcionais do jogo unificado | 28 | 27 | 1 | 0 |
 
 As suítes completas do projeto também passam: 255 testes de unidade, 15 de interface (no Chromium) e 12 de performance.

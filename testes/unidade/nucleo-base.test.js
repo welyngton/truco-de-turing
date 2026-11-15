@@ -71,7 +71,7 @@ describe('rede.js', () => {
     assert.deepEqual([0, 1, 2, 3, 4, 5, 6].map((c) => ehOculta(c)), [false, true, true, true, true, true, false]);
     assert.deepEqual([0, 1, 7, 8].map((c) => ehOculta(c, 9)), [false, true, true, false]);
   });
-  it('tamanhosDaMesa: arquiteturas do NeuroDeck, com um neurônio a mais por camada para cada jogador além de 2', () => {
+  it('tamanhosDaMesa: arquiteturas do motor, com um neurônio a mais por camada para cada jogador além de 2', () => {
     assert.deepEqual(tamanhosDaMesa(), [3, 5, 5, 5, 5, 5, 4]);
     assert.deepEqual(tamanhosDaMesa('curta'), [3, 4, 4, 4, 3]);
     assert.deepEqual(tamanhosDaMesa('profunda', 3), [4, 5, 5, 5, 5, 5, 5, 5, 4]);
@@ -103,7 +103,7 @@ describe('baralhos.js', () => {
     assert.equal(pontosDaCarta({ valor: 'A', naipe: 'C' }, 'classico'), 11);
     assert.equal(pontosDaCarta({ valor: 'K', naipe: 'C' }, 'classico'), 0);
     assert.equal(pontosDaCarta({ valor: '7', naipe: 'C' }, 'classico'), 7);
-    /* truco do NeuroDeck: Zap 12, Copas 11, Espadilha 10, Pica-fumo 9; depois 3, 2, A, K, J, Q */
+    /* truco do motor: Zap 12, Copas 11, Espadilha 10, Pica-fumo 9; depois 3, 2, A, K, J, Q */
     assert.equal(pontosDaCarta({ valor: '4', naipe: 'P' }, 'truco'), 12);
     assert.equal(pontosDaCarta({ valor: '7', naipe: 'C' }, 'truco'), 11);
     assert.equal(pontosDaCarta({ valor: 'A', naipe: 'E' }, 'truco'), 10);

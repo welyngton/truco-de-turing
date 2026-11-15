@@ -1,7 +1,7 @@
 /**
  * @file Testes de unidade da pontuação (pontuacao.js): valores, tunagem, sequências de figuras,
  * vanishing gradient, terrenos e baralhos Fraternidade e Truco. As contas são do motor do
- * NeuroDeck; aqui se confere o que a interface recebe (total, neurônios, combos e notas).
+ * motor; aqui se confere o que a interface recebe (total, neurônios, combos e notas).
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +10,7 @@ import { pontuarRede, mediaDePontos } from '../../src/nucleo/pontuacao.js';
 import { aplicarJogada, jogadasLegais } from '../../src/nucleo/partida.js';
 import { pontosDaCarta } from '../../src/nucleo/baralhos.js';
 import { ehFigura } from '../../src/nucleo/cartas.js';
-import { cartaParaND, situacaoDaRede, MOTIVOS_TRADUZIDOS } from '../../src/nucleo/traducao.js';
+import { cartaParaMotor, situacaoDaRede, MOTIVOS_TRADUZIDOS } from '../../src/nucleo/traducao.js';
 import { redeCom, maoNova } from '../apoio/estados.js';
 
 /** A soma dos neurônios mais a dos combos dá o total (fora quando a rede zera). */
@@ -76,9 +76,9 @@ describe('pontuarRede', () => {
     }
     /* neurônio tunado fica à tona */
     const tunada = redeCom([['9O'], ['9E', '9C']], { terreno: 'pantano' });
-    tunada.nd.terrainData.sunk = { '1-0': 3 };
+    tunada.estadoMotor.terrainData.sunk = { '1-0': 3 };
     assert.equal(pontuarRede(tunada, 0).total, 27);
-    tunada.nd.layers[1][0].stack = [];
+    tunada.estadoMotor.layers[1][0].stack = [];
     assert.equal(pontuarRede(tunada, 0).total, 9 + 6);
   });
   it('oceano: neurônio do naipe do vento revelado na rodada vale o dobro para sempre', () => {
@@ -86,12 +86,12 @@ describe('pontuarRede', () => {
     assert.ok('ECPO'.includes(mao.vento));
     const p = mao.vez;
     const alvo = mao.camadas[0].find((n) => !ehFigura(n.cartas[0]));
-    mao.nd.terrainData.wind = cartaParaND(alvo.cartas[0]).suit; /* o vento sopra a favor desta carta */
+    mao.estadoMotor.terrainData.wind = cartaParaMotor(alvo.cartas[0]).suit; /* o vento sopra a favor desta carta */
     aplicarJogada(mao, { tipo: 'ativar', jogador: p, neuronio: alvo.id });
     const valor = pontosDaCarta(alvo.cartas[0], 'classico');
     assert.equal(pontuarRede(mao, p).total, 2 * valor);
     assert.ok(pontuarRede(mao, p).neuronios[0].notas.some((n) => /vento/.test(n)));
-    mao.nd.terrainData.wind = 'S' === mao.nd.terrainData.wind ? 'H' : 'S'; /* o vento vira: o dobro continua */
+    mao.estadoMotor.terrainData.wind = 'S' === mao.estadoMotor.terrainData.wind ? 'H' : 'S'; /* o vento vira: o dobro continua */
     assert.equal(pontuarRede(mao, p).total, 2 * valor);
   });
   it('fraternidade: vizinhos do mesmo naipe valem dobro', () => {

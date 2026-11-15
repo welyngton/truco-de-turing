@@ -1,4 +1,4 @@
-// NeuroDeck - nucleo do motor
+// Motor - nucleo do motor
 //
 // O nucleo cuida do que nao muda: mesa em camadas, maos, limbo, caminho de
 // cada jogador, turnos, fim de partida e desempates. Pontuacao vem do baralho
@@ -13,14 +13,14 @@
 //   firstRule              'reveal' (cada um revela uma carta da mao, que vai para o cemiterio)
 //                          | 'reveal-keep' (opcao (b) do slide: a carta revelada volta para a mao)
 //                          | 'random' (sorteio)
-//   rules                  conjunto de regras: 'fusao' (padrao) | 'nd-2.0.0' (motor original)
+//   rules                  conjunto de regras: 'fusao' (padrao) | 'original' (motor original)
 //   seed
 //
 // O estado e um objeto simples (JSON). O gerador aleatorio fica em
 // state.rngState e avanca com rand(state). Toda jogada aceita entra em
 // state.moves; com as opcoes e a semente, replay() reproduz a partida.
 
-import { NeuroDeck } from './registry.js';
+import { Motor } from './registry.js';
 import { LAYER_SIZES, HAND_SIZE, MAX_PILE, rand, shuffle, nominalValue, cardStrength, standardDeck, otherPlayer, nextPlayer, opponents, playerCount, round2, SUIT_RANK } from './util.js';
 
 export { otherPlayer, nextPlayer, opponents, playerCount };
@@ -32,9 +32,8 @@ export const LIMBO_SIZE = 10;
 export const MAX_PLAYERS = 5;
 const MAX_COPIES = 8;
 
-// Conjuntos de regras. 'fusao' e o padrao do jogo unificado (NeuroDeck + Truco de
-// Turing), com as decisoes do professor e do grupo de 10/11/2026. 'nd-2.0.0'
-// reproduz o motor original publicado e serve para conferir a equivalencia.
+// Conjuntos de regras. 'fusao' e o padrao do jogo, com as decisoes do professor e do grupo de 10/11/2026. 'original'
+// reproduz as regras anteriores a essas decisoes e serve para conferir a equivalencia.
 //   trio                pontos de um trio de figuras iguais em camadas adjacentes
 //   stackInRun          carta empilhada conta na sequencia de figuras (par, trio, quadra)
 //   highCardByStrength  desempate "carta mais alta" compara a forca da carta (A > K > Q > J > 10...),
@@ -42,7 +41,7 @@ const MAX_COPIES = 8;
 //   passReasons         motivos de fim de rede que liberam o passar com cartas na mao
 export const RULESETS = {
   fusao: { trio: 30, stackInRun: true, highCardByStrength: true, passReasons: ['earlystop', 'auto-earlystop'] },
-  'nd-2.0.0': { trio: 20, stackInRun: false, highCardByStrength: false, passReasons: ['earlystop'] },
+  'original': { trio: 20, stackInRun: false, highCardByStrength: false, passReasons: ['earlystop'] },
 };
 export const DEFAULT_RULES = 'fusao';
 export function rulesOf(state) { return RULESETS[state.rules] || RULESETS[DEFAULT_RULES]; }
@@ -70,8 +69,8 @@ export function newGame(opts = {}) {
   const rng = () => rand(gen);
   const deckId = opts.deck || opts.mode || 'classic';
   const terrainId = opts.terrain || 'none';
-  const deck = NeuroDeck.deck(deckId);
-  const terrain = NeuroDeck.terrain(terrainId);
+  const deck = Motor.deck(deckId);
+  const terrain = Motor.terrain(terrainId);
   const rules = opts.rules || DEFAULT_RULES;
   if (!RULESETS[rules]) throw new Error('conjunto de regras desconhecido: ' + rules);
   let copies = Math.max(1, Number(opts.copies) || 1, deck.minCopies || 1);
@@ -122,7 +121,7 @@ export function newGame(opts = {}) {
     achievements: each(() => []),
     terrainData: {},
   };
-  for (const a of NeuroDeck.actionList()) state.stats.actions[a.id] = 0;
+  for (const a of Motor.actionList()) state.stats.actions[a.id] = 0;
   terrain.onGameStart?.(state);
 
   if (REVEAL_RULES.includes(opts.firstRule || 'reveal')) {
@@ -180,8 +179,8 @@ function applyReveal(state, p, move) {
 
 // ---------- consultas ----------
 
-export function deckOf(state) { return NeuroDeck.deck(state.deck); }
-export function terrainOf(state) { return NeuroDeck.terrain(state.terrain); }
+export function deckOf(state) { return Motor.deck(state.deck); }
+export function terrainOf(state) { return Motor.terrain(state.terrain); }
 export function outputLayer(state) { return state.layers.length - 1; }
 export function layerName(state, L) {
   if (L === 0) return 'Entrada';
@@ -280,7 +279,7 @@ export function legalMoves(state, p, opts = {}) {
   if (state.over) return moves;
   if (state.phase === 'reveal') return revealMoves(state, p);
   const noFree = opts.noFree || state.freeStreak >= MAX_FREE_STREAK;
-  for (const action of NeuroDeck.actionList()) {
+  for (const action of Motor.actionList()) {
     if (noFree && action.consumesTurn === false) continue;
     for (const m of action.generate(state, p, opts)) moves.push({ ...m, type: action.id });
   }
@@ -298,8 +297,8 @@ export const PASS_REASONS = RULESETS[DEFAULT_RULES].passReasons;
 export function canPass(state, p, moves) {
   const net = state.nets[p];
   if (net.finished && rulesOf(state).passReasons.includes(net.reason) && state.hands[p].length) return true;
-  const turnMoves = moves || NeuroDeck.actionList().filter(a => a.id !== 'pass' && a.consumesTurn !== false).flatMap(a => a.generate(state, p, {}).map(m => ({ ...m, type: a.id })));
-  return !turnMoves.some(m => m.type !== 'pass' && NeuroDeck.actions[m.type].consumesTurn !== false);
+  const turnMoves = moves || Motor.actionList().filter(a => a.id !== 'pass' && a.consumesTurn !== false).flatMap(a => a.generate(state, p, {}).map(m => ({ ...m, type: a.id })));
+  return !turnMoves.some(m => m.type !== 'pass' && Motor.actions[m.type].consumesTurn !== false);
 }
 
 export function validate(state, p, move) {
@@ -312,7 +311,7 @@ export function validate(state, p, move) {
     return typeof c === 'string' ? c : true;
   }
   if (p !== state.turn) return 'nao e o turno do jogador ' + p;
-  const action = NeuroDeck.actions[move?.type];
+  const action = Motor.actions[move?.type];
   if (!action) return 'movimento desconhecido: ' + move?.type;
   if (action.consumesTurn === false && state.freeStreak >= MAX_FREE_STREAK) return 'limite de acoes livres neste turno';
   return action.isValid(state, p, move);
@@ -323,7 +322,7 @@ export function applyMove(state, p, move) {
   if (v !== true) throw new Error(v || 'movimento invalido');
   state.moves.push({ seq: state.moves.length, p, move });
   if (state.phase === 'reveal') return applyReveal(state, p, move);
-  const action = NeuroDeck.action(move.type);
+  const action = Motor.action(move.type);
   const deck = deckOf(state), terrain = terrainOf(state);
   const n = playerCount(state);
 
@@ -392,7 +391,7 @@ function pickNext(state, p, can) {
 // (transfer learning): quem so tem ela ainda precisa receber a vez para usa-la.
 export function canAct(state, p) {
   if (legalMoves(state, p, { noFree: true }).some(m => m.type !== 'pass')) return true;
-  return NeuroDeck.actionList().some(a => a.keepsActive && a.generate(state, p, {}).length > 0);
+  return Motor.actionList().some(a => a.keepsActive && a.generate(state, p, {}).length > 0);
 }
 
 function checkStuck(state) {

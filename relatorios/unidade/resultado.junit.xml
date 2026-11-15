@@ -154,7 +154,7 @@
 	</testsuite>
 	<testsuite name="telas" time="1.686275" disabled="0" errors="0" tests="13" failures="0" skipped="0" hostname="vm">
 		<testcase name="menu: mostra as escolhas, lê as mudanças, atualiza as miniaturas e abre cada tela" time="0.439034" classname="test"/>
-		<testcase name="menu: configurações do NeuroDeck (jogadores, humanos, oponentes, arquitetura e baralhos)" time="0.160482" classname="test"/>
+		<testcase name="menu: configurações da partida (jogadores, humanos, oponentes, arquitetura e baralhos)" time="0.160482" classname="test"/>
 		<testcase name="mods: tipos, exemplo comentado e o aviso de que a interface ainda não carrega mods" time="0.037644" classname="test"/>
 		<testcase name="regras: marca o tutorial como visto e chama aoFechar" time="0.054827" classname="test"/>
 		<testcase name="grimório: abre no verbete pedido, troca de verbete e marca como lido" time="0.034942" classname="test"/>
@@ -205,10 +205,10 @@
 		<testcase name="neurônios acima de 8 pontos perdem 1 ponto" time="0.002259" classname="test"/>
 		<testcase name="partidas inteiras no terreno do mod terminam normalmente" time="0.073584" classname="test"/>
 	</testsuite>
-	<testsuite name="Motor do NeuroDeck: equivalência com o site publicado" time="0.001781" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
-		<testcase name="as 1.000 partidas têm o mesmo total de jogadas do site" time="0.000726" classname="test"/>
-		<testcase name="cada bloco de 100 partidas tem o mesmo resumo do site" time="0.000119" classname="test"/>
-		<testcase name="o resumo geral é idêntico ao do site" time="0.000110" classname="test"/>
+	<testsuite name="Motor: equivalência com o conjunto de regras original" time="0.001781" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">
+		<testcase name="as 1.000 partidas têm o mesmo total de jogadas do resumo gravado" time="0.000726" classname="test"/>
+		<testcase name="cada bloco de 100 partidas tem o mesmo resumo gravado" time="0.000119" classname="test"/>
+		<testcase name="o resumo geral é idêntico ao gravado" time="0.000110" classname="test"/>
 	</testsuite>
 	<testsuite name="Quem começa" time="0.011871" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
 		<testcase name="opção (a), 'reveal': as cartas reveladas vão para o cemitério" time="0.003645" classname="test"/>
@@ -226,14 +226,14 @@
 		<testcase name="Q vence J, e figura vence carta numérica" time="0.000325" classname="test"/>
 		<testcase name="Ás é a carta mais alta" time="0.000150" classname="test"/>
 		<testcase name="o naipe só decide quando a carta mais alta é a mesma" time="0.000156" classname="test"/>
-		<testcase name="no motor original (nd-2.0.0), K contra J era decidido pelo naipe" time="0.000310" classname="test"/>
+		<testcase name="no conjunto de regras original, K contra J era decidido pelo naipe" time="0.000310" classname="test"/>
 	</testsuite>
 	<testsuite name="B2: o trio de figuras vale mais que o par" time="0.003247" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
 		<testcase name="par de figuras iguais vale 20 (10 por figura)" time="0.002126" classname="test"/>
 		<testcase name="trio de figuras iguais vale 30 (10 por figura)" time="0.000365" classname="test"/>
 		<testcase name="quadra de figuras iguais zera a rede (vanishing gradient)" time="0.000236" classname="test"/>
 		<testcase name="figura isolada continua valendo 0, e figuras diferentes não formam par" time="0.000183" classname="test"/>
-		<testcase name="no motor original (nd-2.0.0), o trio empatava com o par" time="0.000183" classname="test"/>
+		<testcase name="no conjunto de regras original, o trio empatava com o par" time="0.000183" classname="test"/>
 	</testsuite>
 	<testsuite name="R1: a carta empilhada conta na sequência de figuras" time="0.001169" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="vm">
 		<testcase name="exemplo do slide: 8-K-K-3 com um K tunado vale 41" time="0.000195" classname="test"/>
@@ -241,14 +241,14 @@
 		<testcase name="figura isolada tunada com outra igual forma par e vale 20" time="0.000118" classname="test"/>
 		<testcase name="tunagem de carta numérica continua somando o valor da carta empilhada" time="0.000149" classname="test"/>
 		<testcase name="o detalhamento por neurônio soma o total" time="0.000169" classname="test"/>
-		<testcase name="no motor original (nd-2.0.0), a carta empilhada não entrava na sequência" time="0.000220" classname="test"/>
+		<testcase name="no conjunto de regras original, a carta empilhada não entrava na sequência" time="0.000220" classname="test"/>
 	</testsuite>
 	<testsuite name="R2: qualquer early stop libera o passar" time="0.003876" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="vm">
 		<testcase name="quem sofreu early stop do rival pode passar, mesmo com ataque possível" time="0.001637" classname="test"/>
 		<testcase name="quem aplicou early stop na própria rede também pode passar" time="0.000427" classname="test"/>
 		<testcase name="quem chegou à saída ou ficou sem neurônio livre é obrigado a jogar se puder" time="0.000895" classname="test"/>
 		<testcase name="com a rede aberta não se pode passar" time="0.000261" classname="test"/>
-		<testcase name="no motor original (nd-2.0.0), quem se aplicou early stop era obrigado a atacar" time="0.000319" classname="test"/>
+		<testcase name="no conjunto de regras original, quem se aplicou early stop era obrigado a atacar" time="0.000319" classname="test"/>
 	</testsuite>
 	<testsuite name="Conjuntos de regras" time="7.227673" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="vm">
 		<testcase name="o padrão é o conjunto da fusão, e o nome fica no estado" time="0.000326" classname="test"/>
@@ -277,7 +277,7 @@
 	<testsuite name="rede.js" time="0.000791" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="vm">
 		<testcase name="formato 3-5-5-5-5-5-4 e mão de 5 cartas" time="0.000136" classname="test"/>
 		<testcase name="ehOculta: só as camadas 1 a 5 na mesa padrão; numa mesa de 9 camadas, de 1 a 7" time="0.000089" classname="test"/>
-		<testcase name="tamanhosDaMesa: arquiteturas do NeuroDeck, com um neurônio a mais por camada para cada jogador além de 2" time="0.000225" classname="test"/>
+		<testcase name="tamanhosDaMesa: arquiteturas do motor, com um neurônio a mais por camada para cada jogador além de 2" time="0.000225" classname="test"/>
 		<testcase name="nomeCamada: entrada, ocultas numeradas e saída" time="0.000234" classname="test"/>
 	</testsuite>
 	<testsuite name="baralhos.js" time="0.001980" disabled="0" errors="0" tests="3" failures="0" skipped="0" hostname="vm">

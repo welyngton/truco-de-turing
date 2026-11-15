@@ -111,7 +111,7 @@ describe('ações da mesa', () => {
     } finally { await jogo.fechar(); }
   });
 
-  it('barra de ações do NeuroDeck: botões acendem pela seleção, selo de tunagem, pontos por neurônio e painéis de leitura', async () => {
+  it('barra de ações: botões acendem pela seleção, selo de tunagem, pontos por neurônio e painéis de leitura', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
     try {
@@ -132,7 +132,7 @@ describe('ações da mesa', () => {
         const explicacao = cena.dicaDoCursor;
         acoes.overfit.emit('pointerout');
         return { antes, comOito, explicacao, quantos: Object.keys(acoes).length };`);
-      assert.equal(estado.quantos, 8, 'oito botões, como no NeuroDeck');
+      assert.equal(estado.quantos, 8, 'oito botões');
       assert.equal(estado.antes.tunagem, false, 'sem seleção nenhuma ação de carta acende');
       assert.equal(estado.comOito.tunagem, true, 'um 8 sobre o 8 da própria rede: tunagem');
       assert.equal(estado.comOito.stackoverflow, false, 'stack overflow precisa de três cartas');

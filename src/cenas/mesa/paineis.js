@@ -1,5 +1,5 @@
 /**
- * @file Painéis de leitura da mesa, como no NeuroDeck: placar por camada (clique num bloco do
+ * @file Painéis de leitura da mesa: placar por camada (clique num bloco do
  * placar), registro completo da mão (clique no registro) e lista do cemitério e do limbo (clique
  * na pilha). São só leitura: abrem por cima da mesa e fecham com Esc, no X ou clicando fora.
  */

@@ -2,7 +2,7 @@
  * @file Arquitetura da rede neural montada na mesa.
  *
  * Na arquitetura padrão, a camada 0 é a entrada (3 neurônios), 1 a 5 são ocultas (5 cada) e 6 é a
- * saída (4). As arquiteturas do NeuroDeck (curta, larga, profunda) mudam o número e o tamanho das
+ * saída (4). As arquiteturas do motor (curta, larga, profunda) mudam o número e o tamanho das
  * camadas; com mais de 2 jogadores, cada camada ganha um neurônio por jogador a mais (ver
  * `tamanhosDaMesa`). Por isso as funções abaixo recebem o total de camadas da mesa em uso.
  * Cada jogador recebe `TAMANHO_MAO` cartas por baralho; o que sobra vai para o limbo.
@@ -12,12 +12,12 @@ import { ARCHITECTURES, scaleLayers } from '../motor/engine.js';
 /** Neurônios por camada da arquitetura padrão, da entrada à saída. */
 export const TAMANHOS_CAMADAS = [3, 5, 5, 5, 5, 5, 4];
 
-/** Arquiteturas oferecidas no menu (as do NeuroDeck), com o nome para a interface. */
+/** Arquiteturas oferecidas no menu (as do motor), com o nome para a interface. */
 export const ARQUITETURAS = Object.fromEntries(Object.entries(ARCHITECTURES).map(([id, a]) => [id, { nome: a.name, camadas: a.layers.slice() }]));
 
 /**
  * Tamanho de cada camada da mesa para a arquitetura e o número de jogadores: com mais de 2
- * jogadores, cada camada ganha um neurônio por jogador a mais (regra do NeuroDeck).
+ * jogadores, cada camada ganha um neurônio por jogador a mais (regra do motor).
  * @param {string} [arquitetura='padrao']
  * @param {number} [jogadores=2]
  * @returns {number[]}

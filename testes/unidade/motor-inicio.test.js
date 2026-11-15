@@ -1,5 +1,5 @@
 /**
- * @file Motor do NeuroDeck: quem começa a partida e o resultado das simulações do Monte Carlo
+ * @file Motor: quem começa a partida e o resultado das simulações do Monte Carlo
  * (acréscimos da fusão, issue #2).
  *
  * O slide dá duas formas de revelar a carta que decide quem começa: (a) a carta revelada vai

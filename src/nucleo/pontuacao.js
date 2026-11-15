@@ -1,5 +1,5 @@
 /**
- * @file Soma da rede de um jogador (o "forward pass" do jogo), calculada pelo motor do NeuroDeck.
+ * @file Soma da rede de um jogador (o "forward pass" do jogo), calculada pelo motor.
  *
  * Regras da fusão (ver `src/motor/engine/decks.js`):
  *  - 2 a 10 valem o número, Ás 11, figuras 0;
@@ -14,7 +14,7 @@
  * neurônio, e as sequências de figuras ("combos") à parte, de modo que a soma dos neurônios mais
  * a soma dos combos dá o total.
  */
-import * as ND from '../motor/engine.js';
+import * as motor from '../motor/engine.js';
 import { ehFigura, PLURAL_FIGURA } from './cartas.js';
 import { BARALHOS, pontosDaCarta } from './baralhos.js';
 import { idDoNeuronio } from './traducao.js';
@@ -48,7 +48,7 @@ const arredondar = (x) => Math.round(x * 100) / 100;
  * @returns {Pontuacao}
  */
 export function pontuarRede(mao, j) {
-  const resultado = ND.score(mao.nd, j);
+  const resultado = motor.score(mao.estadoMotor, j);
   if (resultado.kind === 'forward') return pontuarForward(mao, resultado);
   /* no baralho de truco as figuras valem pontos próprios e não formam par nem trio */
   const figurasValem = !!BARALHOS[mao.config.baralho].figurasValem;
@@ -89,7 +89,7 @@ export const ROTULO_SAIDA_SATURADA = 'Saída saturada depois das ativações';
  * camada dele (`pontos`) e, nas notas, o peso do naipe, o viés e a função de ativação. Não há
  * combos de figuras.
  *
- * O motor marca (no campo `vanishing`, nome que vem do NeuroDeck) a rede de 3 ou mais neurônios
+ * O motor marca (no campo `vanishing`) a rede de 3 ou mais neurônios
  * que passou por alguma ativação não linear e terminou abaixo de 20. Sigmoide e tanh do baralho
  * vão no máximo até 20, então isso é saturação da ativação no forward pass, e não vanishing
  * gradient, que acontece no backward e que este baralho não calcula. Aqui o aviso vira

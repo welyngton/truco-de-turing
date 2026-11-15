@@ -1,11 +1,11 @@
-// NeuroDeck - acoes do jogo, cada uma com generate / isValid / execute
+// Motor - acoes do jogo, cada uma com generate / isValid / execute
 //
 // As tres acoes de ataque (overfit, early stop, stack overflow) sao a mesma
 // mecanica com totais de pilha diferentes: 2, 3 e 4 cartas no neuronio do rival.
 // Tunagem e a mesma pilha no proprio neuronio: 2 cartas somam pontos, 3 e 4
 // aplicam early stop e stack overflow em si mesmo.
 
-import { NeuroDeck } from './registry.js';
+import { Motor } from './registry.js';
 import { shuffle, rand, opponents } from './util.js';
 import { lastSlot, nextLayer, isHidden, pileSize, pileRoom, handCardsByRank, hiddenInPath, cardValue, peekCards, takeCards, pileCheck, removeSlot, finishNet, discardHand, addAchievement, logEvent, attackTarget, canPass } from './core.js';
 

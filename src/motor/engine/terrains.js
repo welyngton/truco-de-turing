@@ -1,4 +1,4 @@
-// NeuroDeck - terrenos: ganchos no ciclo do turno que mudam o jogo inteiro
+// Motor - terrenos: ganchos no ciclo do turno que mudam o jogo inteiro
 //
 // Slide: "terrenos com efeitos distintos". Efeitos sobre um neuronio usam
 // neuronBonus: o baralho aplica o ajuste no lugar certo (na soma, no clássico;

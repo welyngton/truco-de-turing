@@ -3,7 +3,7 @@
  *
  * O código fica num texto para a tela poder exibi-lo e copiá-lo; o teste
  * `testes/unidade/mods.test.js` carrega esse mesmo texto como módulo e confere que ele funciona
- * com o motor do NeuroDeck.
+ * com o motor.
  */
 
 /** Código do mod de exemplo: o terreno "Regularização L1". */
@@ -17,8 +17,8 @@ export const CODIGO_DO_MOD_DE_EXEMPLO = `// Mod de exemplo: terreno "Regulariza�
 export const apiVersion = 2;
 
 // O carregador chama a função padrão do módulo com o registro do motor.
-export default function (NeuroDeck) {
-  NeuroDeck.registerTerrain({
+export default function (Motor) {
+  Motor.registerTerrain({
     id: 'regularizacao-l1',          // identificador único (obrigatório)
     name: 'Regularização L1',        // nome mostrado no menu (obrigatório)
     emoji: '⚖️',

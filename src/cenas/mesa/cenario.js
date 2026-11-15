@@ -230,7 +230,7 @@ export const metodosDoCenario = {
     p.subCurva = this.criarTexto(rx + rl, DIR.rotuloCurva, 'soma da rede por turno', { fontStyle: 'italic', fontSize: '11px', color: '#9a8c6c' }).setOrigin(1, 0.5);
     p.maximoCurva = this.criarTexto(rx + 6, DIR.curva + 8, '', { fontSize: '10px', color: '#9a8c6c' }).setOrigin(0, 0.5);
     p.registro = this.criarTexto(rx, DIR.registro, '', { fontSize: '12px', color: '#dccfb2', wordWrap: { width: rl }, lineSpacing: 2 });
-    /* leitura detalhada, como no NeuroDeck: clicar num bloco abre o placar por camada; clicar no
+    /* leitura detalhada: clicar num bloco abre o placar por camada; clicar no
        registro abre a mão inteira */
     for (const b of p.blocos) {
       b.area = this.add.zone(b.x + b.l / 2, b.y + b.a / 2, b.l, b.a).setDepth(9).setInteractive({ useHandCursor: true });
@@ -267,7 +267,7 @@ export const metodosDoCenario = {
   },
 
   /**
-   * Botão de truco e a barra de ações, como no NeuroDeck: selecione cartas da mão e acendem só os
+   * Botão de truco e a barra de ações: selecione cartas da mão e acendem só os
    * botões das jogadas possíveis com elas; passar o cursor num botão explica o efeito no quadro de
    * instruções antes de confirmar. Os botões ficam em `p.acoes[id]`; dropout, transfer e passar
    * também em `p.botaoDropout`, `p.botaoTransfer` e `p.botaoPassar`.

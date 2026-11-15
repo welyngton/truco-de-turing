@@ -210,7 +210,7 @@ describe('telas', () => {
     } finally { analise.reiniciarAnalise(); }
   });
 
-  it('menu: configurações do NeuroDeck (jogadores, humanos, oponentes, arquitetura e baralhos)', () => {
+  it('menu: configurações da partida (jogadores, humanos, oponentes, arquitetura e baralhos)', () => {
     const app = appFalso();
     abrirMenu(app);
     const mudar = (id, valor) => { $('#' + id).value = String(valor); $('#' + id).dispatchEvent(new window.Event('change')); };
@@ -247,7 +247,7 @@ describe('telas', () => {
   it('mods: tipos, exemplo comentado e o aviso de que a interface ainda não carrega mods', async () => {
     abrirMods();
     const texto = $('.mods').textContent;
-    for (const termo of ['registerDeck', 'registerTerrain', 'registerAction', 'apiVersion', 'Regularização L1', 'neurodeck-fpo.web.app/?mod=', 'Ainda não no jogo unificado']) assert.ok(texto.includes(termo), termo);
+    for (const termo of ['registerDeck', 'registerTerrain', 'registerAction', 'apiVersion', 'Regularização L1', 'Ainda não no jogo']) assert.ok(texto.includes(termo), termo);
     clicar($('#mods-copiar'));
     await esperar(20);
     assert.ok($('#mods-copiado').textContent.length > 0);
@@ -344,12 +344,12 @@ describe('telas', () => {
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
     assert.match(medalhaHtml(CONQUISTAS[0], false), /cadeado|bloquead/);
   });
-  it('sobre: versão, os dois jogos, disciplina, professor e autores', () => {
+  it('sobre: versão, disciplina, professor e autores', () => {
     abrirSobre();
     const texto = $('.camada').textContent;
     assert.ok(texto.includes('Versão ' + VERSAO));
     assert.match(texto, /Peng Yaohao/);
-    for (const termo of ['NeuroDeck', 'Truco de Turing', 'Francisco Lima', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo', 'neurodeck-fpo.web.app']) assert.ok(texto.includes(termo), termo);
+    for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
     /* estatísticas de uso: o texto sempre aparece; fora do site publicado não há botões e nada é medido */
     assert.match(texto, /Estatísticas de uso/);
     assert.match(texto, /Google Analytics/);

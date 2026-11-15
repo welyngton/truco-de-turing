@@ -1,7 +1,7 @@
 /**
  * @file Menu principal: apresentação do jogo, botões das telas e configuração da mesa.
  *
- * A mesa reúne as configurações do NeuroDeck (jogadores, humanos no aparelho, oponentes do
+ * A mesa reúne as configurações da partida (jogadores, humanos no aparelho, oponentes do
  * computador, arquitetura da rede e número de baralhos) com as do Truco de Turing (baralho,
  * terreno, quem começa e tipo de partida).
  */
@@ -32,7 +32,7 @@ const ESCOLHAS_OPONENTE = {
   guloso: 'Gradiente Guloso · médio',
   aleatorio: 'Zé do Ruído · fácil',
 };
-/** Jogadores na mesa (2 a 5, como no NeuroDeck). */
+/** Jogadores na mesa (2 a 5). */
 const ESCOLHAS_JOGADORES = { 2: '2 jogadores', 3: '3 jogadores', 4: '4 jogadores', 5: '5 jogadores' };
 /** Baralhos na partida: a mão e o limbo crescem junto. */
 const ESCOLHAS_BARALHOS = { 1: '1 baralho', 2: '2 baralhos', 3: '3 baralhos' };
@@ -95,7 +95,7 @@ function htmlDoMenu(opcoes) {
     '<button class="botao" id="m-mods">Mods</button>' +
     '<button class="botao" id="m-sobre">Sobre</button>' +
     '</div></div>' +
-    '<div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Regras do NeuroDeck com a interface do Truco de Turing. Feito com Phaser. Código aberto sob a licença <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div>' +
+    '<div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Feito com Phaser. Código aberto sob a licença <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div>' +
     '</section>' +
     '<section class="folha menu-painel">' +
     '<h3 style="margin-top:0">Configurar a mesa</h3>' +

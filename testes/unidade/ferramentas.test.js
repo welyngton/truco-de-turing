@@ -143,9 +143,9 @@ describe('documentar.js', () => {
 describe('guia visual das cartas (#3)', () => {
   it('tem as seções combinadas e todas as imagens citadas existem', () => {
     const guia = readFileSync(join(raiz, 'docs/GUIA-VISUAL-CARTAS.md'), 'utf8');
-    for (const secao of ['ND e TT lado a lado', 'O que sai e o que fica', 'Hierarquia de leitura', 'Símbolo central', 'Escolhida']) assert.ok(guia.includes(secao), secao);
+    for (const secao of ['Ponto de partida', 'O que sai e o que fica', 'Hierarquia de leitura', 'Símbolo central', 'Escolhida']) assert.ok(guia.includes(secao), secao);
     const imagens = [...guia.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]);
-    assert.ok(imagens.length >= 3);
+    assert.ok(imagens.length >= 2);
     for (const img of imagens) assert.ok(existsSync(join(raiz, 'docs', img)), img);
   });
 });

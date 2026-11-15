@@ -1,8 +1,7 @@
 /**
- * @file Conferência de equivalência entre o motor publicado do NeuroDeck e a cópia em src/motor/.
+ * @file Conferência de equivalência do motor em src/motor/ com o conjunto de regras original.
  *
- * O mesmo roteiro foi executado no site (https://neurodeck-fpo.web.app, em 10/11/2026) e é
- * repetido aqui: 1.000 partidas com semente, cobrindo os 7 baralhos, os 4 terrenos, 2 a 4
+ * O roteiro foi executado em 10/11/2026 e o resumo gravado abaixo; aqui ele é repetido: 1.000 partidas com semente, cobrindo os 7 baralhos, os 4 terrenos, 2 a 4
  * jogadores, 1 e 2 baralhos, as duas regras de início e os bots aleatório, guloso e Monte Carlo.
  * De cada partida entram no resumo: vencedor, placar, desempate, ranking, todas as jogadas,
  * o motivo de fim de cada rede e o tamanho do cemitério. O resumo é um SHA-256 por bloco de 100
@@ -10,15 +9,15 @@
  */
 import { createHash } from 'node:crypto';
 
-export const BARALHOS_ND = ['classic', 'backprop', 'nobreza', 'truco', 'fraternidade', 'yinyang', 'powerbi'];
-export const TERRENOS_ND = ['none', 'montanha', 'pantano', 'oceano'];
+export const BARALHOS_MOTOR = ['classic', 'backprop', 'nobreza', 'truco', 'fraternidade', 'yinyang', 'powerbi'];
+export const TERRENOS_MOTOR = ['none', 'montanha', 'pantano', 'oceano'];
 export const MESAS = [
   ['random', 'random'], ['greedy', 'random'], ['random', 'greedy'], ['greedy', 'greedy'],
   ['random', 'random', 'random'], ['greedy', 'random', 'greedy', 'random'], ['mc', 'random'],
 ];
 
-/** Resumo gravado no site do NeuroDeck (motor 2.0.0) em 10/11/2026. */
-export const RESUMO_DO_SITE = {
+/** Resumo gravado com o conjunto de regras original (motor 2.0.0) em 10/11/2026. */
+export const RESUMO_GRAVADO = {
   total: 1000,
   jogadas: 19862,
   blocos: [
@@ -39,7 +38,7 @@ export const RESUMO_DO_SITE = {
 /** Opções da partida de número `i` (as mesmas usadas no site). */
 export function configuracao(i) {
   return {
-    bots: MESAS[i % MESAS.length], deck: BARALHOS_ND[i % BARALHOS_ND.length], terrain: TERRENOS_ND[i % TERRENOS_ND.length],
+    bots: MESAS[i % MESAS.length], deck: BARALHOS_MOTOR[i % BARALHOS_MOTOR.length], terrain: TERRENOS_MOTOR[i % TERRENOS_MOTOR.length],
     seed: 1000 + i * 7919, firstRule: i % 2 ? 'reveal' : 'random', copies: i % 5 === 0 ? 2 : 1, rollouts: 4,
   };
 }
@@ -52,9 +51,9 @@ export function resumoDaPartida(estado) {
 const sha256 = (texto) => createHash('sha256').update(texto).digest('hex');
 
 /**
- * Joga as partidas e devolve o resumo no mesmo formato de RESUMO_DO_SITE.
+ * Joga as partidas e devolve o resumo no mesmo formato de RESUMO_GRAVADO.
  * @param {(opcoes: object) => object} jogar Função que joga uma partida até o fim (sim.js: runGame).
- * @param {object} [extras] Opções acrescentadas a todas as partidas (ex.: `{ rules: 'nd-2.0.0' }`).
+ * @param {object} [extras] Opções acrescentadas a todas as partidas (ex.: `{ rules: 'original' }`).
  */
 export function resumir(jogar, extras = {}, total = 1000) {
   const blocos = [];

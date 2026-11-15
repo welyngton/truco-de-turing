@@ -7,7 +7,7 @@
  *   Regra:    o que o enunciado, o professor ou o grupo determinaram;
  *   Esperado: o resultado verificado.
  *
- * As regras são as do motor do NeuroDeck com as decisões da fusão (10/11/2026). Os testes
+ * As regras são as do motor com as decisões da fusão (10/11/2026). Os testes
  * marcados com "Mudou na fusão" fixavam outra leitura no Truco de Turing 1.2; o comentário diz
  * o que valia antes.
  *
