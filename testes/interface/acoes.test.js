@@ -44,6 +44,31 @@ async function semPedidoNaMesa(pagina) {
   throw new Error('o pedido de truco não se resolveu');
 }
 
+/**
+ * Espera a vez do humano com a mesa livre, resolvendo o que aparecer no caminho: resultado (o
+ * oponente correu ou a mão acabou: próxima mão), pedido de truco do oponente (aceita), caixas e a
+ * carta de quem começa. Mantém o tempo acelerado, porque a mão nova volta ao tempo normal e, na
+ * máquina do CI, a vez do humano demorava mais que a espera.
+ */
+async function vezDoHumanoSemPedido(pagina) {
+  for (let i = 0; i < 900; i++) {
+    const estado = await naCena(pagina, `
+      if (!cena || !cena.mao) return 'espera';
+      cena.time.timeScale = 8; cena.tweens.timeScale = 8;
+      if (document.querySelector('#r-proxima')) return 'resultado';
+      if (document.querySelector('.grito-truco .botao.vinho')) return 'grito';
+      const vinho = document.querySelector('.camada .botao.vinho');
+      if (vinho) { vinho.click(); return 'espera'; }
+      if (cena.modo === 'inicio') { cena.aoClicarNaCarta(cena.mao.jogadores[cena.quemVe].mao[0].id); return 'espera'; }
+      return cena.ehVezDoHumano() && !document.querySelector('.camada') ? 'pronto' : 'espera';`);
+    if (estado === 'pronto') return;
+    if (estado === 'resultado') await pagina.click('#r-proxima');
+    if (estado === 'grito') await pagina.locator('.grito-truco .botao.vinho').click();
+    await pagina.waitForTimeout(100);
+  }
+  throw new Error('a vez do humano não chegou');
+}
+
 /** Ativa um neurônio qualquer na vez do humano. */
 const ativarQualquer = (pagina) => naCena(pagina, 'cena.aoClicarNoNeuronio(Object.keys(cena.alvos)[0]);');
 
@@ -303,7 +328,7 @@ describe('ações da mesa', () => {
       await semPedidoNaMesa(pagina);
       /* espera a vez do humano antes de forçar o pedido: com o oponente no meio da jogada, a mão podia
          acabar por baixo do pedido forçado e o resultado cobria os botões do truco */
-      await esperarMinhaVez(pagina);
+      await vezDoHumanoSemPedido(pagina);
       /* o oponente pede truco: o humano pede mais, depois aceita */
       await naCena(pagina, 'cena.partida.aumentadoPor = -1; cena.partida.valor = 1; cena.anunciarTruco(1);');
       await pagina.waitForSelector('.grito-truco');
