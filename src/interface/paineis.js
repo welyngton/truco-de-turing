@@ -1,6 +1,7 @@
 /**
- * @file Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápidos e
- * caixas de confirmação. As telas específicas (menu, regras, grimório…) usam estas funções.
+ * @file Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápidos, a fila
+ * de avisos de conquista e caixas de confirmação. As telas específicas (menu, regras, grimório…)
+ * usam estas funções.
  *
  * Os painéis vivem em `#paineis` e os avisos em `#avisos` (ver index.html).
  */
@@ -33,10 +34,12 @@ export function abrirPainel(html, opcoes = {}) {
   camada.className = 'camada' + (opcoes.transparente ? ' transparente' : '');
   camada.innerHTML = html;
   $('#paineis').appendChild(camada);
+  if (decisaoNaTela()) recolherConquista();
   const painel = {
     elemento: camada,
     fechar() {
       camada.remove();
+      retomarConquistas();
       if (opcoes.aoFechar) opcoes.aoFechar();
     },
   };
@@ -50,10 +53,18 @@ export function abrirPainel(html, opcoes = {}) {
 /** Fecha todas as telas abertas. */
 export function fecharTodos() {
   $('#paineis').innerHTML = '';
+  retomarConquistas();
+}
+
+/** Troca o aviso comum do topo pelo novo. As medalhas de conquista ficam, porque têm fila própria. */
+function trocarAviso(aviso) {
+  const caixa = $('#avisos');
+  caixa.querySelectorAll('.aviso:not(.aviso-conquista)').forEach((a) => a.remove());
+  caixa.appendChild(aviso);
 }
 
 /**
- * Mostra um aviso rápido no topo da tela (só um por vez).
+ * Mostra um aviso rápido no topo da tela (um aviso comum por vez, abaixo da medalha de conquista, se houver).
  * @param {string} titulo
  * @param {string} [texto]
  * @param {'medalha-aviso'} [tipo] Estilo alternativo.
@@ -63,9 +74,7 @@ export function mostrarAviso(titulo, texto, tipo, duracaoMs = 5200) {
   const aviso = document.createElement('div');
   aviso.className = 'aviso' + (tipo ? ' ' + tipo : '');
   aviso.innerHTML = '<b>' + escaparHtml(titulo) + '</b>' + escaparHtml(texto || '');
-  const caixa = $('#avisos');
-  caixa.innerHTML = '';
-  caixa.appendChild(aviso);
+  trocarAviso(aviso);
   setTimeout(() => { aviso.style.transition = 'opacity .4s'; aviso.style.opacity = '0'; }, duracaoMs - 400);
   setTimeout(() => aviso.remove(), duracaoMs);
   aviso.addEventListener('click', () => aviso.remove());
@@ -80,12 +89,101 @@ export function mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito) {
   aviso.className = 'aviso dica-de-jogo';
   aviso.innerHTML = '<b>Dica \u00b7 ' + escaparHtml(titulo) + '</b>' + escaparHtml(texto) +
     (conceito ? '<span class="conceito"><i>Redes neurais \u00b7 ' + escaparHtml(tituloDoConceito) + ':</i> ' + escaparHtml(conceito) + '</span>' : '');
-  const caixa = $('#avisos');
-  caixa.innerHTML = '';
-  caixa.appendChild(aviso);
+  trocarAviso(aviso);
   setTimeout(() => { aviso.style.transition = 'opacity .4s'; aviso.style.opacity = '0'; }, 8600);
   setTimeout(() => aviso.remove(), 9000);
   aviso.addEventListener('click', () => aviso.remove());
+}
+
+/* ======================================================================== avisos de conquista */
+
+/** Tempo de cada aviso de conquista na tela, em milissegundos (um toque fecha antes). */
+export const DURACAO_DO_AVISO_DE_CONQUISTA = 4500;
+/** Espera depois de fechar uma tela, antes de voltar a mostrar medalhas (a resposta do truco pode abrir outro pedido). */
+const ESPERA_DEPOIS_DE_FECHAR = 400;
+
+/** Avisos de conquista esperando a vez, na ordem em que foram ganhos. */
+const filaDeConquistas = [];
+/** Aviso de conquista na tela agora: `{ aviso, elemento, relogios }`, ou null. */
+let conquistaNaTela = null;
+
+/** Quem joga pediu para reduzir o movimento (prefer\u00eancia do sistema)? */
+function reduzirMovimento() {
+  try { return !!(globalThis.matchMedia && globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; }
+}
+
+/** H\u00e1 uma caixa de resposta do truco na tela? A medalha n\u00e3o pode ficar por cima dela. */
+function decisaoNaTela() {
+  return !!document.querySelector('#paineis .grito-truco');
+}
+
+/**
+ * P\u00f5e um aviso de conquista na fila do alto da tela. Os avisos aparecem um de cada vez, na ordem em
+ * que chegaram, sem apagar os outros: cada um fica `duracaoMs` (ou at\u00e9 um toque) e ent\u00e3o entra o
+ * pr\u00f3ximo. Enquanto a caixa de resposta do truco est\u00e1 aberta, a fila espera, e a medalha que estava na
+ * tela volta para o come\u00e7o da fila. Com "reduzir movimento", o aviso entra e sai sem anima\u00e7\u00e3o.
+ * @param {object} aviso
+ * @param {string} aviso.titulo Nome da conquista.
+ * @param {string} [aviso.texto] Descri\u00e7\u00e3o da conquista.
+ * @param {string} [aviso.rotulo] Linha pequena acima do nome (por exemplo, "Conquista \u00b7 Ouro").
+ * @param {string} aviso.medalha HTML da medalha, j\u00e1 pronto (ver telas/conquistas.js \u2192 medalhaHtml).
+ * @param {() => void} [aviso.aoMostrar] Chamado na primeira vez que o aviso aparece (o som da medalha).
+ * @param {number} [aviso.duracaoMs]
+ */
+export function avisarConquista(aviso) {
+  filaDeConquistas.push(aviso);
+  mostrarProximaConquista();
+}
+
+/** Mostra o pr\u00f3ximo aviso da fila, se a vez for dele. */
+function mostrarProximaConquista() {
+  if (conquistaNaTela && conquistaNaTela.elemento.isConnected) return;
+  conquistaNaTela = null;
+  if (!filaDeConquistas.length || decisaoNaTela()) return;
+  const aviso = filaDeConquistas.shift();
+  const elemento = document.createElement('div');
+  elemento.className = 'aviso medalha-aviso aviso-conquista';
+  elemento.setAttribute('role', 'status');
+  elemento.innerHTML = aviso.medalha + '<div class="aviso-conquista-texto">' +
+    (aviso.rotulo ? '<small>' + escaparHtml(aviso.rotulo) + '</small>' : '') +
+    '<b>' + escaparHtml(aviso.titulo) + '</b>' + escaparHtml(aviso.texto || '') + '</div>';
+  $('#avisos').prepend(elemento);
+  const atual = { aviso, elemento, relogios: [] };
+  conquistaNaTela = atual;
+  if (!aviso.mostrado) { aviso.mostrado = true; if (aviso.aoMostrar) aviso.aoMostrar(); }
+  const duracao = aviso.duracaoMs || DURACAO_DO_AVISO_DE_CONQUISTA;
+  const fechar = () => {
+    if (conquistaNaTela !== atual) return;
+    atual.relogios.forEach(clearTimeout);
+    elemento.remove();
+    conquistaNaTela = null;
+    mostrarProximaConquista();
+  };
+  elemento.addEventListener('click', fechar);
+  if (!reduzirMovimento()) atual.relogios.push(setTimeout(() => { elemento.style.transition = 'opacity .4s'; elemento.style.opacity = '0'; }, Math.max(0, duracao - 400)));
+  atual.relogios.push(setTimeout(fechar, duracao));
+}
+
+/** Abriu a caixa de resposta do truco: a medalha da tela volta para o come\u00e7o da fila e espera a resposta. */
+function recolherConquista() {
+  if (!conquistaNaTela) return;
+  const { aviso, elemento, relogios } = conquistaNaTela;
+  relogios.forEach(clearTimeout);
+  elemento.remove();
+  conquistaNaTela = null;
+  filaDeConquistas.unshift(aviso);
+}
+
+/** Uma tela fechou: se a fila estava esperando, ela volta a andar daqui a pouco. */
+function retomarConquistas() {
+  if (filaDeConquistas.length) setTimeout(mostrarProximaConquista, ESPERA_DEPOIS_DE_FECHAR);
+}
+
+/** Esvazia a fila e tira da tela o aviso de conquista atual. */
+export function limparAvisosDeConquista() {
+  filaDeConquistas.splice(0);
+  if (conquistaNaTela) { conquistaNaTela.relogios.forEach(clearTimeout); conquistaNaTela.elemento.remove(); }
+  conquistaNaTela = null;
 }
 
 /**

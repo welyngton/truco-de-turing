@@ -5,11 +5,12 @@
  * É um objeto único (`Aplicacao`) compartilhado pelas cenas e pelas telas HTML.
  */
 import { carregarProgresso, salvarProgresso } from './conteudo/progresso.js';
-import { CONQUISTAS, VALEM_SEM_MAO_COMPLETA } from './conteudo/conquistas.js';
+import { CONQUISTAS, GRADUACOES, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA } from './conteudo/conquistas.js';
 import { VERBETES } from './conteudo/grimorio.js';
 import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
-import { fecharTodos, mostrarAviso } from './interface/paineis.js';
+import { fecharTodos, avisarConquista } from './interface/paineis.js';
+import { medalhaHtml } from './interface/medalha.js';
 import { registrarEvento, atualizarJogador, aoRegistrarEvento, EVENTOS } from './interface/analise.js';
 import { estatisticasDe, registrarAcesso, contarEvento, tipoDeAparelho } from './online/estatisticas.js';
 import { VERSAO } from './versao.js';
@@ -171,20 +172,47 @@ export const Aplicacao = {
       }
     }
     ctx.progresso = p;
-    const novas = [];
-    for (const conquista of CONQUISTAS) {
-      if (p.desbloqueadas[conquista.id]) continue;
-      if (!ctx.completa && !VALEM_SEM_MAO_COMPLETA.has(conquista.id)) continue;
-      let ok = false;
-      try { ok = !!conquista.teste(ctx); } catch (e) { ok = false; }
-      if (ok) { p.desbloqueadas[conquista.id] = Date.now(); novas.push(conquista); }
-    }
+    const novas = conquistasNovas(CONQUISTAS.filter((c) => ctx.completa || VALEM_SEM_MAO_COMPLETA.has(c.id)), ctx, p);
+    this.desbloquear(novas);
     this.salvar();
-    if (novas.length) Som.medalha();
-    const total = Object.keys(p.desbloqueadas).length;
-    for (const conquista of novas) registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total, maos: p.maos });
     this.atualizarJogadorNasEstatisticas();
     return novas;
+  },
+
+  /**
+   * Confere, logo depois de uma jogada, as conquistas que valem na hora (`VALEM_NA_HORA`: ações e
+   * dropouts) e devolve as novas. Não mexe nos contadores, que só contam a mão quando ela acaba.
+   * @param {{mao: object, eu: number, opcoes: object}} ctx Mão em andamento e a cadeira de quem joga neste aparelho.
+   */
+  registrarJogada(ctx) {
+    const p = this.progresso;
+    const jogador = ctx.mao.jogadores[ctx.eu];
+    /* os dropouts da mão em andamento só entram em `p.dropouts` quando ela acaba (registrarMao) */
+    const contexto = { ...ctx, progresso: { ...p, dropouts: p.dropouts + (jogador ? jogador.dropouts : 0) } };
+    const novas = conquistasNovas(CONQUISTAS.filter((c) => VALEM_NA_HORA.has(c.id)), contexto, p);
+    if (!novas.length) return novas;
+    this.desbloquear(novas);
+    this.salvar();
+    this.atualizarJogadorNasEstatisticas();
+    return novas;
+  },
+
+  /**
+   * Desbloqueia conquistas: marca a data, avisa no alto da tela (uma medalha por vez, com o som) e
+   * registra cada uma nas estatísticas de uso. Quem chama grava o progresso.
+   * @param {object[]} conquistas Conquistas ainda bloqueadas (ver conteudo/conquistas.js).
+   */
+  desbloquear(conquistas) {
+    const p = this.progresso, agora = Date.now();
+    for (const conquista of conquistas) p.desbloqueadas[conquista.id] = agora;
+    const total = Object.keys(p.desbloqueadas).length;
+    for (const conquista of conquistas) {
+      avisarConquista({
+        rotulo: 'Conquista · ' + GRADUACOES[conquista.graduacao].nome, titulo: conquista.nome, texto: conquista.descricao,
+        medalha: medalhaHtml(conquista, true), aoMostrar: () => Som.medalha(),
+      });
+      registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total, maos: p.maos });
+    }
   },
 
   /** Marca um verbete como lido e concede "Bibliotecário" quando todos foram lidos. */
@@ -194,14 +222,19 @@ export const Aplicacao = {
     p.lidos[id] = true;
     p.verbetesLidos = Object.keys(p.lidos).length;
     registrarEvento(EVENTOS.verbeteLido, { verbete: id, lidos: p.verbetesLidos });
-    if (!p.desbloqueadas.biblio && p.verbetesLidos >= VERBETES.length) {
-      p.desbloqueadas.biblio = Date.now();
-      const conquista = CONQUISTAS.find((c) => c.id === 'biblio');
-      mostrarAviso('Conquista: ' + conquista.nome, conquista.descricao, 'medalha-aviso');
-      Som.medalha();
-      registrarEvento(EVENTOS.conquista, { conquista: conquista.id, nome: conquista.nome, graduacao: conquista.graduacao, total: Object.keys(p.desbloqueadas).length, maos: p.maos });
-    }
+    if (!p.desbloqueadas.biblio && p.verbetesLidos >= VERBETES.length) this.desbloquear([CONQUISTAS.find((c) => c.id === 'biblio')]);
     this.salvar();
     this.atualizarJogadorNasEstatisticas();
   },
 };
+
+/**
+ * Conquistas de `candidatas` que ainda estão bloqueadas e cujo teste passa no contexto `ctx`. Um teste
+ * que dá erro conta como não cumprido.
+ */
+function conquistasNovas(candidatas, ctx, progresso) {
+  return candidatas.filter((conquista) => {
+    if (progresso.desbloqueadas[conquista.id]) return false;
+    try { return !!conquista.teste(ctx); } catch (e) { return false; }
+  });
+}

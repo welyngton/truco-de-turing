@@ -81,6 +81,7 @@ export const metodosDeTurnos = {
     this.oponenteCorreu = false;
     this.dicaAtual = null;
     this.dicasNaMao = this.app.dicasLigadas;
+    this.conquistasDaMao = [];
     this.linhaDoTempo = [];
     this.linhasRegistradas = 0;
     for (const objeto of this.objetosDoTabuleiro || []) objeto.destroy();
@@ -155,6 +156,7 @@ export const metodosDeTurnos = {
     if (this.modo !== 'inicio') this.modo = 'livre';
     const eventos = this.mao.eventos.splice(0);
     this.registrarJogadaNasEstatisticas(jogada, eventos);
+    this.conferirConquistasDaJogada();
     this.ocupada = true;
     this.redesenhar();
     this.anotarNaLinhaDoTempo(jogada, eventos);

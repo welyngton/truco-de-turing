@@ -305,6 +305,12 @@ html, body { overscroll-behavior: none; }
 .aviso b { font-family: var(--fonte-titulo); font-size: 14px; display: block; color: #6b1a22; letter-spacing: 0.04em; }
 .aviso.medalha-aviso { border-color: var(--latao); background: #2b1608; color: #f6dc8f; }
 .aviso.medalha-aviso b { color: var(--latao); }
+/* aviso de conquista: a medalha na cor da graduação, a graduação, o nome e a descrição (fila em paineis.js) */
+.aviso.aviso-conquista { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.aviso-conquista .medalha { width: 44px; height: 44px; flex: none; border-color: var(--latao); }
+.aviso-conquista .medalha > svg { width: 30px; height: 30px; }
+.aviso-conquista-texto { min-width: 0; }
+.aviso-conquista-texto small { display: block; font: 700 11px var(--fonte-interface); letter-spacing: 0.12em; text-transform: uppercase; color: #d9b260; }
 .aviso.dica-de-jogo { border-color: var(--latao); }
 .aviso.dica-de-jogo .conceito { display: block; margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(60, 40, 20, 0.35); font-size: 13px; color: #4b3a26; }
 
@@ -418,6 +424,10 @@ html, body { overscroll-behavior: none; }
   .menu-acoes .botao.jogar { font-size: 16px; padding: 7px 14px; }
   .menu-mais .botao { padding: 6px 4px; }
   .creditos { display: none; } /* os créditos continuam na tela "Sobre" */
+  /* aviso de conquista mais baixo, para cobrir menos da rede durante a jogada */
+  .aviso.aviso-conquista { padding: 6px 12px; gap: 10px; }
+  .aviso-conquista .medalha { width: 34px; height: 34px; }
+  .aviso-conquista .medalha > svg { width: 24px; height: 24px; }
 }
 @media (max-width: 760px) and (min-height: 521px) {
   .menu { grid-template-columns: minmax(0, 1fr); }

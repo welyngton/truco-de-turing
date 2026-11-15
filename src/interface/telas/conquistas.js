@@ -4,21 +4,13 @@
  */
 import { abrirAvatares } from './avatares.js';
 import { CONQUISTAS, GRADUACOES } from '../../conteudo/conquistas.js';
-import { ICONES_CONQUISTAS, ICONE_CADEADO } from '../../arte/icones.js';
 import { desenharRetratoEmMoldura } from '../../arte/retrato.js';
 import { FOTO_PROFESSOR } from '../../recursos/retratoProfessor.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
+import { medalhaHtml } from '../medalha.js';
 
-/**
- * HTML da medalha de uma conquista (também usado no resumo do fim da mão).
- * @param {object} conquista
- * @param {boolean} desbloqueada
- */
-export function medalhaHtml(conquista, desbloqueada) {
-  const cor = GRADUACOES[conquista.graduacao].cor;
-  return '<div class="medalha" style="--graduacao:' + cor + '">' + (ICONES_CONQUISTAS[conquista.id] || '') +
-    (desbloqueada ? '' : '<span class="cadeado">' + ICONE_CADEADO + '</span>') + '</div>';
-}
+/* a medalha também é usada no resumo do fim da mão e no aviso do alto da tela */
+export { medalhaHtml };
 
 /** HTML de um item da lista de conquistas. */
 function itemHtml(conquista, desbloqueada) {

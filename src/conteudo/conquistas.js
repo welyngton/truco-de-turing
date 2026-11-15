@@ -8,6 +8,8 @@
  *   oponenteCorreu, opcoes,              // se o oponente correu do truco; opções do menu
  *   progresso }                          // contadores acumulados (ver progresso.js)
  * ```
+ * As de `VALEM_NA_HORA` também são avaliadas logo depois de cada jogada, no meio da mão, com um
+ * contexto menor: `{ mao, eu, opcoes, progresso }`.
  */
 import { pontuarRede } from '../nucleo/pontuacao.js';
 import { TERRENOS } from '../nucleo/terrenos.js';
@@ -69,3 +71,9 @@ export const CONQUISTAS = [
 
 /** Conquistas que podem ser ganhas mesmo quando a mão termina porque alguém correu do truco. */
 export const VALEM_SEM_MAO_COMPLETA = new Set(['correu', 'campeao', 'maquina', 'primeira', 'dez', 'cinquenta', 'gato10', 'gato100', 'biblio', 'truco', 'doze', 'cartografo', 'colecionador', 'arquiteto']);
+
+/**
+ * Conquistas que valem na hora da jogada, sem esperar a mão acabar: dependem só do que o jogador já
+ * fez (ações e dropouts). Na jogada, `progresso.dropouts` já soma os dropouts da mão em andamento.
+ */
+export const VALEM_NA_HORA = new Set(['gato10', 'gato100', 'desk', 'transfer', 'overfit', 'earlystop', 'overflow', 'tunador']);
