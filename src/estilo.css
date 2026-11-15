@@ -114,6 +114,7 @@ html, body { overscroll-behavior: none; }
   box-shadow: 0 3px 0 #6b4a12, 0 8px 18px rgba(0, 0, 0, 0.35);
   transition: transform 0.08s ease, filter 0.15s ease;
 }
+a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .botao:hover { filter: brightness(1.08); }
 .botao:active { transform: translateY(2px); box-shadow: 0 1px 0 #6b4a12; }
 .botao.vinho { background: linear-gradient(180deg, #b0303d, #6e1420); color: #ffe9d6; box-shadow: 0 3px 0 #3a0a10, 0 8px 18px rgba(0, 0, 0, 0.35); }

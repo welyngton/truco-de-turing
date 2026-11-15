@@ -13,6 +13,9 @@
  * (`sincronizar`): um aparelho não apaga o que outro gravou, e o que foi ganho sem conexão sobe
  * quando ela volta (issue #57).
  *
+ * Quando o que vem da conta completa as outras conquistas, a conquista final é concedida na hora
+ * (`conferirConquistaFinal`), ao entrar e a cada gravação.
+ *
  * O menu, a tela "Jogar online" e a tela "Conquistas" acompanham a conta por `aoMudarDeConta`.
  */
 import { mesclarProgresso, juntarParaGravar, documentoDaConta } from '../online/contas.js';
@@ -74,6 +77,8 @@ async function gravarNaConta(app, conta) {
     if (atual !== conta) return;
     app.progresso = juntarParaGravar(app.progresso, gravado);
     app.salvarSoLocal();
+    /* o que veio de outro aparelho pode ter completado as outras: a final chega agora (e sobe na gravação seguinte) */
+    app.conferirConquistaFinal?.();
     if (pendente) mostrarAviso('Conta', 'A conexão voltou: o progresso deste aparelho subiu para a conta.', null, 5000);
     pendente = false;
     avisouFalhaAoSalvar = false;
@@ -141,7 +146,8 @@ export async function usarConta(app, conta, metodo, { retomada = false } = {}) {
     };
     globalThis.addEventListener?.('online', () => { if (pendente && atual) sincronizar(app); });
   }
-  app.salvar();
+  /* se as conquistas da conta completaram as outras, a final chega agora (e já grava) */
+  if (!app.conferirConquistaFinal || !app.conferirConquistaFinal().length) app.salvar();
 }
 
 /** Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. */

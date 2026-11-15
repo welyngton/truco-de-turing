@@ -430,4 +430,35 @@ describe('conquistas na conta (#57)', () => {
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });
+
+  it('as conquistas da conta completam as outras: a final chega na hora, com aviso só dela, e sobe para a conta', async () => {
+    const todas = (await import('../../src/conteudo/conquistas.js')).CONQUISTAS.map((c) => c.id).filter((id) => id !== 'convergencia');
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: { 'contas/uid-teste': { desbloqueadas: Object.fromEntries(todas.map((id) => [id, 1])) } } });
+    const { pagina } = jogo;
+    try {
+      await entrar(pagina);
+      assert.equal(await pagina.evaluate(() => !!globalThis.__TRUCO_DE_TURING__.progresso.desbloqueadas.convergencia), true, 'a final chegou ao entrar');
+      await pagina.waitForSelector('#avisos .aviso-conquista');
+      assert.equal(await pagina.locator('#avisos .aviso-conquista').count(), 1, 'um aviso só: o da final, não o das que vieram da conta');
+      assert.match(await pagina.locator('#avisos .aviso-conquista').textContent(), /Conquista final/);
+      await pagina.waitForFunction(() => !!globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].desbloqueadas.convergencia);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
+  it('a última conquista veio de outro aparelho durante uma gravação: a final é concedida e sobe', async () => {
+    const todas = (await import('../../src/conteudo/conquistas.js')).CONQUISTAS.map((c) => c.id).filter((id) => id !== 'convergencia');
+    const faltando = todas.pop();
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: { 'contas/uid-teste': { desbloqueadas: Object.fromEntries(todas.map((id) => [id, 1])) } } });
+    const { pagina } = jogo;
+    try {
+      await entrar(pagina);
+      assert.equal(await pagina.evaluate(() => !!globalThis.__TRUCO_DE_TURING__.progresso.desbloqueadas.convergencia), false, 'faltando uma, sem final');
+      /* outro aparelho grava a que faltava; este aparelho grava e a recebe junto com a final */
+      await pagina.evaluate((id) => { const f = globalThis.__FIREBASE_FALSO__; f.docs['contas/uid-teste'].desbloqueadas[id] = 9; globalThis.__TRUCO_DE_TURING__.salvar(); }, faltando);
+      await pagina.waitForFunction(() => !!globalThis.__TRUCO_DE_TURING__.progresso.desbloqueadas.convergencia);
+      await pagina.waitForFunction(() => !!globalThis.__FIREBASE_FALSO__.docs['contas/uid-teste'].desbloqueadas.convergencia);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
 });
