@@ -3,6 +3,20 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "hosting": {
+    "public": "dist",
+    "ignore": ["artifact.html", "**/.*"],
+    "cleanUrls": true,
+    "rewrites": [
+      { "source": "**", "destination": "/truco-de-turing.html" }
+    ],
+    "headers": [
+      {
+        "source": "**/*.html",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
+  },
   "emulators": {
     "firestore": { "port": 8085 },
     "ui": { "enabled": false },
