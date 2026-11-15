@@ -1,15 +1,15 @@
 /**
  * @file Montagem de situações para os testes: mãos, redes e finais escolhidos carta a carta.
  *
- * As regras são do motor do NeuroDeck, e a mão da interface é só uma visão do estado dele
- * (`mao.nd`, ver src/nucleo/partida.js). Por isso os testes não mexem na visão: estas funções
+ * As regras são do motor, e a mão da interface é só uma visão do estado dele
+ * (`mao.estadoMotor`, ver src/nucleo/partida.js). Por isso os testes não mexem na visão: estas funções
  * alteram o estado do motor e refazem a visão. Também rodam no navegador (testes de interface),
  * carregadas pela página como módulo.
  */
 import { atualizarVisao, finalizarMao } from '../../src/nucleo/partida.js';
 import { rankDoValor, cartaParaTT } from '../../src/nucleo/traducao.js';
 
-const NAIPE_ND = { E: 'S', C: 'H', P: 'C', O: 'D' };
+const NAIPE_MOTOR = { E: 'S', C: 'H', P: 'C', O: 'D' };
 
 /**
  * Cria uma carta nova na partida, fora do baralho, e a registra no índice de cartas da mão.
@@ -18,10 +18,10 @@ const NAIPE_ND = { E: 'S', C: 'H', P: 'C', O: 'D' };
 export function criarCarta(mao, valor, naipe = 'E') {
   const indice = mao.indiceDeCartas;
   indice.proximo = (indice.proximo || 100000) + 1;
-  const carta = { id: indice.proximo, rank: rankDoValor(valor), suit: NAIPE_ND[naipe] };
+  const carta = { id: indice.proximo, rank: rankDoValor(valor), suit: NAIPE_MOTOR[naipe] };
   const visao = cartaParaTT(carta, true);
   indice.tt.set(carta.id, visao);
-  indice.nd.set(visao.id, carta.id);
+  indice.estadoMotor.set(visao.id, carta.id);
   return carta;
 }
 
@@ -39,7 +39,7 @@ function lerCarta(texto) {
  * @returns {object[]} as cartas no formato da interface (para usar os ids nas jogadas)
  */
 export function darMao(mao, j, cartas) {
-  mao.nd.hands[j] = cartas.map((c) => criarCarta(mao, ...lerCarta(c)));
+  mao.estadoMotor.hands[j] = cartas.map((c) => criarCarta(mao, ...lerCarta(c)));
   atualizarVisao(mao);
   return mao.jogadores[j].mao;
 }
@@ -50,10 +50,10 @@ export function darMao(mao, j, cartas) {
  * @param {(string|string[])[][]} pilhas Ex.: [['8'], ['K', 'KC'], ['K'], ['3']].
  */
 export function montarRede(mao, j, pilhas) {
-  const nd = mao.nd, rede = nd.nets[j];
-  for (const r of rede.path) Object.assign(nd.layers[r.layer][r.slotIndex], { owner: null, revealed: false, stack: [] });
+  const estadoMotor = mao.estadoMotor, rede = estadoMotor.nets[j];
+  for (const r of rede.path) Object.assign(estadoMotor.layers[r.layer][r.slotIndex], { owner: null, revealed: false, stack: [] });
   rede.path = pilhas.map((pilha, camada) => {
-    const slot = nd.layers[camada].find((s) => s.owner === null && !s.removed);
+    const slot = estadoMotor.layers[camada].find((s) => s.owner === null && !s.removed);
     const [carta, ...empilhadas] = pilha.map((c) => criarCarta(mao, ...lerCarta(c)));
     Object.assign(slot, { card: carta, stack: empilhadas, owner: j, revealed: true });
     return { layer: camada, slotIndex: slot.slotIndex };
@@ -63,27 +63,27 @@ export function montarRede(mao, j, pilhas) {
 
 /** Dá a rede do jogador `j` por finalizada: 'output', 'earlystop', 'auto-earlystop', 'stackoverflow', 'stuck'… */
 export function finalizarRede(mao, j, motivo = 'output') {
-  Object.assign(mao.nd.nets[j], { finished: true, reason: motivo });
+  Object.assign(mao.estadoMotor.nets[j], { finished: true, reason: motivo });
   return atualizarVisao(mao);
 }
 
 /** Reabre a rede do jogador `j` (desfaz um fim de rede), para continuar montando a situação. */
 export function reabrirRede(mao, j) {
-  Object.assign(mao.nd.nets[j], { finished: false, reason: null });
+  Object.assign(mao.estadoMotor.nets[j], { finished: false, reason: null });
   return atualizarVisao(mao);
 }
 
 /** Ajusta dados soltos do estado: `{ dropouts: [a, b], primeiro, vez }`. */
 export function ajustar(mao, { dropouts, primeiro, vez } = {}) {
-  if (dropouts) dropouts.forEach((n, j) => { mao.nd.nets[j].dropouts = n; });
-  if (primeiro != null) mao.nd.firstPlayer = primeiro;
-  if (vez != null) mao.nd.turn = vez;
+  if (dropouts) dropouts.forEach((n, j) => { mao.estadoMotor.nets[j].dropouts = n; });
+  if (primeiro != null) mao.estadoMotor.firstPlayer = primeiro;
+  if (vez != null) mao.estadoMotor.turn = vez;
   return atualizarVisao(mao);
 }
 
 /** Tira da mesa os neurônios livres da camada (a camada fica sem neurônio para ativar). */
 export function esvaziarCamada(mao, camada) {
-  for (const slot of mao.nd.layers[camada]) if (slot.owner === null) slot.removed = true;
+  for (const slot of mao.estadoMotor.layers[camada]) if (slot.owner === null) slot.removed = true;
   return atualizarVisao(mao);
 }
 

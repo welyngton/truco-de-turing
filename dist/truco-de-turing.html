@@ -464,7 +464,7 @@ html, body { overscroll-behavior: none; }
 .cartas-do-painel { display: flex; flex-wrap: wrap; gap: 6px; }
 .carta-mini { display: inline-block; min-width: 34px; text-align: center; padding: 3px 6px; border-radius: 6px; background: #fff8e6; border: 1px solid rgba(60, 40, 20, 0.3); font-weight: 700; }
 
-/* regras em abas (conteúdo do manual do NeuroDeck) */
+/* regras em abas (conteúdo do manual de regras) */
 .folha.regras { width: min(860px, 100%); }
 .abas { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 6px; border-bottom: 2px solid rgba(60, 40, 20, 0.2); }
 .abas button { font: 700 13px var(--fonte-titulo); letter-spacing: 0.04em; color: #6b1a22; background: transparent; border: 0; border-bottom: 3px solid transparent; padding: 8px 10px; cursor: pointer; margin-bottom: -2px; }
@@ -479,7 +479,7 @@ html, body { overscroll-behavior: none; }
 .nota-regras { font-style: italic; color: #5a4630; }
 button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-decoration: underline; font: inherit; cursor: pointer; }
 
-/* ajuda das ações (o "?" do NeuroDeck) */
+/* ajuda das ações (o botão "?") */
 .cartoes-acao { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 10px; }
 .cartao-acao { background: rgba(255, 248, 230, 0.7); border: 1px solid rgba(60, 40, 20, 0.2); border-radius: 10px; padding: 12px 14px; }
 .cartao-acao[aria-current='true'] { border: 2px solid #6b1a22; box-shadow: 0 0 0 3px rgba(107, 26, 34, 0.15); }
@@ -673,7 +673,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function need(obj, fields, kind) {
     for (const f of fields) if (obj[f] === void 0) throw new Error(`${kind} "${obj.id || "?"}" sem campo obrigatorio: ${f}`);
   }
-  var NeuroDeck = {
+  var Motor = {
     apiVersion: 2,
     decks: {},
     terrains: {},
@@ -718,7 +718,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       return Object.values(this.actions).sort((a, b) => a.order - b.order);
     }
   };
-  if (typeof globalThis !== "undefined") globalThis.NeuroDeck = NeuroDeck;
+  if (typeof globalThis !== "undefined") globalThis.Motor = Motor;
 
   // src/motor/engine/util.js
   var SUITS = ["S", "H", "C", "D"];
@@ -801,7 +801,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   var MAX_COPIES = 8;
   var RULESETS = {
     fusao: { trio: 30, stackInRun: true, highCardByStrength: true, passReasons: ["earlystop", "auto-earlystop"] },
-    "nd-2.0.0": { trio: 20, stackInRun: false, highCardByStrength: false, passReasons: ["earlystop"] }
+    "original": { trio: 20, stackInRun: false, highCardByStrength: false, passReasons: ["earlystop"] }
   };
   var DEFAULT_RULES = "fusao";
   function rulesOf(state) {
@@ -824,8 +824,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     const rng = () => rand(gen);
     const deckId = opts.deck || opts.mode || "classic";
     const terrainId = opts.terrain || "none";
-    const deck = NeuroDeck.deck(deckId);
-    const terrain = NeuroDeck.terrain(terrainId);
+    const deck = Motor.deck(deckId);
+    const terrain = Motor.terrain(terrainId);
     const rules = opts.rules || DEFAULT_RULES;
     if (!RULESETS[rules]) throw new Error("conjunto de regras desconhecido: " + rules);
     let copies = Math.max(1, Number(opts.copies) || 1, deck.minCopies || 1);
@@ -900,7 +900,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       achievements: each(() => []),
       terrainData: {}
     };
-    for (const a of NeuroDeck.actionList()) state.stats.actions[a.id] = 0;
+    for (const a of Motor.actionList()) state.stats.actions[a.id] = 0;
     terrain.onGameStart?.(state);
     if (REVEAL_RULES.includes(opts.firstRule || "reveal")) {
       state.phase = "reveal";
@@ -948,10 +948,10 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return state;
   }
   function deckOf(state) {
-    return NeuroDeck.deck(state.deck);
+    return Motor.deck(state.deck);
   }
   function terrainOf(state) {
-    return NeuroDeck.terrain(state.terrain);
+    return Motor.terrain(state.terrain);
   }
   function lastSlot(state, p) {
     const net = state.nets[p];
@@ -1048,7 +1048,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     if (state.over) return moves;
     if (state.phase === "reveal") return revealMoves(state, p);
     const noFree = opts.noFree || state.freeStreak >= MAX_FREE_STREAK;
-    for (const action of NeuroDeck.actionList()) {
+    for (const action of Motor.actionList()) {
       if (noFree && action.consumesTurn === false) continue;
       for (const m of action.generate(state, p, opts)) moves.push({ ...m, type: action.id });
     }
@@ -1059,8 +1059,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function canPass(state, p, moves) {
     const net = state.nets[p];
     if (net.finished && rulesOf(state).passReasons.includes(net.reason) && state.hands[p].length) return true;
-    const turnMoves = moves || NeuroDeck.actionList().filter((a) => a.id !== "pass" && a.consumesTurn !== false).flatMap((a) => a.generate(state, p, {}).map((m) => ({ ...m, type: a.id })));
-    return !turnMoves.some((m) => m.type !== "pass" && NeuroDeck.actions[m.type].consumesTurn !== false);
+    const turnMoves = moves || Motor.actionList().filter((a) => a.id !== "pass" && a.consumesTurn !== false).flatMap((a) => a.generate(state, p, {}).map((m) => ({ ...m, type: a.id })));
+    return !turnMoves.some((m) => m.type !== "pass" && Motor.actions[m.type].consumesTurn !== false);
   }
   function validate(state, p, move) {
     if (state.over) return "jogo encerrado";
@@ -1072,7 +1072,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       return typeof c === "string" ? c : true;
     }
     if (p !== state.turn) return "nao e o turno do jogador " + p;
-    const action = NeuroDeck.actions[move?.type];
+    const action = Motor.actions[move?.type];
     if (!action) return "movimento desconhecido: " + move?.type;
     if (action.consumesTurn === false && state.freeStreak >= MAX_FREE_STREAK) return "limite de acoes livres neste turno";
     return action.isValid(state, p, move);
@@ -1082,7 +1082,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     if (v !== true) throw new Error(v || "movimento invalido");
     state.moves.push({ seq: state.moves.length, p, move });
     if (state.phase === "reveal") return applyReveal(state, p, move);
-    const action = NeuroDeck.action(move.type);
+    const action = Motor.action(move.type);
     const deck = deckOf(state), terrain = terrainOf(state);
     const n = playerCount(state);
     action.execute(state, p, move);
@@ -1150,7 +1150,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
   function canAct(state, p) {
     if (legalMoves(state, p, { noFree: true }).some((m) => m.type !== "pass")) return true;
-    return NeuroDeck.actionList().some((a) => a.keepsActive && a.generate(state, p, {}).length > 0);
+    return Motor.actionList().some((a) => a.keepsActive && a.generate(state, p, {}).length > 0);
   }
   function checkStuck(state) {
     for (let p = 0; p < playerCount(state); p++) {
@@ -1774,10 +1774,10 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   var BUILTIN_TERRAINS = [none, montanha, pantano, oceano];
 
   // src/motor/engine/index.js
-  for (const a of BUILTIN_ACTIONS) if (!NeuroDeck.actions[a.id]) NeuroDeck.registerAction(a);
-  for (const d of BUILTIN_DECKS) if (!NeuroDeck.decks[d.id]) NeuroDeck.registerDeck(d);
-  for (const t of BUILTIN_TERRAINS) if (!NeuroDeck.terrains[t.id]) NeuroDeck.registerTerrain(t);
-  Object.assign(NeuroDeck, { rand, opponents, nextPlayer, attackTarget });
+  for (const a of BUILTIN_ACTIONS) if (!Motor.actions[a.id]) Motor.registerAction(a);
+  for (const d of BUILTIN_DECKS) if (!Motor.decks[d.id]) Motor.registerDeck(d);
+  for (const t of BUILTIN_TERRAINS) if (!Motor.terrains[t.id]) Motor.registerTerrain(t);
+  Object.assign(Motor, { rand, opponents, nextPlayer, attackTarget });
 
   // src/nucleo/cartas.js
   var VALORES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -1814,24 +1814,24 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/nucleo/traducao.js
-  var BARALHO_ND = { classico: "classic", truco: "truco", nobreza: "nobreza", backprop: "backprop", fraternidade: "fraternidade", yinyang: "yinyang", powerbi: "powerbi" };
-  var TERRENO_ND = { neutro: "none", montanha: "montanha", pantano: "pantano", oceano: "oceano" };
-  var INICIO_ND = { "revela-descarta": "reveal", "revela-volta": "reveal-keep", sorteio: "random" };
+  var BARALHO_MOTOR = { classico: "classic", truco: "truco", nobreza: "nobreza", backprop: "backprop", fraternidade: "fraternidade", yinyang: "yinyang", powerbi: "powerbi" };
+  var TERRENO_MOTOR = { neutro: "none", montanha: "montanha", pantano: "pantano", oceano: "oceano" };
+  var INICIO_MOTOR = { "revela-descarta": "reveal", "revela-volta": "reveal-keep", sorteio: "random" };
   var NAIPE_TT = { S: "E", H: "C", C: "P", D: "O" };
-  var NAIPE_ND = { E: "S", C: "H", P: "C", O: "D" };
+  var NAIPE_MOTOR = { E: "S", C: "H", P: "C", O: "D" };
   var VALOR_TT = { 1: "A", 11: "J", 12: "Q", 13: "K" };
-  var RANK_ND = { A: 1, J: 11, Q: 12, K: 13 };
+  var RANK_MOTOR = { A: 1, J: 11, Q: 12, K: 13 };
   function naipeParaTT(suit) {
     return NAIPE_TT[suit];
   }
   function rankDoValor(valor) {
-    return RANK_ND[valor] || parseInt(valor, 10);
+    return RANK_MOTOR[valor] || parseInt(valor, 10);
   }
   function valorDoRank(rank) {
     return VALOR_TT[rank] || String(rank);
   }
-  function cartaParaND(carta) {
-    return { rank: rankDoValor(carta.valor), suit: NAIPE_ND[carta.naipe] };
+  function cartaParaMotor(carta) {
+    return { rank: rankDoValor(carta.valor), suit: NAIPE_MOTOR[carta.naipe] };
   }
   function cartaParaTT(card, repetida) {
     const valor = valorDoRank(card.rank), naipe = NAIPE_TT[card.suit];
@@ -1878,7 +1878,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 
   // src/nucleo/baralhos.js
   function montarBaralho(chave) {
-    const baralho = NeuroDeck.deck(BARALHO_ND[chave]);
+    const baralho = Motor.deck(BARALHO_MOTOR[chave]);
     const cartas = baralho.build ? baralho.build(null, baralho.minCopies || 1) : standardDeck(1);
     const vezes = {};
     for (const c of cartas) vezes[c.rank + c.suit] = (vezes[c.rank + c.suit] || 0) + 1;
@@ -1921,8 +1921,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   };
   for (const chave of Object.keys(BARALHOS)) BARALHOS[chave].montar = () => montarBaralho(chave);
   function pontosDaCarta(carta, baralho) {
-    const dados = NeuroDeck.decks[BARALHO_ND[baralho]];
-    const c = cartaParaND(carta);
+    const dados = Motor.decks[BARALHO_MOTOR[baralho]];
+    const c = cartaParaMotor(carta);
     return dados && dados.cardValue ? dados.cardValue(c) : nominalValue(c);
   }
   function nomeDaCarta(carta, baralho) {
@@ -1934,7 +1934,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   // src/nucleo/pontuacao.js
   var arredondar = (x) => Math.round(x * 100) / 100;
   function pontuarRede(mao, j) {
-    const resultado = score(mao.nd, j);
+    const resultado = score(mao.estadoMotor, j);
     if (resultado.kind === "forward") return pontuarForward(mao, resultado);
     const figurasValem = !!BARALHOS[mao.config.baralho].figurasValem;
     const neuronios = resultado.items.map((item, camada2) => {
@@ -2304,7 +2304,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       return carta.valor === "4" && carta.naipe === "P";
     }) },
     { id: "biblio", nome: "Bibliotec\xE1rio", descricao: "Leia todos os verbetes do Gloss\xE1rio.", graduacao: "prata", teste: (c) => c.progresso.verbetesLidos >= VERBETES.length },
-    /* conquistas da fusão: baralhos, mesas e arquiteturas do NeuroDeck */
+    /* conquistas da fusão: baralhos, mesas e arquiteturas do motor */
     { id: "nobreza", nome: "Sangue azul", descricao: "Ven\xE7a uma m\xE3o do baralho Nobreza com figuras iguais vizinhas na sua rede.", graduacao: "prata", teste: (c) => c.venceu && c.mao.config.baralho === "nobreza" && pontuarRede(c.mao, c.eu).neuronios.some((n) => n.notas.includes("\xD72 figura")) },
     { id: "backprop", nome: "Forward pass de ouro", descricao: "Termine uma m\xE3o do baralho Backprop com a sa\xEDda da sua rede em 45 ou mais.", graduacao: "ouro", teste: (c) => c.mao.config.baralho === "backprop" && c.mao.resultado.somas[c.eu] >= 45 },
     { id: "tunador", nome: "Ajuste fino", descricao: "Fa\xE7a 3 tunagens numa mesma m\xE3o.", graduacao: "bronze", teste: (c) => meu(c).estatisticas.tunagens >= 3 },
@@ -7189,7 +7189,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function botMoves(state, p) {
     return legalMoves(state, p, { maxDropout: 1 });
   }
-  var optionalPass = (moves) => moves.some((m) => m.type !== "pass" && NeuroDeck.actions[m.type]?.consumesTurn !== false);
+  var optionalPass = (moves) => moves.some((m) => m.type !== "pass" && Motor.actions[m.type]?.consumesTurn !== false);
   function revealPick(state, p, moves, smart, rng) {
     if (!smart) return moves[Math.floor(rng() * moves.length)];
     if (state.firstRule === "reveal-keep") {
@@ -7206,7 +7206,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     for (const m of moves) {
       let w = 1;
       if (m.type === "transfer") w = 2;
-      else if (NeuroDeck.actions[m.type].consumesTurn === false) w = 0.05;
+      else if (Motor.actions[m.type].consumesTurn === false) w = 0.05;
       else if (ATTACKS.has(m.type)) w = 1 + (m.cardIds?.length || 1);
       else if (m.type === "tune") w = m.cardIds.length === 1 ? 1.5 : 0.1;
       else if (m.type === "pass" && optionalPass(moves)) w = 0.3;
@@ -7311,31 +7311,31 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       estatisticas: { ativacoes: 0, tunagens: 0, overfits: 0, earlyStops: 0, overflows: 0, autoParadas: 0, sofridos: 0, transfer: 0 }
     };
   }
-  function todasAsCartas(nd) {
+  function todasAsCartas(estadoMotor) {
     const cartas = [];
-    for (const camada2 of nd.layers) for (const slot of camada2) cartas.push(slot.card, ...slot.stack);
-    for (const mao of nd.hands) cartas.push(...mao);
-    return cartas.concat(nd.limbo, nd.unused || [], nd.graveyard);
+    for (const camada2 of estadoMotor.layers) for (const slot of camada2) cartas.push(slot.card, ...slot.stack);
+    for (const mao of estadoMotor.hands) cartas.push(...mao);
+    return cartas.concat(estadoMotor.limbo, estadoMotor.unused || [], estadoMotor.graveyard);
   }
-  function indexarCartas(nd) {
-    const cartas = todasAsCartas(nd);
+  function indexarCartas(estadoMotor) {
+    const cartas = todasAsCartas(estadoMotor);
     const vezes = {};
     for (const c of cartas) vezes[c.rank + c.suit] = (vezes[c.rank + c.suit] || 0) + 1;
-    const indice = { tt: /* @__PURE__ */ new Map(), nd: /* @__PURE__ */ new Map() };
+    const indice = { tt: /* @__PURE__ */ new Map(), estadoMotor: /* @__PURE__ */ new Map() };
     for (const c of cartas) {
       if (indice.tt.has(c.id)) continue;
       const carta = cartaParaTT(c, vezes[c.rank + c.suit] > 1);
       indice.tt.set(c.id, carta);
-      indice.nd.set(carta.id, c.id);
+      indice.estadoMotor.set(carta.id, c.id);
     }
     return indice;
   }
-  function montar(nd, config, jogadores, simulacao, cartas) {
+  function montar(estadoMotor, config, jogadores, simulacao, cartas) {
     const mao = {
       config,
-      semente: nd.seed,
-      nd,
-      indiceDeCartas: cartas || indexarCartas(nd),
+      semente: estadoMotor.seed,
+      estadoMotor,
+      indiceDeCartas: cartas || indexarCartas(estadoMotor),
       camadas: [],
       neuronios: {},
       jogadores,
@@ -7353,7 +7353,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       resultado: null,
       simulacao
     };
-    nd.layers.forEach((camada2, c) => {
+    estadoMotor.layers.forEach((camada2, c) => {
       mao.camadas.push(camada2.map((_, p) => {
         const neuronio2 = { id: idDoNeuronio(c, p), camada: c, posicao: p, cartas: [], revelado: false, dono: -1, removido: false, conhecido: false, rodadaRevelada: 0 };
         mao.neuronios[neuronio2.id] = neuronio2;
@@ -7370,38 +7370,38 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       arquitetura: opcoes.arquitetura || "padrao",
       baralhos: Math.max(1, Math.min(4, Number(opcoes.baralhos) || 1))
     };
-    if (!BARALHO_ND[config.baralho]) throw new Error("Baralho desconhecido: " + config.baralho);
-    if (!TERRENO_ND[config.terreno]) throw new Error("Terreno desconhecido: " + config.terreno);
-    if (!INICIO_ND[config.inicio]) throw new Error("Forma de in\xEDcio desconhecida: " + config.inicio);
+    if (!BARALHO_MOTOR[config.baralho]) throw new Error("Baralho desconhecido: " + config.baralho);
+    if (!TERRENO_MOTOR[config.terreno]) throw new Error("Terreno desconhecido: " + config.terreno);
+    if (!INICIO_MOTOR[config.inicio]) throw new Error("Forma de in\xEDcio desconhecida: " + config.inicio);
     if (!ARQUITETURAS[config.arquitetura]) throw new Error("Arquitetura desconhecida: " + config.arquitetura);
     const n = opcoes.jogadores.length;
     if (n < 2 || n > MAX_PLAYERS) throw new Error("A mesa aceita de 2 a " + MAX_PLAYERS + " jogadores");
     const semente = opcoes.semente != null ? opcoes.semente | 0 : sementeNova();
-    const nd = newGame({
-      deck: BARALHO_ND[config.baralho],
-      terrain: TERRENO_ND[config.terreno],
-      firstRule: INICIO_ND[config.inicio],
+    const estadoMotor = newGame({
+      deck: BARALHO_MOTOR[config.baralho],
+      terrain: TERRENO_MOTOR[config.terreno],
+      firstRule: INICIO_MOTOR[config.inicio],
       seed: semente,
       players: n,
       copies: config.baralhos,
       layers: tamanhosDaMesa(config.arquitetura, n)
     });
-    const mao = montar(nd, config, opcoes.jogadores.map(novoJogador), false);
+    const mao = montar(estadoMotor, config, opcoes.jogadores.map(novoJogador), false);
     mao.semente = semente;
     if (mao.fase === "jogo") emitir(mao, { tipo: "inicio", jogador: mao.primeiro, como: "sorteio" });
     anotarHistorico(mao);
     return mao;
   }
   function atualizarVisao(mao) {
-    const nd = mao.nd;
+    const estadoMotor = mao.estadoMotor;
     const carta = (c) => mao.indiceDeCartas.tt.get(c.id);
-    mao.vez = nd.turn;
-    mao.primeiro = nd.firstPlayer;
-    mao.rodada = nd.round + 1;
-    mao.turno = nd.turnCount;
-    mao.vento = nd.terrainData.wind ? naipeParaTT(nd.terrainData.wind) : null;
-    mao.fase = nd.over ? "fim" : nd.phase === "reveal" ? "inicio" : "jogo";
-    nd.layers.forEach((camada2, c) => camada2.forEach((slot, p) => {
+    mao.vez = estadoMotor.turn;
+    mao.primeiro = estadoMotor.firstPlayer;
+    mao.rodada = estadoMotor.round + 1;
+    mao.turno = estadoMotor.turnCount;
+    mao.vento = estadoMotor.terrainData.wind ? naipeParaTT(estadoMotor.terrainData.wind) : null;
+    mao.fase = estadoMotor.over ? "fim" : estadoMotor.phase === "reveal" ? "inicio" : "jogo";
+    estadoMotor.layers.forEach((camada2, c) => camada2.forEach((slot, p) => {
       const n = mao.camadas[c][p];
       const revelado = slot.revealed && !slot.removed;
       if (revelado && !n.revelado) n.rodadaRevelada = mao.rodada;
@@ -7412,16 +7412,16 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       n.dono = slot.owner === null ? -1 : slot.owner;
     }));
     mao.jogadores.forEach((jogador, j) => {
-      const rede2 = nd.nets[j];
-      jogador.mao = nd.hands[j].map(carta);
+      const rede2 = estadoMotor.nets[j];
+      jogador.mao = estadoMotor.hands[j].map(carta);
       jogador.caminho = rede2.path.map((r) => idDoNeuronio(r.layer, r.slotIndex));
       jogador.situacao = situacaoDaRede(rede2);
       jogador.dropouts = rede2.dropouts;
-      jogador.transferUsado = nd.transferUsed[j];
-      jogador.cartaInicial = nd.reveal[j] != null ? mao.indiceDeCartas.tt.get(nd.reveal[j]) : null;
+      jogador.transferUsado = estadoMotor.transferUsed[j];
+      jogador.cartaInicial = estadoMotor.reveal[j] != null ? mao.indiceDeCartas.tt.get(estadoMotor.reveal[j]) : null;
     });
-    mao.limbo = nd.limbo.map(carta);
-    mao.cemiterio = nd.graveyard.map(carta);
+    mao.limbo = estadoMotor.limbo.map(carta);
+    mao.cemiterio = estadoMotor.graveyard.map(carta);
     return mao;
   }
   function emitir(mao, evento) {
@@ -7431,7 +7431,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     if (!mao.simulacao) mao.registro.push(texto);
   }
   function somas(mao) {
-    return mao.jogadores.map((_, j) => score(mao.nd, j).total);
+    return mao.jogadores.map((_, j) => score(mao.estadoMotor, j).total);
   }
   function anotarHistorico(mao) {
     if (!mao.simulacao) mao.historico.push(somas(mao));
@@ -7467,7 +7467,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function podeEmpilhar(mao, j, idNeuronio, idsCartas) {
     if (mao.fase !== "jogo" || mao.vez !== j || !idsCartas.length) return false;
     try {
-      return validate(mao.nd, j, jogadaParaND(mao, { tipo: "empilhar", jogador: j, neuronio: idNeuronio, cartas: idsCartas })) === true;
+      return validate(mao.estadoMotor, j, jogadaParaMotor(mao, { tipo: "empilhar", jogador: j, neuronio: idNeuronio, cartas: idsCartas })) === true;
     } catch (erro) {
       return false;
     }
@@ -7486,29 +7486,29 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return null;
   }
   function podePassar(mao, j) {
-    return mao.fase === "jogo" && mao.vez === j && canPass(mao.nd, j);
+    return mao.fase === "jogo" && mao.vez === j && canPass(mao.estadoMotor, j);
   }
   function jogadasLegais(mao, j, opcoes = {}) {
     if (mao.fase === "fim" || mao.fase === "jogo" && mao.vez !== j) return [];
-    return legalMoves(mao.nd, j, { maxDropout: 2 }).filter((m) => opcoes.comDropout || m.type !== "dropout").map((m) => jogadaParaTT(mao, j, m));
+    return legalMoves(mao.estadoMotor, j, { maxDropout: 2 }).filter((m) => opcoes.comDropout || m.type !== "dropout").map((m) => jogadaParaTT(mao, j, m));
   }
   function idsNoMotor(mao, j, ids) {
     if (!Array.isArray(ids)) throw new Error("Jogada sem cartas");
-    const naMao = new Set(mao.nd.hands[j].map((c) => c.id));
+    const naMao = new Set(mao.estadoMotor.hands[j].map((c) => c.id));
     return ids.map((id) => {
-      const idND = mao.indiceDeCartas.nd.get(id);
-      if (idND === void 0 || !naMao.has(idND)) throw new Error("Carta fora da m\xE3o: " + id);
-      return idND;
+      const idMotor = mao.indiceDeCartas.estadoMotor.get(id);
+      if (idMotor === void 0 || !naMao.has(idMotor)) throw new Error("Carta fora da m\xE3o: " + id);
+      return idMotor;
     });
   }
-  function jogadaParaND(mao, jogada) {
-    const j = jogada.jogador, nd = mao.nd;
+  function jogadaParaMotor(mao, jogada) {
+    const j = jogada.jogador, estadoMotor = mao.estadoMotor;
     switch (jogada.tipo) {
       case "inicio":
         return { type: "reveal", cardId: idsNoMotor(mao, j, [jogada.carta])[0] };
       case "ativar": {
         const lugar = lugarDoNeuronio(jogada.neuronio);
-        if (!lugar || lugar.camada !== nd.nets[j].path.length) throw new Error("Neur\xF4nio indispon\xEDvel");
+        if (!lugar || lugar.camada !== estadoMotor.nets[j].path.length) throw new Error("Neur\xF4nio indispon\xEDvel");
         return { type: "advance", slotIndex: lugar.posicao };
       }
       case "empilhar": {
@@ -7525,7 +7525,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       case "transfer": {
         const cardIds = idsNoMotor(mao, j, jogada.cartas);
         if (cardIds.length !== 4) throw new Error("Transfer learning indispon\xEDvel");
-        return { type: "transfer", rank: nd.hands[j].find((c) => c.id === cardIds[0]).rank };
+        return { type: "transfer", rank: estadoMotor.hands[j].find((c) => c.id === cardIds[0]).rank };
       }
       case "passar":
         return { type: "pass" };
@@ -7534,27 +7534,27 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     }
   }
   function jogadaParaTT(mao, j, movimento) {
-    const nd = mao.nd;
+    const estadoMotor = mao.estadoMotor;
     const ids = (cardIds) => cardIds.map((id) => mao.indiceDeCartas.tt.get(id).id);
     const ultimo = (p) => {
-      const s = lastSlot(nd, p);
+      const s = lastSlot(estadoMotor, p);
       return idDoNeuronio(s.layer, s.slotIndex);
     };
     switch (movimento.type) {
       case "reveal":
         return { tipo: "inicio", jogador: j, carta: ids([movimento.cardId])[0] };
       case "advance":
-        return { tipo: "ativar", jogador: j, neuronio: idDoNeuronio(nd.nets[j].path.length, movimento.slotIndex) };
+        return { tipo: "ativar", jogador: j, neuronio: idDoNeuronio(estadoMotor.nets[j].path.length, movimento.slotIndex) };
       case "tune":
         return { tipo: "empilhar", jogador: j, neuronio: ultimo(j), cartas: ids(movimento.cardIds) };
       case "overfit":
       case "earlystop":
       case "stackoverflow":
-        return { tipo: "empilhar", jogador: j, neuronio: ultimo(attackTarget(nd, j, movimento)), cartas: ids(movimento.cardIds) };
+        return { tipo: "empilhar", jogador: j, neuronio: ultimo(attackTarget(estadoMotor, j, movimento)), cartas: ids(movimento.cardIds) };
       case "dropout":
         return { tipo: "dropout", jogador: j, n: movimento.layers, pagamento: ids(movimento.cardIds) };
       case "transfer":
-        return { tipo: "transfer", jogador: j, cartas: ids(nd.hands[j].filter((c) => c.rank === movimento.rank).slice(0, 4).map((c) => c.id)) };
+        return { tipo: "transfer", jogador: j, cartas: ids(estadoMotor.hands[j].filter((c) => c.rank === movimento.rank).slice(0, 4).map((c) => c.id)) };
       case "pass":
         return { tipo: "passar", jogador: j };
       default:
@@ -7570,8 +7570,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     passar: "S\xF3 passa a vez quem teve a rede interrompida por early stop ou n\xE3o tem outra jogada"
   };
   function anunciarInicio(mao) {
-    const nd = mao.nd;
-    const entrada = nd.log.find((e) => e.type === "first") || {};
+    const estadoMotor = mao.estadoMotor;
+    const entrada = estadoMotor.log.find((e) => e.type === "first") || {};
     const cartas = mao.jogadores.map((j) => j.cartaInicial);
     emitir(mao, { tipo: "inicio", jogador: mao.primeiro, como: "revela", cartas, empate: !!entrada.tie, descarta: mao.config.inicio === "revela-descarta" });
     anotar(mao, mao.jogadores[mao.primeiro].nome + " come\xE7a" + (entrada.tie ? " (empate decidido no sorteio)" : "") + ".");
@@ -7593,7 +7593,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     jogador.acoesUsadas++;
     if (efeito.tipo === "tunagem") {
       jogador.estatisticas.tunagens++;
-      const ganho = score(mao.nd, j).total - somaAntes;
+      const ganho = score(mao.estadoMotor, j).total - somaAntes;
       emitir(mao, { tipo: "tunagem", jogador: j, dono, neuronio: jogada.neuronio, cartas: jogadas, ganho });
       anotar(mao, jogador.nome + " tunou " + rotuloCarta(pilha[0]) + " com " + jogadas.map(rotuloCarta).join(" ") + ".");
       return;
@@ -7614,20 +7614,20 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     emitir(mao, { tipo: efeito.tipo, jogador: j, dono, neuronio: jogada.neuronio, cartas: removidas, proprio: efeito.proprio });
   }
   function encerrar(mao) {
-    const nd = mao.nd;
-    const [a, b] = nd.ranking;
-    const n = Math.min(nd.hands[a].length, nd.hands[b].length);
+    const estadoMotor = mao.estadoMotor;
+    const [a, b] = estadoMotor.ranking;
+    const n = Math.min(estadoMotor.hands[a].length, estadoMotor.hands[b].length);
     mao.resultado = {
-      somas: nd.scores.slice(),
-      vencedor: nd.winner,
-      motivo: motivoDaVitoria(nd.tiebreak, n),
-      travados: nd.nets.map((rede2) => rede2.reason === "stuck")
+      somas: estadoMotor.scores.slice(),
+      vencedor: estadoMotor.winner,
+      motivo: motivoDaVitoria(estadoMotor.tiebreak, n),
+      travados: estadoMotor.nets.map((rede2) => rede2.reason === "stuck")
     };
     emitir(mao, { tipo: "fim", resultado: mao.resultado });
-    anotar(mao, "Fim da m\xE3o: " + mao.jogadores[nd.winner].nome + " vence (" + mao.resultado.motivo + ").");
+    anotar(mao, "Fim da m\xE3o: " + mao.jogadores[estadoMotor.winner].nome + " vence (" + mao.resultado.motivo + ").");
   }
   function aplicarJogada(mao, jogada) {
-    const nd = mao.nd, j = jogada.jogador, jogador = mao.jogadores[j];
+    const estadoMotor = mao.estadoMotor, j = jogada.jogador, jogador = mao.jogadores[j];
     if (!jogador) throw new Error("Jogador inexistente: " + j);
     if (jogada.tipo === "inicio") {
       if (mao.fase !== "inicio") throw new Error("A m\xE3o j\xE1 come\xE7ou");
@@ -7637,7 +7637,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     }
     if (!RECUSA[jogada.tipo]) throw new Error("Jogada desconhecida: " + jogada.tipo);
     const carta = (id) => jogador.mao.find((c) => c.id === id);
-    const antes = { rodada: nd.round, linhas: nd.log.length, finalizadas: nd.nets.map((rede2) => rede2.finished) };
+    const antes = { rodada: estadoMotor.round, linhas: estadoMotor.log.length, finalizadas: estadoMotor.nets.map((rede2) => rede2.finished) };
     if (jogada.tipo === "empilhar") {
       const alvo = mao.neuronios[jogada.neuronio];
       if (alvo && alvo.dono >= 0 && Array.isArray(jogada.cartas)) {
@@ -7647,7 +7647,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
           pilha: alvo.cartas.slice(),
           jogadas: jogada.cartas.map(carta),
           maoDaVitima: mao.jogadores[alvo.dono].mao.length,
-          somaAntes: mao.simulacao ? 0 : score(nd, j).total
+          somaAntes: mao.simulacao ? 0 : score(estadoMotor, j).total
         });
       }
     } else if (jogada.tipo === "dropout") {
@@ -7659,8 +7659,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     }
     let movimento;
     try {
-      movimento = jogadaParaND(mao, jogada);
-      applyMove(nd, j, movimento);
+      movimento = jogadaParaMotor(mao, jogada);
+      applyMove(estadoMotor, j, movimento);
     } catch (erro) {
       throw new Error(/^(Carta fora|Jogada)/.test(erro.message) ? erro.message : RECUSA[jogada.tipo]);
     }
@@ -7694,14 +7694,14 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         break;
     }
     if (!mao.simulacao) {
-      for (const entrada of nd.log.slice(antes.linhas)) if (entrada.type === "deck") emitir(mao, { tipo: "powerbi", jogador: entrada.p });
+      for (const entrada of estadoMotor.log.slice(antes.linhas)) if (entrada.type === "deck") emitir(mao, { tipo: "powerbi", jogador: entrada.p });
     }
     mao.jogadores.forEach((outro, i) => {
       if (outro.situacao !== "travada" || antes.finalizadas[i]) return;
       emitir(mao, { tipo: "travada", jogador: i, camada: outro.caminho.length });
       anotar(mao, outro.nome + " ficou sem neur\xF4nio livre na camada " + nomeCamada(outro.caminho.length, mao.camadas.length) + ": a rede foi finalizada.");
     });
-    if (mao.config.terreno === "oceano" && nd.round > antes.rodada && mao.fase === "jogo") emitir(mao, { tipo: "vento", naipe: mao.vento });
+    if (mao.config.terreno === "oceano" && estadoMotor.round > antes.rodada && mao.fase === "jogo") emitir(mao, { tipo: "vento", naipe: mao.vento });
     anotarHistorico(mao);
     if (mao.fase === "fim") encerrar(mao);
     return mao;
@@ -7716,7 +7716,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     if (mao.fase === "inicio") return 0.5;
     let vitorias = 0;
     for (let i = 0; i < n; i++) {
-      const estado2 = determinize(mao.nd, j, novoGerador());
+      const estado2 = determinize(mao.estadoMotor, j, novoGerador());
       playout(estado2, estado2.rng);
       if (estado2.winner === j) vitorias++;
     }
@@ -7725,17 +7725,17 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 
   // src/nucleo/oponentes/estrategias.js
   function jogadaAleatoria(mao, j) {
-    return jogadaParaTT(mao, j, randomPolicy(mao.nd, j, novoGerador()));
+    return jogadaParaTT(mao, j, randomPolicy(mao.estadoMotor, j, novoGerador()));
   }
   function jogadaGulosa(mao, j) {
-    return jogadaParaTT(mao, j, greedyMove(mao.nd, j, novoGerador()));
+    return jogadaParaTT(mao, j, greedyMove(mao.estadoMotor, j, novoGerador()));
   }
   function jogadaMonteCarlo(mao, j, simulacoesPorJogada) {
-    const nd = mao.nd, gerador = novoGerador();
-    const movimentos = legalMoves(nd, j, { maxDropout: 1 });
-    if (movimentos.length <= 1 || movimentos[0].type === "reveal") return jogadaParaTT(mao, j, monteCarloMove(nd, j, gerador));
-    const simulacoes = simulacoesPorJogada || defaultRollouts(nd);
-    const melhor = monteCarloResults(nd, j, gerador, simulacoes, movimentos)[0];
+    const estadoMotor = mao.estadoMotor, gerador = novoGerador();
+    const movimentos = legalMoves(estadoMotor, j, { maxDropout: 1 });
+    if (movimentos.length <= 1 || movimentos[0].type === "reveal") return jogadaParaTT(mao, j, monteCarloMove(estadoMotor, j, gerador));
+    const simulacoes = simulacoesPorJogada || defaultRollouts(estadoMotor);
+    const melhor = monteCarloResults(estadoMotor, j, gerador, simulacoes, movimentos)[0];
     const jogada = jogadaParaTT(mao, j, melhor.move);
     jogada.simulacao = { taxaDeVitoria: melhor.winRate, partidas: simulacoes * movimentos.length };
     return jogada;
@@ -8246,7 +8246,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   ];
   function doMotor(id) {
     try {
-      return NeuroDeck.action(id) || {};
+      return Motor.action(id) || {};
     } catch (e) {
       return {};
     }
@@ -8616,7 +8616,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return escolha === "sim" ? "Neste aparelho: ligadas." : escolha === "nao" ? "Neste aparelho: desligadas." : "Neste aparelho: ainda sem escolha.";
   }
   function abrirSobre() {
-    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>Dois jogos que viraram um</h3><p>A turma fez dois jogos para o mesmo tema, e o professor decidiu juntar o melhor de cada um:</p><ul><li><b>NeuroDeck</b> (<a href="https://neurodeck-fpo.web.app/" target="_blank" rel="noopener">neurodeck-fpo.web.app</a>): as <b>regras</b>. O motor do NeuroDeck decide tudo o que acontece na mesa: jogadas, pontua\xE7\xE3o, terrenos, desempates, as arquiteturas de rede, de 2 a 5 jogadores, os oponentes do computador e a API de mods.</li><li><b>Truco de Turing</b>: a <b>interface</b>. Arte das cartas, menu, mesa, efeitos, sons, m\xFAsica, avatares, conquistas, o Gloss\xE1rio e o modo truco.</li></ul><p>O motor do NeuroDeck foi copiado para o projeto sem altera\xE7\xF5es e conferido contra o site publicado em 1.000 partidas; depois recebeu as decis\xF5es de regra do professor e do grupo, registradas no reposit\xF3rio.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><h3>Autores</h3><ul class="autores"><li><b>Francisco Lima</b>: NeuroDeck (regras, motor, oponentes e mods).</li><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes, valida\xE7\xE3o das regras e fus\xE3o dos dois jogos.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es da fus\xE3o.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. O motor de regras \xE9 o do NeuroDeck, inclu\xEDdo com a concord\xE2ncia do grupo (ver <code>src/motor/ORIGEM.md</code>). Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><h3>Autores</h3><ul class="autores"><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes e valida\xE7\xE3o das regras.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es nas regras.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
     for (const escolha of ["sim", "nao"]) {
       const botao = painel.elemento.querySelector("#s-estatisticas-" + escolha);
@@ -8639,8 +8639,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 export const apiVersion = 2;
 
 // O carregador chama a fun\xE7\xE3o padr\xE3o do m\xF3dulo com o registro do motor.
-export default function (NeuroDeck) {
-  NeuroDeck.registerTerrain({
+export default function (Motor) {
+  Motor.registerTerrain({
     id: 'regularizacao-l1',          // identificador \xFAnico (obrigat\xF3rio)
     name: 'Regulariza\xE7\xE3o L1',        // nome mostrado no menu (obrigat\xF3rio)
     emoji: '\u2696\uFE0F',
@@ -8668,7 +8668,7 @@ export default function (NeuroDeck) {
     { caminho: "src/motor/engine/decks.js", texto: "os 7 baralhos do jogo, cada um registrado como mod (Cl\xE1ssico, Truco, Nobreza, Backprop\u2026)." },
     { caminho: "src/motor/engine/terrains.js", texto: "os terrenos Montanha, P\xE2ntano e Oceano, com os ganchos do turno." },
     { caminho: "src/motor/engine/actions.js", texto: "as a\xE7\xF5es (tunagem, overfit, early stop, dropout, transfer learning\u2026) com generate, isValid e execute." },
-    { caminho: "src/motor/ORIGEM.md", texto: "de onde veio o motor do NeuroDeck e o que mudou na fus\xE3o." }
+    { caminho: "src/motor/MOTOR.md", texto: "os arquivos do motor e as decis\xF5es de regra registradas." }
   ];
   var TIPOS = [
     {
@@ -8694,7 +8694,7 @@ export default function (NeuroDeck) {
     }
   ];
   function abrirMods() {
-    const html = '<div class="folha mods"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Mods</h2><p>As regras do jogo v\xEAm do motor do NeuroDeck, que foi feito para receber <b>mods</b>: pequenos m\xF3dulos JavaScript que acrescentam baralhos, terrenos e a\xE7\xF5es sem mexer no c\xF3digo do jogo. Tudo o que varia no jogo entra por um registro, e os baralhos, terrenos e a\xE7\xF5es que j\xE1 existem s\xE3o registrados do mesmo jeito.</p><h3>O que um mod pode criar</h3><div class="tipos-de-mod">' + TIPOS.map((t) => '<div class="tipo-de-mod"><h4>' + t.nome + "</h4><p>" + escaparHtml(t.texto) + '</p><p class="campos"><code>NeuroDeck.' + t.funcao + "({ \u2026 })</code><br>Campos obrigat\xF3rios: <code>" + t.obrigatorios + "</code><br>Exemplos no reposit\xF3rio: " + linkDoArquivo(t.exemplos) + "</p></div>").join("") + '</div><h3>Como um mod \xE9 feito</h3><ol><li>Um arquivo <code>.js</code> que exporta <code>apiVersion = 2</code> e uma fun\xE7\xE3o padr\xE3o.</li><li>A fun\xE7\xE3o recebe o registro do motor (<code>NeuroDeck</code>) e chama <code>registerDeck</code>, <code>registerTerrain</code> ou <code>registerAction</code>.</li><li>O estado da partida \xE9 um objeto simples: mesa (<code>state.layers</code>), m\xE3os, limbo, cemit\xE9rio e a rede de cada jogador (<code>state.nets</code>). Para sortear, use <code>NeuroDeck.rand(state)</code>, que mant\xE9m a partida reproduz\xEDvel.</li></ol><h3>Exemplo comentado: terreno "Regulariza\xE7\xE3o L1"</h3><p class="campos">Arquivo no reposit\xF3rio: ' + linkDoArquivo("src/conteudo/modExemplo.js") + '</p><pre class="codigo-mod"><code>' + escaparHtml(CODIGO_DO_MOD_DE_EXEMPLO) + '</code></pre><div class="linha"><button class="botao" id="mods-copiar">Copiar o exemplo</button><span class="mods-copiado" id="mods-copiado" aria-live="polite"></span></div><h3>Como testar um mod</h3><ul><li><b>No NeuroDeck original:</b> publique o arquivo num endere\xE7o p\xFAblico e abra <code>https://neurodeck-fpo.web.app/?mod=</code> seguido do endere\xE7o do arquivo.</li><li><b>No reposit\xF3rio:</b> o motor roda no Node. Importe <code>src/motor/engine.js</code> e o mod, chame a fun\xE7\xE3o do mod com <code>NeuroDeck</code> e jogue partidas com <code>newGame</code> e <code>applyMove</code> (o teste ' + linkDoArquivo("testes/unidade/mods.test.js") + ' faz isso com o exemplo acima).</li></ul><p class="aviso-mods"><b>Ainda n\xE3o no jogo unificado:</b> o motor j\xE1 aceita mods, mas a interface do Truco de Turing ainda n\xE3o os carrega, porque cada baralho, terreno e a\xE7\xE3o precisa de arte, textos e anima\xE7\xE3o pr\xF3prios. Por enquanto, use o NeuroDeck original ou o Node para testar.</p><h3>Arquivos e exemplos no reposit\xF3rio</h3><ul class="arquivos-de-mods">' + ARQUIVOS_DE_MODS.map((a) => "<li>" + linkDoArquivo(a.caminho) + ": " + escaparHtml(a.texto) + "</li>").join("") + '</ul><p>Para ir al\xE9m: o <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/MANUAL.md" target="_blank" rel="noopener">manual do c\xF3digo</a> explica como acrescentar baralho, terreno, oponente, conquista ou verbete no Truco de Turing, e a <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/REFERENCIA.md" target="_blank" rel="noopener">refer\xEAncia</a> lista cada fun\xE7\xE3o.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const html = '<div class="folha mods"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Mods</h2><p>As regras do jogo ficam no motor (<code>src/motor/</code>), que foi feito para receber <b>mods</b>: pequenos m\xF3dulos JavaScript que acrescentam baralhos, terrenos e a\xE7\xF5es sem mexer no c\xF3digo do jogo. Tudo o que varia no jogo entra por um registro, e os baralhos, terrenos e a\xE7\xF5es que j\xE1 existem s\xE3o registrados do mesmo jeito.</p><h3>O que um mod pode criar</h3><div class="tipos-de-mod">' + TIPOS.map((t) => '<div class="tipo-de-mod"><h4>' + t.nome + "</h4><p>" + escaparHtml(t.texto) + '</p><p class="campos"><code>Motor.' + t.funcao + "({ \u2026 })</code><br>Campos obrigat\xF3rios: <code>" + t.obrigatorios + "</code><br>Exemplos no reposit\xF3rio: " + linkDoArquivo(t.exemplos) + "</p></div>").join("") + '</div><h3>Como um mod \xE9 feito</h3><ol><li>Um arquivo <code>.js</code> que exporta <code>apiVersion = 2</code> e uma fun\xE7\xE3o padr\xE3o.</li><li>A fun\xE7\xE3o recebe o registro do motor (<code>Motor</code>) e chama <code>registerDeck</code>, <code>registerTerrain</code> ou <code>registerAction</code>.</li><li>O estado da partida \xE9 um objeto simples: mesa (<code>state.layers</code>), m\xE3os, limbo, cemit\xE9rio e a rede de cada jogador (<code>state.nets</code>). Para sortear, use <code>Motor.rand(state)</code>, que mant\xE9m a partida reproduz\xEDvel.</li></ol><h3>Exemplo comentado: terreno "Regulariza\xE7\xE3o L1"</h3><p class="campos">Arquivo no reposit\xF3rio: ' + linkDoArquivo("src/conteudo/modExemplo.js") + '</p><pre class="codigo-mod"><code>' + escaparHtml(CODIGO_DO_MOD_DE_EXEMPLO) + '</code></pre><div class="linha"><button class="botao" id="mods-copiar">Copiar o exemplo</button><span class="mods-copiado" id="mods-copiado" aria-live="polite"></span></div><h3>Como testar um mod</h3><ul><li><b>No reposit\xF3rio:</b> o motor roda no Node. Importe <code>src/motor/engine.js</code> e o mod, chame a fun\xE7\xE3o do mod com <code>Motor</code> e jogue partidas com <code>newGame</code> e <code>applyMove</code> (o teste ' + linkDoArquivo("testes/unidade/mods.test.js") + ' faz isso com o exemplo acima).</li></ul><p class="aviso-mods"><b>Ainda n\xE3o no jogo:</b> o motor j\xE1 aceita mods, mas a interface do Truco de Turing ainda n\xE3o os carrega, porque cada baralho, terreno e a\xE7\xE3o precisa de arte, textos e anima\xE7\xE3o pr\xF3prios. Por enquanto, use o Node para testar.</p><h3>Arquivos e exemplos no reposit\xF3rio</h3><ul class="arquivos-de-mods">' + ARQUIVOS_DE_MODS.map((a) => "<li>" + linkDoArquivo(a.caminho) + ": " + escaparHtml(a.texto) + "</li>").join("") + '</ul><p>Para ir al\xE9m: o <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/MANUAL.md" target="_blank" rel="noopener">manual do c\xF3digo</a> explica como acrescentar baralho, terreno, oponente, conquista ou verbete no Truco de Turing, e a <a href="https://github.com/welyngton/truco-de-turing/blob/main/docs/REFERENCIA.md" target="_blank" rel="noopener">refer\xEAncia</a> lista cada fun\xE7\xE3o.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
     const copiado = painel.elemento.querySelector("#mods-copiado");
     painel.elemento.querySelector("#mods-copiar").addEventListener("click", async () => {
@@ -9582,7 +9582,7 @@ export default function (NeuroDeck) {
     "m-sobre": "sobre"
   };
   function htmlDoMenu(opcoes) {
-    return '<div class="menu"><section class="menu-capa"><h1>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><p class="menu-conta" id="m-conta" role="status" hidden></p><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Regras do NeuroDeck com a interface do Truco de Turing. Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
+    return '<div class="menu"><section class="menu-capa"><h1>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><p class="menu-conta" id="m-conta" role="status" hidden></p><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
   }
   function abrirMenu(app) {
     app.opcoes = normalizarOpcoes(app.opcoes);
@@ -9786,7 +9786,7 @@ export default function (NeuroDeck) {
     truco: 540,
     alturaTruco: 40,
     /*
-     * Ações como no NeuroDeck: duas linhas de quatro botões. Em cima, as que empilham cartas
+     * Ações: duas linhas de quatro botões. Em cima, as que empilham cartas
      * (tunagem e os três ataques); embaixo, dropout, transfer, passar e limpar a seleção.
      * Só acendem os botões das jogadas possíveis com as cartas selecionadas.
      */
@@ -10151,7 +10151,7 @@ export default function (NeuroDeck) {
       return b;
     },
     /**
-     * Botão de truco e a barra de ações, como no NeuroDeck: selecione cartas da mão e acendem só os
+     * Botão de truco e a barra de ações: selecione cartas da mão e acendem só os
      * botões das jogadas possíveis com elas; passar o cursor num botão explica o efeito no quadro de
      * instruções antes de confirmar. Os botões ficam em `p.acoes[id]`; dropout, transfer e passar
      * também em `p.botaoDropout`, `p.botaoTransfer` e `p.botaoPassar`.
@@ -10735,8 +10735,8 @@ export default function (NeuroDeck) {
       this.redesenhar();
     },
     /**
-     * Botão Dropout: com cartas selecionadas, desfaz uma camada por carta e paga com elas (como no
-     * NeuroDeck); sem seleção, entra no modo de escolher até onde desfazer no tabuleiro.
+     * Botão Dropout: com cartas selecionadas, desfaz uma camada por carta e paga com elas; sem
+     * seleção, entra no modo de escolher até onde desfazer no tabuleiro.
      */
     acionarDropout() {
       if (!this.ehVezDoHumano()) return;
@@ -10749,14 +10749,14 @@ export default function (NeuroDeck) {
     },
     /**
      * Texto do quadro de instruções para um botão da barra: o que ele faria agora, com as cartas
-     * selecionadas, ou o que falta para ele acender; depois, a regra do NeuroDeck.
+     * selecionadas, ou o que falta para ele acender; depois, a regra do motor.
      */
     explicarAcao(id) {
       const mao = this.mao;
       if (!mao) return "";
       if (id !== "limpar") this.ultimaAcaoExplicada = id;
       const eu = this.quemVe, nome = NOME_DA_ACAO[id];
-      const regra = ACAO_DO_MOTOR[id] ? " Regra: " + NeuroDeck.action(ACAO_DO_MOTOR[id]).rule : "";
+      const regra = ACAO_DO_MOTOR[id] ? " Regra: " + Motor.action(ACAO_DO_MOTOR[id]).rule : "";
       if (!this.ehVezDoHumano()) return nome + ": espere a sua vez." + regra;
       const qtd = this.selecao.length, valor = this.valorSelecionado();
       if (["tunagem", "overfit", "earlystop", "stackoverflow"].includes(id)) {

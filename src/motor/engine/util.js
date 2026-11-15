@@ -1,4 +1,4 @@
-// NeuroDeck - constantes e utilidades puras
+// Motor - constantes e utilidades puras
 
 export const SUITS = ['S', 'H', 'C', 'D']; // espadas > copas > paus > ouros
 export const SUIT_RANK = { S: 4, H: 3, C: 2, D: 1 };

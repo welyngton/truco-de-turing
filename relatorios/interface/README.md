@@ -59,7 +59,7 @@ Tiradas pelo próprio teste, no momento indicado pelo nome.
 | | Teste | Grupo | Duração |
 |---|---|---|---:|
 | ✅ | inspeção, seleção, Esc, tunagem, overfit, stack overflow e early stop na própria rede | ações da mesa | 85,3 s |
-| ✅ | barra de ações do NeuroDeck: botões acendem pela seleção, selo de tunagem, pontos por neurônio e painéis de leitura | ações da mesa | 33,5 s |
+| ✅ | barra de ações: botões acendem pela seleção, selo de tunagem, pontos por neurônio e painéis de leitura | ações da mesa | 33,5 s |
 | ✅ | dropout (escolher camadas e pagar), cancelar, transfer learning, passar a vez e vanishing gradient | ações da mesa | 41,1 s |
 | ✅ | truco: pedir, responder (aumentar, aceitar, correr) e a mão terminada por corrida | ações da mesa | 51,8 s |
 | ✅ | truco com duas pessoas no aparelho: quem responde pega o aparelho antes de ver o pedido | ações da mesa | 37,0 s |

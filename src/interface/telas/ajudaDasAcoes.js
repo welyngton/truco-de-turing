@@ -1,15 +1,15 @@
 /**
- * @file Ajuda das ações, como o botão "?" do NeuroDeck: um cartão por jogada com a regra (texto do
+ * @file Ajuda das ações, como o botão botão "?": um cartão por jogada com a regra (texto do
  * próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão
  * "Ver o conceito" que abre o verbete certo do Glossário.
  */
-import { NeuroDeck } from '../../motor/engine.js';
+import { Motor } from '../../motor/engine.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
 import { abrirGrimorio } from './grimorio.js';
 import { ICONES_DAS_ACOES } from '../../arte/icones.js';
 
 /**
- * Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no NeuroDeck (de onde vêm a
+ * Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no motor (de onde vêm a
  * regra e o conceito); `verbete` é o verbete do Glossário.
  */
 export const ACOES_DA_AJUDA = [
@@ -39,9 +39,9 @@ export const ACOES_DA_AJUDA = [
     quando: 'Depois de sofrer (ou aplicar em si) um early stop, ou sem nenhuma outra jogada possível.' },
 ];
 
-/** Ação do NeuroDeck, ou um objeto vazio se o motor não tiver aquele id. */
+/** Ação do motor, ou um objeto vazio se o motor não tiver aquele id. */
 function doMotor(id) {
-  try { return NeuroDeck.action(id) || {}; } catch (e) { return {}; }
+  try { return Motor.action(id) || {}; } catch (e) { return {}; }
 }
 
 /**

@@ -1,5 +1,5 @@
 /**
- * @file Testes de unidade da mão (partida.js), a camada de tradução sobre o motor do NeuroDeck:
+ * @file Testes de unidade da mão (partida.js), a camada de tradução sobre o motor:
  * criação, visão da interface, consultas, cada tipo de jogada, eventos e registro, erros de
  * jogadas inválidas, fim da mão e desempates.
  */
@@ -26,10 +26,10 @@ describe('novaMao', () => {
     assert.equal(Object.keys(mao.neuronios).length, 32);
     for (const j of mao.jogadores) assert.equal(j.mao.length, TAMANHO_MAO);
     assert.equal(mao.limbo.length, 10);
-    assert.equal(mao.fase, 'inicio'); /* padrão do NeuroDeck: revela e descarta */
+    assert.equal(mao.fase, 'inicio'); /* padrão do motor: revela e descarta */
     assert.equal(mao.config.inicio, 'revela-descarta');
     assert.deepEqual(mao.historico, [[0, 0]]);
-    assert.equal(mao.nd.rules, 'fusao'); /* regras da fusão no motor */
+    assert.equal(mao.estadoMotor.rules, 'fusao'); /* regras da fusão no motor */
   });
   it('início por sorteio já começa a fase de jogo e emite o evento', () => {
     const mao = maoNova();
@@ -69,18 +69,18 @@ describe('visão da interface', () => {
     for (let passo = 0; passo < 60 && mao.fase === 'jogo'; passo++) {
       const legais = jogadasLegais(mao, mao.vez, { comDropout: true });
       aplicarJogada(mao, legais[(passo * 7) % legais.length]);
-      const nd = mao.nd;
-      assert.equal(mao.vez, nd.turn);
-      assert.equal(mao.cemiterio.length, nd.graveyard.length);
-      assert.equal(mao.limbo.length, nd.limbo.length);
+      const estadoMotor = mao.estadoMotor;
+      assert.equal(mao.vez, estadoMotor.turn);
+      assert.equal(mao.cemiterio.length, estadoMotor.graveyard.length);
+      assert.equal(mao.limbo.length, estadoMotor.limbo.length);
       mao.jogadores.forEach((jogador, j) => {
-        assert.equal(jogador.mao.length, nd.hands[j].length);
-        assert.equal(jogador.caminho.length, nd.nets[j].path.length);
-        assert.equal(jogador.situacao === 'construindo', !nd.nets[j].finished);
+        assert.equal(jogador.mao.length, estadoMotor.hands[j].length);
+        assert.equal(jogador.caminho.length, estadoMotor.nets[j].path.length);
+        assert.equal(jogador.situacao === 'construindo', !estadoMotor.nets[j].finished);
         for (const id of jogador.caminho) assert.equal(mao.neuronios[id].dono, j);
       });
       for (const n of mao.camadas.flat()) {
-        const slot = nd.layers[n.camada][n.posicao];
+        const slot = estadoMotor.layers[n.camada][n.posicao];
         assert.equal(n.removido, slot.removed);
         assert.equal(n.cartas.length, slot.removed ? 0 : 1 + slot.stack.length);
       }
@@ -89,7 +89,7 @@ describe('visão da interface', () => {
   });
   it('atualizarVisao refaz a visão depois de uma mudança direta no estado do motor', () => {
     const mao = maoNova();
-    mao.nd.hands[0].pop();
+    mao.estadoMotor.hands[0].pop();
     assert.equal(mao.jogadores[0].mao.length, 5);
     assert.equal(atualizarVisao(mao), mao);
     assert.equal(mao.jogadores[0].mao.length, 4);
@@ -108,7 +108,7 @@ describe('copiarMao', () => {
     const mao = maoJogada(4), copia = copiarMao(mao);
     assert.equal(copia.simulacao, true);
     assert.deepEqual(copia.eventos, []);
-    assert.notEqual(copia.nd, mao.nd);
+    assert.notEqual(copia.estadoMotor, mao.estadoMotor);
     ativarQualquer(copia);
     assert.notEqual(copia.turno, mao.turno);
     assert.deepEqual(copia.eventos, []);
@@ -163,7 +163,7 @@ describe('consultas', () => {
     const mao = maoNova();
     darMao(mao, 0, ['7E', '7C', '7P', '7O', '2E']);
     assert.equal(valorParaTransfer(mao, 0), '7');
-    mao.nd.transferUsed[0] = true;
+    mao.estadoMotor.transferUsed[0] = true;
     atualizarVisao(mao);
     assert.equal(valorParaTransfer(mao, 0), null);
     darMao(mao, 1, ['7E', '8E', '9E', '2E', '3E']);
@@ -361,13 +361,13 @@ describe('aplicarJogada', () => {
   });
   it('erros: fora da vez, mão não iniciada, jogada desconhecida, carta fora da mão; o estado não muda', () => {
     const mao = maoNova();
-    const foto = JSON.stringify(mao.nd);
+    const foto = JSON.stringify(mao.estadoMotor);
     assert.throws(() => aplicarJogada(mao, { tipo: 'ativar', jogador: 1 - mao.vez, neuronio: 'C0N0' }), /Não é a vez/);
     assert.throws(() => aplicarJogada(mao, { tipo: 'voar', jogador: mao.vez }), /desconhecida/);
     assert.throws(() => aplicarJogada(mao, { tipo: 'ativar', jogador: mao.vez, neuronio: 'C3N0' }), /indisponível/);
     assert.throws(() => aplicarJogada(mao, { tipo: 'ativar', jogador: 7, neuronio: 'C0N0' }), /inexistente/);
     assert.throws(() => aplicarJogada(mao, { tipo: 'empilhar', jogador: mao.vez, neuronio: 'C0N0', cartas: [mao.jogadores[mao.vez].mao[0].id] }), /Empilhamento inválido/);
-    assert.equal(JSON.stringify(mao.nd), foto);
+    assert.equal(JSON.stringify(mao.estadoMotor), foto);
     const parada = novaMao({ semente: 1, jogadores: JOGADORES });
     assert.throws(() => aplicarJogada(parada, { tipo: 'ativar', jogador: 0, neuronio: 'C0N0' }), /não está em andamento/);
     const { mao: m2, jogada } = procurarSituacao((m, x) => x.tipo === 'dropout');

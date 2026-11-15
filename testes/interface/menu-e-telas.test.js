@@ -53,7 +53,7 @@ describe('menu e telas', () => {
         await pagina.waitForSelector('.camada:not(.transparente) h2');
         assert.match(await pagina.locator('.camada:not(.transparente) h2').first().textContent(), new RegExp(texto));
         if (botao === '#m-regras') {
-          /* abas do manual do NeuroDeck, com a arte dos baralhos e terrenos */
+          /* abas do manual de regras, com a arte dos baralhos e terrenos */
           await pagina.click('.abas [data-aba="extensoes"]');
           await pagina.waitForSelector('.extensao-arte img');
           await capturar(pagina, '26-regras-baralhos-e-terrenos');

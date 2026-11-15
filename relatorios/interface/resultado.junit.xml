@@ -2,7 +2,7 @@
 <testsuites>
 	<testsuite name="ações da mesa" time="389.446789" disabled="0" errors="0" tests="9" failures="0" skipped="0" hostname="vm">
 		<testcase name="inspeção, seleção, Esc, tunagem, overfit, stack overflow e early stop na própria rede" time="85.346653" classname="test"/>
-		<testcase name="barra de ações do NeuroDeck: botões acendem pela seleção, selo de tunagem, pontos por neurônio e painéis de leitura" time="33.498437" classname="test"/>
+		<testcase name="barra de ações: botões acendem pela seleção, selo de tunagem, pontos por neurônio e painéis de leitura" time="33.498437" classname="test"/>
 		<testcase name="dropout (escolher camadas e pagar), cancelar, transfer learning, passar a vez e vanishing gradient" time="41.078511" classname="test"/>
 		<testcase name="truco: pedir, responder (aumentar, aceitar, correr) e a mão terminada por corrida" time="51.760926" classname="test"/>
 		<testcase name="truco com duas pessoas no aparelho: quem responde pega o aparelho antes de ver o pedido" time="36.987995" classname="test"/>

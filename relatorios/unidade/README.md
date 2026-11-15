@@ -3,7 +3,7 @@
 **Versão 1.3.1** · commit `0b63147-dirty` (com as mudanças ainda não registradas) · 11/11/2026, 23:28 (horário de Brasília)  
 Ambiente: Node v22.23.4 · Chromium 153.0.8010.12 · Linux x64 · 2 núcleos
 
-Regras do jogo, oponentes, conteúdo (conquistas, avatares, dicas, Biblioteca de conceitos), motor do NeuroDeck e a camada de tradução, arte procedural desenhada num canvas de verdade, telas em HTML (jsdom), som e música (WebAudio de mentira), aplicação e ferramentas de linha de comando.
+Regras do jogo, oponentes, conteúdo (conquistas, avatares, dicas, Biblioteca de conceitos), motor e a camada de tradução, arte procedural desenhada num canvas de verdade, telas em HTML (jsdom), som e música (WebAudio de mentira), aplicação e ferramentas de linha de comando.
 
 | Testes | Aprovados | Reprovados | Pulados | Duração |
 |---:|---:|---:|---:|---:|
@@ -161,7 +161,7 @@ Resultado em formato JUnit (para ferramentas de CI): [`resultado.junit.xml`](res
 | ✅ | trilhas: menu e os quatro terrenos, com tema composto que cabe nos compassos | som.js e musica.js | 52 ms |
 | ✅ | música: cada terreno agenda notas; trocar, repetir e parar | som.js e musica.js | 8,6 s |
 | ✅ | menu: mostra as escolhas, lê as mudanças, atualiza as miniaturas e abre cada tela | telas | 439 ms |
-| ✅ | menu: configurações do NeuroDeck (jogadores, humanos, oponentes, arquitetura e baralhos) | telas | 161 ms |
+| ✅ | menu: configurações da partida (jogadores, humanos, oponentes, arquitetura e baralhos) | telas | 161 ms |
 | ✅ | mods: tipos, exemplo comentado e o aviso de que a interface ainda não carrega mods | telas | 38 ms |
 | ✅ | regras: marca o tutorial como visto e chama aoFechar | telas | 55 ms |
 | ✅ | grimório: abre no verbete pedido, troca de verbete e marca como lido | telas | 35 ms |
@@ -212,9 +212,9 @@ Resultado em formato JUnit (para ferramentas de CI): [`resultado.junit.xml`](res
 
 | | Teste | Grupo | Duração |
 |---|---|---|---:|
-| ✅ | as 1.000 partidas têm o mesmo total de jogadas do site | Motor do NeuroDeck: equivalência com o site publicado | 1 ms |
-| ✅ | cada bloco de 100 partidas tem o mesmo resumo do site | Motor do NeuroDeck: equivalência com o site publicado | 0 ms |
-| ✅ | o resumo geral é idêntico ao do site | Motor do NeuroDeck: equivalência com o site publicado | 0 ms |
+| ✅ | as 1.000 partidas têm o mesmo total de jogadas do resumo gravado | Motor: equivalência com o conjunto de regras original | 1 ms |
+| ✅ | cada bloco de 100 partidas tem o mesmo resumo gravado | Motor: equivalência com o conjunto de regras original | 0 ms |
+| ✅ | o resumo geral é idêntico ao gravado | Motor: equivalência com o conjunto de regras original | 0 ms |
 
 ## `testes/unidade/motor-inicio.test.js`
 
@@ -236,23 +236,23 @@ Resultado em formato JUnit (para ferramentas de CI): [`resultado.junit.xml`](res
 | ✅ | Q vence J, e figura vence carta numérica | B1: desempate pela carta mais alta | 0 ms |
 | ✅ | Ás é a carta mais alta | B1: desempate pela carta mais alta | 0 ms |
 | ✅ | o naipe só decide quando a carta mais alta é a mesma | B1: desempate pela carta mais alta | 0 ms |
-| ✅ | no motor original (nd-2.0.0), K contra J era decidido pelo naipe | B1: desempate pela carta mais alta | 0 ms |
+| ✅ | no conjunto de regras original, K contra J era decidido pelo naipe | B1: desempate pela carta mais alta | 0 ms |
 | ✅ | par de figuras iguais vale 20 (10 por figura) | B2: o trio de figuras vale mais que o par | 2 ms |
 | ✅ | trio de figuras iguais vale 30 (10 por figura) | B2: o trio de figuras vale mais que o par | 0 ms |
 | ✅ | quadra de figuras iguais zera a rede (vanishing gradient) | B2: o trio de figuras vale mais que o par | 0 ms |
 | ✅ | figura isolada continua valendo 0, e figuras diferentes não formam par | B2: o trio de figuras vale mais que o par | 0 ms |
-| ✅ | no motor original (nd-2.0.0), o trio empatava com o par | B2: o trio de figuras vale mais que o par | 0 ms |
+| ✅ | no conjunto de regras original, o trio empatava com o par | B2: o trio de figuras vale mais que o par | 0 ms |
 | ✅ | exemplo do slide: 8-K-K-3 com um K tunado vale 41 | R1: a carta empilhada conta na sequência de figuras | 0 ms |
 | ✅ | tunar os dois Ks de um par forma quadra e zera a rede | R1: a carta empilhada conta na sequência de figuras | 0 ms |
 | ✅ | figura isolada tunada com outra igual forma par e vale 20 | R1: a carta empilhada conta na sequência de figuras | 0 ms |
 | ✅ | tunagem de carta numérica continua somando o valor da carta empilhada | R1: a carta empilhada conta na sequência de figuras | 0 ms |
 | ✅ | o detalhamento por neurônio soma o total | R1: a carta empilhada conta na sequência de figuras | 0 ms |
-| ✅ | no motor original (nd-2.0.0), a carta empilhada não entrava na sequência | R1: a carta empilhada conta na sequência de figuras | 0 ms |
+| ✅ | no conjunto de regras original, a carta empilhada não entrava na sequência | R1: a carta empilhada conta na sequência de figuras | 0 ms |
 | ✅ | quem sofreu early stop do rival pode passar, mesmo com ataque possível | R2: qualquer early stop libera o passar | 2 ms |
 | ✅ | quem aplicou early stop na própria rede também pode passar | R2: qualquer early stop libera o passar | 0 ms |
 | ✅ | quem chegou à saída ou ficou sem neurônio livre é obrigado a jogar se puder | R2: qualquer early stop libera o passar | 1 ms |
 | ✅ | com a rede aberta não se pode passar | R2: qualquer early stop libera o passar | 0 ms |
-| ✅ | no motor original (nd-2.0.0), quem se aplicou early stop era obrigado a atacar | R2: qualquer early stop libera o passar | 0 ms |
+| ✅ | no conjunto de regras original, quem se aplicou early stop era obrigado a atacar | R2: qualquer early stop libera o passar | 0 ms |
 | ✅ | o padrão é o conjunto da fusão, e o nome fica no estado | Conjuntos de regras | 0 ms |
 | ✅ | refazendo as mesmas jogadas com as regras da fusão, só muda o resultado de partidas que tocam B1, B2 ou R1 | Conjuntos de regras | 7,2 s |
 | ✅ | dropout: o neurônio desfeito sai da mesa, vai para o cemitério e não gasta a vez | Decisões confirmadas pelo professor (o motor já fazia assim) | 1 ms |
@@ -274,7 +274,7 @@ Resultado em formato JUnit (para ferramentas de CI): [`resultado.junit.xml`](res
 | ✅ | baralhoPadrao: 52 cartas com ids únicos | cartas.js | 0 ms |
 | ✅ | formato 3-5-5-5-5-5-4 e mão de 5 cartas | rede.js | 0 ms |
 | ✅ | ehOculta: só as camadas 1 a 5 na mesa padrão; numa mesa de 9 camadas, de 1 a 7 | rede.js | 0 ms |
-| ✅ | tamanhosDaMesa: arquiteturas do NeuroDeck, com um neurônio a mais por camada para cada jogador além de 2 | rede.js | 0 ms |
+| ✅ | tamanhosDaMesa: arquiteturas do motor, com um neurônio a mais por camada para cada jogador além de 2 | rede.js | 0 ms |
 | ✅ | nomeCamada: entrada, ocultas numeradas e saída | rede.js | 0 ms |
 | ✅ | cada baralho monta as cartas do motor (52; o truco, 2 baralhos de 27) e tem nome e resumo | baralhos.js | 2 ms |
 | ✅ | pontosDaCarta: Ás 11, figuras 0, números pelo valor; no truco, manilhas e a ordem do truco | baralhos.js | 0 ms |

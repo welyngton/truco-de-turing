@@ -38,7 +38,7 @@ function lerModulo(caminho) {
   const codigo = readFileSync(caminho, 'utf8');
   const arquivo = (/\/\*\*\s*\n?\s*\*?\s*@file([\s\S]*?)\*\//.exec(codigo) || [, ''])[1];
   let descricao = limparComentario('/**' + arquivo + '*/');
-  /* arquivos sem @file (o motor do NeuroDeck, em src/motor/): usa o primeiro parágrafo dos comentários `//` do topo */
+  /* arquivos sem @file (o motor, em src/motor/): usa o primeiro parágrafo dos comentários `//` do topo */
   if (!descricao) {
     const topo = (/^(?:\/\/.*\n)+/.exec(codigo) || [''])[0].split('\n').map((linha) => linha.replace(/^\/\/ ?/, ''));
     const fim = topo.findIndex((linha) => !linha.trim());

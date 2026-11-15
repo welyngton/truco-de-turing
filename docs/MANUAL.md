@@ -28,14 +28,13 @@ A regra mais importante da arquitetura é a separação em camadas, em que cada 
 ├───────────────────────────────────────────────────────────────┤
 │ nucleo/             camada de tradução e modo truco           │
 ├───────────────────────────────────────────────────────────────┤
-│ motor/              regras do NeuroDeck: sem Phaser, sem DOM  │
+│ motor/              regras do jogo: sem Phaser, sem DOM       │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-- **`motor/`** é o motor de regras do NeuroDeck (estado da partida, ações, baralhos, terrenos,
-  desempates e bots), trazido na fusão dos dois jogos. Toda regra do jogo mora aqui. O código está
-  em inglês, como no original; a origem, a conferência da cópia e as mudanças estão em
-  `src/motor/ORIGEM.md`.
+- **`motor/`** é o motor de regras (estado da partida, ações, baralhos, terrenos, desempates e
+  bots). Toda regra do jogo mora aqui. O código está em inglês; os arquivos e as decisões de regra
+  estão em `src/motor/MOTOR.md`.
 - **`nucleo/`** é a camada de tradução: guarda o estado do motor e entrega às telas a mão, as
   jogadas, a pontuação e os oponentes no formato da interface. Não decide nenhuma regra, com uma
   exceção: o modo truco (tentos e pedidos), que é do Truco de Turing. Como o motor, não usa Phaser
@@ -58,7 +57,7 @@ src/
   aplicacao.js              estado fora da partida: opções, progresso, conquistas, navegação
   configuracao.js           tamanho do mundo, cores, fontes, resolução e densidade das texturas
   estilo.css                estilo dos painéis HTML
-  motor/                    REGRAS (motor do NeuroDeck, em inglês; ver ORIGEM.md)
+  motor/                    REGRAS (motor, em inglês; ver MOTOR.md)
     engine.js                 fachada do motor
     engine/                   core (estado, turnos, desempates), actions, decks, terrains,
                               registry (API de mods), util
@@ -66,7 +65,7 @@ src/
     sim.js                    partidas entre bots
   nucleo/                   CAMADA DE TRADUÇÃO (pura) e modo truco
     traducao.js               conversões: cartas, jogadas, situações, motivos de vitória
-    partida.js                a mão vista pela interface: estado do motor (mao.nd), visão,
+    partida.js                a mão vista pela interface: estado do motor (mao.estadoMotor), visão,
                               jogadas legais, aplicação de jogadas, eventos e registro
     pontuacao.js              pontuação do motor no formato das telas (neurônios, combos, notas)
     baralhos.js               baralhos: nome, resumo, manilhas e pontos de cada carta
@@ -148,12 +147,12 @@ docs/
 
 ## 4. O motor e a camada de tradução
 
-As regras são do motor do NeuroDeck (`src/motor/`). O núcleo (`src/nucleo/`) guarda o estado do motor
+As regras ficam no motor (`src/motor/`). O núcleo (`src/nucleo/`) guarda o estado do motor
 e o apresenta às telas com o vocabulário do Truco de Turing:
 
-| Truco de Turing (interface) | Motor do NeuroDeck |
+| Truco de Turing (interface) | Motor |
 |---|---|
-| `mao` (visão) | `state`, guardado em `mao.nd` |
+| `mao` (visão) | `state`, guardado em `mao.estadoMotor` |
 | `jogadores[j].caminho`, `situacao` | `nets[j].path`, `finished` e `reason` |
 | neurônio `{ id: 'C2N3', cartas, dono, removido }` | slot `layers[2][3]` com `card`, `stack`, `owner`, `removed` |
 | carta `{ valor: 'K', naipe: 'E' }` | carta `{ rank: 13, suit: 'S' }` |
@@ -164,12 +163,12 @@ e o apresenta às telas com o vocabulário do Truco de Turing:
 ### 4.1 Estado de uma mão (`nucleo/partida.js`)
 
 `novaMao(opcoes)` cria a partida no motor (`newGame`) e monta a visão. Depois de cada jogada,
-`atualizarVisao(mao)` refaz a visão a partir de `mao.nd`. Os campos principais:
+`atualizarVisao(mao)` refaz a visão a partir de `mao.estadoMotor`. Os campos principais:
 
 | Campo | Conteúdo |
 |---|---|
 | `config` | `{ baralho, terreno, inicio }` escolhidos no menu |
-| `nd` | estado do motor: a fonte da verdade (é o que os bots e as simulações usam) |
+| `estadoMotor` | estado do motor: a fonte da verdade (é o que os bots e as simulações usam) |
 | `camadas` | lista de camadas; cada uma é uma lista de neurônios |
 | `neuronios` | mapa `id → { id, camada, posicao, cartas, revelado, dono, removido, conhecido }` |
 | `jogadores` | `{ nome, tipo: 'humano'|'oponente', oponente, mao, caminho, situacao, dropouts, transferUsado, cartaInicial, estatisticas }` |
@@ -183,7 +182,7 @@ e o apresenta às telas com o vocabulário do Truco de Turing:
 `situacao` de um jogador: `'construindo'`, `'concluida'` (chegou à saída), `'earlystop'`, `'overflow'`
 ou `'travada'` (ficou sem neurônio livre na camada seguinte e a rede foi finalizada).
 
-A visão é só leitura: quem precisa montar uma situação (testes, ferramentas) altera `mao.nd` e chama
+A visão é só leitura: quem precisa montar uma situação (testes, ferramentas) altera `mao.estadoMotor` e chama
 `atualizarVisao`. As funções de `testes/apoio/montagem.js` fazem isso (`darMao`, `montarRede`,
 `finalizarRede`…).
 
@@ -229,7 +228,7 @@ roda por cima das mãos do motor e não depende dele.
 
 ### 4.6 Oponentes (`nucleo/oponentes/`)
 
-São os bots do NeuroDeck (`motor/bot.js`); o núcleo só traduz a jogada escolhida.
+São os bots do motor (`motor/bot.js`); o núcleo só traduz a jogada escolhida.
 
 | Chave | Nome | Nível | Bot do motor |
 |---|---|---|---|
@@ -242,9 +241,9 @@ de um oponente. As de truco usam `chanceDeVitoria`, estimada por simulação.
 
 ### 4.7 Conjuntos de regras do motor
 
-`newGame({ rules })` aceita `'fusao'` (padrão: regras decididas na fusão) e `'nd-2.0.0'` (o motor
-original). O teste `motor-equivalencia` joga 1.000 partidas com `'nd-2.0.0'` e compara com o resumo
-gravado no site do NeuroDeck; o `motor-regras` cobre o que mudou.
+`newGame({ rules })` aceita `'fusao'` (padrão: regras com as decisões do professor e do grupo) e
+`'original'` (as regras anteriores a essas decisões). O teste `motor-equivalencia` joga 1.000 partidas
+com `'original'` e compara com o resumo gravado; o `motor-regras` cobre o que mudou.
 
 ## 5. A cena da mesa (`cenas/mesa/`)
 
@@ -373,22 +372,22 @@ as escritas à mão, ficam como estão: a pessoa é reconhecida pelo `[@login]` 
 
 ### Novo baralho
 1. No motor: escreva o baralho no formato de `motor/engine/decks.js` (`id`, `name`, `score` e,
-   se precisar, `build`, `cardValue`, `stackValue`) e registre com `NeuroDeck.registerDeck`.
-2. Em `nucleo/traducao.js`, acrescente a chave em `BARALHO_ND`; em `nucleo/baralhos.js`, a entrada em
+   se precisar, `build`, `cardValue`, `stackValue`) e registre com `Motor.registerDeck`.
+2. Em `nucleo/traducao.js`, acrescente a chave em `BARALHO_MOTOR`; em `nucleo/baralhos.js`, a entrada em
    `BARALHOS` com `nome` e `resumo` (e `manilhas` ou `figurasValem`, se for o caso).
 3. Em `arte/versos.js`, escreva `versoNovo(ctx, W, H, aleatorio)` e registre em `VERSOS`.
 4. O menu lista os baralhos automaticamente. Rode `npm run testar` e uma simulação com o baralho.
 
 ### Novo terreno
 1. No motor: escreva o terreno no formato de `motor/engine/terrains.js` (ganchos `neuronBonus`,
-   `onRoundEnd`, `onCardPlayed`…) e registre com `NeuroDeck.registerTerrain`.
-2. `nucleo/traducao.js`: chave em `TERRENO_ND`; `nucleo/terrenos.js`: entrada em `TERRENOS` com `nome` e `resumo`.
+   `onRoundEnd`, `onCardPlayed`…) e registre com `Motor.registerTerrain`.
+2. `nucleo/traducao.js`: chave em `TERRENO_MOTOR`; `nucleo/terrenos.js`: entrada em `TERRENOS` com `nome` e `resumo`.
 3. `arte/mesas.js`: o fundo da mesa (registre na tabela de `desenharMesa`).
 4. `arte/cartasDeTerreno.js`: a paleta e a paisagem da carta de terreno.
 
 ### Novo oponente
 1. Escreva a estratégia em `nucleo/oponentes/estrategias.js`: recebe `mao` e `j`, escolhe um
-   movimento do motor (de `ND.legalMoves(mao.nd, j)`) e o devolve traduzido com `jogadaParaTT`.
+   movimento do motor (de `motor.legalMoves(mao.estadoMotor, j)`) e o devolve traduzido com `jogadaParaTT`.
 2. Registre o perfil em `OPONENTES` (`nucleo/oponentes/index.js`) e ligue-o em `escolherJogada`.
 3. Desenhe o avatar em `arte/avatares.js` e acrescente a chave em `AVATARES` de `CenaCarregamento.js`.
 
@@ -428,8 +427,8 @@ mesmos arquivos de `src/`), com a lista de cada função e método e quantas vez
 No GitHub, o workflow `.github/workflows/testes.yml` faz o mesmo em cada pull request e push na
 main e publica os relatórios como artefato da execução.
 
-As regras têm três níveis de teste: `motor-equivalencia` (a cópia do motor joga como o site do
-NeuroDeck), `motor-regras` e `motor-inicio` (o que a fusão mudou no motor) e `regras-de-negocio`
+As regras têm três níveis de teste: `motor-equivalencia` (o motor joga como o resumo gravado do
+conjunto de regras original), `motor-regras` e `motor-inicio` (o que as decisões de regra mudaram no motor) e `regras-de-negocio`
 (os 40 testes RN da especificação, pela interface do núcleo). Para montar uma situação com cartas
 escolhidas, use `testes/apoio/montagem.js` (`darMao`, `montarRede`, `finalizarRede`, `encerrar`…),
 que altera o estado do motor e refaz a visão; nos testes de interface, `carregarMontagem(pagina)`

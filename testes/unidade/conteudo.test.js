@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { VERBETES } from '../../src/conteudo/grimorio.js';
 import { FIGURAS, figuraDaBiblioteca } from '../../src/conteudo/figurasDaBiblioteca.js';
 import { ACOES_DA_AJUDA } from '../../src/interface/telas/ajudaDasAcoes.js';
-import { NeuroDeck } from '../../src/motor/engine.js';
+import { Motor } from '../../src/motor/engine.js';
 import { AMBIENTACAO, PROVOCACOES, provocar } from '../../src/conteudo/textos.js';
 import { GRADUACOES, CONQUISTAS, VALEM_SEM_MAO_COMPLETA } from '../../src/conteudo/conquistas.js';
 import { AVATARES_DO_JOGADOR, avatarLiberado, avatarDoJogador, conquistaQueLibera, avataresDaConquista } from '../../src/conteudo/avatares.js';
@@ -68,7 +68,7 @@ describe('grimorio.js', () => {
     const ids = new Set(VERBETES.map((x) => x.id));
     for (const a of ACOES_DA_AJUDA) {
       assert.ok(ids.has(a.verbete), a.id);
-      assert.ok(NeuroDeck.action(a.motor).rule, a.id);
+      assert.ok(Motor.action(a.motor).rule, a.id);
       assert.ok(a.resumo && a.quando, a.id);
     }
     for (const id of ['tunagem', 'overfit', 'earlystop', 'stackoverflow', 'dropout', 'transfer', 'passar']) assert.ok(ACOES_DA_AJUDA.some((a) => a.id === id), id);

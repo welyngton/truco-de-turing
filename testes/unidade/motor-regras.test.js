@@ -1,9 +1,9 @@
 /**
- * @file Regras que a fusão mudou no motor do NeuroDeck (issue #1): B1, B2, R1 e R2.
+ * @file Regras que a fusão mudou no motor (issue #1): B1, B2, R1 e R2.
  *
  * Cada teste descreve o cenário, a regra e o resultado esperado. Os testes foram escritos antes
- * das correções: falhavam no motor copiado e passam no motor da fusão. O conjunto de regras
- * original continua disponível com `newGame({ rules: 'nd-2.0.0' })`.
+ * das correções: falhavam com as regras originais e passam no motor da fusão. O conjunto de regras
+ * original continua disponível com `newGame({ rules: 'original' })`.
  *
  *  - B1: desempate "carta mais alta" comparava os pontos da carta, e K contra J caía no naipe.
  *  - B2: o trio de figuras valia o mesmo que o par (20).
@@ -14,7 +14,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import * as E from '../../src/motor/engine.js';
 import { runGame } from '../../src/motor/sim.js';
-import { configuracao, resumoDaPartida, RESUMO_DO_SITE } from '../apoio/equivalencia-motor.js';
+import { configuracao, resumoDaPartida, RESUMO_GRAVADO } from '../apoio/equivalencia-motor.js';
 
 const K = 13, Q = 12, J = 11, AS = 1;
 const carta = (id, rank, suit) => ({ id, rank, suit });
@@ -92,9 +92,9 @@ describe('B1: desempate pela carta mais alta', () => {
     assert.deepEqual(r, { winner: 1, tiebreak: 'naipe' });
   });
 
-  test('no motor original (nd-2.0.0), K contra J era decidido pelo naipe', () => {
+  test('no conjunto de regras original, K contra J era decidido pelo naipe', () => {
     // Registro do comportamento antigo, mantido para a conferência de equivalência.
-    const r = empatadosComMaos([carta(900, K, 'D'), carta(901, 3, 'H')], [carta(902, 3, 'S'), carta(903, J, 'S')], { rules: 'nd-2.0.0' });
+    const r = empatadosComMaos([carta(900, K, 'D'), carta(901, 3, 'H')], [carta(902, 3, 'S'), carta(903, J, 'S')], { rules: 'original' });
     assert.deepEqual(r, { winner: 1, tiebreak: 'naipe' });
   });
 });
@@ -123,9 +123,9 @@ describe('B2: o trio de figuras vale mais que o par', () => {
     assert.equal(pontuar([2, K, Q, 2]).total, 4);
   });
 
-  test('no motor original (nd-2.0.0), o trio empatava com o par', () => {
-    assert.equal(pontuar([2, K, K, K, 2], {}, { rules: 'nd-2.0.0' }).total, 24);
-    assert.equal(pontuar([2, K, K, 2], {}, { rules: 'nd-2.0.0' }).total, 24);
+  test('no conjunto de regras original, o trio empatava com o par', () => {
+    assert.equal(pontuar([2, K, K, K, 2], {}, { rules: 'original' }).total, 24);
+    assert.equal(pontuar([2, K, K, 2], {}, { rules: 'original' }).total, 24);
   });
 });
 
@@ -160,9 +160,9 @@ describe('R1: a carta empilhada conta na sequência de figuras', () => {
     assert.deepEqual(r.items.map((it) => it.tune), [0, 10, 0, 0]);
   });
 
-  test('no motor original (nd-2.0.0), a carta empilhada não entrava na sequência', () => {
-    assert.equal(pontuar([8, K, K, 3], { 1: 1 }, { rules: 'nd-2.0.0' }).total, 41); // 8 + 20 (par) + 10 (tunagem) + 3
-    assert.equal(pontuar([2, K, K, 2], { 1: 1, 2: 1 }, { rules: 'nd-2.0.0' }).total, 44);
+  test('no conjunto de regras original, a carta empilhada não entrava na sequência', () => {
+    assert.equal(pontuar([8, K, K, 3], { 1: 1 }, { rules: 'original' }).total, 41); // 8 + 20 (par) + 10 (tunagem) + 3
+    assert.equal(pontuar([2, K, K, 2], { 1: 1, 2: 1 }, { rules: 'original' }).total, 44);
   });
 });
 
@@ -194,8 +194,8 @@ describe('R2: qualquer early stop libera o passar', () => {
     assert.throws(() => E.applyMove(s, s.turn, { type: 'pass' }));
   });
 
-  test('no motor original (nd-2.0.0), quem se aplicou early stop era obrigado a atacar', () => {
-    const { s, p } = finalizadoComAtaquePossivel('auto-earlystop', { rules: 'nd-2.0.0' });
+  test('no conjunto de regras original, quem se aplicou early stop era obrigado a atacar', () => {
+    const { s, p } = finalizadoComAtaquePossivel('auto-earlystop', { rules: 'original' });
     assert.throws(() => E.applyMove(s, p, { type: 'pass' }));
   });
 });
@@ -203,20 +203,20 @@ describe('R2: qualquer early stop libera o passar', () => {
 describe('Conjuntos de regras', () => {
   test('o padrão é o conjunto da fusão, e o nome fica no estado', () => {
     assert.equal(E.newGame({ seed: 1 }).rules, 'fusao');
-    assert.equal(E.newGame({ seed: 1, rules: 'nd-2.0.0' }).rules, 'nd-2.0.0');
+    assert.equal(E.newGame({ seed: 1, rules: 'original' }).rules, 'original');
     assert.throws(() => E.newGame({ seed: 1, rules: 'inexistente' }));
   });
 
   test('refazendo as mesmas jogadas com as regras da fusão, só muda o resultado de partidas que tocam B1, B2 ou R1', () => {
-    // Cenário: as 1.000 partidas do site, com as mesmas jogadas, pontuadas pelas regras da fusão.
+    // Cenário: as 1.000 partidas do resumo gravado, com as mesmas jogadas, pontuadas pelas regras da fusão.
     // Regra: R2 só acrescenta a opção de passar, então toda jogada original continua válida.
     // Esperado: placar, vencedor ou desempate só mudam se a partida tem figura tunada ou trio
     // de figuras na rede de alguém (B2, R1), ou se chegou ao desempate pela carta mais alta (B1).
     let mudaram = 0;
-    for (let i = 0; i < RESUMO_DO_SITE.total; i++) {
+    for (let i = 0; i < RESUMO_GRAVADO.total; i++) {
       const cfg = configuracao(i);
       const opcoes = { deck: cfg.deck, terrain: cfg.terrain, seed: cfg.seed, firstRule: cfg.firstRule, copies: cfg.copies, players: cfg.bots.length };
-      const original = runGame({ ...cfg, rules: 'nd-2.0.0' });
+      const original = runGame({ ...cfg, rules: 'original' });
       const refeita = E.replay({ ...opcoes, rules: 'fusao' }, original.moves);
       assert.equal(refeita.over, true, 'partida ' + i + ' termina no mesmo ponto');
       if (resumoDaPartida(refeita) === resumoDaPartida(original)) continue;

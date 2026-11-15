@@ -1,12 +1,12 @@
 /**
- * @file Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor do NeuroDeck.
+ * @file Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor.
  *
  * Este arquivo é a **camada de tradução** da fusão: as telas e os testes continuam chamando as
  * mesmas funções de antes (`novaMao`, `jogadasLegais`, `aplicarJogada`…), mas as regras agora são
- * as do motor em `src/motor/` (ver `src/motor/ORIGEM.md`). Nenhuma regra é decidida aqui.
+ * as do motor em `src/motor/` (ver `src/motor/MOTOR.md`). Nenhuma regra é decidida aqui.
  *
  * ## Como funciona
- * A mão guarda o estado do motor em `mao.nd` e uma **visão** dele no formato que a interface
+ * A mão guarda o estado do motor em `mao.estadoMotor` e uma **visão** dele no formato que a interface
  * conhece (os campos abaixo). Cada jogada é traduzida (`traducao.js`), aplicada pelo motor e, em
  * seguida, a visão é refeita por `atualizarVisao`. Os eventos de animação e as linhas do registro
  * são gerados aqui, comparando o antes e o depois.
@@ -16,7 +16,7 @@
  * {
  *   config: { baralho, terreno, inicio, arquitetura, baralhos },  // opções escolhidas no menu
  *   semente,                                   // aleatoriedade reproduzível
- *   nd,                                        // estado do motor do NeuroDeck (fonte da verdade)
+ *   estadoMotor,                                        // estado do motor (fonte da verdade)
  *   indiceDeCartas,                            // cartas da interface por id do motor, e vice-versa
  *   camadas: Neuronio[][],                     // a mesa, camada a camada
  *   neuronios: { [id]: Neuronio },             // índice dos neurônios por id
@@ -41,7 +41,7 @@
  * `{ tipo: 'empilhar', jogador, neuronio, cartas }`, `{ tipo: 'dropout', jogador, n, pagamento }`,
  * `{ tipo: 'transfer', jogador, cartas }`, `{ tipo: 'passar', jogador }`.
  *
- * ## O que mudou nas regras com o motor do NeuroDeck
+ * ## O que mudou nas regras com o motor
  *  - dropout: o neurônio desfeito vai para o cemitério e sai da mesa (antes voltava virado);
  *  - quem fica sem neurônio livre na camada seguinte tem a rede finalizada ('travada');
  *  - transfer learning não gasta a vez;
@@ -49,12 +49,12 @@
  *    tem nenhuma outra jogada; quem não pode jogar é pulado automaticamente;
  *  - pontuação, terrenos e desempates: ver `pontuacao.js` e `src/motor/engine/`.
  */
-import * as ND from '../motor/engine.js';
+import * as motor from '../motor/engine.js';
 import { sementeNova } from './aleatorio.js';
 import { rotuloCarta } from './cartas.js';
 import { ehOculta, nomeCamada, tamanhosDaMesa, ARQUITETURAS } from './rede.js';
 import {
-  BARALHO_ND, TERRENO_ND, INICIO_ND, ATAQUE_PELO_TAMANHO,
+  BARALHO_MOTOR, TERRENO_MOTOR, INICIO_MOTOR, ATAQUE_PELO_TAMANHO,
   cartaParaTT, naipeParaTT, idDoNeuronio, lugarDoNeuronio, situacaoDaRede, motivoDaVitoria,
 } from './traducao.js';
 
@@ -81,49 +81,49 @@ function novoJogador(dados, indice) {
 }
 
 /** Todas as cartas da partida no estado do motor, onde quer que estejam. */
-function todasAsCartas(nd) {
+function todasAsCartas(estadoMotor) {
   const cartas = [];
-  for (const camada of nd.layers) for (const slot of camada) cartas.push(slot.card, ...slot.stack);
-  for (const mao of nd.hands) cartas.push(...mao);
-  return cartas.concat(nd.limbo, nd.unused || [], nd.graveyard);
+  for (const camada of estadoMotor.layers) for (const slot of camada) cartas.push(slot.card, ...slot.stack);
+  for (const mao of estadoMotor.hands) cartas.push(...mao);
+  return cartas.concat(estadoMotor.limbo, estadoMotor.unused || [], estadoMotor.graveyard);
 }
 
 /**
  * Converte as cartas do motor para o formato da interface, uma vez por partida.
- * @returns {{ tt: Map<number, object>, nd: Map<string, number> }} carta da interface por id do
+ * @returns {{ tt: Map<number, object>, estadoMotor: Map<string, number> }} carta da interface por id do
  *   motor, e id do motor por id da interface.
  */
-function indexarCartas(nd) {
-  const cartas = todasAsCartas(nd);
+function indexarCartas(estadoMotor) {
+  const cartas = todasAsCartas(estadoMotor);
   const vezes = {};
   for (const c of cartas) vezes[c.rank + c.suit] = (vezes[c.rank + c.suit] || 0) + 1;
-  const indice = { tt: new Map(), nd: new Map() };
+  const indice = { tt: new Map(), estadoMotor: new Map() };
   for (const c of cartas) {
     if (indice.tt.has(c.id)) continue;
     const carta = cartaParaTT(c, vezes[c.rank + c.suit] > 1);
     indice.tt.set(c.id, carta);
-    indice.nd.set(carta.id, c.id);
+    indice.estadoMotor.set(carta.id, c.id);
   }
   return indice;
 }
 
 /**
  * Monta a visão da interface em volta de um estado do motor.
- * @param {object} nd Estado do motor (`newGame`, `cloneState` ou `determinize`).
+ * @param {object} estadoMotor Estado do motor (`newGame`, `cloneState` ou `determinize`).
  * @param {object} config `{ baralho, terreno, inicio }`.
  * @param {object[]} jogadores Jogadores no formato da interface.
  * @param {boolean} simulacao Mãos de simulação não geram eventos, registro nem histórico.
  * @param {object} [cartas] Índice de cartas de outra visão da mesma partida.
  */
-function montar(nd, config, jogadores, simulacao, cartas) {
+function montar(estadoMotor, config, jogadores, simulacao, cartas) {
   const mao = {
-    config, semente: nd.seed, nd, indiceDeCartas: cartas || indexarCartas(nd),
+    config, semente: estadoMotor.seed, estadoMotor, indiceDeCartas: cartas || indexarCartas(estadoMotor),
     camadas: [], neuronios: {}, jogadores,
     limbo: [], cemiterio: [],
     vez: 0, primeiro: 0, rodada: 1, turno: 0, vento: null,
     fase: 'inicio', eventos: [], registro: [], historico: [], resultado: null, simulacao,
   };
-  nd.layers.forEach((camada, c) => {
+  estadoMotor.layers.forEach((camada, c) => {
     mao.camadas.push(camada.map((_, p) => {
       const neuronio = { id: idDoNeuronio(c, p), camada: c, posicao: p, cartas: [], revelado: false, dono: -1, removido: false, conhecido: false, rodadaRevelada: 0 };
       mao.neuronios[neuronio.id] = neuronio;
@@ -149,18 +149,18 @@ export function novaMao(opcoes) {
     baralho: opcoes.baralho || 'classico', terreno: opcoes.terreno || 'neutro', inicio: opcoes.inicio || 'revela-descarta',
     arquitetura: opcoes.arquitetura || 'padrao', baralhos: Math.max(1, Math.min(4, Number(opcoes.baralhos) || 1)),
   };
-  if (!BARALHO_ND[config.baralho]) throw new Error('Baralho desconhecido: ' + config.baralho);
-  if (!TERRENO_ND[config.terreno]) throw new Error('Terreno desconhecido: ' + config.terreno);
-  if (!INICIO_ND[config.inicio]) throw new Error('Forma de início desconhecida: ' + config.inicio);
+  if (!BARALHO_MOTOR[config.baralho]) throw new Error('Baralho desconhecido: ' + config.baralho);
+  if (!TERRENO_MOTOR[config.terreno]) throw new Error('Terreno desconhecido: ' + config.terreno);
+  if (!INICIO_MOTOR[config.inicio]) throw new Error('Forma de início desconhecida: ' + config.inicio);
   if (!ARQUITETURAS[config.arquitetura]) throw new Error('Arquitetura desconhecida: ' + config.arquitetura);
   const n = opcoes.jogadores.length;
-  if (n < 2 || n > ND.MAX_PLAYERS) throw new Error('A mesa aceita de 2 a ' + ND.MAX_PLAYERS + ' jogadores');
+  if (n < 2 || n > motor.MAX_PLAYERS) throw new Error('A mesa aceita de 2 a ' + motor.MAX_PLAYERS + ' jogadores');
   const semente = opcoes.semente != null ? opcoes.semente | 0 : sementeNova();
-  const nd = ND.newGame({
-    deck: BARALHO_ND[config.baralho], terrain: TERRENO_ND[config.terreno], firstRule: INICIO_ND[config.inicio],
+  const estadoMotor = motor.newGame({
+    deck: BARALHO_MOTOR[config.baralho], terrain: TERRENO_MOTOR[config.terreno], firstRule: INICIO_MOTOR[config.inicio],
     seed: semente, players: n, copies: config.baralhos, layers: tamanhosDaMesa(config.arquitetura, n),
   });
-  const mao = montar(nd, config, opcoes.jogadores.map(novoJogador), false);
+  const mao = montar(estadoMotor, config, opcoes.jogadores.map(novoJogador), false);
   mao.semente = semente;
   if (mao.fase === 'jogo') emitir(mao, { tipo: 'inicio', jogador: mao.primeiro, como: 'sorteio' });
   anotarHistorico(mao);
@@ -170,29 +170,29 @@ export function novaMao(opcoes) {
 /**
  * Cópia leve da mão para simulações (sem eventos, textos ou histórico).
  * @param {object} mao
- * @param {object} [nd] Estado do motor a usar na cópia (por padrão, um clone do estado da mão).
+ * @param {object} [estadoMotor] Estado do motor a usar na cópia (por padrão, um clone do estado da mão).
  * @returns {object}
  */
-export function copiarMao(mao, nd = ND.cloneState(mao.nd)) {
+export function copiarMao(mao, estadoMotor = motor.cloneState(mao.estadoMotor)) {
   const jogadores = mao.jogadores.map((j) => ({ ...j, estatisticas: { ...j.estatisticas } }));
-  return montar(nd, mao.config, jogadores, true, mao.indiceDeCartas);
+  return montar(estadoMotor, mao.config, jogadores, true, mao.indiceDeCartas);
 }
 
 /**
- * Refaz a visão da interface a partir do estado do motor (`mao.nd`). É chamada depois de cada
- * jogada; ferramentas e testes que mexem direto em `mao.nd` também precisam chamá-la.
+ * Refaz a visão da interface a partir do estado do motor (`mao.estadoMotor`). É chamada depois de cada
+ * jogada; ferramentas e testes que mexem direto em `mao.estadoMotor` também precisam chamá-la.
  * @returns {object} a própria mão
  */
 export function atualizarVisao(mao) {
-  const nd = mao.nd;
+  const estadoMotor = mao.estadoMotor;
   const carta = (c) => mao.indiceDeCartas.tt.get(c.id);
-  mao.vez = nd.turn;
-  mao.primeiro = nd.firstPlayer;
-  mao.rodada = nd.round + 1;
-  mao.turno = nd.turnCount;
-  mao.vento = nd.terrainData.wind ? naipeParaTT(nd.terrainData.wind) : null;
-  mao.fase = nd.over ? 'fim' : nd.phase === 'reveal' ? 'inicio' : 'jogo';
-  nd.layers.forEach((camada, c) => camada.forEach((slot, p) => {
+  mao.vez = estadoMotor.turn;
+  mao.primeiro = estadoMotor.firstPlayer;
+  mao.rodada = estadoMotor.round + 1;
+  mao.turno = estadoMotor.turnCount;
+  mao.vento = estadoMotor.terrainData.wind ? naipeParaTT(estadoMotor.terrainData.wind) : null;
+  mao.fase = estadoMotor.over ? 'fim' : estadoMotor.phase === 'reveal' ? 'inicio' : 'jogo';
+  estadoMotor.layers.forEach((camada, c) => camada.forEach((slot, p) => {
     const n = mao.camadas[c][p];
     const revelado = slot.revealed && !slot.removed;
     if (revelado && !n.revelado) n.rodadaRevelada = mao.rodada;
@@ -203,16 +203,16 @@ export function atualizarVisao(mao) {
     n.dono = slot.owner === null ? -1 : slot.owner;
   }));
   mao.jogadores.forEach((jogador, j) => {
-    const rede = nd.nets[j];
-    jogador.mao = nd.hands[j].map(carta);
+    const rede = estadoMotor.nets[j];
+    jogador.mao = estadoMotor.hands[j].map(carta);
     jogador.caminho = rede.path.map((r) => idDoNeuronio(r.layer, r.slotIndex));
     jogador.situacao = situacaoDaRede(rede);
     jogador.dropouts = rede.dropouts;
-    jogador.transferUsado = nd.transferUsed[j];
-    jogador.cartaInicial = nd.reveal[j] != null ? mao.indiceDeCartas.tt.get(nd.reveal[j]) : null;
+    jogador.transferUsado = estadoMotor.transferUsed[j];
+    jogador.cartaInicial = estadoMotor.reveal[j] != null ? mao.indiceDeCartas.tt.get(estadoMotor.reveal[j]) : null;
   });
-  mao.limbo = nd.limbo.map(carta);
-  mao.cemiterio = nd.graveyard.map(carta);
+  mao.limbo = estadoMotor.limbo.map(carta);
+  mao.cemiterio = estadoMotor.graveyard.map(carta);
   return mao;
 }
 
@@ -230,7 +230,7 @@ function anotar(mao, texto) {
 
 /** Soma atual da rede de cada jogador, pelo motor. */
 function somas(mao) {
-  return mao.jogadores.map((_, j) => ND.score(mao.nd, j).total);
+  return mao.jogadores.map((_, j) => motor.score(mao.estadoMotor, j).total);
 }
 
 /** Guarda a soma atual de cada rede para a curva de treino. */
@@ -287,7 +287,7 @@ export function efeitoDoEmpilhamento(mao, j, neuronio, n) {
 export function podeEmpilhar(mao, j, idNeuronio, idsCartas) {
   if (mao.fase !== 'jogo' || mao.vez !== j || !idsCartas.length) return false;
   try {
-    return ND.validate(mao.nd, j, jogadaParaND(mao, { tipo: 'empilhar', jogador: j, neuronio: idNeuronio, cartas: idsCartas })) === true;
+    return motor.validate(mao.estadoMotor, j, jogadaParaMotor(mao, { tipo: 'empilhar', jogador: j, neuronio: idNeuronio, cartas: idsCartas })) === true;
   } catch (erro) {
     return false;
   }
@@ -315,7 +315,7 @@ export function valorParaTransfer(mao, j) {
  * obrigatório), ou quem não tem nenhuma outra jogada que gaste a vez.
  */
 export function podePassar(mao, j) {
-  return mao.fase === 'jogo' && mao.vez === j && ND.canPass(mao.nd, j);
+  return mao.fase === 'jogo' && mao.vez === j && motor.canPass(mao.estadoMotor, j);
 }
 
 /**
@@ -326,7 +326,7 @@ export function podePassar(mao, j) {
  */
 export function jogadasLegais(mao, j, opcoes = {}) {
   if (mao.fase === 'fim' || (mao.fase === 'jogo' && mao.vez !== j)) return [];
-  return ND.legalMoves(mao.nd, j, { maxDropout: 2 })
+  return motor.legalMoves(mao.estadoMotor, j, { maxDropout: 2 })
     .filter((m) => opcoes.comDropout || m.type !== 'dropout')
     .map((m) => jogadaParaTT(mao, j, m));
 }
@@ -336,11 +336,11 @@ export function jogadasLegais(mao, j, opcoes = {}) {
 /** Ids do motor das cartas da mão do jogador, a partir dos ids da interface. */
 function idsNoMotor(mao, j, ids) {
   if (!Array.isArray(ids)) throw new Error('Jogada sem cartas');
-  const naMao = new Set(mao.nd.hands[j].map((c) => c.id));
+  const naMao = new Set(mao.estadoMotor.hands[j].map((c) => c.id));
   return ids.map((id) => {
-    const idND = mao.indiceDeCartas.nd.get(id);
-    if (idND === undefined || !naMao.has(idND)) throw new Error('Carta fora da mão: ' + id);
-    return idND;
+    const idMotor = mao.indiceDeCartas.estadoMotor.get(id);
+    if (idMotor === undefined || !naMao.has(idMotor)) throw new Error('Carta fora da mão: ' + id);
+    return idMotor;
   });
 }
 
@@ -348,14 +348,14 @@ function idsNoMotor(mao, j, ids) {
  * Traduz uma jogada da interface para um movimento do motor. Lança erro se a jogada estiver
  * malformada; a validade pelas regras é conferida pelo motor.
  */
-export function jogadaParaND(mao, jogada) {
-  const j = jogada.jogador, nd = mao.nd;
+export function jogadaParaMotor(mao, jogada) {
+  const j = jogada.jogador, estadoMotor = mao.estadoMotor;
   switch (jogada.tipo) {
     case 'inicio':
       return { type: 'reveal', cardId: idsNoMotor(mao, j, [jogada.carta])[0] };
     case 'ativar': {
       const lugar = lugarDoNeuronio(jogada.neuronio);
-      if (!lugar || lugar.camada !== nd.nets[j].path.length) throw new Error('Neurônio indisponível');
+      if (!lugar || lugar.camada !== estadoMotor.nets[j].path.length) throw new Error('Neurônio indisponível');
       return { type: 'advance', slotIndex: lugar.posicao };
     }
     case 'empilhar': {
@@ -373,7 +373,7 @@ export function jogadaParaND(mao, jogada) {
     case 'transfer': {
       const cardIds = idsNoMotor(mao, j, jogada.cartas);
       if (cardIds.length !== 4) throw new Error('Transfer learning indisponível');
-      return { type: 'transfer', rank: nd.hands[j].find((c) => c.id === cardIds[0]).rank };
+      return { type: 'transfer', rank: estadoMotor.hands[j].find((c) => c.id === cardIds[0]).rank };
     }
     case 'passar':
       return { type: 'pass' };
@@ -384,17 +384,17 @@ export function jogadaParaND(mao, jogada) {
 
 /** Traduz um movimento do motor (de `legalMoves` ou dos bots) para uma jogada da interface. */
 export function jogadaParaTT(mao, j, movimento) {
-  const nd = mao.nd;
+  const estadoMotor = mao.estadoMotor;
   const ids = (cardIds) => cardIds.map((id) => mao.indiceDeCartas.tt.get(id).id);
-  const ultimo = (p) => { const s = ND.lastSlot(nd, p); return idDoNeuronio(s.layer, s.slotIndex); };
+  const ultimo = (p) => { const s = motor.lastSlot(estadoMotor, p); return idDoNeuronio(s.layer, s.slotIndex); };
   switch (movimento.type) {
     case 'reveal': return { tipo: 'inicio', jogador: j, carta: ids([movimento.cardId])[0] };
-    case 'advance': return { tipo: 'ativar', jogador: j, neuronio: idDoNeuronio(nd.nets[j].path.length, movimento.slotIndex) };
+    case 'advance': return { tipo: 'ativar', jogador: j, neuronio: idDoNeuronio(estadoMotor.nets[j].path.length, movimento.slotIndex) };
     case 'tune': return { tipo: 'empilhar', jogador: j, neuronio: ultimo(j), cartas: ids(movimento.cardIds) };
     case 'overfit': case 'earlystop': case 'stackoverflow':
-      return { tipo: 'empilhar', jogador: j, neuronio: ultimo(ND.attackTarget(nd, j, movimento)), cartas: ids(movimento.cardIds) };
+      return { tipo: 'empilhar', jogador: j, neuronio: ultimo(motor.attackTarget(estadoMotor, j, movimento)), cartas: ids(movimento.cardIds) };
     case 'dropout': return { tipo: 'dropout', jogador: j, n: movimento.layers, pagamento: ids(movimento.cardIds) };
-    case 'transfer': return { tipo: 'transfer', jogador: j, cartas: ids(nd.hands[j].filter((c) => c.rank === movimento.rank).slice(0, 4).map((c) => c.id)) };
+    case 'transfer': return { tipo: 'transfer', jogador: j, cartas: ids(estadoMotor.hands[j].filter((c) => c.rank === movimento.rank).slice(0, 4).map((c) => c.id)) };
     case 'pass': return { tipo: 'passar', jogador: j };
     default: throw new Error('Movimento desconhecido do motor: ' + movimento.type);
   }
@@ -414,8 +414,8 @@ const RECUSA = {
 
 /** Depois que todos revelaram a carta: quem começa. */
 function anunciarInicio(mao) {
-  const nd = mao.nd;
-  const entrada = nd.log.find((e) => e.type === 'first') || {};
+  const estadoMotor = mao.estadoMotor;
+  const entrada = estadoMotor.log.find((e) => e.type === 'first') || {};
   const cartas = mao.jogadores.map((j) => j.cartaInicial);
   emitir(mao, { tipo: 'inicio', jogador: mao.primeiro, como: 'revela', cartas, empate: !!entrada.tie, descarta: mao.config.inicio === 'revela-descarta' });
   anotar(mao, mao.jogadores[mao.primeiro].nome + ' começa' + (entrada.tie ? ' (empate decidido no sorteio)' : '') + '.');
@@ -441,7 +441,7 @@ function narrarEmpilhamento(mao, jogada, antes) {
   jogador.acoesUsadas++;
   if (efeito.tipo === 'tunagem') {
     jogador.estatisticas.tunagens++;
-    const ganho = ND.score(mao.nd, j).total - somaAntes;
+    const ganho = motor.score(mao.estadoMotor, j).total - somaAntes;
     emitir(mao, { tipo: 'tunagem', jogador: j, dono, neuronio: jogada.neuronio, cartas: jogadas, ganho });
     anotar(mao, jogador.nome + ' tunou ' + rotuloCarta(pilha[0]) + ' com ' + jogadas.map(rotuloCarta).join(' ') + '.');
     return;
@@ -465,15 +465,15 @@ function narrarEmpilhamento(mao, jogada, antes) {
 
 /** Fim da mão: resultado no formato da interface. */
 function encerrar(mao) {
-  const nd = mao.nd;
-  const [a, b] = nd.ranking;
-  const n = Math.min(nd.hands[a].length, nd.hands[b].length);
+  const estadoMotor = mao.estadoMotor;
+  const [a, b] = estadoMotor.ranking;
+  const n = Math.min(estadoMotor.hands[a].length, estadoMotor.hands[b].length);
   mao.resultado = {
-    somas: nd.scores.slice(), vencedor: nd.winner, motivo: motivoDaVitoria(nd.tiebreak, n),
-    travados: nd.nets.map((rede) => rede.reason === 'stuck'),
+    somas: estadoMotor.scores.slice(), vencedor: estadoMotor.winner, motivo: motivoDaVitoria(estadoMotor.tiebreak, n),
+    travados: estadoMotor.nets.map((rede) => rede.reason === 'stuck'),
   };
   emitir(mao, { tipo: 'fim', resultado: mao.resultado });
-  anotar(mao, 'Fim da mão: ' + mao.jogadores[nd.winner].nome + ' vence (' + mao.resultado.motivo + ').');
+  anotar(mao, 'Fim da mão: ' + mao.jogadores[estadoMotor.winner].nome + ' vence (' + mao.resultado.motivo + ').');
 }
 
 /**
@@ -483,7 +483,7 @@ function encerrar(mao) {
  */
 export function finalizarMao(mao) {
   if (mao.fase === 'fim' && mao.resultado) return mao;
-  ND.endGame(mao.nd);
+  motor.endGame(mao.estadoMotor);
   atualizarVisao(mao);
   encerrar(mao);
   return mao;
@@ -497,7 +497,7 @@ export function finalizarMao(mao) {
  * @returns {object} a própria mão
  */
 export function aplicarJogada(mao, jogada) {
-  const nd = mao.nd, j = jogada.jogador, jogador = mao.jogadores[j];
+  const estadoMotor = mao.estadoMotor, j = jogada.jogador, jogador = mao.jogadores[j];
   if (!jogador) throw new Error('Jogador inexistente: ' + j);
   if (jogada.tipo === 'inicio') {
     if (mao.fase !== 'inicio') throw new Error('A mão já começou');
@@ -509,13 +509,13 @@ export function aplicarJogada(mao, jogada) {
 
   /* o que a narração precisa saber de antes da jogada */
   const carta = (id) => jogador.mao.find((c) => c.id === id);
-  const antes = { rodada: nd.round, linhas: nd.log.length, finalizadas: nd.nets.map((rede) => rede.finished) };
+  const antes = { rodada: estadoMotor.round, linhas: estadoMotor.log.length, finalizadas: estadoMotor.nets.map((rede) => rede.finished) };
   if (jogada.tipo === 'empilhar') {
     const alvo = mao.neuronios[jogada.neuronio];
     if (alvo && alvo.dono >= 0 && Array.isArray(jogada.cartas)) {
       Object.assign(antes, {
         efeito: efeitoDoEmpilhamento(mao, j, alvo, jogada.cartas.length), dono: alvo.dono, pilha: alvo.cartas.slice(),
-        jogadas: jogada.cartas.map(carta), maoDaVitima: mao.jogadores[alvo.dono].mao.length, somaAntes: mao.simulacao ? 0 : ND.score(nd, j).total,
+        jogadas: jogada.cartas.map(carta), maoDaVitima: mao.jogadores[alvo.dono].mao.length, somaAntes: mao.simulacao ? 0 : motor.score(estadoMotor, j).total,
       });
     }
   } else if (jogada.tipo === 'dropout') {
@@ -528,8 +528,8 @@ export function aplicarJogada(mao, jogada) {
 
   let movimento;
   try {
-    movimento = jogadaParaND(mao, jogada);
-    ND.applyMove(nd, j, movimento);
+    movimento = jogadaParaMotor(mao, jogada);
+    motor.applyMove(estadoMotor, j, movimento);
   } catch (erro) {
     throw new Error(/^(Carta fora|Jogada)/.test(erro.message) ? erro.message : RECUSA[jogada.tipo]);
   }
@@ -562,14 +562,14 @@ export function aplicarJogada(mao, jogada) {
 
   /* acontecimentos que o motor decide sozinho depois da jogada */
   if (!mao.simulacao) {
-    for (const entrada of nd.log.slice(antes.linhas)) if (entrada.type === 'deck') emitir(mao, { tipo: 'powerbi', jogador: entrada.p });
+    for (const entrada of estadoMotor.log.slice(antes.linhas)) if (entrada.type === 'deck') emitir(mao, { tipo: 'powerbi', jogador: entrada.p });
   }
   mao.jogadores.forEach((outro, i) => {
     if (outro.situacao !== 'travada' || antes.finalizadas[i]) return;
     emitir(mao, { tipo: 'travada', jogador: i, camada: outro.caminho.length });
     anotar(mao, outro.nome + ' ficou sem neurônio livre na camada ' + nomeCamada(outro.caminho.length, mao.camadas.length) + ': a rede foi finalizada.');
   });
-  if (mao.config.terreno === 'oceano' && nd.round > antes.rodada && mao.fase === 'jogo') emitir(mao, { tipo: 'vento', naipe: mao.vento });
+  if (mao.config.terreno === 'oceano' && estadoMotor.round > antes.rodada && mao.fase === 'jogo') emitir(mao, { tipo: 'vento', naipe: mao.vento });
   anotarHistorico(mao);
   if (mao.fase === 'fim') encerrar(mao);
   return mao;

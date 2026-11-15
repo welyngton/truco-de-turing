@@ -1,22 +1,16 @@
 # Guia visual das cartas
 
-Referência comum para o redesenho das cartas (épico #2). O pedido do professor foi:
-
-> A arte do TT está bonita, mas as cartas achei meio "visualmente carregadas" demais. Prefiro um design mais "clean" do ND, mas com os símbolos do meio das cartas um pouco mais elaborados (não necessariamente precisa remeter a nada de machine learning, a prioridade aqui é ser claro ao player).
+Referência comum para o redesenho das cartas (épico #2). O pedido do professor foi deixar as cartas menos carregadas visualmente: um design mais limpo, com os símbolos do centro um pouco mais elaborados, e a clareza para o jogador em primeiro lugar.
 
 Este guia define o que sai e o que fica nas cartas, a ordem de leitura e o símbolo central escolhido. As issues #4 (moldura, fundo e cenário) e #5 (símbolos centrais) seguem estas decisões.
 
-## 1. ND e TT lado a lado
+## 1. Ponto de partida
 
-![Cartas do NeuroDeck e do Truco de Turing lado a lado](guia-visual/comparacao-nd-tt.png)
-
-Linha de cima: cartas do NeuroDeck, desenhadas pelo próprio `cardEl` do site (`neurodeck-fpo.web.app`). Linhas de baixo: cartas do Truco de Turing na versão 2.1.0. A carta da mão e a da mesa usam o mesmo desenho (`desenharCartaDaMesa`); a carta completa só aparece na inspeção e nas Regras.
-
-O que o ND faz bem:
+O estilo limpo que se busca:
 
 - **Fundo liso**: papel branco, uma borda fina e nada atrás do símbolo.
 - **Índices grandes** nos cantos, na cor do naipe, sem disputar atenção com outra coisa.
-- **Um símbolo só no centro**, com traço grosso: o naipe no ás, o neurônio com o número nas cartas numéricas e a curva da ativação nas figuras.
+- **Um símbolo só no centro**, com traço grosso.
 - **Duas cores por carta** (tinta do naipe e papel) e nenhuma textura.
 
 O que pesa no TT:
@@ -64,11 +58,11 @@ Três propostas, desenhadas para o 7 de cada naipe sobre a carta já limpa:
 
 | | Proposta | A favor | Contra |
 |---|---|---|---|
-| **A** | **Naipe grande**: o naipe francês grande e chapado, como o ás do ND | máxima clareza; igual ao canto | elaborado de menos: não atende ao "um pouco mais elaborado" do professor; o valor não aparece no centro |
-| **B** | **Medalhão**: o naipe francês num medalhão na cor clara do naipe, com anel duplo, e um mini-naipe por ponto da carta em volta | o símbolo do centro é o mesmo do canto; mais trabalhado que o ND; os mini-naipes mostram o valor (como os "pips" do baralho comum); funciona em cinza | um pouco mais de desenho que A |
+| **A** | **Naipe grande**: o naipe francês grande e chapado, como num ás tradicional | máxima clareza; igual ao canto | elaborado de menos: não atende ao "um pouco mais elaborado" do professor; o valor não aparece no centro |
+| **B** | **Medalhão**: o naipe francês num medalhão na cor clara do naipe, com anel duplo, e um mini-naipe por ponto da carta em volta | o símbolo do centro é o mesmo do canto; mais trabalhado que um naipe simples; os mini-naipes mostram o valor (como os "pips" do baralho comum); funciona em cinza | um pouco mais de desenho que A |
 | **C** | **Emblema limpo**: o emblema espanhol atual, sem cenário, sobre um disco claro | mantém a identidade "truco" do TT | o centro continua diferente do canto (cálice × ♥); o ouro e a copa ficam pequenos e detalhados demais na mesa |
 
-**Escolhida: B (medalhão com o naipe francês).** É a única que cumpre as duas partes do pedido: fica clara como o ND (mesmo símbolo do canto, fundo liso) e é mais elaborada que ele (medalhão e anel de pontos).
+**Escolhida: B (medalhão com o naipe francês).** É a única que cumpre as duas partes do pedido: fica clara (mesmo símbolo do canto, fundo liso) e é mais elaborada (medalhão e anel de pontos).
 
 Teste rápido em escala de cinza e a 40% do tamanho, perto do tamanho da carta na mesa do celular: os quatro naipes continuam distinguíveis pela forma.
 
@@ -87,4 +81,4 @@ Detalhes da proposta B para a #5:
 - **#5:** desenhar o medalhão da proposta B em `desenharCartaDaMesa`; na carta completa, rever `posicoesDosNaipes` para os emblemas da ilustração.
 - **#6:** atualizar os testes de arte e as capturas; pedir a 2 ou 3 pessoas para dizer valor e naipe de cartas sorteadas, no computador e no celular.
 
-As imagens deste guia são geradas a partir do código do jogo (cartas do TT e propostas) e do site do NeuroDeck (cartas do ND), e ficam em `docs/guia-visual/`.
+As imagens deste guia são geradas a partir do código do jogo (cartas do TT e propostas) e ficam em `docs/guia-visual/`.

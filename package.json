@@ -28,8 +28,7 @@
   "contributors": [
     "Diego Casagrande",
     "Vinícius Chiconato",
-    "Suzy Arcanjo",
-    "Francisco Lima (motor do NeuroDeck)"
+    "Suzy Arcanjo"
   ],
   "dependencies": {
     "phaser": "^3.80.1"

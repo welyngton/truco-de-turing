@@ -1,6 +1,6 @@
 /**
  * @file Testes de unidade do truco (truco.js) e dos oponentes (oponentes/comum.js,
- * estrategias.js e index.js). Os oponentes são os bots do NeuroDeck, traduzidos para a interface.
+ * estrategias.js e index.js). Os oponentes são os bots do motor, traduzidos para a interface.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -95,9 +95,9 @@ describe('oponentes/comum.js', () => {
     assert.equal(chanceDeVitoria(fim, 1 - fim.resultado.vencedor, 5), 0);
   });
   it('chanceDeVitoria não altera a mão', () => {
-    const mao = maoJogada(6), foto = JSON.stringify(mao.nd);
+    const mao = maoJogada(6), foto = JSON.stringify(mao.estadoMotor);
     chanceDeVitoria(mao, 1, 8);
-    assert.equal(JSON.stringify(mao.nd), foto);
+    assert.equal(JSON.stringify(mao.estadoMotor), foto);
   });
 });
 

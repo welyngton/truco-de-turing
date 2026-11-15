@@ -38,7 +38,7 @@ export const DIR = {
   rotuloCurva: 292, curva: 304, alturaCurva: 64, registro: 380, alturaRegistro: 132,
   truco: 540, alturaTruco: 40,
   /*
-   * Ações como no NeuroDeck: duas linhas de quatro botões. Em cima, as que empilham cartas
+   * Ações: duas linhas de quatro botões. Em cima, as que empilham cartas
    * (tunagem e os três ataques); embaixo, dropout, transfer, passar e limpar a seleção.
    * Só acendem os botões das jogadas possíveis com as cartas selecionadas.
    */

@@ -17,7 +17,7 @@ import { VERSAO } from './versao.js';
 /**
  * Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles
  * jogam no mesmo aparelho (os outros são oponentes do perfil `oponente`), `arquitetura` é uma das
- * arquiteturas do NeuroDeck e `baralhos` quantos baralhos entram na partida.
+ * arquiteturas do motor e `baralhos` quantos baralhos entram na partida.
  */
 export const OPCOES_PADRAO = {
   oponente: 'guloso', baralho: 'classico', terreno: 'neutro', inicio: 'revela-descarta', alvo: 12,

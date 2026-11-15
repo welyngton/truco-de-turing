@@ -44,7 +44,7 @@ export const metodosDeDesenho = {
     this.pontuacoes = mao.jogadores.map((_, j) => pontuarRede(mao, j));
     this.calcularAlvos();
     this.camadaVazios.clear();
-    /* pontos de cada neurônio na rede do dono (placar por camada, como no NeuroDeck) */
+    /* pontos de cada neurônio na rede do dono (placar por camada) */
     const pontosDe = {};
     this.pontuacoes.forEach((pont) => { for (const x of pont.neuronios) pontosDe[x.neuronio.id] = x.pontos; });
     for (const camada of mao.camadas) {

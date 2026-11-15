@@ -1,5 +1,5 @@
 /**
- * @file Tradução entre o vocabulário do Truco de Turing (interface) e o do motor do NeuroDeck
+ * @file Tradução entre o vocabulário do Truco de Turing (interface) e o do motor
  * (regras, em `src/motor/`).
  *
  * As telas continuam falando de `mao`, `jogadores`, `neuronios`, cartas `{ valor: 'K', naipe: 'E' }`
@@ -7,7 +7,7 @@
  * `{ rank: 13, suit: 'S' }` e movimentos `{ type: 'tune', ... }`. Este arquivo tem só as
  * conversões, sem estado: quem guarda a partida é `partida.js`.
  *
- * | Truco de Turing              | Motor do NeuroDeck                                   |
+ * | Truco de Turing              | Motor                                   |
  * |------------------------------|------------------------------------------------------|
  * | `inicio` (carta)             | `reveal` (cardId)                                    |
  * | `ativar` (neuronio)          | `advance` (slotIndex na próxima camada)              |
@@ -19,34 +19,34 @@
  */
 
 /** Baralhos: chave do Truco de Turing → id no motor. */
-export const BARALHO_ND = { classico: 'classic', truco: 'truco', nobreza: 'nobreza', backprop: 'backprop', fraternidade: 'fraternidade', yinyang: 'yinyang', powerbi: 'powerbi' };
+export const BARALHO_MOTOR = { classico: 'classic', truco: 'truco', nobreza: 'nobreza', backprop: 'backprop', fraternidade: 'fraternidade', yinyang: 'yinyang', powerbi: 'powerbi' };
 
 /** Terrenos: chave do Truco de Turing → id no motor. */
-export const TERRENO_ND = { neutro: 'none', montanha: 'montanha', pantano: 'pantano', oceano: 'oceano' };
+export const TERRENO_MOTOR = { neutro: 'none', montanha: 'montanha', pantano: 'pantano', oceano: 'oceano' };
 
 /** Formas de decidir quem começa: chave do Truco de Turing → `firstRule` do motor. */
-export const INICIO_ND = { 'revela-descarta': 'reveal', 'revela-volta': 'reveal-keep', sorteio: 'random' };
+export const INICIO_MOTOR = { 'revela-descarta': 'reveal', 'revela-volta': 'reveal-keep', sorteio: 'random' };
 
 /** Oponentes: perfil do Truco de Turing → bot do motor. */
-export const OPONENTE_ND = { aleatorio: 'random', guloso: 'greedy', montecarlo: 'mc' };
+export const OPONENTE_MOTOR = { aleatorio: 'random', guloso: 'greedy', montecarlo: 'mc' };
 
 const NAIPE_TT = { S: 'E', H: 'C', C: 'P', D: 'O' };
-const NAIPE_ND = { E: 'S', C: 'H', P: 'C', O: 'D' };
+const NAIPE_MOTOR = { E: 'S', C: 'H', P: 'C', O: 'D' };
 const VALOR_TT = { 1: 'A', 11: 'J', 12: 'Q', 13: 'K' };
-const RANK_ND = { A: 1, J: 11, Q: 12, K: 13 };
+const RANK_MOTOR = { A: 1, J: 11, Q: 12, K: 13 };
 
 /** Naipe do motor ('S', 'H', 'C', 'D') → naipe da interface ('E', 'C', 'P', 'O'). */
 export function naipeParaTT(suit) { return NAIPE_TT[suit]; }
 
 /** Valor da interface ('A', '2'…'10', 'J', 'Q', 'K') → rank do motor (1 a 13). */
-export function rankDoValor(valor) { return RANK_ND[valor] || parseInt(valor, 10); }
+export function rankDoValor(valor) { return RANK_MOTOR[valor] || parseInt(valor, 10); }
 
 /** Rank do motor (1 a 13) → valor da interface. */
 export function valorDoRank(rank) { return VALOR_TT[rank] || String(rank); }
 
 /** Carta da interface → carta do motor, sem id (serve para consultar valor e força no baralho). */
-export function cartaParaND(carta) {
-  return { rank: rankDoValor(carta.valor), suit: NAIPE_ND[carta.naipe] };
+export function cartaParaMotor(carta) {
+  return { rank: rankDoValor(carta.valor), suit: NAIPE_MOTOR[carta.naipe] };
 }
 
 /**

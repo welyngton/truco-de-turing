@@ -79,8 +79,8 @@ src/principal.js           ponto de entrada: cria o Phaser.Game
 src/aplicacao.js           opções, progresso, conquistas e navegação menu ⇄ mesa
 src/configuracao.js        mundo 1280x720, cores, fontes, resolução
 src/estilo.css             painéis HTML (menu, regras, biblioteca, conquistas, avatares, sobre)
-src/motor/                 motor de regras do NeuroDeck (do colega Francisco): estado, ações,
-                           baralhos, terrenos, desempates e bots. Ver src/motor/ORIGEM.md
+src/motor/                 motor de regras: estado, ações, baralhos, terrenos, desempates
+                           e bots. Ver src/motor/MOTOR.md
 src/nucleo/                camada de tradução (sem Phaser): entrega às telas a mão, as jogadas,
                            a pontuação e os oponentes no formato da interface, sobre o motor;
                            e o modo truco
@@ -100,18 +100,9 @@ docs/                      manual e referência
 O motor (`src/motor`) e o núcleo (`src/nucleo`) não dependem do Phaser: rodam no navegador e no Node,
 o que permite testar regras e balanceamento com milhares de partidas.
 
-### Fusão com o NeuroDeck
-
-Por decisão do professor, o jogo unificado usa as **regras do NeuroDeck** e a **interface do Truco de
-Turing**. O motor do NeuroDeck foi copiado do site publicado sem alterações (o SHA-256 de cada arquivo e
-1.000 partidas com semente conferem com o site) e depois recebeu as quatro mudanças de regra decididas
-em 10/11/2026; o conjunto original continua disponível com `rules: 'nd-2.0.0'` e é testado contra o
-site a cada execução. `src/nucleo` virou uma camada de tradução: as telas chamam as mesmas funções de
-antes e quem decide as regras é o motor. Detalhes em [`src/motor/ORIGEM.md`](src/motor/ORIGEM.md).
-
 ## Regras implementadas
 
-São as regras do motor do NeuroDeck com as decisões da fusão: mesa 3-5-5-5-5-5-4, 5 cartas na mão, 10 no
+São as regras do prof. Peng Yaohao, com as decisões registradas em `src/motor/MOTOR.md`: mesa 3-5-5-5-5-5-4, 5 cartas na mão, 10 no
 limbo; uma carta por camada da entrada à saída; Ás 11, figuras 0; figuras iguais em camadas vizinhas
 valem 10 cada (par 20, trio 30) e a quadra zera a rede; tunagem, overfit, early stop, stack overflow,
 dropout (GatoNet) e transfer learning (uma vez por mão), os dois últimos sem gastar o turno; entrada e
@@ -250,9 +241,9 @@ Autores:
 <!-- autores -->
 - Peng Yaohao: especificação inicial, gerência do projeto, validação e feedbacks
 - Welyngton José Vinicius Dal Prá ([@welyngton](https://github.com/welyngton)): Truco de Turing (interface, arte, sons, conquistas e modo truco)
-- Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande)): testes, validação das regras e fusão com o NeuroDeck
+- Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande)): testes e validação das regras
 - Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações no Glossário
-- Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções da fusão
+- Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções nas regras
 - 
 <!-- /autores -->
 

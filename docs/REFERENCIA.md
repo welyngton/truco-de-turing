@@ -8,7 +8,7 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `OPCOES_PADRAO` | constante (exportada) | Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles jogam no mesmo aparelho (os outros são oponentes do perfil `oponente`), `arquitetura` é uma das arquiteturas do NeuroDeck e `baralhos` quantos baralhos entram na partida. |
+| `OPCOES_PADRAO` | constante (exportada) | Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles jogam no mesmo aparelho (os outros são oponentes do perfil `oponente`), `arquitetura` é uma das arquiteturas do motor e `baralhos` quantos baralhos entram na partida. |
 | `faixaDeExperiencia(maos)` | função (exportada) | Faixa de experiência do jogador pelo número de mãos jogadas (propriedade `experiencia`). |
 | `normalizarOpcoes(opcoes)` | função (exportada) | Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. |
 | `iniciar()` | método | Carrega opções e preferência de som. |
@@ -270,7 +270,7 @@ Parte da CenaMesa: elementos fixos da tela (molduras dos painéis, colunas das c
 | `criarPainelEsquerdo(p)` | método | Painel esquerdo: inspeção, limbo e cemitério (como pilhas), terreno e dica do turno. |
 | `criarPlacar(p)` | método | Placar (painel direito): título da mão e um bloco por jogador com avatar, nome, nível, situação, detalhes, tentos e soma da rede. Os blocos de cima são os adversários de quem está vendo; o dele fica por último. Com mais de 2 jogadores os blocos são compactos (ver `blocosDoPlacar` em layout.js). |
 | `criarBlocoCompacto(rx, y, rl, a)` | método | Bloco compacto do placar (mesas com 3 a 5 jogadores): avatar pequeno, nome, uma linha com a situação e a mão, e a soma à direita. Tem os mesmos campos do bloco grande, para que `atualizarBlocoDoJogador` sirva aos dois. |
-| `criarBotoesDeAcao(p)` | método | Botão de truco e a barra de ações, como no NeuroDeck: selecione cartas da mão e acendem só os botões das jogadas possíveis com elas; passar o cursor num botão explica o efeito no quadro de instruções antes de confirmar. Os botões ficam em `p.acoes[id]`; dropout, transfer e passar também em `p.botaoDropout`, `p.botaoTransfer` e `p.botaoPassar`. |
+| `criarBotoesDeAcao(p)` | método | Botão de truco e a barra de ações: selecione cartas da mão e acendem só os botões das jogadas possíveis com elas; passar o cursor num botão explica o efeito no quadro de instruções antes de confirmar. Os botões ficam em `p.acoes[id]`; dropout, transfer e passar também em `p.botaoDropout`, `p.botaoTransfer` e `p.botaoPassar`. |
 | `atualizarChaves()` | método | Atualiza os rótulos das chaves (som, música e dicas) nas janelas REGRAS e MENU, se abertas. O botão REGRAS ganha uma estrela quando as dicas estão ligadas. |
 
 ## `src/cenas/mesa/desenho.js`
@@ -358,12 +358,12 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `ACAO_DO_MOTOR` | constante | Ação do motor do NeuroDeck correspondente a cada botão (para o texto da regra). |
+| `ACAO_DO_MOTOR` | constante | Ação do motor correspondente a cada botão (para o texto da regra). |
 | `realcarNeuronio(id, entrando)` | método | Aproxima a carta da mesa sob o cursor (zoom leve, por cima das vizinhas) e a devolve ao sair. |
 | `aoPassarNoNeuronio(id, entrando)` | método | Cursor sobre um neurônio: mostra a carta na inspeção e explica o efeito de clicar. |
 | `executarAcao(tipo)` | método | Botão de empilhar da barra (tunagem, overfit, early stop, stack overflow): com um alvo só, joga direto; com mais de um (vários rivais), destaca só os alvos dessa ação e espera o clique. |
-| `acionarDropout()` | método | Botão Dropout: com cartas selecionadas, desfaz uma camada por carta e paga com elas (como no NeuroDeck); sem seleção, entra no modo de escolher até onde desfazer no tabuleiro. |
-| `explicarAcao(id)` | método | Texto do quadro de instruções para um botão da barra: o que ele faria agora, com as cartas selecionadas, ou o que falta para ele acender; depois, a regra do NeuroDeck. |
+| `acionarDropout()` | método | Botão Dropout: com cartas selecionadas, desfaz uma camada por carta e paga com elas; sem seleção, entra no modo de escolher até onde desfazer no tabuleiro. |
+| `explicarAcao(id)` | método | Texto do quadro de instruções para um botão da barra: o que ele faria agora, com as cartas selecionadas, ou o que falta para ele acender; depois, a regra do motor. |
 | `aoClicarNoNeuronio(id)` | método | Clique num neurônio: ativa, empilha as cartas selecionadas ou escolhe o alcance do dropout. |
 | `aoClicarNaCarta(idCarta)` | método | Clique numa carta da mão: escolhe a carta de início, paga o dropout ou monta a seleção. |
 | `cancelarSelecao()` | método | Esc: limpa a seleção e sai do modo de dropout. |
@@ -425,7 +425,7 @@ Parte da CenaMesa: partida online (src/online/sala.js). Cada aparelho mostra a m
 
 ## `src/cenas/mesa/paineis.js`
 
-Painéis de leitura da mesa, como no NeuroDeck: placar por camada (clique num bloco do placar), registro completo da mão (clique no registro) e lista do cemitério e do limbo (clique na pilha). São só leitura: abrem por cima da mesa e fecham com Esc, no X ou clicando fora.
+Painéis de leitura da mesa: placar por camada (clique num bloco do placar), registro completo da mão (clique no registro) e lista do cemitério e do limbo (clique na pilha). São só leitura: abrem por cima da mesa e fecham com Esc, no X ou clicando fora.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -585,7 +585,7 @@ Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada m
 
 ## `src/conteudo/modExemplo.js`
 
-Mod de exemplo mostrado na tela "Mods" (interface/telas/mods.js). O código fica num texto para a tela poder exibi-lo e copiá-lo; o teste `testes/unidade/mods.test.js` carrega esse mesmo texto como módulo e confere que ele funciona com o motor do NeuroDeck.
+Mod de exemplo mostrado na tela "Mods" (interface/telas/mods.js). O código fica num texto para a tela poder exibi-lo e copiá-lo; o teste `testes/unidade/mods.test.js` carrega esse mesmo texto como módulo e confere que ele funciona com o motor.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -665,12 +665,12 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 
 ## `src/interface/menu.js`
 
-Menu principal: apresentação do jogo, botões das telas e configuração da mesa. A mesa reúne as configurações do NeuroDeck (jogadores, humanos no aparelho, oponentes do computador, arquitetura da rede e número de baralhos) com as do Truco de Turing (baralho, terreno, quem começa e tipo de partida).
+Menu principal: apresentação do jogo, botões das telas e configuração da mesa. A mesa reúne as configurações da partida (jogadores, humanos no aparelho, oponentes do computador, arquitetura da rede e número de baralhos) com as do Truco de Turing (baralho, terreno, quem começa e tipo de partida).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `ESCOLHAS_OPONENTE` | constante | Opções da lista de oponentes do computador (todos os oponentes da mesa têm o mesmo perfil). |
-| `ESCOLHAS_JOGADORES` | constante | Jogadores na mesa (2 a 5, como no NeuroDeck). |
+| `ESCOLHAS_JOGADORES` | constante | Jogadores na mesa (2 a 5). |
 | `ESCOLHAS_BARALHOS` | constante | Baralhos na partida: a mão e o limbo crescem junto. |
 | `escolhasDeHumanos(n)` | função | Opções da lista "Humanos no aparelho" para uma mesa de `n` jogadores. |
 | `miniaturas` | constante | Miniaturas do verso e da mesa já desenhadas (evita redesenhar a cada troca). |
@@ -747,12 +747,12 @@ Efeitos sonoros sintetizados com WebAudio (nenhum arquivo de áudio). O navegado
 
 ## `src/interface/telas/ajudaDasAcoes.js`
 
-Ajuda das ações, como o botão "?" do NeuroDeck: um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Ver o conceito" que abre o verbete certo do Glossário.
+Ajuda das ações, como o botão botão "?": um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Ver o conceito" que abre o verbete certo do Glossário.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no NeuroDeck (de onde vêm a regra e o conceito); `verbete` é o verbete do Glossário. |
-| `doMotor(id)` | função | Ação do NeuroDeck, ou um objeto vazio se o motor não tiver aquele id. |
+| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no motor (de onde vêm a regra e o conceito); `verbete` é o verbete do Glossário. |
+| `doMotor(id)` | função | Ação do motor, ou um objeto vazio se o motor não tiver aquele id. |
 | `abrirAjudaDasAcoes(app, idInicial)` | função (exportada) | Abre a ajuda das ações. |
 
 ## `src/interface/telas/avatares.js`
@@ -802,7 +802,7 @@ Tela "Jogadores" (issue #66), só para administradores: a lista das contas com a
 
 ## `src/interface/telas/mods.js`
 
-Tela "Mods": como criar baralhos, terrenos e ações para o motor do NeuroDeck, com um mod de exemplo comentado (conteudo/modExemplo.js) e links para os arquivos e exemplos no repositório do jogo no GitHub. A API é a do registro do motor (src/motor/engine/registry.js, apiVersion 2). A tela é honesta sobre o estado atual: o motor aceita mods, mas a interface do jogo unificado ainda não os carrega.
+Tela "Mods": como criar baralhos, terrenos e ações para o motor, com um mod de exemplo comentado (conteudo/modExemplo.js) e links para os arquivos e exemplos no repositório do jogo no GitHub. A API é a do registro do motor (src/motor/engine/registry.js, apiVersion 2). A tela é honesta sobre o estado atual: o motor aceita mods, mas a interface do jogo ainda não os carrega.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -832,7 +832,7 @@ Tela "Jogar online": conta e sala. - Conta: com o projeto Firebase configurado (
 
 ## `src/interface/telas/regras.js`
 
-Tela de regras, com o conteúdo do manual do NeuroDeck e as decisões da fusão, em abas: Como jogar, Ações, Pontuação, Baralhos e terrenos (com a arte do Truco de Turing) e Dicas e estratégias. As abas "Cartas" e "Decisões de regra" do NeuroDeck ficaram de fora a pedido do professor; as decisões estão no repositório (docs e testes).
+Tela de regras, com o conteúdo do manual de regras e as decisões da fusão, em abas: Como jogar, Ações, Pontuação, Baralhos e terrenos (com a arte do Truco de Turing) e Dicas e estratégias. As abas "Cartas" e "Decisões de regra" ficaram de fora a pedido do professor; as decisões estão no repositório (docs e testes).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -864,7 +864,7 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre": versão, o jogo unificado (NeuroDeck + Truco de Turing), a disciplina, as regras originais, o professor, os autores, as estatísticas de uso (ligar e desligar) e a licença.
+Tela "Sobre": versão, a disciplina, as regras originais, o professor, os autores, as estatísticas de uso (ligar e desligar) e a licença.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -873,43 +873,43 @@ Tela "Sobre": versão, o jogo unificado (NeuroDeck + Truco de Turing), a discipl
 
 ## `src/motor/bot.js`
 
-NeuroDeck - oponentes artificiais Guloso: escolhe a jogada de melhor ganho imediato (sem olhar adiante). Monte Carlo: simula partidas aleatorias para cada jogada e escolhe a de maior taxa de vitoria. A informacao oculta e sorteada a cada simulacao (determinizacao). Com mais de 2 jogadores, a margem e medida contra o melhor rival.
+Motor - oponentes artificiais Guloso: escolhe a jogada de melhor ganho imediato (sem olhar adiante). Monte Carlo: simula partidas aleatorias para cada jogada e escolhe a de maior taxa de vitoria. A informacao oculta e sorteada a cada simulacao (determinizacao). Com mais de 2 jogadores, a margem e medida contra o melhor rival.
 
 ## `src/motor/engine/actions.js`
 
-NeuroDeck - acoes do jogo, cada uma com generate / isValid / execute
+Motor - acoes do jogo, cada uma com generate / isValid / execute
 
 ## `src/motor/engine/core.js`
 
-NeuroDeck - nucleo do motor
+Motor - nucleo do motor
 
 ## `src/motor/engine/decks.js`
 
-NeuroDeck - baralhos: cada um define como a rede e pontuada
+Motor - baralhos: cada um define como a rede e pontuada
 
 ## `src/motor/engine/index.js`
 
-NeuroDeck - ponto de entrada do motor Registra os modulos nativos e exporta a API. Mods importam './registry.js' (ou usam window.NeuroDeck) e registram seus proprios baralhos, terrenos e acoes.
+Motor - ponto de entrada do motor Registra os modulos nativos e exporta a API. Mods importam './registry.js' (ou usam window.Motor) e registram seus proprios baralhos, terrenos e acoes.
 
 ## `src/motor/engine/registry.js`
 
-NeuroDeck - registro de modulos (API de mods)
+Motor - registro de modulos (API de mods)
 
 ## `src/motor/engine/terrains.js`
 
-NeuroDeck - terrenos: ganchos no ciclo do turno que mudam o jogo inteiro
+Motor - terrenos: ganchos no ciclo do turno que mudam o jogo inteiro
 
 ## `src/motor/engine/util.js`
 
-NeuroDeck - constantes e utilidades puras
+Motor - constantes e utilidades puras
 
 ## `src/motor/engine.js`
 
-NeuroDeck - fachada do motor (compatibilidade com imports antigos) O motor vive em ./engine/: registry (API de mods), core (regras fixas), actions, decks e terrains (modulos registrados).
+Motor - fachada do motor (compatibilidade com imports antigos) O motor vive em ./engine/: registry (API de mods), core (regras fixas), actions, decks e terrains (modulos registrados).
 
 ## `src/motor/sim.js`
 
-NeuroDeck - laboratorio: simulacao de Monte Carlo de partidas bot x bot
+Motor - laboratorio: simulacao de Monte Carlo de partidas bot x bot
 
 ## `src/nucleo/aleatorio.js`
 
@@ -924,7 +924,7 @@ Gerador de números aleatórios com semente. Toda a aleatoriedade das regras pas
 
 ## `src/nucleo/baralhos.js`
 
-Baralhos do jogo e valor em pontos das cartas. As regras de cada baralho (cartas, valores e pontuação) são as do motor do NeuroDeck, em `src/motor/engine/decks.js`. Aqui ficam o nome, o resumo do menu e o que a arte precisa.
+Baralhos do jogo e valor em pontos das cartas. As regras de cada baralho (cartas, valores e pontuação) são as do motor, em `src/motor/engine/decks.js`. Aqui ficam o nome, o resumo do menu e o que a arte precisa.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -953,7 +953,7 @@ Cartas do baralho: valores, naipes e nomes. Uma carta é um objeto simples `{ id
 
 ## `src/nucleo/oponentes/comum.js`
 
-Ferramentas compartilhadas pelos oponentes, sobre o motor do NeuroDeck: gerador aleatório, determinização (sortear o que o jogador não vê) e estimativa da chance de vitória.
+Ferramentas compartilhadas pelos oponentes, sobre o motor: gerador aleatório, determinização (sortear o que o jogador não vê) e estimativa da chance de vitória.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -963,7 +963,7 @@ Ferramentas compartilhadas pelos oponentes, sobre o motor do NeuroDeck: gerador 
 
 ## `src/nucleo/oponentes/estrategias.js`
 
-As três estratégias de jogo, uma por nível de dificuldade. São os bots do NeuroDeck (`src/motor/bot.js`); aqui a jogada escolhida é só traduzida para o formato da interface. - aleatória (Zé do Ruído): sorteia uma jogada válida, com leve preferência por ataques; - gulosa (Gradiente Guloso): escolhe a jogada de melhor ganho imediato, sem olhar adiante; - Monte Carlo (Mestre Monte Carlo): simula partidas inteiras para cada jogada e escolhe a que mais venceu.
+As três estratégias de jogo, uma por nível de dificuldade. São os bots do motor (`src/motor/bot.js`); aqui a jogada escolhida é só traduzida para o formato da interface. - aleatória (Zé do Ruído): sorteia uma jogada válida, com leve preferência por ataques; - gulosa (Gradiente Guloso): escolhe a jogada de melhor ganho imediato, sem olhar adiante; - Monte Carlo (Mestre Monte Carlo): simula partidas inteiras para cada jogada e escolhe a que mais venceu.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -973,7 +973,7 @@ As três estratégias de jogo, uma por nível de dificuldade. São os bots do Ne
 
 ## `src/nucleo/oponentes/index.js`
 
-Ponto de entrada dos oponentes: perfis (nome, nível, estilo), escolha de jogada e decisões de truco. As jogadas vêm dos bots do NeuroDeck (ver estrategias.js); as decisões de truco são do Truco de Turing e usam a chance de vitória estimada por simulação.
+Ponto de entrada dos oponentes: perfis (nome, nível, estilo), escolha de jogada e decisões de truco. As jogadas vêm dos bots do motor (ver estrategias.js); as decisões de truco são do Truco de Turing e usam a chance de vitória estimada por simulação.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -986,19 +986,19 @@ Ponto de entrada dos oponentes: perfis (nome, nível, estilo), escolha de jogada
 
 ## `src/nucleo/partida.js`
 
-Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor do NeuroDeck. Este arquivo é a **camada de tradução** da fusão: as telas e os testes continuam chamando as mesmas funções de antes (`novaMao`, `jogadasLegais`, `aplicarJogada`…), mas as regras agora são as do motor em `src/motor/` (ver `src/motor/ORIGEM.md`). Nenhuma regra é decidida aqui. ## Como funciona A mão guarda o estado do motor em `mao.nd` e uma **visão** dele no formato que a interface conhece (os campos abaixo). Cada jogada é traduzida (`traducao.js`), aplicada pelo motor e, em seguida, a visão é refeita por `atualizarVisao`. Os eventos de animação e as linhas do registro são gerados aqui, comparando o antes e o depois. ## Visão da mão ``` { config: { baralho, terreno, inicio, arquitetura, baralhos }, // opções escolhidas no menu semente, // aleatoriedade reproduzível nd, // estado do motor do NeuroDeck (fonte da verdade) indiceDeCartas, // cartas da interface por id do motor, e vice-versa camadas: Neuronio[][], // a mesa, camada a camada neuronios: { [id]: Neuronio }, // índice dos neurônios por id jogadores: Jogador[], limbo: Carta[], cemiterio: Carta[], vez, primeiro, rodada, turno, vento, fase: 'inicio' | 'jogo' | 'fim', eventos: Evento[], // fila consumida pela interface para animar registro: string[], // texto do histórico de jogadas historico: number[][], // soma de cada rede a cada jogada (curva de treino) resultado: { somas, vencedor, motivo, travados } | null, simulacao: boolean, // em simulações, não gera eventos nem textos } ``` Neurônio: `{ id, camada, posicao, cartas, revelado, dono, removido, conhecido, rodadaRevelada }`. Jogador: `{ indice, nome, tipo: 'humano'|'oponente', oponente, mao, caminho, situacao, dropouts, acoesUsadas, transferUsado, cartaInicial, estatisticas }`. `situacao` é 'construindo', 'concluida', 'earlystop', 'overflow' ou 'travada' (ficou sem neurônio livre na camada seguinte). ## Jogadas `{ tipo: 'inicio', jogador, carta }`, `{ tipo: 'ativar', jogador, neuronio }`, `{ tipo: 'empilhar', jogador, neuronio, cartas }`, `{ tipo: 'dropout', jogador, n, pagamento }`, `{ tipo: 'transfer', jogador, cartas }`, `{ tipo: 'passar', jogador }`. ## O que mudou nas regras com o motor do NeuroDeck - dropout: o neurônio desfeito vai para o cemitério e sai da mesa (antes voltava virado); - quem fica sem neurônio livre na camada seguinte tem a rede finalizada ('travada'); - transfer learning não gasta a vez; - só passa a vez quem teve a rede interrompida por early stop (com cartas na mão) ou quem não tem nenhuma outra jogada; quem não pode jogar é pulado automaticamente; - pontuação, terrenos e desempates: ver `pontuacao.js` e `src/motor/engine/`.
+Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor. Este arquivo é a **camada de tradução** da fusão: as telas e os testes continuam chamando as mesmas funções de antes (`novaMao`, `jogadasLegais`, `aplicarJogada`…), mas as regras agora são as do motor em `src/motor/` (ver `src/motor/MOTOR.md`). Nenhuma regra é decidida aqui. ## Como funciona A mão guarda o estado do motor em `mao.estadoMotor` e uma **visão** dele no formato que a interface conhece (os campos abaixo). Cada jogada é traduzida (`traducao.js`), aplicada pelo motor e, em seguida, a visão é refeita por `atualizarVisao`. Os eventos de animação e as linhas do registro são gerados aqui, comparando o antes e o depois. ## Visão da mão ``` { config: { baralho, terreno, inicio, arquitetura, baralhos }, // opções escolhidas no menu semente, // aleatoriedade reproduzível estadoMotor, // estado do motor (fonte da verdade) indiceDeCartas, // cartas da interface por id do motor, e vice-versa camadas: Neuronio[][], // a mesa, camada a camada neuronios: { [id]: Neuronio }, // índice dos neurônios por id jogadores: Jogador[], limbo: Carta[], cemiterio: Carta[], vez, primeiro, rodada, turno, vento, fase: 'inicio' | 'jogo' | 'fim', eventos: Evento[], // fila consumida pela interface para animar registro: string[], // texto do histórico de jogadas historico: number[][], // soma de cada rede a cada jogada (curva de treino) resultado: { somas, vencedor, motivo, travados } | null, simulacao: boolean, // em simulações, não gera eventos nem textos } ``` Neurônio: `{ id, camada, posicao, cartas, revelado, dono, removido, conhecido, rodadaRevelada }`. Jogador: `{ indice, nome, tipo: 'humano'|'oponente', oponente, mao, caminho, situacao, dropouts, acoesUsadas, transferUsado, cartaInicial, estatisticas }`. `situacao` é 'construindo', 'concluida', 'earlystop', 'overflow' ou 'travada' (ficou sem neurônio livre na camada seguinte). ## Jogadas `{ tipo: 'inicio', jogador, carta }`, `{ tipo: 'ativar', jogador, neuronio }`, `{ tipo: 'empilhar', jogador, neuronio, cartas }`, `{ tipo: 'dropout', jogador, n, pagamento }`, `{ tipo: 'transfer', jogador, cartas }`, `{ tipo: 'passar', jogador }`. ## O que mudou nas regras com o motor - dropout: o neurônio desfeito vai para o cemitério e sai da mesa (antes voltava virado); - quem fica sem neurônio livre na camada seguinte tem a rede finalizada ('travada'); - transfer learning não gasta a vez; - só passa a vez quem teve a rede interrompida por early stop (com cartas na mão) ou quem não tem nenhuma outra jogada; quem não pode jogar é pulado automaticamente; - pontuação, terrenos e desempates: ver `pontuacao.js` e `src/motor/engine/`.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `FORMAS_DE_INICIO` | constante (exportada) | Formas de decidir quem começa (seção "Inicialização" da especificação). A primeira é o padrão. |
 | `NOME_EFEITO` | constante (exportada) | Nome de cada efeito de empilhamento, para a interface. |
 | `novoJogador(dados, indice)` | função | Cria o objeto de um jogador no começo da mão. |
-| `todasAsCartas(nd)` | função | Todas as cartas da partida no estado do motor, onde quer que estejam. |
-| `indexarCartas(nd)` | função | Converte as cartas do motor para o formato da interface, uma vez por partida. motor, e id do motor por id da interface. |
-| `montar(nd, config, jogadores, simulacao, cartas)` | função | Monta a visão da interface em volta de um estado do motor. |
+| `todasAsCartas(estadoMotor)` | função | Todas as cartas da partida no estado do motor, onde quer que estejam. |
+| `indexarCartas(estadoMotor)` | função | Converte as cartas do motor para o formato da interface, uma vez por partida. motor, e id do motor por id da interface. |
+| `montar(estadoMotor, config, jogadores, simulacao, cartas)` | função | Monta a visão da interface em volta de um estado do motor. |
 | `novaMao(opcoes)` | função (exportada) | Cria uma mão nova: o motor embaralha, monta a mesa, distribui as cartas e separa o limbo. |
-| `copiarMao(mao, nd = ND.cloneState(mao.nd)` | função (exportada) | Cópia leve da mão para simulações (sem eventos, textos ou histórico). |
-| `atualizarVisao(mao)` | função (exportada) | Refaz a visão da interface a partir do estado do motor (`mao.nd`). É chamada depois de cada jogada; ferramentas e testes que mexem direto em `mao.nd` também precisam chamá-la. |
+| `copiarMao(mao, estadoMotor = motor.cloneState(mao.estadoMotor)` | função (exportada) | Cópia leve da mão para simulações (sem eventos, textos ou histórico). |
+| `atualizarVisao(mao)` | função (exportada) | Refaz a visão da interface a partir do estado do motor (`mao.estadoMotor`). É chamada depois de cada jogada; ferramentas e testes que mexem direto em `mao.estadoMotor` também precisam chamá-la. |
 | `emitir(mao, evento)` | função | Coloca um evento na fila da interface (ignorado em simulação). |
 | `anotar(mao, texto)` | função | Acrescenta uma linha ao registro de jogadas (ignorado em simulação). |
 | `somas(mao)` | função | Soma atual da rede de cada jogador, pelo motor. |
@@ -1014,7 +1014,7 @@ Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor do
 | `podePassar(mao, j)` | função (exportada) | Passar a vez: só quem teve a rede interrompida por early stop e ainda tem cartas (atacar não é obrigatório), ou quem não tem nenhuma outra jogada que gaste a vez. |
 | `jogadasLegais(mao, j, opcoes = {})` | função (exportada) | Lista as jogadas legais do jogador, geradas pelo motor. |
 | `idsNoMotor(mao, j, ids)` | função | Ids do motor das cartas da mão do jogador, a partir dos ids da interface. |
-| `jogadaParaND(mao, jogada)` | função (exportada) | Traduz uma jogada da interface para um movimento do motor. Lança erro se a jogada estiver malformada; a validade pelas regras é conferida pelo motor. |
+| `jogadaParaMotor(mao, jogada)` | função (exportada) | Traduz uma jogada da interface para um movimento do motor. Lança erro se a jogada estiver malformada; a validade pelas regras é conferida pelo motor. |
 | `jogadaParaTT(mao, j, movimento)` | função (exportada) | Traduz um movimento do motor (de `legalMoves` ou dos bots) para uma jogada da interface. |
 | `RECUSA` | constante | Mensagem de erro de cada tipo de jogada recusada pelo motor. |
 | `anunciarInicio(mao)` | função | Depois que todos revelaram a carta: quem começa. |
@@ -1026,7 +1026,7 @@ Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor do
 
 ## `src/nucleo/pontuacao.js`
 
-Soma da rede de um jogador (o "forward pass" do jogo), calculada pelo motor do NeuroDeck. Regras da fusão (ver `src/motor/engine/decks.js`): - 2 a 10 valem o número, Ás 11, figuras 0; - figuras iguais em camadas vizinhas formam uma sequência, e a figura empilhada por tunagem conta nela. Cada figura da sequência vale 10: par 20, trio 30; quadra zera a rede (vanishing gradient); - tunagem de carta numérica soma o valor da carta empilhada. Exemplo do enunciado: "8-K-K-3" com tunagem num K tem três Reis (trio), logo 8 + 30 + 3 = 41. Este arquivo só reorganiza o resultado do motor no formato que as telas usam: os pontos de cada neurônio, e as sequências de figuras ("combos") à parte, de modo que a soma dos neurônios mais a soma dos combos dá o total.
+Soma da rede de um jogador (o "forward pass" do jogo), calculada pelo motor. Regras da fusão (ver `src/motor/engine/decks.js`): - 2 a 10 valem o número, Ás 11, figuras 0; - figuras iguais em camadas vizinhas formam uma sequência, e a figura empilhada por tunagem conta nela. Cada figura da sequência vale 10: par 20, trio 30; quadra zera a rede (vanishing gradient); - tunagem de carta numérica soma o valor da carta empilhada. Exemplo do enunciado: "8-K-K-3" com tunagem num K tem três Reis (trio), logo 8 + 30 + 3 = 41. Este arquivo só reorganiza o resultado do motor no formato que as telas usam: os pontos de cada neurônio, e as sequências de figuras ("combos") à parte, de modo que a soma dos neurônios mais a soma dos combos dá o total.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1034,18 +1034,18 @@ Soma da rede de um jogador (o "forward pass" do jogo), calculada pelo motor do N
 | `pontuarRede(mao, j)` | função (exportada) | Calcula a soma da rede do jogador `j`. |
 | `decimal` | constante | Número com vírgula decimal e no máximo 2 casas ("1,2", "23,45"). |
 | `ROTULO_SAIDA_SATURADA` | constante (exportada) | Rótulo do aviso do baralho Backprop (ver `pontuarForward`). |
-| `pontuarForward(mao, resultado)` | função | Baralho Backprop: a rede vale a ativação da saída. Cada neurônio mostra a ativação depois da camada dele (`pontos`) e, nas notas, o peso do naipe, o viés e a função de ativação. Não há combos de figuras. O motor marca (no campo `vanishing`, nome que vem do NeuroDeck) a rede de 3 ou mais neurônios que passou por alguma ativação não linear e terminou abaixo de 20. Sigmoide e tanh do baralho vão no máximo até 20, então isso é saturação da ativação no forward pass, e não vanishing gradient, que acontece no backward e que este baralho não calcula. Aqui o aviso vira `saturada`, e `vanishing` fica falso: nenhum texto do Backprop fala em vanishing gradient. |
+| `pontuarForward(mao, resultado)` | função | Baralho Backprop: a rede vale a ativação da saída. Cada neurônio mostra a ativação depois da camada dele (`pontos`) e, nas notas, o peso do naipe, o viés e a função de ativação. Não há combos de figuras. O motor marca (no campo `vanishing`) a rede de 3 ou mais neurônios que passou por alguma ativação não linear e terminou abaixo de 20. Sigmoide e tanh do baralho vão no máximo até 20, então isso é saturação da ativação no forward pass, e não vanishing gradient, que acontece no backward e que este baralho não calcula. Aqui o aviso vira `saturada`, e `vanishing` fica falso: nenhum texto do Backprop fala em vanishing gradient. |
 | `mediaDePontos(mao, cartas)` | função (exportada) | Média de pontos de um conjunto de cartas. |
 
 ## `src/nucleo/rede.js`
 
-Arquitetura da rede neural montada na mesa. Na arquitetura padrão, a camada 0 é a entrada (3 neurônios), 1 a 5 são ocultas (5 cada) e 6 é a saída (4). As arquiteturas do NeuroDeck (curta, larga, profunda) mudam o número e o tamanho das camadas; com mais de 2 jogadores, cada camada ganha um neurônio por jogador a mais (ver `tamanhosDaMesa`). Por isso as funções abaixo recebem o total de camadas da mesa em uso. Cada jogador recebe `TAMANHO_MAO` cartas por baralho; o que sobra vai para o limbo.
+Arquitetura da rede neural montada na mesa. Na arquitetura padrão, a camada 0 é a entrada (3 neurônios), 1 a 5 são ocultas (5 cada) e 6 é a saída (4). As arquiteturas do motor (curta, larga, profunda) mudam o número e o tamanho das camadas; com mais de 2 jogadores, cada camada ganha um neurônio por jogador a mais (ver `tamanhosDaMesa`). Por isso as funções abaixo recebem o total de camadas da mesa em uso. Cada jogador recebe `TAMANHO_MAO` cartas por baralho; o que sobra vai para o limbo.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `TAMANHOS_CAMADAS` | constante (exportada) | Neurônios por camada da arquitetura padrão, da entrada à saída. |
-| `ARQUITETURAS` | constante (exportada) | Arquiteturas oferecidas no menu (as do NeuroDeck), com o nome para a interface. |
-| `tamanhosDaMesa(arquitetura = 'padrao', jogadores = 2)` | função (exportada) | Tamanho de cada camada da mesa para a arquitetura e o número de jogadores: com mais de 2 jogadores, cada camada ganha um neurônio por jogador a mais (regra do NeuroDeck). |
+| `ARQUITETURAS` | constante (exportada) | Arquiteturas oferecidas no menu (as do motor), com o nome para a interface. |
+| `tamanhosDaMesa(arquitetura = 'padrao', jogadores = 2)` | função (exportada) | Tamanho de cada camada da mesa para a arquitetura e o número de jogadores: com mais de 2 jogadores, cada camada ganha um neurônio por jogador a mais (regra do motor). |
 | `TOTAL_CAMADAS` | constante (exportada) | Quantidade de camadas (7). |
 | `CAMADA_SAIDA` | constante (exportada) | Índice da camada de saída (6). |
 | `TAMANHO_MAO` | constante (exportada) | Cartas na mão de cada jogador no início. |
@@ -1054,22 +1054,22 @@ Arquitetura da rede neural montada na mesa. Na arquitetura padrão, a camada 0 �
 
 ## `src/nucleo/terrenos.js`
 
-Terrenos (seção "Extensões" da especificação). O efeito de cada um é aplicado pelo motor do NeuroDeck (`src/motor/engine/terrains.js`); aqui ficam só nome e descrição.
+Terrenos (seção "Extensões" da especificação). O efeito de cada um é aplicado pelo motor do motor (`src/motor/engine/terrains.js`); aqui ficam só nome e descrição.
 
 ## `src/nucleo/traducao.js`
 
-Tradução entre o vocabulário do Truco de Turing (interface) e o do motor do NeuroDeck (regras, em `src/motor/`). As telas continuam falando de `mao`, `jogadores`, `neuronios`, cartas `{ valor: 'K', naipe: 'E' }` e jogadas `{ tipo: 'empilhar', ... }`. O motor fala de `state`, `nets`, `slots`, cartas `{ rank: 13, suit: 'S' }` e movimentos `{ type: 'tune', ... }`. Este arquivo tem só as conversões, sem estado: quem guarda a partida é `partida.js`. | Truco de Turing | Motor do NeuroDeck | |------------------------------|------------------------------------------------------| | `inicio` (carta) | `reveal` (cardId) | | `ativar` (neuronio) | `advance` (slotIndex na próxima camada) | | `empilhar` no próprio | `tune` (cardIds) | | `empilhar` no adversário | `overfit`, `earlystop` ou `stackoverflow`, pelo tamanho final da pilha (2, 3 ou 4) | | `dropout` (n, pagamento) | `dropout` (layers, cardIds) | | `transfer` (cartas) | `transfer` (rank) | | `passar` | `pass` |
+Tradução entre o vocabulário do Truco de Turing (interface) e o do motor (regras, em `src/motor/`). As telas continuam falando de `mao`, `jogadores`, `neuronios`, cartas `{ valor: 'K', naipe: 'E' }` e jogadas `{ tipo: 'empilhar', ... }`. O motor fala de `state`, `nets`, `slots`, cartas `{ rank: 13, suit: 'S' }` e movimentos `{ type: 'tune', ... }`. Este arquivo tem só as conversões, sem estado: quem guarda a partida é `partida.js`. | Truco de Turing | Motor | |------------------------------|------------------------------------------------------| | `inicio` (carta) | `reveal` (cardId) | | `ativar` (neuronio) | `advance` (slotIndex na próxima camada) | | `empilhar` no próprio | `tune` (cardIds) | | `empilhar` no adversário | `overfit`, `earlystop` ou `stackoverflow`, pelo tamanho final da pilha (2, 3 ou 4) | | `dropout` (n, pagamento) | `dropout` (layers, cardIds) | | `transfer` (cartas) | `transfer` (rank) | | `passar` | `pass` |
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `BARALHO_ND` | constante (exportada) | Baralhos: chave do Truco de Turing → id no motor. |
-| `TERRENO_ND` | constante (exportada) | Terrenos: chave do Truco de Turing → id no motor. |
-| `INICIO_ND` | constante (exportada) | Formas de decidir quem começa: chave do Truco de Turing → `firstRule` do motor. |
-| `OPONENTE_ND` | constante (exportada) | Oponentes: perfil do Truco de Turing → bot do motor. |
+| `BARALHO_MOTOR` | constante (exportada) | Baralhos: chave do Truco de Turing → id no motor. |
+| `TERRENO_MOTOR` | constante (exportada) | Terrenos: chave do Truco de Turing → id no motor. |
+| `INICIO_MOTOR` | constante (exportada) | Formas de decidir quem começa: chave do Truco de Turing → `firstRule` do motor. |
+| `OPONENTE_MOTOR` | constante (exportada) | Oponentes: perfil do Truco de Turing → bot do motor. |
 | `naipeParaTT(suit)` | função (exportada) | Naipe do motor ('S', 'H', 'C', 'D') → naipe da interface ('E', 'C', 'P', 'O'). |
 | `rankDoValor(valor)` | função (exportada) | Valor da interface ('A', '2'…'10', 'J', 'Q', 'K') → rank do motor (1 a 13). |
 | `valorDoRank(rank)` | função (exportada) | Rank do motor (1 a 13) → valor da interface. |
-| `cartaParaND(carta)` | função (exportada) | Carta da interface → carta do motor, sem id (serve para consultar valor e força no baralho). |
+| `cartaParaMotor(carta)` | função (exportada) | Carta da interface → carta do motor, sem id (serve para consultar valor e força no baralho). |
 | `cartaParaTT(card, repetida)` | função (exportada) | Carta do motor → carta da interface. O id é `valor + naipe` ('KC') quando a carta é única na partida, e ganha o sufixo `#id` do motor quando há cartas repetidas (2 baralhos, Yin-yang). |
 | `idDoNeuronio(camada, posicao)` | função (exportada) | Id do neurônio na interface: camada e posição ('C2N3'). |
 | `lugarDoNeuronio(id)` | função (exportada) | Camada e posição a partir do id do neurônio, ou null se o id não for válido. |

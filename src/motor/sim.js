@@ -1,4 +1,4 @@
-// NeuroDeck - laboratorio: simulacao de Monte Carlo de partidas bot x bot
+// Motor - laboratorio: simulacao de Monte Carlo de partidas bot x bot
 import { newGame, applyMove, endGame, mulberry32 } from './engine.js';
 import { chooseMove } from './bot.js';
 

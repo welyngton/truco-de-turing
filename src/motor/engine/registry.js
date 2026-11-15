@@ -1,4 +1,4 @@
-// NeuroDeck - registro de modulos (API de mods)
+// Motor - registro de modulos (API de mods)
 //
 // Tudo o que varia no jogo entra por aqui: baralhos (como pontuar), terrenos
 // (ganchos no ciclo do turno) e acoes (o que se pode fazer com as cartas).
@@ -37,17 +37,17 @@
 //
 // Partidas com mais de 2 jogadores (apiVersion 2):
 //   state.players                  numero de jogadores; vetores por jogador tem esse tamanho
-//   NeuroDeck.opponents(state, p)  rivais de p na ordem da mesa
-//   NeuroDeck.nextPlayer(state, p) quem joga depois de p
-//   NeuroDeck.attackTarget(state, p, move)  alvo de um ataque (move.target, ou o unico rival)
-//   NeuroDeck.rand(state)          numero aleatorio da partida (state.rng nao existe mais)
+//   Motor.opponents(state, p)  rivais de p na ordem da mesa
+//   Motor.nextPlayer(state, p) quem joga depois de p
+//   Motor.attackTarget(state, p, move)  alvo de um ataque (move.target, ou o unico rival)
+//   Motor.rand(state)          numero aleatorio da partida (state.rng nao existe mais)
 // Um mod pode exportar apiVersion; o carregador avisa quando difere.
 
 function need(obj, fields, kind) {
   for (const f of fields) if (obj[f] === undefined) throw new Error(`${kind} "${obj.id || '?'}" sem campo obrigatorio: ${f}`);
 }
 
-export const NeuroDeck = {
+export const Motor = {
   apiVersion: 2,
   decks: {},
   terrains: {},
@@ -78,5 +78,5 @@ export const NeuroDeck = {
   actionList() { return Object.values(this.actions).sort((a, b) => a.order - b.order); },
 };
 
-// Mods externos: window.NeuroDeck (para scripts classicos) e import() de modulos.
-if (typeof globalThis !== 'undefined') globalThis.NeuroDeck = NeuroDeck;
+// Mods externos: window.Motor (para scripts classicos) e import() de modulos.
+if (typeof globalThis !== 'undefined') globalThis.Motor = Motor;

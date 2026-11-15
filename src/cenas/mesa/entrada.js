@@ -8,7 +8,7 @@
 import { rotuloCarta } from '../../nucleo/cartas.js';
 import { nomeCamada } from '../../nucleo/rede.js';
 import { valorParaTransfer, podePassar, camadasDesfaziveis } from '../../nucleo/partida.js';
-import { NeuroDeck } from '../../motor/engine.js';
+import { Motor } from '../../motor/engine.js';
 import { Som } from '../../interface/som.js';
 import { confirmar, abrirPainel } from '../../interface/paineis.js';
 import { abrirRegras } from '../../interface/telas/regras.js';
@@ -18,7 +18,7 @@ import { texturaDeInspecao } from '../recursos.js';
 import { registrarEvento, EVENTOS } from '../../interface/analise.js';
 import { colunaX, linhaY, NOME_DA_ACAO, cartaDaMesa } from './layout.js';
 
-/** Ação do motor do NeuroDeck correspondente a cada botão (para o texto da regra). */
+/** Ação do motor correspondente a cada botão (para o texto da regra). */
 const ACAO_DO_MOTOR = { tunagem: 'tune', overfit: 'overfit', earlystop: 'earlystop', stackoverflow: 'stackoverflow', dropout: 'dropout', transfer: 'transfer', passar: 'pass' };
 
 export const metodosDeEntrada = {
@@ -84,8 +84,8 @@ export const metodosDeEntrada = {
   },
 
   /**
-   * Botão Dropout: com cartas selecionadas, desfaz uma camada por carta e paga com elas (como no
-   * NeuroDeck); sem seleção, entra no modo de escolher até onde desfazer no tabuleiro.
+   * Botão Dropout: com cartas selecionadas, desfaz uma camada por carta e paga com elas; sem
+   * seleção, entra no modo de escolher até onde desfazer no tabuleiro.
    */
   acionarDropout() {
     if (!this.ehVezDoHumano()) return;
@@ -99,14 +99,14 @@ export const metodosDeEntrada = {
 
   /**
    * Texto do quadro de instruções para um botão da barra: o que ele faria agora, com as cartas
-   * selecionadas, ou o que falta para ele acender; depois, a regra do NeuroDeck.
+   * selecionadas, ou o que falta para ele acender; depois, a regra do motor.
    */
   explicarAcao(id) {
     const mao = this.mao;
     if (!mao) return '';
     if (id !== 'limpar') this.ultimaAcaoExplicada = id; /* o "?" abre a ajuda nesta ação */
     const eu = this.quemVe, nome = NOME_DA_ACAO[id];
-    const regra = ACAO_DO_MOTOR[id] ? ' Regra: ' + NeuroDeck.action(ACAO_DO_MOTOR[id]).rule : '';
+    const regra = ACAO_DO_MOTOR[id] ? ' Regra: ' + Motor.action(ACAO_DO_MOTOR[id]).rule : '';
     if (!this.ehVezDoHumano()) return nome + ': espere a sua vez.' + regra;
     const qtd = this.selecao.length, valor = this.valorSelecionado();
     if (['tunagem', 'overfit', 'earlystop', 'stackoverflow'].includes(id)) {

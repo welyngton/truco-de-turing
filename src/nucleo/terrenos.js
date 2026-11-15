@@ -1,6 +1,6 @@
 /**
  * @file Terrenos (seção "Extensões" da especificação). O efeito de cada um é aplicado pelo motor
- * do NeuroDeck (`src/motor/engine/terrains.js`); aqui ficam só nome e descrição.
+ * do motor (`src/motor/engine/terrains.js`); aqui ficam só nome e descrição.
  */
 export const TERRENOS = {
   neutro: { nome: 'Mesa neutra', resumo: 'Sem efeito. Feltro verde, café e truco.' },

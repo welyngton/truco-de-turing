@@ -1,17 +1,17 @@
 /**
  * @file Baralhos do jogo e valor em pontos das cartas.
  *
- * As regras de cada baralho (cartas, valores e pontuação) são as do motor do NeuroDeck, em
+ * As regras de cada baralho (cartas, valores e pontuação) são as do motor, em
  * `src/motor/engine/decks.js`. Aqui ficam o nome, o resumo do menu e o que a arte precisa.
  */
-import * as ND from '../motor/engine.js';
+import * as motor from '../motor/engine.js';
 import { NOME_VALOR, NAIPE } from './cartas.js';
-import { BARALHO_ND, cartaParaND, cartaParaTT } from './traducao.js';
+import { BARALHO_MOTOR, cartaParaMotor, cartaParaTT } from './traducao.js';
 
 /** Cartas de um baralho do motor, no formato da interface. */
 function montarBaralho(chave) {
-  const baralho = ND.NeuroDeck.deck(BARALHO_ND[chave]);
-  const cartas = baralho.build ? baralho.build(null, baralho.minCopies || 1) : ND.standardDeck(1);
+  const baralho = motor.Motor.deck(BARALHO_MOTOR[chave]);
+  const cartas = baralho.build ? baralho.build(null, baralho.minCopies || 1) : motor.standardDeck(1);
   const vezes = {};
   for (const c of cartas) vezes[c.rank + c.suit] = (vezes[c.rank + c.suit] || 0) + 1;
   return cartas.map((c) => cartaParaTT(c, vezes[c.rank + c.suit] > 1));
@@ -67,9 +67,9 @@ for (const chave of Object.keys(BARALHOS)) BARALHOS[chave].montar = () => montar
  * @param {string} baralho Chave de BARALHOS.
  */
 export function pontosDaCarta(carta, baralho) {
-  const dados = ND.NeuroDeck.decks[BARALHO_ND[baralho]];
-  const c = cartaParaND(carta);
-  return dados && dados.cardValue ? dados.cardValue(c) : ND.nominalValue(c);
+  const dados = motor.Motor.decks[BARALHO_MOTOR[baralho]];
+  const c = cartaParaMotor(carta);
+  return dados && dados.cardValue ? dados.cardValue(c) : motor.nominalValue(c);
 }
 
 /** Nome por extenso da carta, ou o nome da manilha ("Zap"). */

@@ -1,14 +1,14 @@
 /**
- * @file Ferramentas compartilhadas pelos oponentes, sobre o motor do NeuroDeck: gerador
+ * @file Ferramentas compartilhadas pelos oponentes, sobre o motor: gerador
  * aleatório, determinização (sortear o que o jogador não vê) e estimativa da chance de vitória.
  */
-import * as ND from '../../motor/engine.js';
+import * as motor from '../../motor/engine.js';
 import { playout } from '../../motor/bot.js';
 import { copiarMao } from '../partida.js';
 
 /** Gerador aleatório novo para uma decisão de oponente (função que devolve números em [0, 1)). */
 export function novoGerador() {
-  return ND.mulberry32(Math.floor(Math.random() * 2 ** 31));
+  return motor.mulberry32(Math.floor(Math.random() * 2 ** 31));
 }
 
 /**
@@ -17,7 +17,7 @@ export function novoGerador() {
  * escondidas antes de simular.
  */
 export function determinizar(mao, j) {
-  return copiarMao(mao, ND.determinize(mao.nd, j, novoGerador()));
+  return copiarMao(mao, motor.determinize(mao.estadoMotor, j, novoGerador()));
 }
 
 /**
@@ -29,7 +29,7 @@ export function chanceDeVitoria(mao, j, n) {
   if (mao.fase === 'inicio') return 0.5;
   let vitorias = 0;
   for (let i = 0; i < n; i++) {
-    const estado = ND.determinize(mao.nd, j, novoGerador());
+    const estado = motor.determinize(mao.estadoMotor, j, novoGerador());
     playout(estado, estado.rng);
     if (estado.winner === j) vitorias++;
   }

@@ -1,5 +1,5 @@
 /**
- * @file Mesa dinâmica (issue #5): arquiteturas do NeuroDeck, 2 a 5 jogadores e vários baralhos.
+ * @file Mesa dinâmica (issue #5): arquiteturas do motor, 2 a 5 jogadores e vários baralhos.
  *
  * Cada teste diz o cenário e o resultado esperado. A geometria do tabuleiro é testada no Node
  * (layout.js não depende do Phaser); a partida, pela camada de tradução; a revisão da mão, no
@@ -40,12 +40,12 @@ function jogarAteOFim(mao) {
 /** Todas as cartas da mão, onde quer que estejam (mesa, mãos, limbo, cemitério e fora da partida). */
 function contarCartas(mao) {
   const cartas = [...mao.camadas.flat().flatMap((n) => n.cartas), ...mao.jogadores.flatMap((j) => j.mao), ...mao.limbo, ...mao.cemiterio];
-  return { total: cartas.length + (mao.nd.unused || []).length, ids: new Set(cartas.map((c) => c.id)).size, soltas: cartas.length };
+  return { total: cartas.length + (mao.estadoMotor.unused || []).length, ids: new Set(cartas.map((c) => c.id)).size, soltas: cartas.length };
 }
 
 describe('Mesa: arquiteturas, jogadores e baralhos', () => {
   it('a mesa tem os tamanhos da arquitetura, com um neurônio a mais por camada para cada jogador além de 2', () => {
-    // Cenário: as quatro arquiteturas do NeuroDeck, com 2 e com 4 jogadores.
+    // Cenário: as quatro arquiteturas do motor, com 2 e com 4 jogadores.
     for (const arquitetura of ['padrao', 'curta', 'larga', 'profunda']) {
       for (const n of [2, 4]) {
         const mao = novaMao({ arquitetura, jogadores: mesaCom(n), semente: 3, inicio: 'sorteio' });
@@ -55,7 +55,7 @@ describe('Mesa: arquiteturas, jogadores e baralhos', () => {
   });
 
   it('com 2 baralhos a mão tem 10 cartas e o limbo 20; com 3 baralhos, 15 e 30', () => {
-    // Regra do NeuroDeck: mão e limbo multiplicam pelo número de baralhos.
+    // regra do motor: mão e limbo multiplicam pelo número de baralhos.
     const dois = novaMao({ baralhos: 2, jogadores: mesaCom(2), semente: 1, inicio: 'sorteio' });
     assert.deepEqual(dois.jogadores.map((j) => j.mao.length), [10, 10]);
     assert.equal(dois.limbo.length, 20);

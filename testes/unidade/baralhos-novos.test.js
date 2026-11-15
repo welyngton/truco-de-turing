@@ -1,5 +1,5 @@
 /**
- * @file Baralhos do NeuroDeck que entraram na fusão (Nobreza e Backprop), a arte deles e os ícones
+ * @file Baralhos do motor que entraram na fusão (Nobreza e Backprop), a arte deles e os ícones
  * das ações.
  *
  * Rodar: node --test testes/unidade/baralhos-novos.test.js
@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { instalarNavegadorFalso, pixelsPintados } from '../apoio/ambiente.js';
 import { redeCom, maoAteOFim } from '../apoio/estados.js';
 import { BARALHOS } from '../../src/nucleo/baralhos.js';
-import { BARALHO_ND } from '../../src/nucleo/traducao.js';
+import { BARALHO_MOTOR } from '../../src/nucleo/traducao.js';
 import { pontuarRede, ROTULO_SAIDA_SATURADA } from '../../src/nucleo/pontuacao.js';
 import { VERBETES } from '../../src/conteudo/grimorio.js';
 import { ICONES_DAS_ACOES } from '../../src/arte/icones.js';
@@ -24,7 +24,7 @@ describe('Nobreza e Backprop', () => {
   it('estão no menu, no motor e geram 52 cartas', () => {
     for (const chave of ['nobreza', 'backprop']) {
       assert.ok(BARALHOS[chave].nome && BARALHOS[chave].resumo, chave);
-      assert.equal(BARALHO_ND[chave], chave);
+      assert.equal(BARALHO_MOTOR[chave], chave);
       assert.equal(BARALHOS[chave].montar().length, 52, chave);
     }
   });

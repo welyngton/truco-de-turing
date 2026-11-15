@@ -67,7 +67,7 @@ async function jogarAteOFim(paginas, trucar = []) {
 }
 
 /** Estado do motor visto por uma aba. */
-const estado = (p) => naCena(p, 'return JSON.stringify({ redes: cena.mao.nd.nets, mesa: cena.mao.nd.layers, somas: cena.mao.resultado && cena.mao.resultado.somas, valor: cena.partida.valor });');
+const estado = (p) => naCena(p, 'return JSON.stringify({ redes: cena.mao.estadoMotor.nets, mesa: cena.mao.estadoMotor.layers, somas: cena.mao.resultado && cena.mao.resultado.somas, valor: cena.partida.valor });');
 
 describe('partida online entre abas', () => {
   it('criar, entrar pelo código, jogar uma mão com truco e terminar igual nas duas telas', async () => {
@@ -109,7 +109,7 @@ describe('partida online entre abas', () => {
       assert.deepEqual(await naCena(a, 'return [cena.cadeiraOnline(), cena.mao.jogadores.map((j) => j.nome)]'), [0, ['Ana (você)', 'Beto']]);
       assert.deepEqual(await naCena(b.pagina, 'return [cena.cadeiraOnline(), cena.mao.jogadores.map((j) => j.nome)]'), [1, ['Ana', 'Beto (você)']]);
       /* as duas telas criaram a mesma mão */
-      assert.equal(await naCena(a, 'return JSON.stringify(cena.mao.nd.layers)'), await naCena(b.pagina, 'return JSON.stringify(cena.mao.nd.layers)'));
+      assert.equal(await naCena(a, 'return JSON.stringify(cena.mao.estadoMotor.layers)'), await naCena(b.pagina, 'return JSON.stringify(cena.mao.estadoMotor.layers)'));
       await jogarAteOFim([a, b.pagina], [true, false]);
       await capturar(a, '31-online-resultado');
       assert.equal(await estado(a), await estado(b.pagina));
