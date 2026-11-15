@@ -1,12 +1,15 @@
 /**
  * @file Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as
- * medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado). A conquista
- * final fica em destaque no alto, com o progresso até ela.
+ * medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha
+ * que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque
+ * no alto, com o progresso até ela.
  */
 import { abrirAvatares } from './avatares.js';
 import { CONQUISTAS, GRADUACOES, CONQUISTA_FINAL, progressoDaFinal } from '../../conteudo/conquistas.js';
 import { desenharRetratoEmMoldura } from '../../arte/retrato.js';
 import { FOTO_PROFESSOR } from '../../recursos/retratoProfessor.js';
+import { firebaseConfigurado } from '../../online/firebase.js';
+import { contaAtual, haMarcaDeConta, aoMudarDeConta } from '../conta.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
 import { medalhaHtml } from '../medalha.js';
 
@@ -33,23 +36,46 @@ function finalHtml(conquista, progresso) {
 }
 
 /**
- * Abre o quadro de conquistas.
+ * De quem são as conquistas da tela: da conta conectada (com o nome), da conta que ainda está sendo
+ * retomada, ou só deste aparelho.
+ */
+export function origemDasConquistas() {
+  const conta = contaAtual();
+  if (conta) return 'Conquistas da conta de <b>' + escaparHtml(conta.nome) + '</b>: valem em qualquer aparelho em que você entrar.';
+  if (haMarcaDeConta()) return 'Carregando as conquistas da sua conta…';
+  if (!firebaseConfigurado()) return 'Conquistas deste aparelho.';
+  return 'Conquistas só deste aparelho. Para guardá-las e vê-las em outros aparelhos, entre numa conta em <b>Jogar online</b>.';
+}
+
+/** Origem, resumo e lista de medalhas (a parte que muda quando a conta entra ou sai). */
+function conteudoHtml(p) {
+  const total = CONQUISTAS.filter((c) => p.desbloqueadas[c.id]).length;
+  return '<p class="conquistas-origem">' + origemDasConquistas() + '</p>' +
+    '<p class="conquistas-resumo"><b>' + total + '</b> de ' + CONQUISTAS.length + ' desbloqueadas · ' + p.vitorias + ' mãos vencidas · ' + p.dropouts + ' dropouts</p>' +
+    CONQUISTAS.filter((c) => c.id === CONQUISTA_FINAL).map((c) => finalHtml(c, p)).join('') +
+    '<div class="conquistas-lista">' + CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL).map((c) => itemHtml(c, !!p.desbloqueadas[c.id])).join('') + '</div>';
+}
+
+/**
+ * Abre o quadro de conquistas. Se a conta entrar (ou sair) com o quadro aberto, ele se atualiza.
  * @param {object} app Aplicação (lê o progresso).
  */
 export function abrirConquistas(app) {
-  const p = app.progresso;
-  const total = CONQUISTAS.filter((c) => p.desbloqueadas[c.id]).length;
   const html = '<div class="folha larga"><button class="fechar-x" data-fechar aria-label="Fechar">×</button>' +
     '<div class="conquistas-salao">' +
     '<aside class="guilda"><div class="retrato" id="c-retrato" role="img" aria-label="Retrato do prof. Peng Yaohao em moldura medieval"></div>' +
     '<p class="guilda-nota">Guardião do salão das conquistas. Cada medalha aqui foi conquistada contra os oponentes da mesa.</p></aside>' +
     '<div class="conquistas-principal"><h2>Conquistas</h2>' +
-    '<p class="conquistas-resumo"><b>' + total + '</b> de ' + CONQUISTAS.length + ' desbloqueadas · ' + p.vitorias + ' mãos vencidas · ' + p.dropouts + ' dropouts</p>' +
-    CONQUISTAS.filter((c) => c.id === CONQUISTA_FINAL).map((c) => finalHtml(c, p)).join('') +
-    '<div class="conquistas-lista">' + CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL).map((c) => itemHtml(c, !!p.desbloqueadas[c.id])).join('') + '</div>' +
+    '<div class="conquistas-conteudo">' + conteudoHtml(app.progresso) + '</div>' +
     '<p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
-  const painel = abrirPainel(html, { fechaAoClicarFora: true });
+  let pararDeOuvir = () => {};
+  const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar: () => pararDeOuvir() });
   painel.elemento.querySelector('#c-avatares').addEventListener('click', () => abrirAvatares(app));
+  pararDeOuvir = aoMudarDeConta(() => {
+    const conteudo = painel.elemento.querySelector('.conquistas-conteudo');
+    if (!conteudo || !conteudo.isConnected) { pararDeOuvir(); return; }
+    conteudo.innerHTML = conteudoHtml(app.progresso);
+  });
   const densidade = Math.min(3, Math.max(2, globalThis.devicePixelRatio || 1));
   desenharRetratoEmMoldura(FOTO_PROFESSOR, densidade, 'Prof. Peng Yaohao', 'Grão-mestre da guilda', (canvas) => {
     painel.elemento.querySelector('#c-retrato')?.appendChild(canvas);

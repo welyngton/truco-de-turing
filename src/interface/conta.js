@@ -9,11 +9,15 @@
  * a marca existir; aí espera a sessão guardada e junta o progresso da conta com o do aparelho,
  * como no login.
  *
- * O menu e a tela "Jogar online" acompanham a conta por `aoMudarDeConta`.
+ * Com a conta valendo, cada gravação junta o progresso do aparelho com o da conta numa transação
+ * (`sincronizar`): um aparelho não apaga o que outro gravou, e o que foi ganho sem conexão sobe
+ * quando ela volta (issue #57).
+ *
+ * O menu, a tela "Jogar online" e a tela "Conquistas" acompanham a conta por `aoMudarDeConta`.
  */
-import { mesclarProgresso, documentoDaConta } from '../online/contas.js';
+import { mesclarProgresso, juntarParaGravar, documentoDaConta } from '../online/contas.js';
 import { estatisticasDe } from '../online/estatisticas.js';
-import { firebaseConfigurado, contaGuardada, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta } from '../online/firebase.js';
+import { firebaseConfigurado, contaGuardada, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta, juntarNaConta } from '../online/firebase.js';
 import { explicarErroFirebase } from '../online/errosFirebase.js';
 import { mostrarAviso } from './paineis.js';
 import { definirConta } from './analise.js';
@@ -30,6 +34,58 @@ let acessoContadoNaConta = false;
 const ouvintes = new Set();
 /** Já avisou que salvar na conta falhou? (um aviso só, até voltar a dar certo) */
 let avisouFalhaAoSalvar = false;
+/** Gravação na conta em andamento (uma por vez), ou null. */
+let gravacao = null;
+/** Alguém pediu para gravar enquanto outra gravação corria? (vira uma gravação só, logo depois) */
+let gravarDeNovo = false;
+/** O progresso ficou sem subir por falta de conexão? Sobe sozinho quando a conexão voltar. */
+let pendente = false;
+
+/** O erro é de falta de conexão (e vale tentar de novo quando ela voltar)? */
+const semConexao = (e) => !!e && (['unavailable', 'deadline-exceeded'].includes(e.code) || /offline/i.test(e.message || ''));
+/** O navegador diz que está sem conexão? */
+const navegadorSemConexao = () => !!globalThis.navigator && globalThis.navigator.onLine === false;
+
+/**
+ * Sobe o progresso para a conta juntando com o que já está lá (`juntarParaGravar`, numa transação),
+ * para um aparelho não apagar o que outro gravou. O que vier da conta (conquistas ganhas em outro
+ * aparelho) entra também neste aparelho, sem aviso. Uma gravação por vez: pedidos que chegam no
+ * meio viram uma gravação só, logo depois. Sem conexão, o progresso fica pendente, com um aviso só,
+ * e sobe sozinho quando a conexão volta (evento `online`, ligado em `usarConta`).
+ * @param {object} app Aplicação.
+ * @returns {Promise<void>}
+ */
+function sincronizar(app) {
+  if (!atual) return Promise.resolve();
+  if (gravacao) { gravarDeNovo = true; return gravacao; }
+  /* o `.finally` roda depois desta atribuição mesmo quando a gravação falha na hora (sem conexão) */
+  gravacao = gravarNaConta(app, atual).finally(() => {
+    gravacao = null;
+    if (gravarDeNovo) { gravarDeNovo = false; sincronizar(app); }
+  });
+  return gravacao;
+}
+
+/** Uma gravação de `sincronizar`: junta, grava, traz o que veio da conta e avisa o que for preciso. */
+async function gravarNaConta(app, conta) {
+  try {
+    if (navegadorSemConexao()) throw Object.assign(new Error('offline'), { code: 'unavailable' });
+    const gravado = await juntarNaConta(conta.uid, (naConta) => documentoDaConta(juntarParaGravar(app.progresso, naConta), conta, metodoAtual));
+    if (atual !== conta) return;
+    app.progresso = juntarParaGravar(app.progresso, gravado);
+    app.salvarSoLocal();
+    if (pendente) mostrarAviso('Conta', 'A conexão voltou: o progresso deste aparelho subiu para a conta.', null, 5000);
+    pendente = false;
+    avisouFalhaAoSalvar = false;
+  } catch (e) {
+    const offline = navegadorSemConexao() || semConexao(e);
+    if (offline) pendente = true;
+    if (avisouFalhaAoSalvar) return;
+    avisouFalhaAoSalvar = true;
+    mostrarAviso('Conta', offline ? 'Sem conexão: o progresso fica neste aparelho e sobe para a conta quando a conexão voltar.'
+      : 'O progresso ficou só neste aparelho. ' + (explicarErroFirebase(e) || ''), null, 7000);
+  }
+}
 
 /** Conta conectada agora (`{ uid, nome, email }`), ou null. */
 export function contaAtual() { return atual; }
@@ -75,18 +131,15 @@ export async function usarConta(app, conta, metodo, { retomada = false } = {}) {
   gravarMarca(metodo);
   definirConta(conta.uid, metodo, { retomada });
   mudar(conta);
-  /* daqui em diante, cada vez que o progresso é salvo, ele vai também para a conta */
+  /* daqui em diante, cada vez que o progresso é salvo, ele vai também para a conta, juntando com o
+     que já está lá; o que ficou pendente sem conexão sobe quando ela voltar */
   if (!app.salvarSoLocal) {
     app.salvarSoLocal = app.salvar;
     app.salvar = function () {
       this.salvarSoLocal();
-      if (!atual) return;
-      salvarProgressoNaConta(atual.uid, documentoDaConta(this.progresso, atual, metodoAtual)).then(() => { avisouFalhaAoSalvar = false; }, (e) => {
-        if (avisouFalhaAoSalvar) return;
-        avisouFalhaAoSalvar = true;
-        mostrarAviso('Conta', 'O progresso ficou só neste aparelho. ' + (explicarErroFirebase(e) || ''), null, 7000);
-      });
+      sincronizar(this);
     };
+    globalThis.addEventListener?.('online', () => { if (pendente && atual) sincronizar(app); });
   }
   app.salvar();
 }

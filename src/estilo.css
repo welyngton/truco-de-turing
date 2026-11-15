@@ -217,6 +217,9 @@ html, body { overscroll-behavior: none; }
 .guilda .retrato canvas { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); }
 .guilda-nota { font-style: italic; font-size: 14px; color: #5a4630; margin: 6px auto 0; max-width: 26ch; }
 .conquistas-principal { min-width: 0; }
+/* de quem são as conquistas: da conta conectada ou só deste aparelho */
+.conquistas-origem { margin: 2px 0 0; font-size: 14px; color: #5a4630; }
+.conquistas-origem b { color: #6b1a22; }
 .conquistas-resumo { color: #5a4630; }
 .conquistas-resumo b { font-family: var(--fonte-titulo); font-size: 20px; color: #6b1a22; }
 .conquistas-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 12px; }

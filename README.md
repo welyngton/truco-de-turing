@@ -214,6 +214,9 @@ Botão **Jogar online** no menu:
   que vale em qualquer aparelho; o progresso do aparelho e o da conta se juntam sem contar nada em dobro.
   A conta continua conectada ao recarregar a página ou voltar outro dia (até sair dela), e o menu
   mostra quem está conectado. Quem nunca entrou numa conta não baixa nada do Firebase.
+  Cada gravação junta o progresso com o que já está na conta, então um aparelho não apaga as
+  conquistas que outro gravou; sem conexão, o progresso fica no aparelho e sobe sozinho quando a
+  conexão volta. A tela **Conquistas** diz se elas são da conta (com o nome) ou só deste aparelho.
 - **Sala**: quem cria a sala escolhe quantas pessoas vão jogar e passa o código de 5 letras; as
   cadeiras que sobrarem ficam com o computador. A sala usa as opções do menu, e o truco vale entre 2 jogadores.
 - **Como funciona**: todos os aparelhos criam a mesma mão com a mesma semente e aplicam as mesmas

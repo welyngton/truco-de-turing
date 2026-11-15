@@ -11,7 +11,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { Sala, codigoDeSala, TEMPO_SEM_SINAL, BATIMENTO } from '../../src/online/sala.js';
 import { centralEmMemoria } from '../../src/online/transportes.js';
-import { mesclarProgresso } from '../../src/online/contas.js';
+import { mesclarProgresso, juntarParaGravar } from '../../src/online/contas.js';
 import { novaMao, aplicarJogada } from '../../src/nucleo/partida.js';
 import { novaPartida, pedirTruco, responderTruco } from '../../src/nucleo/truco.js';
 import { jogadaAleatoria } from '../../src/nucleo/oponentes/estrategias.js';
@@ -278,6 +278,19 @@ describe('contas: progresso mesclado entre o aparelho e a conta', () => {
     assert.equal(m.avatar, 'gato');
     assert.equal(m.mudo, true); /* preferências do aparelho ficam */
     assert.deepEqual(mesclarProgresso(local, null), local);
+  });
+  it('juntarParaGravar (#57): na gravação, nada da conta se perde, o avatar é o do aparelho e juntar de novo não muda nada', () => {
+    /* este aparelho ganhou "zap" sem conexão; outro aparelho gravou "bigdata" e mais vitórias na conta */
+    const local = { vitorias: 3, maos: 10, dropouts: 4, vitoriasZen: 0, desbloqueadas: { primeira: 5, zap: 20 }, lidos: { dropout: true }, terrenos: {}, baralhos: {}, arquiteturas: {}, avatar: 'robo', mudo: true };
+    const conta = { vitorias: 7, maos: 8, dropouts: 1, vitoriasZen: 1, desbloqueadas: { primeira: 2, bigdata: 9 }, lidos: { overfit: true }, terrenos: {}, baralhos: {}, arquiteturas: {}, avatar: 'gato' };
+    const junto = juntarParaGravar(local, conta);
+    assert.deepEqual(junto.desbloqueadas, { primeira: 2, zap: 20, bigdata: 9 }, 'a união, com a data mais antiga');
+    assert.deepEqual([junto.vitorias, junto.maos], [7, 10]);
+    assert.equal(junto.avatar, 'robo', 'o avatar escolhido agora neste aparelho');
+    assert.equal(junto.mudo, true);
+    const deNovo = juntarParaGravar(junto, junto);
+    assert.deepEqual([deNovo.desbloqueadas, deNovo.vitorias, deNovo.maos, deNovo.dropouts, deNovo.lidos], [junto.desbloqueadas, junto.vitorias, junto.maos, junto.dropouts, junto.lidos], 'sem contar em dobro');
+    assert.deepEqual(juntarParaGravar(local, null).desbloqueadas, local.desbloqueadas, 'conta vazia: vai o do aparelho');
   });
 });
 

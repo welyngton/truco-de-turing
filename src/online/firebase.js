@@ -97,6 +97,25 @@ export async function salvarProgressoNaConta(uid, progresso) {
   await fs.setDoc(fs.doc(banco, 'contas', uid), JSON.parse(JSON.stringify(progresso)));
 }
 
+/**
+ * Grava na conta juntando com o que já está lá, numa transação: lê o documento, monta o novo com
+ * `montar(naConta)` e grava. Se outro aparelho gravar no meio, o Firestore repete a transação com
+ * o documento novo. Sem conexão, falha (código `unavailable`), e quem chama tenta de novo depois.
+ * @param {string} uid
+ * @param {(naConta: object|null) => object} montar Recebe o documento atual (ou null) e devolve o novo.
+ * @returns {Promise<object>} O documento gravado.
+ */
+export async function juntarNaConta(uid, montar) {
+  const { fs, banco } = await carregar();
+  const ref = fs.doc(banco, 'contas', uid);
+  return fs.runTransaction(banco, async (transacao) => {
+    const atual = await transacao.get(ref);
+    const dados = JSON.parse(JSON.stringify(montar(atual.exists() ? atual.data() : null)));
+    transacao.set(ref, dados);
+    return dados;
+  });
+}
+
 /* ------------------------------------------------------------ administração */
 
 /**

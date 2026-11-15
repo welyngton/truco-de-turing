@@ -413,6 +413,8 @@ describe('telas', () => {
     abrirConquistas(app);
     assert.match($('.conquistas-resumo').textContent, new RegExp('1 de ' + CONQUISTAS.length));
     assert.equal($$('.conquista').length, CONQUISTAS.length);
+    /* sem conta: a tela diz que as conquistas são só deste aparelho e como levá-las para a conta */
+    assert.match($('.conquistas-origem').textContent, /só deste aparelho.*Jogar online/);
     /* a conquista final fica em destaque no alto, bloqueada, com o progresso até ela */
     const final = $('.conquista.final');
     assert.ok(final && final.classList.contains('bloqueada'));
