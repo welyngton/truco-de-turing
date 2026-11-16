@@ -20,6 +20,7 @@ import { abrirRegras } from './telas/regras.js';
 import { abrirGrimorio } from './telas/grimorio.js';
 import { abrirConquistas } from './telas/conquistas.js';
 import { abrirSobre } from './telas/sobre.js';
+import { EMBLEMA_SVG } from './logo.js';
 import { abrirMods } from './telas/mods.js';
 import { abrirAvatares, retratoDoAvatar } from './telas/avatares.js';
 import { abrirOnline } from './telas/online.js';
@@ -80,7 +81,7 @@ export const BOTOES_DO_MENU = {
 function htmlDoMenu(opcoes) {
   return '<div class="menu">' +
     '<section class="menu-capa">' +
-    '<h1>TRUCO DE TURING</h1>' +
+    '<h1><span class="menu-emblema" aria-hidden="true">' + EMBLEMA_SVG + '</span>TRUCO DE TURING</h1>' +
     '<p>Monte uma rede neural carta por carta, da entrada à saída. Tune seus neurônios, aplique overfit no adversário, fuja do vanishing gradient e, quando sentir a mão boa, grite TRUCO.</p>' +
     '<div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> é a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lilás e rosa, as dos adversários</span></div>' +
     '<div class="menu-acoes">' +

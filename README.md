@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo/logo-truco-de-turing-500x700.png" alt="Logo do Truco de Turing: uma carta com uma rede neural" width="220"></p>
+
 # Truco de Turing
 
 <!-- versao -->

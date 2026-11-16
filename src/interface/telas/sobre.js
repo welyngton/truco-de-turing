@@ -1,9 +1,10 @@
 /**
- * @file Tela "Sobre": versão, a disciplina, as regras
+ * @file Tela "Sobre": a logo, versão, a disciplina, as regras
  * originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
  */
 import { TEXTO_DA_CONTA } from '../../online/contas.js';
 import { abrirPainel } from '../paineis.js';
+import { LOGO_SVG } from '../logo.js';
 import { VERSAO, DATA_DA_VERSAO } from '../../versao.js';
 import { podeMedir, consentimento, definirConsentimento, TEXTO_DAS_ESTATISTICAS } from '../analise.js';
 
@@ -17,6 +18,7 @@ function situacaoDasEstatisticas() {
 /** Abre a tela "Sobre". */
 export function abrirSobre() {
   const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\u00d7</button>' +
+      '<div class="sobre-logo">' + LOGO_SVG + '</div>' +
       '<h2>Sobre o jogo</h2>' +
       '<p class="versao">Versão ' + VERSAO + ' \u00b7 ' + DATA_DA_VERSAO.split('-').reverse().join('/') +
       ' \u00b7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">histórico de versões</a></p>' +
