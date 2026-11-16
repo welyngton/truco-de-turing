@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.8.0 — 2026-11-15
+
+- feat: logo do jogo (favicon, menu, Sobre e README) ([#80](https://github.com/welyngton/truco-de-turing/pull/80), por [@welyngton](https://github.com/welyngton))
+
 ## 2.7.0 — 2026-11-15
 
 - feat: conquista final na hora ao juntar com a conta e botão de bugs e sugestões no Sobre ([#77](https://github.com/welyngton/truco-de-turing/pull/77), por [@welyngton](https://github.com/welyngton))

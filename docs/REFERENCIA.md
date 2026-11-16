@@ -680,6 +680,15 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 | `sairDaContaAtual()` | função (exportada) | Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. |
 | `retomarConta(app)` | função (exportada) | Ao abrir o jogo, retoma a conta de quem já entrou neste navegador. Sem a marca do login (ou sem o Firebase configurado), não faz nada e não baixa o SDK. Com a marca, espera a sessão que o Firebase guardou: - sessão encerrada (saiu em outro lugar, expirou): apaga a marca e segue sem conta; - sessão válida: junta o progresso como no login e volta a salvar na conta; - falha ao ler ou gravar a conta: avisa, segue com o progresso do aparelho e mantém a marca, para tentar de novo na próxima visita. |
 
+## `src/interface/logo.js`
+
+A logo do Truco de Turing: uma carta com uma rede neural (três entradas, quatro neurônios no meio e duas saídas, uma azul e outra laranja, como no teste de Turing). Os textos já estão em curvas, então a logo não depende da fonte. Os mesmos desenhos estão em `docs/logo/` (SVG e PNG) para o README, redes sociais e impressão.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `LOGO_SVG` | constante (exportada) | Logo completa: "TRUCO DE" no alto, a rede no centro e "TURING" embaixo. |
+| `EMBLEMA_SVG` | constante (exportada) | Só a carta com a rede (sem texto), para espaços pequenos. |
+
 ## `src/interface/medalha.js`
 
 HTML da medalha de uma conquista, na cor da graduação: usado no quadro de conquistas, na tela de resultado e no aviso do alto da tela. Fica num módulo leve, sem as telas, para a Aplicacao poder montar o aviso.
@@ -903,7 +912,7 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre": versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
+Tela "Sobre": a logo, versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
