@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.10.0 — 2026-11-18
+
+- feat: baralho Power BI vira Power Bee-Ai (abelha no verso) ([#102](https://github.com/welyngton/truco-de-turing/pull/102), por [@welyngton](https://github.com/welyngton))
+
 ## 2.9.0 — 2026-11-18
 
 - feat: Glossário vira "Livro de conceitos" e "Ver o conceito" vira "Aprender mais" ([#99](https://github.com/welyngton/truco-de-turing/pull/99), por [@welyngton](https://github.com/welyngton))
