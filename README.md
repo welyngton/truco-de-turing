@@ -140,6 +140,7 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
 - **9 avatares** para o jogador, 6 deles liberados por conquistas (Menu > Avatar).
 - **Modo dicas**: dicas de estratégia a cada vez, sempre com o conceito de redes neurais por trás, e explicações nos botões (mouse ou segurar no celular); só usam o que está à vista e nunca dizem qual carta virada escolher. Mãos com dicas não valem conquistas.
 - **Som e música com ícones**: alto-falante e nota musical (cortados quando desligados), sempre à vista no menu e na mesa, com nome acessível, estado (`aria-pressed`) e alvo de toque de pelo menos 44 px; a escolha é lembrada.
+- **Sobre em duas abas**: "O jogo" e "Equipe", com um cartão por pessoa (foto e mini-CV, em `src/conteudo/equipe.js`). O retrato do prof. Peng saiu das Conquistas e está no cartão dele; mini-CVs que ainda não chegaram avisam "a caminho".
 - **Ordenar a mão**: botões Tamanho e Naipe na mesa (teclas T e N); cada clique ordena e o seguinte inverte (▲ crescente, ▼ decrescente), respeitando a ordem de valor do baralho escolhido. A ordem vale para as cartas que chegam depois e só muda como a mão aparece.
 - **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Livro de conceitos e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
 - **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Livro de conceitos.

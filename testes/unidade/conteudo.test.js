@@ -74,6 +74,24 @@ describe('grimorio.js', () => {
     assert.equal(ids(mao), original);
   });
 
+  it('equipe: dados completos, sem currículo inventado, cartão com foto ou iniciais', async () => {
+    const { EQUIPE, iniciaisDe } = await import('../../src/conteudo/equipe.js');
+    const { cartaoDaPessoa, ABAS_DO_SOBRE } = await import('../../src/interface/telas/sobre.js');
+    assert.deepEqual(ABAS_DO_SOBRE.map((a) => a[0]), ['jogo', 'equipe']);
+    assert.equal(new Set(EQUIPE.map((p) => p.id)).size, EQUIPE.length);
+    for (const p of EQUIPE) assert.ok(p.nome && p.papel, p.id);
+    assert.deepEqual(EQUIPE.filter((p) => p.foto).map((p) => p.id), ['peng']);
+    assert.deepEqual(EQUIPE.filter((p) => !p.curriculo).map((p) => p.id), ['welyngton', 'diego', 'vinicius', 'suzy']);
+    assert.equal(iniciaisDe('Welyngton José Vinicius Dal Prá'), 'WP');
+    assert.equal(iniciaisDe('Suzy Arcanjo'), 'SA');
+    assert.equal(iniciaisDe('Madonna'), 'M');
+    assert.equal(iniciaisDe(''), '');
+    const semCv = cartaoDaPessoa({ id: 'x', nome: 'Ana <b>', papel: 'Teste', foto: null, curriculo: null });
+    assert.match(semCv, /a-caminho/); assert.match(semCv, /iniciais/); assert.doesNotMatch(semCv, /<b>/);
+    const comFoto = cartaoDaPessoa({ id: 'y', nome: 'Beto', papel: 'Teste', foto: 'professor', curriculo: 'Texto.' });
+    assert.match(comFoto, /data-foto="professor"/); assert.match(comFoto, /Texto\./); assert.doesNotMatch(comFoto, /a-caminho/);
+  });
+
   it('terrenos: o terreno sem efeito aparece como "Planície" (o id continua neutro), sem sobrar "Mesa neutra"', () => {
     assert.deepEqual(Object.keys(TERRENOS), ['neutro', 'montanha', 'pantano', 'oceano']);
     assert.deepEqual(Object.values(TERRENOS).map((t) => t.nome), ['Planície', 'Montanha', 'Pântano', 'Oceano']);

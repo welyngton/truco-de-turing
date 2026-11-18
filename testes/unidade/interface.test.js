@@ -427,11 +427,12 @@ describe('telas', () => {
     assert.equal(final.querySelector('.barra').getAttribute('aria-valuenow'), '1');
     assert.equal($$('.conquistas-lista .conquista.final').length, 0, 'e não se repete na lista');
     await esperar(50);
-    assert.ok($('#c-retrato canvas'));
+    assert.equal($('#c-retrato'), null, 'o retrato do professor saiu daqui (está na aba Equipe do Sobre)');
+    assert.equal($('.guilda'), null);
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
     assert.match(medalhaHtml(CONQUISTAS[0], false), /cadeado|bloquead/);
   });
-  it('sobre: versão, disciplina, professor e autores', () => {
+  it('sobre: versão, disciplina, professor e autores, em duas abas (O jogo e Equipe)', async () => {
     abrirSobre();
     const texto = $('.camada').textContent;
     assert.ok(texto.includes('Versão ' + VERSAO));
@@ -440,6 +441,9 @@ describe('telas', () => {
     assert.match($('.sobre-logo svg').getAttribute('aria-label'), /Truco de Turing/);
     assert.equal($('.sobre-logo svg text'), null);
     assert.match($('.homenagem').textContent, /Convergência global.*homenagem ao prof\. Peng.*Singularidade/s);
+    assert.match(texto, /Yu-Gi-Oh!, UNO e Geometry Dash/);
+    await esperar(50);
+    assert.ok($('.pessoa-cartao[data-pessoa="peng"] .pessoa-foto canvas'), 'a foto do professor está no cartão dele');
     for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
     /* bugs e sugestões: o botão leva às issues do repositório, em outra aba */
     const reportar = $('#s-reportar');

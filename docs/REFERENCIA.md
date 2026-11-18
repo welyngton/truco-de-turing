@@ -571,6 +571,14 @@ Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por 
 | `contarValores(mao)` | função | Contagem de cartas da mão por valor. |
 | `escolherDicaDeJogo(mao, j, partida, recentes = [])` | função (exportada) | Escolhe a dica de jogo para o jogador `j` agora. |
 
+## `src/conteudo/equipe.js`
+
+A equipe do jogo, mostrada na aba "Equipe" da tela Sobre (um cartão por pessoa). É só dados: para completar um cartão, preencha `curriculo` (um parágrafo curto, texto simples) e, se houver foto, `foto`. Pessoa sem `curriculo` aparece com "Mini-CV a caminho"; sem `foto`, com as iniciais. Os textos vêm de cada pessoa: não inventamos currículo de ninguém. Campos: - `id`: identificador estável; - `nome`, `papel`: como aparecem no cartão; - `curriculo`: mini-CV (ou `null` enquanto não chega); - `foto`: chave da foto (`'professor'` usa o retrato em moldura; `null` mostra as iniciais).
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `iniciaisDe(nome)` | função (exportada) | Iniciais para o cartão sem foto: primeira e última palavra do nome (Welyngton Prá → "WP"). |
+
 ## `src/conteudo/figurasDaBiblioteca.js`
 
 Figuras do Livro de conceitos: diagramas em SVG, desenhados à mão e embutidos no verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e escalam com a largura do verbete.
@@ -835,7 +843,7 @@ Tela de avatares: o jogador escolhe o retrato que aparece no placar. Os bloquead
 
 ## `src/interface/telas/conquistas.js`
 
-Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela.
+Quadro de conquistas: as medalhas (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -934,12 +942,16 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre": a logo, versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
+Tela "Sobre", em duas abas. "O jogo": a logo, a versão, a disciplina, as regras originais e as inspirações, as estatísticas de uso (ligar e desligar), os dados da conta, o botão para reportar bugs e sugestões (issues do GitHub) e a licença. "Equipe": um cartão por pessoa, com foto e mini-CV (dados em `conteudo/equipe.js`), e a homenagem ao prof. Peng na conquista final.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `situacaoDasEstatisticas()` | função | Situação das estatísticas de uso neste aparelho, em texto. |
-| `abrirSobre()` | função (exportada) | Abre a tela "Sobre". |
+| `ABAS_DO_SOBRE` | constante (exportada) | Abas da tela, na ordem: [id, nome]. |
+| `cartaoDaPessoa(pessoa)` | função (exportada) | Cartão de uma pessoa da equipe. Sem mini-CV, avisa que ele ainda vai chegar. |
+| `abaDoJogo()` | função | Conteúdo da aba "O jogo". |
+| `abaDaEquipe()` | função | Conteúdo da aba "Equipe". |
+| `abrirSobre(abaInicial = 'jogo')` | função (exportada) | Abre a tela "Sobre". |
 
 ## `src/motor/bot.js`
 
