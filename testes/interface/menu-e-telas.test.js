@@ -94,8 +94,27 @@ describe('menu e telas', () => {
           assert.ok(await pagina.locator('#g-verbete .aprofundar .formula math').evaluate((m) => m.getBoundingClientRect().height > 20));
           await capturar(pagina, '01b-grimorio-formulas');
         }
-        if (botao === '#m-conquistas') { await pagina.waitForSelector('#c-retrato canvas'); await capturar(pagina, '02-conquistas'); }
-        if (botao === '#m-sobre') assert.match(await pagina.locator('.versao').textContent(), /Versão \d+\.\d+\.\d+/);
+        if (botao === '#m-conquistas') {
+          /* o retrato do professor saiu daqui (foi para o cartão dele, na aba Equipe do Sobre) */
+          await pagina.waitForSelector('.conquistas-lista');
+          assert.equal(await pagina.locator('#c-retrato, .guilda, .conquistas-salao canvas').count(), 0);
+          await capturar(pagina, '02-conquistas');
+        }
+        if (botao === '#m-sobre') {
+          assert.match(await pagina.locator('.versao').textContent(), /Versão \d+\.\d+\.\d+/);
+          /* duas abas: "O jogo" (aberta) e "Equipe" (um cartão por pessoa; a foto do professor no cartão dele) */
+          assert.deepEqual(await pagina.locator('.folha.sobre .abas [role="tab"]').allTextContents(), ['O jogo', 'Equipe']);
+          assert.match(await pagina.locator('section.aba[data-aba="jogo"]').textContent(), /Yu-Gi-Oh!, UNO e Geometry Dash/);
+          assert.equal(await pagina.locator('section.aba[data-aba="equipe"]').isHidden(), true);
+          await pagina.click('.abas [data-aba="equipe"]');
+          assert.equal(await pagina.locator('.pessoa-cartao').count(), 5);
+          await pagina.waitForSelector('.pessoa-cartao[data-pessoa="peng"] .pessoa-foto canvas');
+          assert.equal(await pagina.locator('.pessoa-cartao canvas').count(), 1, 'só o professor tem foto por enquanto');
+          assert.equal(await pagina.locator('.pessoa-cartao[data-pessoa="diego"] .iniciais').textContent(), 'DC');
+          assert.equal(await pagina.locator('.pessoa-cartao .a-caminho').count(), 4, 'os mini-CVs que faltam avisam que vão chegar');
+          assert.equal(await pagina.locator('section.aba[data-aba="jogo"]').isHidden(), true);
+          await capturar(pagina, '02b-sobre-equipe');
+        }
         if (botao === '#m-mods') await capturar(pagina, '24-mods');
         await pagina.click('.camada:not(.transparente) [data-fechar] >> nth=0');
       }

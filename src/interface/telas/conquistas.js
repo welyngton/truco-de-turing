@@ -1,13 +1,10 @@
 /**
- * @file Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as
- * medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha
+ * @file Quadro de conquistas: as medalhas (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha
  * que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque
  * no alto, com o progresso até ela.
  */
 import { abrirAvatares } from './avatares.js';
 import { CONQUISTAS, GRADUACOES, CONQUISTA_FINAL, progressoDaFinal } from '../../conteudo/conquistas.js';
-import { desenharRetratoEmMoldura } from '../../arte/retrato.js';
-import { FOTO_PROFESSOR } from '../../recursos/retratoProfessor.js';
 import { firebaseConfigurado } from '../../online/firebase.js';
 import { contaAtual, haMarcaDeConta, aoMudarDeConta } from '../conta.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
@@ -63,8 +60,6 @@ function conteudoHtml(p) {
 export function abrirConquistas(app) {
   const html = '<div class="folha larga"><button class="fechar-x" data-fechar aria-label="Fechar">×</button>' +
     '<div class="conquistas-salao">' +
-    '<aside class="guilda"><div class="retrato" id="c-retrato" role="img" aria-label="Retrato do prof. Peng Yaohao em moldura medieval"></div>' +
-    '<p class="guilda-nota">Guardião do salão das conquistas. Cada medalha aqui foi conquistada contra os oponentes da mesa.</p></aside>' +
     '<div class="conquistas-principal"><h2>Conquistas</h2>' +
     '<div class="conquistas-conteudo">' + conteudoHtml(app.progresso) + '</div>' +
     '<p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
@@ -75,10 +70,6 @@ export function abrirConquistas(app) {
     const conteudo = painel.elemento.querySelector('.conquistas-conteudo');
     if (!conteudo || !conteudo.isConnected) { pararDeOuvir(); return; }
     conteudo.innerHTML = conteudoHtml(app.progresso);
-  });
-  const densidade = Math.min(3, Math.max(2, globalThis.devicePixelRatio || 1));
-  desenharRetratoEmMoldura(FOTO_PROFESSOR, densidade, 'Prof. Peng Yaohao', 'Grão-mestre da guilda', (canvas) => {
-    painel.elemento.querySelector('#c-retrato')?.appendChild(canvas);
   });
   return painel;
 }
