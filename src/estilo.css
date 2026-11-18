@@ -166,7 +166,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .menu-mais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 8px; }
 /* os seis botões têm o mesmo tamanho: colunas e linhas iguais, conteúdo centrado, e o retrato do
    Avatar não aumenta a altura do botão (margem negativa compensa o tamanho dele) */
-.menu-mais .botao { font-size: 13px; padding: 9px 6px; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.menu-mais .botao { font-size: 13px; padding: 9px 6px; white-space: normal; line-height: 1.1; text-align: center; display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .menu-mais .botao-avatar img { width: 1.9em; height: 1.9em; margin-block: -0.5em; flex: none; }
 @media (max-width: 520px) { .menu-mais { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .menu-painel { padding: 22px 24px; }
@@ -474,7 +474,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
   .camada, .folha, .aviso, .trofeu, .folha.vitoria, .aviso.aviso-conquista.especial { animation: none; }
 }
 
-/* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
+/* Livro de conceitos: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
 .grimorio-verbete .aprofundar { margin-top: 14px; border-top: 1px solid rgba(43, 22, 8, 0.2); padding-top: 4px; }
 .grimorio-verbete .aprofundar h3 { margin: 8px 0 4px; }
 .grimorio-verbete .aprofundar .formula { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
