@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.13.0 — 2026-11-18
+
+- feat: uma cor para cada botão de ação ([#105](https://github.com/welyngton/truco-de-turing/pull/105), por [@welyngton](https://github.com/welyngton))
+
 ## 2.12.0 — 2026-11-18
 
 - feat: Transfer learning pergunta antes e deixa escolher a quadra ([#104](https://github.com/welyngton/truco-de-turing/pull/104), por [@welyngton](https://github.com/welyngton))
