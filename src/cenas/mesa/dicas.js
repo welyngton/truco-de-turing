@@ -13,6 +13,7 @@
  * Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas
  * estatísticas. O aviso aparece ao ligar.
  */
+import { corDaAcao } from '../../arte/botoes.js';
 import { camadasDesfaziveis, valorParaTransfer, podePassar, alvosDeAtivacao } from '../../nucleo/partida.js';
 import { podeTrucar, proximoValor, GRITO_TRUCO, ehMaoDeOnze } from '../../nucleo/truco.js';
 import { chanceDeVitoria } from '../../nucleo/oponentes/index.js';
@@ -95,7 +96,7 @@ export const metodosDeDicas = {
     const html = escaparHtml(corpo) +
       (agora ? '<span class="agora">' + escaparHtml(agora) + '</span>' : '') +
       (conceito ? '<span class="conceito">' + escaparHtml(conceito) + '</span>' : '');
-    mostrarDicaFlutuante(titulo, html, retanguloNaTela(this, x, y, l, a));
+    mostrarDicaFlutuante(titulo, html, retanguloNaTela(this, x, y, l, a), corDaAcao(chave));
   },
 
   /** Esconde a dica flutuante. */

@@ -7,13 +7,13 @@
 import { FONTES, RESOLUCAO, CORES, TAMANHO_CARTA } from '../../configuracao.js';
 import { nomeCamada } from '../../nucleo/rede.js';
 import { TERRENOS } from '../../nucleo/terrenos.js';
-import { desenharBotao, MARGEM_BOTAO } from '../../arte/botoes.js';
+import { desenharBotao, MARGEM_BOTAO, PALETAS_DOS_BOTOES, COR_DA_ACAO } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
 import { texturaDeInspecao } from '../recursos.js';
 import { PAINEL_ESQ, PAINEL_DIR, ROTULO_DO_DETALHE, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
 
 /** Cor do rótulo de cada variante de botão. */
-const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
+const COR_ROTULO = Object.fromEntries(Object.entries(PALETAS_DOS_BOTOES).map(([v, p]) => [v, p.texto]));
 /** Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. */
 const TEMPO_DE_SEGURAR = 450;
 
@@ -124,7 +124,7 @@ export const metodosDoCenario = {
       if (botao.habilitado === sim) return botao;
       botao.habilitado = sim;
       pintar(sim ? 'normal' : 'inativo');
-      texto.setColor(sim ? COR_ROTULO[variante] : variante === 'vinho' ? '#a77a7a' : '#8c7f63');
+      texto.setColor(sim ? COR_ROTULO[variante] : variante === 'ouro' || variante === 'pedra' ? '#8c7f63' : '#b9a6a6');
       return botao;
     };
     botao.definirRotulo(rotulo);
@@ -276,7 +276,7 @@ export const metodosDoCenario = {
     const rx = PAINEL_DIR.x + 12, rl = PAINEL_DIR.l - 24, rc = PAINEL_DIR.x + PAINEL_DIR.l / 2;
     /* TRUCO! e, ao lado, o "?" com a ajuda das ações (regra, quando acende e o conceito) */
     const lado = DIR.alturaTruco + 4, lt = rl - lado - 6;
-    p.truco = this.criarBotao(rx + lt / 2, DIR.truco, lt, DIR.alturaTruco, 'TRUCO!', () => this.pedirTrucoHumano(), { variante: 'vinho', tamanho: 20, dica: 'truco' });
+    p.truco = this.criarBotao(rx + lt / 2, DIR.truco, lt, DIR.alturaTruco, 'TRUCO!', () => this.pedirTrucoHumano(), { variante: COR_DA_ACAO.truco, tamanho: 20, dica: 'truco' });
     p.botaoAjuda = this.criarBotao(rx + rl - lado / 2, DIR.truco, lado, DIR.alturaTruco, '?', () => this.abrirAjudaDaMesa(), {
       variante: 'pedra', tamanho: 22,
       explicar: () => 'Ajuda das ações: a regra de cada jogada, quando o botão acende e o conceito de redes neurais por trás dela.',
@@ -292,7 +292,7 @@ export const metodosDoCenario = {
     for (const [id, rotulo, linha] of BARRA_DE_ACOES) {
       const y = linha === 0 ? DIR.acoes : DIR.acoes2, i = porLinha[linha]++;
       p.acoes[id] = this.criarBotao(coluna(i), y, bl, DIR.alturaAcao, rotulo, acoes[id], {
-        tamanho: 13, dica: ['dropout', 'transfer', 'passar'].includes(id) ? id : undefined,
+        variante: COR_DA_ACAO[id], tamanho: 13, dica: ['dropout', 'transfer', 'passar'].includes(id) ? id : undefined,
         explicar: () => this.explicarAcao(id),
       });
     }

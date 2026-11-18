@@ -223,3 +223,47 @@ describe('icones.js e retrato.js', () => {
     assert.ok(pixelsPintados(canvas) > 0.5);
   });
 });
+
+describe('Cores dos botões de ação (#87)', async () => {
+  const { PALETAS_DOS_BOTOES, COR_DA_ACAO, corDaAcao } = await import('../../src/arte/botoes.js');
+  const { BARRA_DE_ACOES } = await import('../../src/cenas/mesa/layout.js');
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const luz = (h) => { const [r, g, b] = rgb(h).map((c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const contraste = (a, b) => { const [x, y] = [luz(a), luz(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  const mistura = (a, b, t) => '#' + rgb(a).map((c, i) => Math.round(c + (rgb(b)[i] - c) * t).toString(16).padStart(2, '0')).join('');
+  const matiz = (h) => {
+    const [r, g, b] = rgb(h).map((c) => c / 255), max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (!d) return 0;
+    const m = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (m * 60 + 360) % 360;
+  };
+  const acoesColoridas = ['tunagem', 'overfit', 'earlystop', 'stackoverflow', 'dropout', 'transfer', 'passar', 'truco'];
+
+  it('toda ação da barra, mais o TRUCO, tem uma paleta própria, e as paletas são todas diferentes entre si', () => {
+    for (const [id] of BARRA_DE_ACOES) assert.ok(PALETAS_DOS_BOTOES[COR_DA_ACAO[id]], 'sem cor: ' + id);
+    const variantes = acoesColoridas.map((a) => COR_DA_ACAO[a]);
+    assert.equal(new Set(variantes).size, acoesColoridas.length, 'duas ações com a mesma cor');
+    const caras = variantes.map((v) => PALETAS_DOS_BOTOES[v].gradiente[1]);
+    for (let i = 0; i < caras.length; i++) for (let j = i + 1; j < caras.length; j++) {
+      const dh = Math.abs(matiz(caras[i]) - matiz(caras[j])), dif = Math.min(dh, 360 - dh);
+      assert.ok(dif >= 20 || contraste(caras[i], caras[j]) >= 1.5, acoesColoridas[i] + ' e ' + acoesColoridas[j] + ' se parecem demais (' + Math.round(dif) + '°)');
+    }
+    assert.equal(corDaAcao('tunagem'), PALETAS_DOS_BOTOES.verde.gradiente[1]);
+    assert.equal(corDaAcao('inexistente'), null);
+  });
+
+  it('o texto do botão tem contraste de pelo menos 4,5:1 sobre a cor onde ele fica (do 2º tom ao meio entre o 2º e o 3º)', () => {
+    for (const [nome, p] of Object.entries(PALETAS_DOS_BOTOES)) {
+      const [, cara, fundo] = p.gradiente;
+      assert.ok(contraste(p.texto, cara) >= 4.5, nome + ': ' + contraste(p.texto, cara).toFixed(2) + ' sobre a cor da cara');
+      assert.ok(contraste(p.texto, mistura(cara, fundo, 0.6)) >= 4.5, nome + ': contraste baixo no meio do botão');
+    }
+  });
+
+  it('cada paleta desenha um botão normal, em foco e apagado (apagado ainda mostra a cor, mais escura)', () => {
+    for (const variante of Object.keys(PALETAS_DOS_BOTOES)) for (const estado of ['normal', 'foco', 'inativo']) {
+      const c = desenharBotao(80, 54, 1, variante, estado);
+      assert.ok(pixelsPintados(c) > 0.3, variante + ' ' + estado);
+    }
+  });
+});

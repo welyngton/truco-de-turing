@@ -221,12 +221,14 @@ let dicaFlutuante = null;
  * @param {string} titulo
  * @param {string} html Corpo da dica (já escapado por quem chama).
  * @param {{x: number, y: number, l: number, a: number}} alvo Retângulo do elemento, em pixels da página.
+ * @param {string} [cor] Cor da ação (a mesma do botão), na faixa da borda esquerda.
  */
-export function mostrarDicaFlutuante(titulo, html, alvo) {
+export function mostrarDicaFlutuante(titulo, html, alvo, cor) {
   esconderDicaFlutuante();
   const caixa = document.createElement('div');
   caixa.className = 'dica-flutuante';
   caixa.setAttribute('role', 'tooltip');
+  if (cor) caixa.style.borderLeft = '7px solid ' + cor;
   caixa.innerHTML = '<b>' + escaparHtml(titulo) + '</b>' + html;
   document.body.appendChild(caixa);
   const l = caixa.offsetWidth, a = caixa.offsetHeight, margem = 10;

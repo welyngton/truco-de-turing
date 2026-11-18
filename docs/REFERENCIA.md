@@ -45,6 +45,9 @@ Texturas dos botões da mesa e da faísca das explosões. São imagens próprias
 |---|---|---|
 | `desenharFaisca(S, cor)` | função (exportada) | Faísca radial (32x32 base) usada nas explosões de partículas, na cor pedida. |
 | `MARGEM_BOTAO` | constante (exportada) | Margem em volta do botão, reservada para a sombra. |
+| `PALETAS_DOS_BOTOES` | constante (exportada) | Paletas dos botões: `gradiente` (do brilho do topo à base, 4 tons; o 2º é a cor "da cara" do botão) e `texto` (cor do rótulo, com contraste mínimo de 4,5:1 sobre o botão: ver o teste de arte). Cada ação da mesa tem a sua cor (`COR_DA_ACAO`), para o jogador gravar cada função pela cor. |
+| `COR_DA_ACAO` | constante (exportada) | Variante (paleta) de cada botão de ação da mesa, uma por ação. |
+| `corDaAcao(acao)` | função (exportada) | Cor "da cara" (CSS) de uma ação, para as dicas e a ajuda usarem a mesma cor do botão. |
 | `desenharBotao(w, h, S, variante, estado)` | função (exportada) | Textura de um botão de w × h (base). |
 
 ## `src/arte/cartas.js`
@@ -773,7 +776,7 @@ Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápi
 | `retomarConquistas()` | função | Uma tela fechou: se a fila estava esperando, ela volta a andar daqui a pouco. |
 | `limparAvisosDeConquista()` | função (exportada) | Esvazia a fila e tira da tela o aviso de conquista atual. |
 | `confirmar(titulo, texto, botoes, opcoes = {})` | função (exportada) | Caixa de confirmação com botões. |
-| `mostrarDicaFlutuante(titulo, html, alvo)` | função (exportada) | Mostra uma dica no estilo do Livro de conceitos ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
+| `mostrarDicaFlutuante(titulo, html, alvo, cor)` | função (exportada) | Mostra uma dica no estilo do Livro de conceitos ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
 | `esconderDicaFlutuante()` | função (exportada) | Esconde a dica flutuante, se houver. |
 
 ## `src/interface/som.js`
