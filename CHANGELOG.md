@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.16.0 — 2026-11-18
+
+- feat: Sobre em duas abas (O jogo e Equipe) ([#108](https://github.com/welyngton/truco-de-turing/pull/108), por [@welyngton](https://github.com/welyngton))
+
 ## 2.15.0 — 2026-11-18
 
 - feat: ícones de som e música (e arquivo único sem espaços) ([#107](https://github.com/welyngton/truco-de-turing/pull/107), por [@welyngton](https://github.com/welyngton))
