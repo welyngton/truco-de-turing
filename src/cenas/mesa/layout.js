@@ -13,6 +13,12 @@
 import { TAMANHOS_CAMADAS } from '../../nucleo/rede.js';
 import { CORES, CORES_CSS, TAMANHO_CARTA, CORES_JOGADORES, CORES_JOGADORES_CSS } from '../../configuracao.js';
 
+/**
+ * Rótulo do painel que mostra a carta ampliada ao passar o cursor ou tocar (no código, "inspeção").
+ * O jogador lê "Detalhe da carta": "inspeção" é termo de quem desenvolve.
+ */
+export const ROTULO_DO_DETALHE = 'DETALHE DA CARTA';
+
 /** Painel esquerdo (inspeção, pilhas e dica). */
 export const PAINEL_ESQ = { x: 8, y: 8, l: 244, a: 704 };
 /** Painel direito (placar, curva, registro e ações). */

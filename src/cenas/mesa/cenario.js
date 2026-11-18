@@ -10,7 +10,7 @@ import { TERRENOS } from '../../nucleo/terrenos.js';
 import { desenharBotao, MARGEM_BOTAO } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
 import { texturaDeInspecao } from '../recursos.js';
-import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
+import { PAINEL_ESQ, PAINEL_DIR, ROTULO_DO_DETALHE, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
 
 /** Cor do rótulo de cada variante de botão. */
 const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
@@ -46,7 +46,7 @@ export const metodosDoCenario = {
         ajustarLinha(aviso, aviso.text, 11.5, coluna + 6, 8);
       }
     }
-    this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, 'INSPEÇÃO', { fontFamily: FONTES.titulo, fontStyle: '700', fontSize: '12px', color: '#e8d6a8', letterSpacing: 2 }).setOrigin(0.5).setDepth(7);
+    this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, ROTULO_DO_DETALHE, { fontFamily: FONTES.titulo, fontStyle: '700', fontSize: '12px', color: '#e8d6a8', letterSpacing: 2 }).setOrigin(0.5).setDepth(7);
   },
 
   /**
