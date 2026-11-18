@@ -576,3 +576,22 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .faixa-estatisticas-botoes { display: flex; gap: 6px; flex: none; }
 @media (max-width: 560px) { .faixa-estatisticas { flex-direction: column; align-items: stretch; } }
 .estatisticas-situacao { font-weight: 600; }
+
+/* ícones de som e música (controlesDeSom.js): alvo de toque de 44 px, estado em aria-pressed */
+.controles-som { display: flex; gap: 8px; }
+.icone-som {
+  width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
+  color: #f6ecd6; background: linear-gradient(#bcae8b, #6f6146 14%, #4d4129 78%, #241d10);
+  border: 2px solid #0b0907; border-radius: 10px; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.icone-som svg { width: 26px; height: 26px; }
+.icone-som:hover { filter: brightness(1.15); }
+.icone-som:focus-visible { outline: 3px solid #f6dc8f; outline-offset: 2px; }
+.icone-som[aria-pressed='false'] { color: #b9a98a; background: linear-gradient(#4a4232, #342e22 14%, #262118 78%, #120f0a); }
+.menu-capa { position: relative; }
+.menu-capa > .controles-som { position: absolute; top: 0; right: 0; }
+.menu-capa h1 { padding-right: 112px; }
+/* na mesa, o par fica sobre o canvas, na fileira dos botões de ordenar (posicionado em pixels pelo código) */
+.controles-som.na-mesa { position: fixed; z-index: 4; gap: 0; display: block; }
+.controles-som.na-mesa .icone-som { position: fixed; }
+.controles-som.na-mesa .icone-som svg { width: 58%; height: 58%; }

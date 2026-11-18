@@ -220,7 +220,7 @@ describe('ações da mesa', () => {
       assert.equal(await naCena(pagina, 'return cena.mao.jogadores[0].mao.map((c) => c.valor + c.naipe).join(" ")'), 'JO 3E AP 8C 5O 9E');
       /* o botão cabe na barra e é grande o bastante para o toque */
       const caixa = await naCena(pagina, 'const b = cena.painel.ordenar.tamanho; return { l: b.width, a: b.height };');
-      assert.ok(caixa.a >= 44 && caixa.l >= 100, JSON.stringify(caixa));
+      assert.ok(caixa.a >= 44 && caixa.l >= 80, JSON.stringify(caixa));
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });

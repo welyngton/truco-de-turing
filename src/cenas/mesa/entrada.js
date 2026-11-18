@@ -9,6 +9,8 @@ import { rotuloCarta, NOME_VALOR } from '../../nucleo/cartas.js';
 import { nomeCamada } from '../../nucleo/rede.js';
 import { valorParaTransfer, valoresParaTransfer, podePassar, camadasDesfaziveis } from '../../nucleo/partida.js';
 import { Motor } from '../../motor/engine.js';
+import { retanguloNaTela } from '../recursos.js';
+import { htmlDosControlesDeSom, ligarControlesDeSom } from '../../interface/controlesDeSom.js';
 import { Som } from '../../interface/som.js';
 import { confirmar, abrirPainel, escaparHtml } from '../../interface/paineis.js';
 import { abrirRegras } from '../../interface/telas/regras.js';
@@ -259,6 +261,31 @@ export const metodosDeEntrada = {
       const ativo = ordem && ordem.criterio === criterio;
       botao.definirRotulo(ROTULO_DA_ORDEM[criterio] + (ativo ? (ordem.sentido > 0 ? ' \u25B2' : ' \u25BC') : ''));
     }
+  },
+
+  /**
+   * Ícones de som e música da mesa: dois botões HTML (com `aria-pressed`) postos sobre o canvas, nos
+   * espaços da fileira dos botões de ordenar. Seguem o canvas quando a janela muda de tamanho.
+   * @param {number[]} centros Centro x de cada ícone, em coordenadas do mundo.
+   * @param {number} y Centro y, em coordenadas do mundo.
+   * @param {number} lado Lado do botão, em coordenadas do mundo.
+   */
+  criarControlesDeSomDaMesa(centros, y, lado) {
+    const molde = document.createElement('div');
+    molde.innerHTML = htmlDosControlesDeSom(this.app);
+    const raiz = molde.firstElementChild;
+    raiz.classList.add('na-mesa');
+    document.body.appendChild(raiz);
+    ligarControlesDeSom(raiz, this.app, () => this.opcoes.terreno, () => this.atualizarChaves());
+    const botoes = [...raiz.querySelectorAll('[data-controle-som]')];
+    const posicionar = () => botoes.forEach((b, j) => {
+      const r = retanguloNaTela(this, centros[j], y, lado, lado);
+      Object.assign(b.style, { left: r.x + 'px', top: r.y + 'px', width: r.l + 'px', height: r.a + 'px' });
+    });
+    posicionar();
+    this.time.delayedCall(0, posicionar);
+    this.scale.on('resize', posicionar);
+    this.events.once('shutdown', () => { this.scale.off('resize', posicionar); raiz.remove(); });
   },
 
   /** Texto do quadro de instruções para os botões de ordenar. */

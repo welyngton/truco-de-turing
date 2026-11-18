@@ -113,6 +113,48 @@ describe('menu e telas', () => {
     } finally { await jogo.fechar(); }
   });
 
+  it('ícones de som e música: sempre à vista no menu e na mesa, com estado, alvo de 44 px, lembrados e em sincronia', async () => {
+    const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
+    const { pagina } = jogo;
+    try {
+      await esperarMenu(pagina);
+      const som = pagina.getByRole('button', { name: 'Efeitos sonoros' }), musica = pagina.getByRole('button', { name: 'Música', exact: true });
+      for (const botao of [som, musica]) {
+        assert.equal(await botao.getAttribute('aria-pressed'), 'true', 'começam ligados');
+        const caixa = await botao.boundingBox();
+        assert.ok(caixa.width >= 44 && caixa.height >= 44, 'alvo de toque: ' + JSON.stringify(caixa));
+      }
+      /* desligar: o estado, o ícone e a escolha (salva no progresso) mudam */
+      const cheio = await som.innerHTML();
+      await som.click();
+      assert.equal(await som.getAttribute('aria-pressed'), 'false');
+      assert.notEqual(await som.innerHTML(), cheio, 'o ícone troca (cortado quando desligado)');
+      await musica.click();
+      assert.equal(await musica.getAttribute('aria-pressed'), 'false');
+      const salvo = () => pagina.evaluate(() => globalThis.__TRUCO_DE_TURING__.progresso);
+      assert.deepEqual([(await salvo()).mudo, (await salvo()).musica], [true, false]);
+      /* a mesa abre com o mesmo estado e tem os seus próprios ícones, sobre o canvas */
+      await comecarPartida(pagina, { oponente: 'aleatorio' });
+      const naMesa = pagina.locator('.controles-som.na-mesa .icone-som');
+      assert.equal(await naMesa.count(), 2);
+      assert.deepEqual(await naMesa.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-pressed'))), ['false', 'false']);
+      for (const caixa of await naMesa.evaluateAll((bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; }))) {
+        assert.ok(caixa.w >= 40 && caixa.h >= 40 && caixa.l >= 0 && caixa.t >= 0, 'ícone da mesa dentro da tela e com bom tamanho: ' + JSON.stringify(caixa));
+      }
+      /* ligar na mesa vale para tudo: progresso, o outro conjunto e a janela MENU */
+      await naMesa.nth(0).click();
+      assert.equal((await salvo()).mudo, false);
+      await naMesa.nth(1).click();
+      assert.equal((await salvo()).musica, true);
+      await pagina.waitForFunction(async () => (await import('/src/interface/musica.js')).Musica.tocando());
+      await naCena(pagina, 'cena.abrirMenuDaMesa();');
+      assert.equal((await pagina.locator('[data-chave="som"]').textContent()), 'Som: sim');
+      await pagina.locator('[data-chave="som"]').click();
+      assert.deepEqual(await naMesa.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-pressed'))), ['false', 'true'], 'o botão do MENU também repinta os ícones');
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
   it('celular na vertical: só o aviso para girar; ao girar, o jogo é criado e o menu aparece', async () => {
     const jogo = await abrirJogo(servidor.url, { dispositivo: 'iPhone 13' });
     const { pagina } = jogo;

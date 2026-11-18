@@ -378,6 +378,7 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | `fazerTransfer()` | método | Botão Transfer learning: não é jogada obrigatória, então pergunta antes. Com uma quadra, pede a confirmação; com mais de uma, o jogador escolhe qual trocar (uma só por mão) ou cancela. |
 | `ordenarMao(criterio)` | método | Botões Tamanho e Naipe: o primeiro clique ordena do menor ao maior; clicar de novo no mesmo critério inverte. A escolha fica na aplicação e vale nas próximas mãos e para cartas novas. |
 | `atualizarRotulosDaOrdem()` | método | Rótulos dos botões de ordenar: o ativo mostra a seta do sentido. |
+| `criarControlesDeSomDaMesa(centros, y, lado)` | método | Ícones de som e música da mesa: dois botões HTML (com `aria-pressed`) postos sobre o canvas, nos espaços da fileira dos botões de ordenar. Seguem o canvas quando a janela muda de tamanho. |
 | `explicarOrdem(criterio)` | método | Texto do quadro de instruções para os botões de ordenar. |
 | `passarAVez()` | método | Botão Passar a vez. |
 | `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só. |
@@ -688,6 +689,19 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 | `sairDaContaAtual()` | função (exportada) | Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. |
 | `retomarConta(app)` | função (exportada) | Ao abrir o jogo, retoma a conta de quem já entrou neste navegador. Sem a marca do login (ou sem o Firebase configurado), não faz nada e não baixa o SDK. Com a marca, espera a sessão que o Firebase guardou: - sessão encerrada (saiu em outro lugar, expirou): apaga a marca e segue sem conta; - sessão válida: junta o progresso como no login e volta a salvar na conta; - falha ao ler ou gravar a conta: avisa, segue com o progresso do aparelho e mantém a marca, para tentar de novo na próxima visita. |
 
+## `src/interface/controlesDeSom.js`
+
+Ícones de ligar e desligar os efeitos sonoros e a música, sempre à vista no menu e na mesa. São botões HTML (alto-falante e nota musical, com um corte quando desligados) com nome acessível e estado em `aria-pressed` (apertado = ligado). Todos os conjuntos abertos (menu, mesa) mostram o mesmo estado: `atualizarControlesDeSom` repinta todos de uma vez. A escolha é lembrada pela aplicação (`alternarSom` e `alternarMusica`).
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `iconeDeSom(ligado)` | função (exportada) | Alto-falante, com ondas quando ligado e cortado por uma barra quando desligado. |
+| `iconeDeMusica(ligado)` | função (exportada) | Nota musical, cortada por uma barra quando desligada. |
+| `htmlDoBotao(chave, ligado)` | função | HTML de um dos botões. `ligado` é o estado inicial. |
+| `htmlDosControlesDeSom(app)` | função (exportada) | HTML do par de ícones, já no estado atual. |
+| `atualizarControlesDeSom(app)` | função (exportada) | Repinta todos os ícones de som e música abertos (menu e mesa) conforme o estado da aplicação. |
+| `ligarControlesDeSom(raiz, app, terreno, aoMudar)` | função (exportada) | Liga os cliques dos ícones dentro de `raiz`. |
+
 ## `src/interface/logo.js`
 
 A logo do Truco de Turing: uma carta com uma rede neural (três entradas, quatro neurônios no meio e duas saídas, uma azul e outra laranja, como no teste de Turing). Os textos já estão em curvas, então a logo não depende da fonte. Os mesmos desenhos estão em `docs/logo/` (SVG e PNG) para o README, redes sociais e impressão.
@@ -719,7 +733,7 @@ Menu principal: apresentação do jogo, botões das telas e configuração da me
 | `mostrarMiniatura(elemento, chave, desenhar)` | função | Mostra a miniatura `chave` dentro do elemento, desenhando-a na primeira vez com `desenhar()`. |
 | `opcoesHtml(rotulos, selecionado)` | função | Gera as `<option>` de uma lista. `rotulos` mapeia valor → texto (ou objeto com `nome`). |
 | `BOTOES_DO_MENU` | constante (exportada) | Botões do menu inicial e o nome de cada um nas estatísticas de uso (evento `menu_clique`). |
-| `htmlDoMenu(opcoes)` | função | HTML do menu. |
+| `htmlDoMenu(opcoes, app)` | função | HTML do menu. |
 | `abrirMenu(app)` | função (exportada) | Abre o menu principal. |
 | `atualizarDicas()` | função | Atualiza descrições, listas dependentes e miniaturas conforme as escolhas. |
 | `lerEscolhas()` | função | Guarda as escolhas atuais na aplicação (as opções que não estão nesta tela continuam como estavam). |
