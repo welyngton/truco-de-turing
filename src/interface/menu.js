@@ -11,6 +11,7 @@ import { TERRENOS } from '../nucleo/terrenos.js';
 import { OPONENTES } from '../nucleo/oponentes/index.js';
 import { ARQUITETURAS, tamanhosDaMesa } from '../nucleo/rede.js';
 import { normalizarOpcoes, OPCOES_PADRAO } from '../aplicacao.js';
+import { htmlDosControlesDeSom, ligarControlesDeSom } from './controlesDeSom.js';
 import { RESTRICOES_DO_BARALHO } from '../nucleo/baralhos.js';
 import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
@@ -79,9 +80,9 @@ export const BOTOES_DO_MENU = {
 };
 
 /** HTML do menu. */
-function htmlDoMenu(opcoes) {
+function htmlDoMenu(opcoes, app) {
   return '<div class="menu">' +
-    '<section class="menu-capa">' +
+    '<section class="menu-capa">' + htmlDosControlesDeSom(app) +
     '<h1><span class="menu-emblema" aria-hidden="true">' + EMBLEMA_SVG + '</span>TRUCO DE TURING</h1>' +
     '<p>Monte uma rede neural carta por carta, da entrada à saída. Tune seus neurônios, aplique overfit no adversário, fuja do vanishing gradient e, quando sentir a mão boa, grite TRUCO.</p>' +
     '<div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> é a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lilás e rosa, as dos adversários</span></div>' +
@@ -126,7 +127,8 @@ function htmlDoMenu(opcoes) {
  */
 export function abrirMenu(app) {
   app.opcoes = normalizarOpcoes(app.opcoes);
-  const painel = abrirPainel(htmlDoMenu(app.opcoes), { transparente: true });
+  const painel = abrirPainel(htmlDoMenu(app.opcoes, app), { transparente: true });
+  ligarControlesDeSom(painel.elemento, app, () => 'menu');
   const elemento = painel.elemento;
   const campo = (id) => elemento.querySelector('#' + id);
 

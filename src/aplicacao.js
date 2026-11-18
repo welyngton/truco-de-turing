@@ -9,6 +9,7 @@ import { CONQUISTAS, GRADUACOES, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA, CONQUIST
 import { VERBETES } from './conteudo/grimorio.js';
 import { aplicarRestricoesDoBaralho } from './nucleo/baralhos.js';
 import { Som } from './interface/som.js';
+import { atualizarControlesDeSom } from './interface/controlesDeSom.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, avisarConquista } from './interface/paineis.js';
 import { medalhaHtml } from './interface/medalha.js';
@@ -103,6 +104,7 @@ export const Aplicacao = {
     Som.definirMudo(this.progresso.mudo);
     this.salvar();
     registrarEvento(EVENTOS.audio, { tipo: 'som', ligado: this.progresso.mudo ? 0 : 1 });
+    atualizarControlesDeSom(this);
   },
 
   /**
@@ -114,7 +116,8 @@ export const Aplicacao = {
     this.progresso.musicaEscolhida = true;
     this.salvar();
     registrarEvento(EVENTOS.audio, { tipo: 'musica', ligado: this.progresso.musica ? 1 : 0 });
-    if (this.progresso.musica && terreno) Musica.tocar(terreno); else Musica.parar();
+    if (this.progresso.musica && terreno) { Som.desbloquear(); Musica.tocar(terreno); } else Musica.parar();
+    atualizarControlesDeSom(this);
   },
 
   /** Sai do menu e abre a mesa. */
