@@ -320,6 +320,22 @@ describe('aplicarJogada', () => {
     assert.equal(mao.eventos.at(-1).entram, 4);
     assert.throws(() => aplicarJogada(mao, { tipo: 'transfer', jogador: mao.vez, cartas: [] }), /indisponível/);
   });
+  it('Yin-yang fica em 1 baralho e na arquitetura curta: na mão, nas opções salvas e sem mexer no resto', async () => {
+    const { normalizarOpcoes } = await import('../../src/aplicacao.js');
+    const { aplicarRestricoesDoBaralho } = await import('../../src/nucleo/baralhos.js');
+    const jogadores = [{ nome: 'A' }, { nome: 'B' }];
+    const mao = novaMao({ baralho: 'yinyang', baralhos: 3, arquitetura: 'larga', jogadores, semente: 7 });
+    assert.deepEqual([mao.config.baralhos, mao.config.arquitetura], [1, 'curta']);
+    assert.equal(mao.camadas.length, 5);
+    const o = normalizarOpcoes({ baralho: 'yinyang', baralhos: 4, arquitetura: 'profunda', terreno: 'oceano', alvo: 24 });
+    assert.deepEqual([o.baralhos, o.arquitetura, o.terreno, o.alvo], [1, 'curta', 'oceano', 24]);
+    const outro = novaMao({ baralho: 'classico', baralhos: 3, arquitetura: 'larga', jogadores, semente: 7 });
+    assert.deepEqual([outro.config.baralhos, outro.config.arquitetura], [3, 'larga']);
+    const entrada = { baralho: 'truco', baralhos: 2 };
+    assert.deepEqual(aplicarRestricoesDoBaralho(entrada), entrada);
+    assert.notEqual(aplicarRestricoesDoBaralho(entrada), entrada);
+  });
+
   it('Power Bee-Ai embaralha a mão com o limbo depois de uma ação com cartas', () => {
     const mao = maoNova({ baralho: 'powerbi' }), j = mao.vez;
     const cartas = darMao(mao, j, ['5E', '5C', '5P', '5O', '3E']).slice(0, 4).map((c) => c.id);

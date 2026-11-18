@@ -10,7 +10,7 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 |---|---|---|
 | `OPCOES_PADRAO` | constante (exportada) | Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles jogam no mesmo aparelho (os outros são oponentes do perfil `oponente`), `arquitetura` é uma das arquiteturas do motor e `baralhos` quantos baralhos entram na partida. |
 | `faixaDeExperiencia(maos)` | função (exportada) | Faixa de experiência do jogador pelo número de mãos jogadas (propriedade `experiencia`). |
-| `normalizarOpcoes(opcoes)` | função (exportada) | Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. |
+| `normalizarOpcoes(opcoes)` | função (exportada) | Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. Também aplica as restrições do baralho (Yin-yang: 1 baralho e arquitetura curta), valendo para opções salvas e para salas online. |
 | `iniciar()` | método | Carrega opções e preferência de som. |
 | `atualizarJogadorNasEstatisticas()` | método | Passa às estatísticas de uso a experiência, as conquistas, o avatar, os verbetes lidos, os acessos e as partidas. |
 | `salvar()` | método | Grava o progresso. |
@@ -979,6 +979,8 @@ Baralhos do jogo e valor em pontos das cartas. As regras de cada baralho (cartas
 |---|---|---|
 | `montarBaralho(chave)` | função | Cartas de um baralho do motor, no formato da interface. |
 | `BARALHOS` | constante (exportada) | Cada baralho tem: `nome`, `resumo` (texto do menu) e `montar()`, que gera as cartas. Opcionais: - `manilhas`: nome especial de cartas (truco), usado na arte; - `figurasValem`: as figuras valem pontos próprios e não formam par nem trio (truco, nobreza); - `forward`: a rede vale a ativação da saída, calculada camada a camada (backprop). |
+| `RESTRICOES_DO_BARALHO` | constante (exportada) | Restrições de mesa de alguns baralhos. O Yin-yang só tem 2 e Ás, então mais de um baralho ou uma rede grande deixam as mãos repetitivas e fáceis de somar: fica em 1 baralho e na arquitetura curta, pelo menos até haver coringas para equilibrar (prof. Peng Yaohao, #90). A regra vale em `novaMao` e em `normalizarOpcoes`, então vale também online e nas opções salvas. |
+| `aplicarRestricoesDoBaralho(opcoes)` | função (exportada) | Devolve uma cópia das opções com as restrições do baralho aplicadas (`baralhos` e `arquitetura`). |
 | `pontosDaCarta(carta, baralho)` | função (exportada) | Pontos de uma carta isolada no baralho escolhido: no clássico, 2 a 10 pelo número, Ás 11 e figuras 0; no truco, o valor da carta na ordem do truco. |
 | `nomeDaCarta(carta, baralho)` | função (exportada) | Nome por extenso da carta, ou o nome da manilha ("Zap"). |
 | `manilhaDaCarta(carta, baralho)` | função (exportada) | Nome da manilha, se a carta for uma no baralho escolhido. |
@@ -1045,7 +1047,7 @@ Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor. E
 | `todasAsCartas(estadoMotor)` | função | Todas as cartas da partida no estado do motor, onde quer que estejam. |
 | `indexarCartas(estadoMotor)` | função | Converte as cartas do motor para o formato da interface, uma vez por partida. motor, e id do motor por id da interface. |
 | `montar(estadoMotor, config, jogadores, simulacao, cartas)` | função | Monta a visão da interface em volta de um estado do motor. |
-| `novaMao(opcoes)` | função (exportada) | Cria uma mão nova: o motor embaralha, monta a mesa, distribui as cartas e separa o limbo. |
+| `novaMao(opcoesPedidas)` | função (exportada) | Cria uma mão nova: o motor embaralha, monta a mesa, distribui as cartas e separa o limbo. |
 | `copiarMao(mao, estadoMotor = motor.cloneState(mao.estadoMotor)` | função (exportada) | Cópia leve da mão para simulações (sem eventos, textos ou histórico). |
 | `atualizarVisao(mao)` | função (exportada) | Refaz a visão da interface a partir do estado do motor (`mao.estadoMotor`). É chamada depois de cada jogada; ferramentas e testes que mexem direto em `mao.estadoMotor` também precisam chamá-la. |
 | `emitir(mao, evento)` | função | Coloca um evento na fila da interface (ignorado em simulação). |
