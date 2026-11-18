@@ -47,6 +47,13 @@ describe('grimorio.js', () => {
     }
     assert.deepEqual(VERBETES.filter((v) => v.formula).map((v) => v.id), ['overfit', 'stackoverflow', 'transfer']);
   });
+  it('terrenos: o terreno sem efeito aparece como "Planície" (o id continua neutro), sem sobrar "Mesa neutra"', () => {
+    assert.deepEqual(Object.keys(TERRENOS), ['neutro', 'montanha', 'pantano', 'oceano']);
+    assert.deepEqual(Object.values(TERRENOS).map((t) => t.nome), ['Planície', 'Montanha', 'Pântano', 'Oceano']);
+    for (const t of Object.values(TERRENOS)) assert.doesNotMatch(t.nome + ' ' + t.resumo, /neutr/i);
+    assert.equal(Motor.terrains.none.name, TERRENOS.neutro.nome);
+  });
+
   it('Glossário: todo verbete tem equação em MathML e "até onde vale a comparação"; as figuras existem', () => {
     for (const v of VERBETES) {
       assert.match(v.equacao, /^(<math display="block">.*?<\/math>)+$/s, v.id);
