@@ -60,7 +60,7 @@ export const NOME_DA_ACAO = {
 /** Ações da barra, na ordem: [id, rótulo, linha]. O id é o tipo de alvo (ver calcularAlvos) ou a ação. */
 export const BARRA_DE_ACOES = [
   ['tunagem', 'Tunagem', 0], ['overfit', 'Overfit', 0], ['earlystop', 'Early\nstop', 0], ['stackoverflow', 'Stack\noverflow', 0],
-  ['dropout', 'Dropout', 1], ['transfer', 'Transfer', 1], ['passar', 'Passar', 1], ['limpar', 'Limpar', 1],
+  ['dropout', 'Dropout', 1], ['transfer', 'Transfer\nlearning', 1], ['passar', 'Passar', 1], ['limpar', 'Limpar', 1],
 ];
 
 /**

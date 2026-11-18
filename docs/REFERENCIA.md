@@ -372,7 +372,7 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | `aoClicarNaCarta(idCarta)` | método | Clique numa carta da mão: escolhe a carta de início, paga o dropout ou monta a seleção. |
 | `cancelarSelecao()` | método | Esc: limpa a seleção e sai do modo de dropout. |
 | `alternarDropout()` | método | Botão Dropout: entra ou sai do modo de escolher o alcance. |
-| `fazerTransfer()` | método | Botão Transfer: troca as quatro cartas iguais da mão. |
+| `fazerTransfer()` | método | Botão Transfer learning: não é jogada obrigatória, então pergunta antes. Com uma quadra, pede a confirmação; com mais de uma, o jogador escolhe qual trocar (uma só por mão) ou cancela. |
 | `passarAVez()` | método | Botão Passar a vez. |
 | `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só. |
 | `abrirAjudaDaMesa()` | método | Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. |
@@ -1061,7 +1061,8 @@ Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor. E
 | `efeitoDoEmpilhamento(mao, j, neuronio, n)` | função (exportada) | Efeito de empilhar `n` cartas no neurônio, pelo tamanho final da pilha: 2 = tunagem (própria) ou overfit (adversário); 3 = early stop; 4 = stack overflow. |
 | `podeEmpilhar(mao, j, idNeuronio, idsCartas)` | função (exportada) | Diz se o jogador pode empilhar essas cartas da mão nesse neurônio (quem decide é o motor). |
 | `camadasDesfaziveis(mao, j)` | função (exportada) | Quantas camadas ocultas o jogador pode desfazer com dropout. |
-| `valorParaTransfer(mao, j)` | função (exportada) | Valor que o jogador tem quatro vezes na mão (para transfer learning), ou null. |
+| `valoresParaTransfer(mao, j)` | função (exportada) | Valores que o jogador tem quatro vezes ou mais na mão (quadras para o transfer learning), na ordem em que aparecem na mão. Vazio se já usou o transfer nesta mão. O transfer não é automático nem obrigatório: quem escolhe se troca e qual quadra é o jogador. |
+| `valorParaTransfer(mao, j)` | função (exportada) | Primeira quadra da mão (para dicas e botão), ou null. |
 | `podePassar(mao, j)` | função (exportada) | Passar a vez: só quem teve a rede interrompida por early stop e ainda tem cartas (atacar não é obrigatório), ou quem não tem nenhuma outra jogada que gaste a vez. |
 | `jogadasLegais(mao, j, opcoes = {})` | função (exportada) | Lista as jogadas legais do jogador, geradas pelo motor. |
 | `idsNoMotor(mao, j, ids)` | função | Ids do motor das cartas da mão do jogador, a partir dos ids da interface. |

@@ -7651,13 +7651,15 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     if (jogador.situacao !== "construindo" || jogador.caminho.length < 2) return 0;
     return jogador.caminho.length - 1;
   }
-  function valorParaTransfer(mao, j) {
+  function valoresParaTransfer(mao, j) {
     const jogador = mao.jogadores[j];
-    if (jogador.transferUsado) return null;
-    const conta2 = {};
-    for (const c of jogador.mao) conta2[c.valor] = (conta2[c.valor] || 0) + 1;
-    for (const valor in conta2) if (conta2[valor] >= 4) return valor;
-    return null;
+    if (jogador.transferUsado) return [];
+    const conta2 = /* @__PURE__ */ new Map();
+    for (const c of jogador.mao) conta2.set(c.valor, (conta2.get(c.valor) || 0) + 1);
+    return [...conta2].filter(([, n]) => n >= 4).map(([valor]) => valor);
+  }
+  function valorParaTransfer(mao, j) {
+    return valoresParaTransfer(mao, j)[0] ?? null;
   }
   function podePassar(mao, j) {
     return mao.fase === "jogo" && mao.vez === j && canPass(mao.estadoMotor, j);
@@ -8180,7 +8182,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       "transfer",
       "transfer",
       "Quatro iguais na m\xE3o",
-      "Voc\xEA tem quatro " + valorTransfer + ". Se eles n\xE3o servem para tunar nem atacar, o transfer learning troca todos por cartas novas do limbo."
+      "Voc\xEA tem quatro " + valorTransfer + ". Se eles n\xE3o servem para tunar nem atacar, o transfer learning troca os quatro por cartas novas do limbo (voc\xEA confirma antes e pode cancelar)."
     );
     if (eu.mao.length > 0 && eu.mao.length <= 2 && eu.situacao === "construindo") dica(
       "mao-curta",
@@ -8403,11 +8405,11 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     },
     {
       id: "transfer",
-      nome: "Transfer",
+      nome: "Transfer learning",
       motor: "transfer",
       verbete: "transfer",
-      resumo: "4 cartas iguais da m\xE3o trocadas por 4 do limbo, uma vez por partida. N\xE3o gasta o turno.",
-      quando: "Com 4 cartas do mesmo valor na m\xE3o, se voc\xEA ainda n\xE3o usou o transfer nesta partida."
+      resumo: "4 cartas iguais da m\xE3o trocadas por 4 do limbo, uma vez por m\xE3o e s\xF3 se voc\xEA quiser: o jogo pergunta antes e, com mais de uma quadra, voc\xEA escolhe qual. N\xE3o gasta o turno.",
+      quando: "Com 4 cartas do mesmo valor na m\xE3o, se voc\xEA ainda n\xE3o usou o transfer nesta m\xE3o."
     },
     {
       id: "passar",
@@ -10078,7 +10080,7 @@ export default function (Motor) {
     ["earlystop", "Early\nstop", 0],
     ["stackoverflow", "Stack\noverflow", 0],
     ["dropout", "Dropout", 1],
-    ["transfer", "Transfer", 1],
+    ["transfer", "Transfer\nlearning", 1],
     ["passar", "Passar", 1],
     ["limpar", "Limpar", 1]
   ];
@@ -11054,7 +11056,7 @@ export default function (Motor) {
       }
       if (id === "transfer") {
         const v = valorParaTransfer(mao, eu);
-        return v ? "Transfer learning: troca os quatro " + v + " da m\xE3o por quatro cartas do limbo. Uma vez por m\xE3o; n\xE3o gasta a vez." : "Transfer learning precisa de quatro cartas iguais na m\xE3o (uma vez por m\xE3o)." + regra;
+        return v ? "Transfer learning: troca quatro cartas iguais da m\xE3o (" + v + (valoresParaTransfer(mao, eu).length > 1 ? " ou outra quadra, voc\xEA escolhe" : "") + ") por quatro do limbo. Voc\xEA confirma antes e pode cancelar. Uma vez por m\xE3o; n\xE3o gasta a vez." : "Transfer learning precisa de quatro cartas iguais na m\xE3o (uma vez por m\xE3o)." + regra;
       }
       if (id === "passar") return podePassar(mao, eu) ? "Passar: encerra a sua vez sem jogar." + regra : "Passar n\xE3o est\xE1 dispon\xEDvel: voc\xEA ainda tem jogada." + regra;
       return qtd || this.modo !== "livre" ? "Limpar a sele\xE7\xE3o e voltar ao come\xE7o da jogada (Esc)." : "Nada selecionado.";
@@ -11127,12 +11129,27 @@ export default function (Motor) {
       this.selecao = [];
       this.redesenhar();
     },
-    /** Botão Transfer: troca as quatro cartas iguais da mão. */
+    /**
+     * Botão Transfer learning: não é jogada obrigatória, então pergunta antes. Com uma quadra, pede
+     * a confirmação; com mais de uma, o jogador escolhe qual trocar (uma só por mão) ou cancela.
+     */
     fazerTransfer() {
-      const eu = this.quemVe, valor = valorParaTransfer(this.mao, eu);
-      if (!valor) return;
-      const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
-      this.executarJogada({ tipo: "transfer", jogador: eu, cartas });
+      if (!this.ehVezDoHumano()) return;
+      const eu = this.quemVe, valores = valoresParaTransfer(this.mao, eu);
+      if (!valores.length) return;
+      const trocar = (valor) => {
+        const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
+        this.executarJogada({ tipo: "transfer", jogador: eu, cartas });
+      };
+      const nome = (v) => NOME_VALOR[v] || v;
+      confirmar(
+        "Transfer learning?",
+        (valores.length > 1 ? "Voc\xEA tem mais de uma quadra na m\xE3o. Escolha qual trocar por quatro cartas do limbo (s\xF3 uma por m\xE3o). " : "Trocar os quatro " + escaparHtml(nome(valores[0])) + " da m\xE3o por quatro cartas do limbo? ") + "Uma vez por m\xE3o; n\xE3o gasta a vez e voc\xEA pode cancelar.",
+        [
+          { rotulo: "Cancelar", classe: "discreto" },
+          ...valores.map((v) => ({ rotulo: valores.length > 1 ? "Trocar os quatro " + nome(v) : "Trocar", classe: "vinho", acao: () => trocar(v) }))
+        ]
+      );
     },
     /** Botão Passar a vez. */
     passarAVez() {
