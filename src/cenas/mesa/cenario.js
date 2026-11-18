@@ -10,7 +10,7 @@ import { TERRENOS } from '../../nucleo/terrenos.js';
 import { desenharBotao, MARGEM_BOTAO, PALETAS_DOS_BOTOES, COR_DA_ACAO } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
 import { texturaDeInspecao } from '../recursos.js';
-import { PAINEL_ESQ, PAINEL_DIR, ROTULO_DO_DETALHE, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
+import { PAINEL_ESQ, PAINEL_DIR, ROTULO_DO_DETALHE, ROTULO_DA_ORDEM, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
 
 /** Cor do rótulo de cada variante de botão. */
 const COR_ROTULO = Object.fromEntries(Object.entries(PALETAS_DOS_BOTOES).map(([v, p]) => [v, p.texto]));
@@ -281,6 +281,17 @@ export const metodosDoCenario = {
       variante: 'pedra', tamanho: 22,
       explicar: () => 'Ajuda das ações: a regra de cada jogada, quando o botão acende e o conceito de redes neurais por trás dela.',
     });
+    /* Ordenar a mão: Tamanho e Naipe; cada clique ordena e o seguinte inverte (▲ crescente, ▼ decrescente) */
+    const ol = (rl - 6) / 2;
+    p.ordenar = {};
+    ['tamanho', 'naipe'].forEach((criterio, i) => {
+      p.ordenar[criterio] = this.criarBotao(rx + ol / 2 + i * (ol + 6), DIR.ordenar, ol, DIR.alturaOrdenar, ROTULO_DA_ORDEM[criterio], () => this.ordenarMao(criterio), {
+        variante: 'pedra', tamanho: 14, explicar: () => this.explicarOrdem(criterio),
+      });
+    });
+    this.input.keyboard?.on('keydown-T', () => this.ordenarMao('tamanho'));
+    this.input.keyboard?.on('keydown-N', () => this.ordenarMao('naipe'));
+    this.atualizarRotulosDaOrdem();
     const espaco = 6, bl = (rl - espaco * 3) / 4, coluna = (i) => rx + bl / 2 + i * (bl + espaco);
     const acoes = {
       tunagem: () => this.executarAcao('tunagem'), overfit: () => this.executarAcao('overfit'),

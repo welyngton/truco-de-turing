@@ -376,6 +376,9 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | `cancelarSelecao()` | método | Esc: limpa a seleção e sai do modo de dropout. |
 | `alternarDropout()` | método | Botão Dropout: entra ou sai do modo de escolher o alcance. |
 | `fazerTransfer()` | método | Botão Transfer learning: não é jogada obrigatória, então pergunta antes. Com uma quadra, pede a confirmação; com mais de uma, o jogador escolhe qual trocar (uma só por mão) ou cancela. |
+| `ordenarMao(criterio)` | método | Botões Tamanho e Naipe: o primeiro clique ordena do menor ao maior; clicar de novo no mesmo critério inverte. A escolha fica na aplicação e vale nas próximas mãos e para cartas novas. |
+| `atualizarRotulosDaOrdem()` | método | Rótulos dos botões de ordenar: o ativo mostra a seta do sentido. |
+| `explicarOrdem(criterio)` | método | Texto do quadro de instruções para os botões de ordenar. |
 | `passarAVez()` | método | Botão Passar a vez. |
 | `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só. |
 | `abrirAjudaDaMesa()` | método | Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. |
@@ -389,6 +392,7 @@ Geometria da mesa e utilitários de texto que se ajusta ao espaço. Tudo em coor
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `ROTULO_DO_DETALHE` | constante (exportada) | Rótulo do painel que mostra a carta ampliada ao passar o cursor ou tocar (no código, "inspeção"). O jogador lê "Detalhe da carta": "inspeção" é termo de quem desenvolve. |
+| `ROTULO_DA_ORDEM` | constante (exportada) | Rótulo dos botões que ordenam a mão (a seta ▲ crescente ou ▼ decrescente é somada ao do botão ativo). |
 | `PAINEL_ESQ` | constante (exportada) | Painel esquerdo (inspeção, pilhas e dica). |
 | `PAINEL_DIR` | constante (exportada) | Painel direito (placar, curva, registro e ações). |
 | `ESQ` | constante (exportada) | Posições verticais dentro do painel esquerdo, de cima para baixo. `pilha` é o tamanho das cartas do limbo e do cemitério. |
@@ -985,6 +989,7 @@ Baralhos do jogo e valor em pontos das cartas. As regras de cada baralho (cartas
 | `RESTRICOES_DO_BARALHO` | constante (exportada) | Restrições de mesa de alguns baralhos. O Yin-yang só tem 2 e Ás, então mais de um baralho ou uma rede grande deixam as mãos repetitivas e fáceis de somar: fica em 1 baralho e na arquitetura curta, pelo menos até haver coringas para equilibrar (prof. Peng Yaohao, #90). A regra vale em `novaMao` e em `normalizarOpcoes`, então vale também online e nas opções salvas. |
 | `aplicarRestricoesDoBaralho(opcoes)` | função (exportada) | Devolve uma cópia das opções com as restrições do baralho aplicadas (`baralhos` e `arquitetura`). |
 | `pontosDaCarta(carta, baralho)` | função (exportada) | Pontos de uma carta isolada no baralho escolhido: no clássico, 2 a 10 pelo número, Ás 11 e figuras 0; no truco, o valor da carta na ordem do truco. |
+| `ordenarCartas(cartas, baralho, criterio, sentido = 1)` | função (exportada) | Cópia das cartas ordenada para mostrar a mão (não mexe na mão do jogo). `tamanho` segue o valor da carta no baralho escolhido (no Clássico, 2 a 10, figuras 0 e Ás 11; no Truco, a ordem do truco; os empates ficam na ordem A, 2 … K e depois nos naipes). `naipe` agrupa por naipe (Ouros, Paus, Copas, Espadas, a ordem de desempate do jogo), do menor ao maior dentro de cada um. |
 | `nomeDaCarta(carta, baralho)` | função (exportada) | Nome por extenso da carta, ou o nome da manilha ("Zap"). |
 | `manilhaDaCarta(carta, baralho)` | função (exportada) | Nome da manilha, se a carta for uma no baralho escolhido. |
 

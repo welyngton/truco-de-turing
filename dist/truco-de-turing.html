@@ -1973,6 +1973,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     const c = cartaParaMotor(carta);
     return dados && dados.cardValue ? dados.cardValue(c) : nominalValue(c);
   }
+  function ordenarCartas(cartas, baralho, criterio, sentido = 1) {
+    const copia = cartas.slice();
+    if (criterio !== "tamanho" && criterio !== "naipe") return copia;
+    const tamanho = (c) => [pontosDaCarta(c, baralho), VALORES.indexOf(c.valor), ORDEM_NAIPE[c.naipe]];
+    const chave = (c) => criterio === "naipe" ? [ORDEM_NAIPE[c.naipe], ...tamanho(c)] : tamanho(c);
+    const comparar = (a, b) => {
+      const x = chave(a), y = chave(b);
+      for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return (x[i] - y[i]) * sentido;
+      return 0;
+    };
+    return copia.sort(comparar);
+  }
   function nomeDaCarta(carta, baralho) {
     const manilha = BARALHOS[baralho]?.manilhas?.[carta.valor + carta.naipe];
     if (manilha) return manilha;
@@ -10050,6 +10062,7 @@ export default function (Motor) {
 
   // src/cenas/mesa/layout.js
   var ROTULO_DO_DETALHE = "DETALHE DA CARTA";
+  var ROTULO_DA_ORDEM = { tamanho: "Tamanho", naipe: "Naipe" };
   var PAINEL_ESQ = { x: 8, y: 8, l: 244, a: 704 };
   var PAINEL_DIR = { x: 962, y: 8, l: 310, a: 704 };
   var ESQ = {
@@ -10078,7 +10091,10 @@ export default function (Motor) {
     curva: 304,
     alturaCurva: 64,
     registro: 380,
-    alturaRegistro: 132,
+    alturaRegistro: 86,
+    /* botões que ordenam a mão (Tamanho e Naipe), logo abaixo do registro e acima do TRUCO */
+    ordenar: 495,
+    alturaOrdenar: 44,
     truco: 540,
     alturaTruco: 40,
     /*
@@ -10461,6 +10477,18 @@ export default function (Motor) {
         tamanho: 22,
         explicar: () => "Ajuda das a\xE7\xF5es: a regra de cada jogada, quando o bot\xE3o acende e o conceito de redes neurais por tr\xE1s dela."
       });
+      const ol = (rl - 6) / 2;
+      p.ordenar = {};
+      ["tamanho", "naipe"].forEach((criterio, i) => {
+        p.ordenar[criterio] = this.criarBotao(rx + ol / 2 + i * (ol + 6), DIR.ordenar, ol, DIR.alturaOrdenar, ROTULO_DA_ORDEM[criterio], () => this.ordenarMao(criterio), {
+          variante: "pedra",
+          tamanho: 14,
+          explicar: () => this.explicarOrdem(criterio)
+        });
+      });
+      this.input.keyboard?.on("keydown-T", () => this.ordenarMao("tamanho"));
+      this.input.keyboard?.on("keydown-N", () => this.ordenarMao("naipe"));
+      this.atualizarRotulosDaOrdem();
       const espaco = 6, bl = (rl - espaco * 3) / 4, coluna = (i) => rx + bl / 2 + i * (bl + espaco);
       const acoes = {
         tunagem: () => this.executarAcao("tunagem"),
@@ -10566,7 +10594,8 @@ export default function (Motor) {
       this.cartasDoAdversario = [];
       const debaixo = this.jogadorDeBaixo();
       const aberta = this.quemVe >= 0;
-      const cartas = mao.jogadores[debaixo].mao;
+      const ordem = this.app.ordemDaMao || { criterio: null, sentido: 1 };
+      const cartas = ordenarCartas(mao.jogadores[debaixo].mao, baralho, ordem.criterio, ordem.sentido);
       const espaco = Math.min(TAMANHO_CARTA.maoL + 8, 660 / Math.max(1, cartas.length));
       cartas.forEach((carta, i) => {
         const x = 610 + (i - (cartas.length - 1) / 2) * espaco;
@@ -11177,6 +11206,32 @@ export default function (Motor) {
           ...valores.map((v) => ({ rotulo: valores.length > 1 ? "Trocar os quatro " + nome(v) : "Trocar", classe: "vinho", acao: () => trocar(v) }))
         ]
       );
+    },
+    /**
+     * Botões Tamanho e Naipe: o primeiro clique ordena do menor ao maior; clicar de novo no mesmo
+     * critério inverte. A escolha fica na aplicação e vale nas próximas mãos e para cartas novas.
+     * @param {'tamanho'|'naipe'} criterio
+     */
+    ordenarMao(criterio) {
+      if (!this.mao || this.quemVe < 0) return;
+      const atual3 = this.app.ordemDaMao;
+      this.app.ordemDaMao = atual3 && atual3.criterio === criterio ? { criterio, sentido: -atual3.sentido } : { criterio, sentido: 1 };
+      this.atualizarRotulosDaOrdem();
+      this.desenharMaos();
+    },
+    /** Rótulos dos botões de ordenar: o ativo mostra a seta do sentido. */
+    atualizarRotulosDaOrdem() {
+      const ordem = this.app.ordemDaMao;
+      for (const [criterio, botao] of Object.entries(this.painel.ordenar)) {
+        const ativo = ordem && ordem.criterio === criterio;
+        botao.definirRotulo(ROTULO_DA_ORDEM[criterio] + (ativo ? ordem.sentido > 0 ? " \u25B2" : " \u25BC" : ""));
+      }
+    },
+    /** Texto do quadro de instruções para os botões de ordenar. */
+    explicarOrdem(criterio) {
+      const ordem = this.app.ordemDaMao, ativo = ordem && ordem.criterio === criterio;
+      const como = criterio === "tamanho" ? "Ordena a m\xE3o pelo valor das cartas no baralho escolhido (empate: A, 2 \u2026 K, depois o naipe)." : "Agrupa a m\xE3o por naipe (Ouros, Paus, Copas, Espadas), do menor ao maior dentro de cada um.";
+      return como + " " + (ativo ? "Clique de novo para " + (ordem.sentido > 0 ? "inverter (decrescente)." : "voltar ao crescente.") : "Clique de novo para inverter.") + " Atalho: tecla " + (criterio === "tamanho" ? "T" : "N") + ". S\xF3 muda como as cartas aparecem.";
     },
     /** Botão Passar a vez. */
     passarAVez() {
