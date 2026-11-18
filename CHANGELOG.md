@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.14.0 — 2026-11-18
+
+- feat: botões Tamanho e Naipe para ordenar a mão ([#106](https://github.com/welyngton/truco-de-turing/pull/106), por [@welyngton](https://github.com/welyngton))
+
 ## 2.13.0 — 2026-11-18
 
 - feat: uma cor para cada botão de ação ([#105](https://github.com/welyngton/truco-de-turing/pull/105), por [@welyngton](https://github.com/welyngton))
