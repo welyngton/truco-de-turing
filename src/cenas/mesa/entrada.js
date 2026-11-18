@@ -75,6 +75,7 @@ export const metodosDeEntrada = {
    */
   executarAcao(tipo) {
     if (!this.ehVezDoHumano()) return;
+    if (this.tutorial && !this.tutorialLibera(tipo)) return;
     const alvos = this.alvosDaAcao(tipo);
     if (!alvos.length) return;
     /* um só alvo, na rede de outro (ou tunagem): executa direto; na própria rede (early stop,
@@ -91,6 +92,7 @@ export const metodosDeEntrada = {
    */
   acionarDropout() {
     if (!this.ehVezDoHumano()) return;
+    if (this.tutorial && !this.tutorialLibera('dropout')) return;
     const n = this.selecao.length;
     if (n && this.modo === 'livre' && n <= camadasDesfaziveis(this.mao, this.quemVe)) {
       this.executarJogada({ tipo: 'dropout', jogador: this.quemVe, n, pagamento: this.selecao.slice() });
@@ -172,12 +174,14 @@ export const metodosDeEntrada = {
   aoClicarNaCarta(idCarta) {
     const mao = this.mao, eu = this.quemVe;
     if (mao.fase === 'inicio' && this.modo === 'inicio') {
+      if (this.tutorial && !this.tutorialLiberaCarta(idCarta)) return;
       this.modo = 'livre';
       Som.colocarCarta();
       this.executarJogada({ tipo: 'inicio', jogador: eu, carta: idCarta });
       return;
     }
     if (!this.ehVezDoHumano()) return;
+    if (this.tutorial && !this.tutorialLiberaCarta(idCarta)) return;
     Som.selecionar();
     const i = this.selecao.indexOf(idCarta);
     if (this.modo === 'pagarDropout') {
@@ -225,6 +229,7 @@ export const metodosDeEntrada = {
    */
   fazerTransfer() {
     if (!this.ehVezDoHumano()) return;
+    if (this.tutorial) return this.avisarTutorial();
     const eu = this.quemVe, valores = valoresParaTransfer(this.mao, eu);
     if (!valores.length) return;
     const trocar = (valor) => {
@@ -300,6 +305,7 @@ export const metodosDeEntrada = {
 
   /** Botão Passar a vez. */
   passarAVez() {
+    if (this.tutorial && this.ehVezDoHumano() && !this.tutorialLibera('passar')) return;
     if (this.ehVezDoHumano() && podePassar(this.mao, this.quemVe)) this.executarJogada({ tipo: 'passar', jogador: this.quemVe });
   },
 
@@ -372,6 +378,7 @@ export const metodosDeEntrada = {
   },
 
   perguntarSeVoltaAoMenu() {
+    if (this.tutorial) return this.sairDoTutorial();
     confirmar('Abandonar a partida?', 'O placar de tentos desta partida será perdido. Conquistas já desbloqueadas ficam salvas.', [
       { rotulo: 'Continuar jogando', classe: 'discreto' },
       { rotulo: 'Voltar ao menu', classe: 'vinho', acao: () => { this.registrarAbandono(); this.app.irParaMenu(); } },

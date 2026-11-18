@@ -31,6 +31,7 @@ export const metodosDoResultado = {
    */
   encerrarMao(corrida) {
     if (this.encerrada) return;
+    if (this.tutorial) return this.terminarTutorial();
     this.encerrada = true;
     this.ocupada = true;
     this.dicaAtual = null;
@@ -66,7 +67,7 @@ export const metodosDoResultado = {
 
   /** A mão vale conquistas? Mãos com dicas e partidas entre pessoas no mesmo aparelho não valem. */
   valemConquistas() {
-    return !this.variosHumanos && !this.dicasNaMao;
+    return !this.tutorial && !this.variosHumanos && !this.dicasNaMao;
   },
 
   /** Cadeira de quem ganha as conquistas neste aparelho: online, a da sala; no jogo local, a 0. */

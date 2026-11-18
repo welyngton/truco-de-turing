@@ -177,6 +177,7 @@ Eventos (`EVENTOS` em `analise.js`):
 | `fim_mao` | fim de cada mão | baralho, terreno, oponente, jogadores, online, venceu, completa, valor, soma, dicas |
 | `acao_jogada` | cada jogada de quem está no aparelho | acao (inicio, ativar, tunagem, overfit, earlystop, stackoverflow, dropout, transfer, passar), baralho, terreno, camada, mao |
 | `truco` | pedido de truco | valor, quem, meu (1 se foi de quem joga no aparelho) |
+| `tutorial` | treino guiado do Percy | etapa (iniciado, passo, concluido, abandonado), passo |
 | `menu_clique` | botões do menu inicial | botao (jogar, jogar_online, como_jogar, glossario, conquistas, avatar, mods, sobre) |
 | `menu_opcao` | mudança numa escolha do menu | campo, valor |
 | `mesa_clique` | REGRAS e MENU da mesa e as opções deles | botao |
