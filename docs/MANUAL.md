@@ -259,6 +259,7 @@ copiados para o protótipo com `Object.assign` no fim de `CenaMesa.js`. Dentro d
 | `entrada.js` | cliques e toques: neurônios, cartas da mão, botões de ação |
 | `turnos.js` | fluxo da mão: `iniciarMao`, `executarJogada`, `avancar`, vez do oponente, troca de aparelho |
 | `truco.js` | pedir, anunciar e responder truco |
+| `tutorial.js` | treino guiado do Percy: balão, passo atual, só aceita a jogada do roteiro (`conteudo/tutorial.js`, `nucleo/tutorial.js`), mão fixa sem estatísticas nem conquistas |
 | `efeitos.js` | animação de cada evento, faíscas, faixas, balão de fala e avisos do Livro de conceitos |
 | `resultado.js` | conquistas na hora da jogada e no fim da mão, tentos, comemoração da vitória e tela de resultado |
 | `dicas.js` | modo dicas: sugestão de jogada (busca gulosa) e dicas flutuantes dos botões |

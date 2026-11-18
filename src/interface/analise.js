@@ -49,6 +49,7 @@ export const EVENTOS = {
   mesaClique: 'mesa_clique', // botões REGRAS e MENU da mesa e as opções das janelas deles
   acaoJogada: 'acao_jogada', // jogada de quem está neste aparelho (acao: ativar, tunagem, overfit…)
   jogoAbandonado: 'jogo_abandonado', // saiu da partida antes do fim
+  tutorial: 'tutorial', // treino guiado: etapa (iniciado, concluido, abandonado) e passo do roteiro
   dicas: 'dicas', // ligou ou desligou as dicas (ligadas: 1 ou 0)
   revisao: 'revisao_aberta', // abriu a revisão da mão ou da partida
   avatar: 'avatar_escolhido',

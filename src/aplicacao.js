@@ -120,17 +120,40 @@ export const Aplicacao = {
     atualizarControlesDeSom(this);
   },
 
-  /** Sai do menu e abre a mesa. */
+  /** Primeira vez de quem nunca jogou uma mão nem fez o tutorial: o Jogar abre o tutorial. */
+  deveFazerOTutorial() {
+    const p = this.progresso;
+    return !this.online && !p.treinoVisto && !(p.maos > 0);
+  },
+
+  /** Sai do menu e abre a mesa (na primeira vez, com o tutorial). */
   jogar() {
     const o = this.opcoes || OPCOES_PADRAO;
-    registrarEvento(EVENTOS.jogoIniciado, {
-      baralho: o.baralho, terreno: o.terreno, oponente: o.oponente, arquitetura: o.arquitetura,
-      jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: this.online ? 1 : 0,
-    });
+    this.tutorialAgora = this.deveFazerOTutorial();
+    if (!this.tutorialAgora) {
+      registrarEvento(EVENTOS.jogoIniciado, {
+        baralho: o.baralho, terreno: o.terreno, oponente: o.oponente, arquitetura: o.arquitetura,
+        jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: this.online ? 1 : 0,
+      });
+    }
+    this.abrirMesa();
+  },
+
+  /** Abre a mesa de treino (botão "Fazer o tutorial" de Como jogar), do menu ou de uma partida em andamento. */
+  iniciarTutorial() {
+    if (this.online) return;
+    this.tutorialAgora = true;
+    this.abrirMesa();
+  },
+
+  /** Troca a tela atual pela mesa (a cena da mesa lê `tutorialAgora` ao ser criada). */
+  abrirMesa() {
     fecharTodos();
     this.modoImersivo();
     document.body.classList.add('em-partida');
     this.jogo.scene.stop('Menu');
+    /* do tutorial para uma partida (ou ao contrário), a mesa atual dá lugar a uma nova */
+    if (this.jogo.scene.isActive && this.jogo.scene.isActive('Mesa')) this.jogo.scene.stop('Mesa');
     this.jogo.scene.start('Mesa');
   },
 

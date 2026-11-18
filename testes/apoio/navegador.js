@@ -129,11 +129,13 @@ export const carregarMontagem = (pagina) => pagina.evaluate(async () => { global
 export const esperarMenu = (pagina) => pagina.waitForSelector('#m-jogar', { timeout: 60000 });
 
 /**
- * Configura o menu, clica em Jogar, fecha as regras (na primeira vez) e acelera o tempo da cena
+ * Configura o menu, clica em Jogar (sem o tutorial), fecha as regras (na primeira vez) e acelera o tempo da cena
  * para os testes não esperarem as animações.
  */
 export async function comecarPartida(pagina, escolhas = {}) {
   await esperarMenu(pagina);
+  /* a primeira partida abriria o tutorial (testes/interface/tutorial.test.js): as demais pulam */
+  await pagina.evaluate(() => { globalThis.__TRUCO_DE_TURING__.progresso.treinoVisto = true; });
   for (const [campo, valor] of Object.entries(escolhas)) await pagina.selectOption('#m-' + campo, String(valor));
   await pagina.click('#m-jogar');
   await esperarCena(pagina, 'return cena && cena.sys.isActive() && cena.painel');
