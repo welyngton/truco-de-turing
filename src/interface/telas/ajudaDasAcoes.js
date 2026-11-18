@@ -3,6 +3,7 @@
  * próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão
  * "Aprender mais" que abre o verbete certo do Livro de conceitos.
  */
+import { corDaAcao } from '../../arte/botoes.js';
 import { Motor } from '../../motor/engine.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
 import { abrirGrimorio } from './grimorio.js';
@@ -52,7 +53,8 @@ function doMotor(id) {
 export function abrirAjudaDasAcoes(app, idInicial) {
   const cartoes = ACOES_DA_AJUDA.map((a) => {
     const m = doMotor(a.motor);
-    return '<article class="cartao-acao" data-acao="' + a.id + '"' + (a.id === idInicial ? ' aria-current="true"' : '') + '>' +
+    const cor = corDaAcao(a.id);
+    return '<article class="cartao-acao" data-acao="' + a.id + '"' + (cor ? ' style="border-left: 7px solid ' + cor + '"' : '') + (a.id === idInicial ? ' aria-current="true"' : '') + '>' +
       '<h3>' + (ICONES_DAS_ACOES[a.id] ? '<span class="icone-acao">' + ICONES_DAS_ACOES[a.id] + '</span>' : '') + escaparHtml(a.nome) + '</h3>' +
       '<p><b>Regra:</b> ' + escaparHtml(m.rule || a.resumo) + '</p>' +
       '<p class="quando"><b>Quando acende:</b> ' + escaparHtml(a.quando) + '</p>' +

@@ -3074,11 +3074,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return painel;
   }
   var dicaFlutuante = null;
-  function mostrarDicaFlutuante(titulo, html, alvo) {
+  function mostrarDicaFlutuante(titulo, html, alvo, cor) {
     esconderDicaFlutuante();
     const caixa = document.createElement("div");
     caixa.className = "dica-flutuante";
     caixa.setAttribute("role", "tooltip");
+    if (cor) caixa.style.borderLeft = "7px solid " + cor;
     caixa.innerHTML = "<b>" + escaparHtml(titulo) + "</b>" + html;
     document.body.appendChild(caixa);
     const l = caixa.offsetWidth, a = caixa.offsetHeight, margem = 10;
@@ -7248,15 +7249,39 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return o.c;
   }
   var MARGEM_BOTAO = 5;
+  var PALETAS_DOS_BOTOES = {
+    ouro: { gradiente: ["#fff1bf", "#e2bb5c", "#a3741f", "#5c3d0a"], texto: "#2a1606" },
+    vinho: { gradiente: ["#f08a8a", "#c0303e", "#7a1424", "#3a0810"], texto: "#fff0e0" },
+    pedra: { gradiente: ["#bcae8b", "#6f6146", "#4d4129", "#241d10"], texto: "#f6ecd6" },
+    verde: { gradiente: ["#7fd99a", "#2a7d4f", "#1b5736", "#0a2616"], texto: "#ffffff" },
+    laranja: { gradiente: ["#ffb26b", "#b04e0c", "#7d3a0a", "#3a1904"], texto: "#ffffff" },
+    azul: { gradiente: ["#8ab8ff", "#2f5fbf", "#1f4287", "#0b1a40"], texto: "#ffffff" },
+    roxo: { gradiente: ["#c9a0ff", "#7338b8", "#522a86", "#25103c"], texto: "#ffffff" },
+    magenta: { gradiente: ["#ff9ae0", "#a8268f", "#7a1a68", "#3a0a32"], texto: "#ffffff" },
+    turquesa: { gradiente: ["#7fe3e0", "#12727c", "#0f5a62", "#052a2e"], texto: "#ffffff" }
+  };
+  var COR_DA_ACAO = {
+    tunagem: "verde",
+    overfit: "laranja",
+    earlystop: "azul",
+    stackoverflow: "roxo",
+    dropout: "turquesa",
+    transfer: "magenta",
+    passar: "ouro",
+    truco: "vinho",
+    limpar: "pedra"
+  };
+  function corDaAcao(acao) {
+    const p = PALETAS_DOS_BOTOES[COR_DA_ACAO[acao]];
+    return p ? p.gradiente[1] : null;
+  }
   function desenharBotao(w, h, S, variante, estado2) {
     let pad = MARGEM_BOTAO, o = criarTela(w + pad * 2, h + pad * 2, S || 1), ctx = o.ctx;
     let x = pad, y = pad - 1, r = Math.min(10, h / 3.2);
-    let V = {
-      ouro: ["#fff1bf", "#e2bb5c", "#a3741f", "#5c3d0a"],
-      vinho: ["#f08a8a", "#c0303e", "#7a1424", "#3a0810"],
-      pedra: ["#cbbd9a", "#8a7a5a", "#5a4c32", "#2a2214"]
-    }[variante] || [];
-    if (estado2 === "inativo") V = variante === "vinho" ? ["#5a2a30", "#3e1a1f", "#2c1015", "#160709"] : ["#4a4232", "#342e22", "#262118", "#120f0a"];
+    let V = (PALETAS_DOS_BOTOES[variante] || PALETAS_DOS_BOTOES.ouro).gradiente;
+    if (estado2 === "inativo") V = variante === "ouro" || variante === "pedra" ? ["#4a4232", "#342e22", "#262118", "#120f0a"] : V.map(function(c) {
+      return tonalizar(c, -0.62);
+    });
     if (estado2 === "foco") V = V.map(function(c) {
       return tonalizar(c, 0.18);
     });
@@ -8430,7 +8455,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function abrirAjudaDasAcoes(app, idInicial) {
     const cartoes = ACOES_DA_AJUDA.map((a) => {
       const m = doMotor(a.motor);
-      return '<article class="cartao-acao" data-acao="' + a.id + '"' + (a.id === idInicial ? ' aria-current="true"' : "") + "><h3>" + (ICONES_DAS_ACOES[a.id] ? '<span class="icone-acao">' + ICONES_DAS_ACOES[a.id] + "</span>" : "") + escaparHtml(a.nome) + "</h3><p><b>Regra:</b> " + escaparHtml(m.rule || a.resumo) + '</p><p class="quando"><b>Quando acende:</b> ' + escaparHtml(a.quando) + "</p>" + (m.ml ? '<p class="em-ml"><b>Em machine learning:</b> ' + escaparHtml(m.ml) + "</p>" : "") + '<button class="botao discreto" data-verbete="' + a.verbete + '">Aprender mais</button></article>';
+      const cor = corDaAcao(a.id);
+      return '<article class="cartao-acao" data-acao="' + a.id + '"' + (cor ? ' style="border-left: 7px solid ' + cor + '"' : "") + (a.id === idInicial ? ' aria-current="true"' : "") + "><h3>" + (ICONES_DAS_ACOES[a.id] ? '<span class="icone-acao">' + ICONES_DAS_ACOES[a.id] + "</span>" : "") + escaparHtml(a.nome) + "</h3><p><b>Regra:</b> " + escaparHtml(m.rule || a.resumo) + '</p><p class="quando"><b>Quando acende:</b> ' + escaparHtml(a.quando) + "</p>" + (m.ml ? '<p class="em-ml"><b>Em machine learning:</b> ' + escaparHtml(m.ml) + "</p>" : "") + '<button class="botao discreto" data-verbete="' + a.verbete + '">Aprender mais</button></article>';
     }).join("");
     const html = '<div class="folha larga ajuda-acoes"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Ajuda das a\xE7\xF5es</h2><p>Selecione cartas da m\xE3o e acendem s\xF3 os bot\xF5es das jogadas poss\xEDveis. Cada cart\xE3o traz a regra, quando o bot\xE3o acende e o conceito de redes neurais por tr\xE1s da jogada.</p><div class="cartoes-acao">' + cartoes + '</div><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Voltar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
@@ -10158,7 +10184,7 @@ export default function (Motor) {
   }
 
   // src/cenas/mesa/cenario.js
-  var COR_ROTULO = { ouro: "#2a1606", vinho: "#fff0e0", pedra: "#f6ecd6" };
+  var COR_ROTULO = Object.fromEntries(Object.entries(PALETAS_DOS_BOTOES).map(([v, p]) => [v, p.texto]));
   var TEMPO_DE_SEGURAR = 450;
   var metodosDoCenario = {
     /** Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. */
@@ -10284,7 +10310,7 @@ export default function (Motor) {
         if (botao.habilitado === sim) return botao;
         botao.habilitado = sim;
         pintar(sim ? "normal" : "inativo");
-        texto.setColor(sim ? COR_ROTULO[variante] : variante === "vinho" ? "#a77a7a" : "#8c7f63");
+        texto.setColor(sim ? COR_ROTULO[variante] : variante === "ouro" || variante === "pedra" ? "#8c7f63" : "#b9a6a6");
         return botao;
       };
       botao.definirRotulo(rotulo);
@@ -10429,7 +10455,7 @@ export default function (Motor) {
     criarBotoesDeAcao(p) {
       const rx = PAINEL_DIR.x + 12, rl = PAINEL_DIR.l - 24, rc = PAINEL_DIR.x + PAINEL_DIR.l / 2;
       const lado = DIR.alturaTruco + 4, lt = rl - lado - 6;
-      p.truco = this.criarBotao(rx + lt / 2, DIR.truco, lt, DIR.alturaTruco, "TRUCO!", () => this.pedirTrucoHumano(), { variante: "vinho", tamanho: 20, dica: "truco" });
+      p.truco = this.criarBotao(rx + lt / 2, DIR.truco, lt, DIR.alturaTruco, "TRUCO!", () => this.pedirTrucoHumano(), { variante: COR_DA_ACAO.truco, tamanho: 20, dica: "truco" });
       p.botaoAjuda = this.criarBotao(rx + rl - lado / 2, DIR.truco, lado, DIR.alturaTruco, "?", () => this.abrirAjudaDaMesa(), {
         variante: "pedra",
         tamanho: 22,
@@ -10451,6 +10477,7 @@ export default function (Motor) {
       for (const [id, rotulo, linha2] of BARRA_DE_ACOES) {
         const y = linha2 === 0 ? DIR.acoes : DIR.acoes2, i = porLinha[linha2]++;
         p.acoes[id] = this.criarBotao(coluna(i), y, bl, DIR.alturaAcao, rotulo, acoes[id], {
+          variante: COR_DA_ACAO[id],
           tamanho: 13,
           dica: ["dropout", "transfer", "passar"].includes(id) ? id : void 0,
           explicar: () => this.explicarAcao(id)
@@ -12377,7 +12404,7 @@ export default function (Motor) {
       if (!this.mao) return;
       const { titulo, corpo, agora, conceito } = this.conteudoDaDica(chave);
       const html = escaparHtml(corpo) + (agora ? '<span class="agora">' + escaparHtml(agora) + "</span>" : "") + (conceito ? '<span class="conceito">' + escaparHtml(conceito) + "</span>" : "");
-      mostrarDicaFlutuante(titulo, html, retanguloNaTela(this, x, y, l, a));
+      mostrarDicaFlutuante(titulo, html, retanguloNaTela(this, x, y, l, a), corDaAcao(chave));
     },
     /** Esconde a dica flutuante. */
     esconderDicaDoBotao() {
