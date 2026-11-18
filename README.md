@@ -144,7 +144,7 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
 - **Ordenar a mão**: botões Tamanho e Naipe na mesa (teclas T e N); cada clique ordena e o seguinte inverte (▲ crescente, ▼ decrescente), respeitando a ordem de valor do baralho escolhido. A ordem vale para as cartas que chegam depois e só muda como a mão aparece.
 - **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Livro de conceitos e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
 - **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Livro de conceitos.
-- **Trilha sonora** (ligada por padrão): baião épico no menu (cordas de orquestra, zabumba, tímpano e palmas), blues lento na Planície (dois violinos, violoncelo e fagote), valsa com flauta de pã e marimba no oceano, épica com trompa, harpa e xilofone na montanha e uma dança de fada com harmônica de vidro e glockenspiel no pântano; fanfarra e confete na vitória.
+- **Trilha sonora** (ligada por padrão): baião épico no menu (cordas de orquestra, zabumba, tímpano e palmas), blues lento na Planície (dois violinos, violoncelo e fagote), valsa com flauta de pã e marimba no oceano, épica com trompa, harpa e xilofone na montanha e um lamento sombrio com órgão, sino e glockenspiel ao fundo no pântano; fanfarra e confete na vitória.
 - **Feedback visual**: conexões com espessura proporcional ao valor (como no Playground), curva de treino, explosões, banners, músicas e sons.
 
 ## Conteúdo educativo
