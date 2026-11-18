@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.9.0 — 2026-11-18
+
+- feat: Glossário vira "Livro de conceitos" e "Ver o conceito" vira "Aprender mais" ([#99](https://github.com/welyngton/truco-de-turing/pull/99), por [@welyngton](https://github.com/welyngton))
+
 ## 2.8.2 — 2026-11-18
 
 - fix: o rótulo "Inspeção" vira "Detalhe da carta" ([#101](https://github.com/welyngton/truco-de-turing/pull/101), por [@welyngton](https://github.com/welyngton))
