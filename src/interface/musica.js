@@ -242,7 +242,7 @@ export const MUSICAS = {
     },
   },
 
-  /* Planície (mesa neutra): blues lento em Mi, 12 compassos; o tema é cantado, com notas longas e
+  /* Planície (id `neutro`): blues lento em Mi, 12 compassos; o tema é cantado, com notas longas e
      passos curtos, sobre baixo em mínimas, acordes macios e escovinha */
   neutro: {
     bpm: 72, tempos: 4, subdivisao: 2, balanco: 0.22,
