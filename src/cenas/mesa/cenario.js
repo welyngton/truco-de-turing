@@ -282,13 +282,15 @@ export const metodosDoCenario = {
       explicar: () => 'Ajuda das ações: a regra de cada jogada, quando o botão acende e o conceito de redes neurais por trás dela.',
     });
     /* Ordenar a mão: Tamanho e Naipe; cada clique ordena e o seguinte inverte (▲ crescente, ▼ decrescente) */
-    const ol = (rl - 6) / 2;
+    /* a fileira tem 4 espaços: Tamanho, Naipe e os dois ícones de som e música (HTML sobre o canvas) */
+    const ladoIcone = DIR.alturaOrdenar, ol = (rl - 6 * 3 - ladoIcone * 2) / 2;
     p.ordenar = {};
     ['tamanho', 'naipe'].forEach((criterio, i) => {
       p.ordenar[criterio] = this.criarBotao(rx + ol / 2 + i * (ol + 6), DIR.ordenar, ol, DIR.alturaOrdenar, ROTULO_DA_ORDEM[criterio], () => this.ordenarMao(criterio), {
         variante: 'pedra', tamanho: 14, explicar: () => this.explicarOrdem(criterio),
       });
     });
+    this.criarControlesDeSomDaMesa([0, 1].map((j) => rx + (ol + 6) * 2 + ladoIcone / 2 + j * (ladoIcone + 6)), DIR.ordenar, ladoIcone);
     this.input.keyboard?.on('keydown-T', () => this.ordenarMao('tamanho'));
     this.input.keyboard?.on('keydown-N', () => this.ordenarMao('naipe'));
     this.atualizarRotulosDaOrdem();
