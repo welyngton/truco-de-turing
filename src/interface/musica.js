@@ -4,7 +4,7 @@
  * | Trilha              | Estilo                                                        | Andamento    |
  * |---------------------|---------------------------------------------------------------|--------------|
  * | menu                | baião épico em Sol: cordas, zabumba, tímpano e palmas; refrão que convida a jogar | 100 bpm |
- * | neutro (Planície)   | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm     |
+ * | neutro (Planície)   | blues lento em Mi: dois violinos no tema, violoncelo e fagote no apoio | 72 bpm     |
  * | oceano              | valsa em Sol: flauta de pã, marimba ao fundo, coro nos repousos | 63 bpm (3/4) |
  * | montanha            | épica em Lá menor: trompa, harpa ao fundo e xilofone nos repousos | 84 bpm   |
  * | pantano             | dança de fada em Ré menor: harmônica de vidro, glockenspiel e pizzicato | 60 bpm |
@@ -185,6 +185,24 @@ function cordas(saida, tempo, midi, duracao, volume = 0.03) {
   voz(saida, tempo, midi, duracao, { forma: 'triangle', volume: volume * 0.5, ataque: Math.min(0.12, duracao * 0.4), liberacao: 0.25 });
 }
 
+/** Violino: serra filtrada com ataque de arco e vibrato; dois violinistas levemente desafinados. */
+function violino(saida, tempo, midi, duracao, volume = 0.03) {
+  for (const desafinar of [-9, 9]) voz(saida, tempo, midi, duracao, { forma: 'sawtooth', volume: volume * 0.55, ataque: 0.07, liberacao: 0.3, filtro: 2600, vibrato: 7, desafinar });
+  voz(saida, tempo, midi, duracao, { forma: 'triangle', volume: volume * 0.4, ataque: 0.06, liberacao: 0.3 });
+}
+
+/** Violoncelo: serra escura, arco lento e vibrato fundo. */
+function violoncelo(saida, tempo, midi, duracao, volume = 0.1) {
+  voz(saida, tempo, midi, duracao, { forma: 'sawtooth', volume: volume * 0.7, ataque: 0.09, liberacao: 0.35, filtro: 650, vibrato: 5 });
+  voz(saida, tempo, midi, duracao, { forma: 'triangle', volume: volume * 0.5, ataque: 0.07, liberacao: 0.35 });
+}
+
+/** Fagote: palheta nasalada e redonda, apoio no meio do acorde. */
+function fagote(saida, tempo, midi, duracao, volume = 0.03) {
+  voz(saida, tempo, midi, duracao, { forma: 'square', volume: volume * 0.5, ataque: 0.06, liberacao: 0.25, filtro: 700 });
+  voz(saida, tempo, midi, duracao, { forma: 'sawtooth', volume: volume * 0.5, ataque: 0.06, liberacao: 0.25, filtro: 500 });
+}
+
 /** Coro (pad): acorde de senoides que entra e sai devagar e passa um pouco do compasso. */
 function coro(saida, tempo, notas, duracao, volume = 0.018) {
   for (const n of notas) voz(saida, tempo, n, duracao, { forma: 'sine', volume, ataque: duracao * 0.3, liberacao: duracao * 0.35, vibrato: 3 });
@@ -262,8 +280,9 @@ export const MUSICAS = {
     },
   },
 
-  /* Planície (id `neutro`): blues lento em Mi, 12 compassos; o tema é cantado, com notas longas e
-     passos curtos, sobre baixo em mínimas, acordes macios e escovinha */
+  /* Planície (id `neutro`): blues lento em Mi, 12 compassos; o tema, de notas longas e passos
+     curtos, vai em dois violinos sobre violoncelo em mínimas e fagote de apoio; sem percussão, e a
+     mesma textura do primeiro ao último compasso (inspiração só no clima de "Greenpath", sem cópia) */
   neutro: {
     bpm: 72, tempos: 4, subdivisao: 2, balanco: 0.22,
     acordes: [40, 40, 40, 40, 45, 45, 40, 40, 47, 45, 40, 47].map((r) => [r, r + 4, r + 7, r + 10]),
@@ -277,16 +296,12 @@ export const MUSICAS = {
     ],
     tocar(s, t, compasso, passo, acorde, sortear, d) {
       const r = acorde[0];
-      if (passo === 0 || passo === 4) voz(s, t, passo ? r + 7 : r, d * 3.6, { forma: 'triangle', volume: 0.12, ataque: 0.02, liberacao: 0.3 });
-      if (passo === 2 || passo === 6) {
-        for (const n of acorde.slice(1)) voz(s, t, n + 12, d * 1.6, { forma: 'sine', volume: 0.016, ataque: 0.03, liberacao: 0.4, vibrato: 3 });
-      }
-      if (passo % 2 === 1) chiado(s, t, 0.08, { volume: 0.012, filtro: 6000 });
-      if (passo === 0) tambor(s, t, { volume: 0.07, de: 80, para: 48, duracao: 0.3 });
-      melodia(this.tema, compasso, passo, (nota, dur) => {
-        voz(s, t, nota, dur * 0.95, { forma: 'sine', volume: 0.065, ataque: 0.03, liberacao: 0.35, vibrato: 5 });
-        voz(s, t, nota, dur * 0.95, { forma: 'triangle', volume: 0.02, ataque: 0.03, liberacao: 0.3, filtro: 1800 });
-      }, d);
+      /* violoncelo: raiz e quinta em notas longas, do primeiro ao último compasso (sem percussão) */
+      if (passo === 0 || passo === 4) violoncelo(s, t, (passo ? r + 7 : r) + 12, d * 3.6, 0.1);
+      /* fagote: apoio na terça e na sétima do acorde nos contratempos */
+      if (passo === 2 || passo === 6) fagote(s, t, acorde[passo === 2 ? 2 : 3] , d * 1.8, 0.04);
+      /* melodia nos dois violinos */
+      melodia(this.tema, compasso, passo, (nota, dur) => violino(s, t, nota, dur * 0.97, 0.06), d);
     },
   },
 
