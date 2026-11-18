@@ -90,7 +90,7 @@ function htmlDoMenu(opcoes) {
     '<p class="menu-conta" id="m-conta" role="status" hidden></p>' +
     '<div class="menu-mais">' +
     '<button class="botao" id="m-regras">Como jogar</button>' +
-    '<button class="botao" id="m-grimorio">Glossário</button>' +
+    '<button class="botao" id="m-grimorio">Livro de conceitos</button>' +
     '<button class="botao" id="m-conquistas">Conquistas</button>' +
     '<button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button>' +
     '<button class="botao" id="m-mods">Mods</button>' +

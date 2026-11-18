@@ -1,7 +1,7 @@
 /**
  * @file Ajuda das ações, como o botão botão "?": um cartão por jogada com a regra (texto do
  * próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão
- * "Ver o conceito" que abre o verbete certo do Glossário.
+ * "Aprender mais" que abre o verbete certo do Livro de conceitos.
  */
 import { Motor } from '../../motor/engine.js';
 import { abrirPainel, escaparHtml } from '../paineis.js';
@@ -10,7 +10,7 @@ import { ICONES_DAS_ACOES } from '../../arte/icones.js';
 
 /**
  * Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no motor (de onde vêm a
- * regra e o conceito); `verbete` é o verbete do Glossário.
+ * regra e o conceito); `verbete` é o verbete do Livro de conceitos.
  */
 export const ACOES_DA_AJUDA = [
   { id: 'avancar', nome: 'Avançar', motor: 'advance', verbete: 'forward',
@@ -46,7 +46,7 @@ function doMotor(id) {
 
 /**
  * Abre a ajuda das ações.
- * @param {object} app Aplicação (guarda os verbetes lidos quando abre o Glossário).
+ * @param {object} app Aplicação (guarda os verbetes lidos quando abre o Livro de conceitos).
  * @param {string} [idInicial] Ação destacada e rolada até a vista (ids de ACOES_DA_AJUDA).
  */
 export function abrirAjudaDasAcoes(app, idInicial) {
@@ -57,7 +57,7 @@ export function abrirAjudaDasAcoes(app, idInicial) {
       '<p><b>Regra:</b> ' + escaparHtml(m.rule || a.resumo) + '</p>' +
       '<p class="quando"><b>Quando acende:</b> ' + escaparHtml(a.quando) + '</p>' +
       (m.ml ? '<p class="em-ml"><b>Em machine learning:</b> ' + escaparHtml(m.ml) + '</p>' : '') +
-      '<button class="botao discreto" data-verbete="' + a.verbete + '">Ver o conceito</button>' +
+      '<button class="botao discreto" data-verbete="' + a.verbete + '">Aprender mais</button>' +
       '</article>';
   }).join('');
   const html = '<div class="folha larga ajuda-acoes"><button class="fechar-x" data-fechar aria-label="Fechar">×</button>' +

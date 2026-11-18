@@ -132,7 +132,7 @@ export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
   };
   raiz.querySelectorAll('.abas [data-aba]').forEach((b) => b.addEventListener('click', () => mostrarAba(b.dataset.aba)));
   mostrarAba(abaInicial);
-  /* o Glossário e a ajuda abrem por cima; as regras continuam abertas embaixo */
+  /* o Livro de conceitos e a ajuda abrem por cima; as regras continuam abertas embaixo */
   const appDaBiblioteca = app || { progresso: { lidos: {} }, marcarVerbeteLido() {} };
   raiz.querySelector('#r-ajuda-acoes').addEventListener('click', () => abrirAjudaDasAcoes(appDaBiblioteca));
   raiz.querySelector('#r-biblioteca').addEventListener('click', () => abrirGrimorio(appDaBiblioteca));
