@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.17.0 — 2026-11-18
+
+- feat: trilhas da Montanha e do Oceano (#95, #97) ([#109](https://github.com/welyngton/truco-de-turing/pull/109), por [@welyngton](https://github.com/welyngton))
+
 ## 2.16.0 — 2026-11-18
 
 - feat: Sobre em duas abas (O jogo e Equipe) ([#108](https://github.com/welyngton/truco-de-turing/pull/108), por [@welyngton](https://github.com/welyngton))
