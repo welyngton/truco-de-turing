@@ -385,6 +385,7 @@ Geometria da mesa e utilitários de texto que se ajusta ao espaço. Tudo em coor
 
 | Nome | Tipo | Descrição |
 |---|---|---|
+| `ROTULO_DO_DETALHE` | constante (exportada) | Rótulo do painel que mostra a carta ampliada ao passar o cursor ou tocar (no código, "inspeção"). O jogador lê "Detalhe da carta": "inspeção" é termo de quem desenvolve. |
 | `PAINEL_ESQ` | constante (exportada) | Painel esquerdo (inspeção, pilhas e dica). |
 | `PAINEL_DIR` | constante (exportada) | Painel direito (placar, curva, registro e ações). |
 | `ESQ` | constante (exportada) | Posições verticais dentro do painel esquerdo, de cima para baixo. `pilha` é o tamanho das cartas do limbo e do cemitério. |
