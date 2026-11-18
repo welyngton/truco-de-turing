@@ -7,6 +7,7 @@
 import { carregarProgresso, salvarProgresso } from './conteudo/progresso.js';
 import { CONQUISTAS, GRADUACOES, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA, CONQUISTA_FINAL, progressoDaFinal } from './conteudo/conquistas.js';
 import { VERBETES } from './conteudo/grimorio.js';
+import { aplicarRestricoesDoBaralho } from './nucleo/baralhos.js';
 import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, avisarConquista } from './interface/paineis.js';
@@ -33,7 +34,8 @@ export function faixaDeExperiencia(maos) {
 
 /**
  * Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte
- * o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`.
+ * o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. Também aplica as restrições do
+ * baralho (Yin-yang: 1 baralho e arquitetura curta), valendo para opções salvas e para salas online.
  */
 export function normalizarOpcoes(opcoes) {
   const o = { ...OPCOES_PADRAO, ...(opcoes || {}) };
@@ -41,7 +43,7 @@ export function normalizarOpcoes(opcoes) {
   o.jogadores = Math.max(2, Math.min(5, Number(o.jogadores) || 2));
   o.humanos = Math.max(1, Math.min(o.jogadores, Number(o.humanos) || 1));
   o.baralhos = Math.max(1, Math.min(4, Number(o.baralhos) || 1));
-  return o;
+  return aplicarRestricoesDoBaralho(o);
 }
 
 export const Aplicacao = {

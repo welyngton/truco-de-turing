@@ -10,7 +10,8 @@ import { BARALHOS } from '../nucleo/baralhos.js';
 import { TERRENOS } from '../nucleo/terrenos.js';
 import { OPONENTES } from '../nucleo/oponentes/index.js';
 import { ARQUITETURAS, tamanhosDaMesa } from '../nucleo/rede.js';
-import { normalizarOpcoes } from '../aplicacao.js';
+import { normalizarOpcoes, OPCOES_PADRAO } from '../aplicacao.js';
+import { RESTRICOES_DO_BARALHO } from '../nucleo/baralhos.js';
 import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
 import { abrirPainel, escaparHtml } from './paineis.js';
@@ -129,8 +130,25 @@ export function abrirMenu(app) {
   const elemento = painel.elemento;
   const campo = (id) => elemento.querySelector('#' + id);
 
+  /* Baralhos com restrição (Yin-yang) fixam arquitetura e nº de baralhos; `anteriores` guarda o que o
+     jogador tinha escolhido para devolver ao trocar de baralho. Se o menu já abre num baralho restrito,
+     não há escolha anterior conhecida e voltam os valores padrão. */
+  let restrito = Boolean(RESTRICOES_DO_BARALHO[app.opcoes.baralho]);
+  let anteriores = restrito ? { arquitetura: OPCOES_PADRAO.arquitetura, baralhos: OPCOES_PADRAO.baralhos } : null;
+  function aplicarRestricaoDoBaralho() {
+    const regra = RESTRICOES_DO_BARALHO[campo('m-baralho').value];
+    const arq = campo('m-arquitetura'), bar = campo('m-baralhos');
+    if (regra && !restrito) anteriores = { arquitetura: arq.value, baralhos: Number(bar.value) };
+    if (regra) { arq.value = regra.arquitetura; bar.value = String(regra.baralhos); }
+    else if (restrito && anteriores) { arq.value = anteriores.arquitetura; bar.value = String(anteriores.baralhos); }
+    arq.disabled = bar.disabled = Boolean(regra);
+    restrito = Boolean(regra);
+    return regra;
+  }
+
   /** Atualiza descrições, listas dependentes e miniaturas conforme as escolhas. */
   function atualizarDicas() {
+    const regraDoBaralho = aplicarRestricaoDoBaralho();
     const n = Number(campo('m-jogadores').value);
     /* humanos: de 1 até o número de jogadores */
     const humanos = Math.min(n, Number(campo('m-humanos').value) || 1);
@@ -146,7 +164,8 @@ export function abrirMenu(app) {
     const minimo = campo('m-baralho').value === 'truco' ? 2 : 1, baralhos = Math.max(minimo, Number(campo('m-baralhos').value));
     campo('m-mesa-dica').textContent = 'Mesa ' + camadas.join('-') + ' (' + camadas.reduce((a, b) => a + b, 0) + ' neurônios, ' + (camadas.length - 2) + ' camadas ocultas)' +
       (n > 2 ? ', com um neurônio a mais por camada para cada jogador além de 2' : '') + '. Mão de ' + 5 * baralhos + ' cartas' +
-      (Number(campo('m-baralhos').value) < minimo ? ' (o baralho Truco usa no mínimo 2 baralhos)' : '') + '.';
+      (Number(campo('m-baralhos').value) < minimo ? ' (o baralho Truco usa no mínimo 2 baralhos)' : '') + '.' +
+      (regraDoBaralho ? ' ' + regraDoBaralho.motivo : '');
     /* o truco é de um contra um; a opção de 12 tentos é a segunda da lista (chaves numéricas saem em ordem crescente) */
     campo('m-partida').querySelector('option[value="12"]').textContent = n === 2 ? ESCOLHAS_PARTIDA[12] : 'Partida até 12 tentos (truco só com 2)';
     const baralho = campo('m-baralho').value, terreno = campo('m-terreno').value;

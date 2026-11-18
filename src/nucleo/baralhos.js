@@ -58,6 +58,25 @@ export const BARALHOS = {
     resumo: 'Depois de cada ação com cartas, a sua mão é embaralhada com o limbo: as cartas que sobraram mudam.',
   },
 };
+/**
+ * Restrições de mesa de alguns baralhos. O Yin-yang só tem 2 e Ás, então mais de um baralho ou uma
+ * rede grande deixam as mãos repetitivas e fáceis de somar: fica em 1 baralho e na arquitetura
+ * curta, pelo menos até haver coringas para equilibrar (prof. Peng Yaohao, #90).
+ * A regra vale em `novaMao` e em `normalizarOpcoes`, então vale também online e nas opções salvas.
+ */
+export const RESTRICOES_DO_BARALHO = {
+  yinyang: { baralhos: 1, arquitetura: 'curta', motivo: 'O Yin-yang só tem 2 e Ás: fica em 1 baralho e na arquitetura curta, até haver coringas para equilibrar.' },
+};
+
+/**
+ * Devolve uma cópia das opções com as restrições do baralho aplicadas (`baralhos` e `arquitetura`).
+ * @param {{baralho?: string, baralhos?: number, arquitetura?: string}} opcoes
+ */
+export function aplicarRestricoesDoBaralho(opcoes) {
+  const r = RESTRICOES_DO_BARALHO[opcoes && opcoes.baralho];
+  return r ? { ...opcoes, baralhos: r.baralhos, arquitetura: r.arquitetura } : { ...opcoes };
+}
+
 for (const chave of Object.keys(BARALHOS)) BARALHOS[chave].montar = () => montarBaralho(chave);
 
 /**

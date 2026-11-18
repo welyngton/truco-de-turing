@@ -176,6 +176,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
   font: 600 16px var(--fonte-interface); color: var(--tinta);
   background: #fbf4e2; border: 2px solid #2b1608; border-radius: 8px; padding: 8px 10px; width: 100%;
 }
+.campo select:disabled { opacity: .6; cursor: not-allowed; }
 .campo .dica { font-size: 14px; color: #5a4630; line-height: 1.35; min-width: 0; }
 /* dois campos curtos lado a lado (jogadores e humanos; arquitetura e baralhos; início e partida) */
 .campos-duplos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }

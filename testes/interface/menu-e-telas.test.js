@@ -46,6 +46,20 @@ describe('menu e telas', () => {
       await pagina.mouse.click(5, 5);
       await pagina.waitForFunction(async () => (await import('/src/interface/musica.js')).Musica.tocando());
       assert.equal(await musicaDoMenu(), true);
+      /* Yin-yang fixa 1 baralho e a arquitetura curta (com explicação) e, ao sair dele, as escolhas voltam */
+      await pagina.selectOption('#m-arquitetura', 'larga');
+      await pagina.selectOption('#m-baralhos', '3');
+      await pagina.selectOption('#m-baralho', 'yinyang');
+      assert.equal(await pagina.locator('#m-arquitetura').inputValue(), 'curta');
+      assert.equal(await pagina.locator('#m-baralhos').inputValue(), '1');
+      assert.ok(await pagina.locator('#m-arquitetura').isDisabled() && await pagina.locator('#m-baralhos').isDisabled());
+      assert.match(await pagina.locator('#m-mesa-dica').textContent(), /Yin-yang só tem 2 e Ás/);
+      await pagina.selectOption('#m-baralho', 'classico');
+      assert.equal(await pagina.locator('#m-arquitetura').inputValue(), 'larga');
+      assert.equal(await pagina.locator('#m-baralhos').inputValue(), '3');
+      assert.ok(await pagina.locator('#m-arquitetura').isEnabled() && await pagina.locator('#m-baralhos').isEnabled());
+      await pagina.selectOption('#m-arquitetura', 'padrao');
+      await pagina.selectOption('#m-baralhos', '1');
       await pagina.selectOption('#m-terreno', 'oceano');
       await pagina.waitForSelector('.miniatura img');
       for (const [botao, texto] of [['#m-regras', 'Regras'], ['#m-grimorio', 'Livro de conceitos'], ['#m-conquistas', 'Conquistas'], ['#m-mods', 'Mods'], ['#m-sobre', 'Sobre']]) {

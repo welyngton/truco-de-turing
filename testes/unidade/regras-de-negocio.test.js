@@ -510,7 +510,13 @@ describe('Invariantes em partidas aleatórias', () => {
         semente: 500 + g, jogadores: JOGADORES,
         baralho: baralhos[g % 5], terreno: terrenos[Math.floor(g / 5) % 4], inicio: inicios[g % 3],
       });
-      const total = mao.config.baralho === 'truco' ? 54 : 52;
+      const idsDaMao = () => [
+        ...mao.camadas.flat().flatMap((n) => n.cartas.map((c) => c.id)),
+        ...mao.jogadores.flatMap((j) => j.mao.map((c) => c.id)),
+        ...mao.limbo.map((c) => c.id), ...mao.cemiterio.map((c) => c.id),
+      ];
+      /* o Yin-yang usa a arquitetura curta (#90), que não distribui o baralho inteiro: o total é o do início da mão */
+      const total = mao.config.baralho === 'yinyang' ? idsDaMao().length : mao.config.baralho === 'truco' ? 54 : 52;
       let jogadas = 0;
       while (mao.fase !== 'fim' && jogadas < 500) {
         if (mao.fase === 'inicio') {
@@ -520,11 +526,7 @@ describe('Invariantes em partidas aleatórias', () => {
         const legais = jogadasLegais(mao, mao.vez, { comDropout: true });
         aplicarJogada(mao, legais[sortear(legais.length)]);
         jogadas++;
-        const ids = [
-          ...mao.camadas.flat().flatMap((n) => n.cartas.map((c) => c.id)),
-          ...mao.jogadores.flatMap((j) => j.mao.map((c) => c.id)),
-          ...mao.limbo.map((c) => c.id), ...mao.cemiterio.map((c) => c.id),
-        ];
+        const ids = idsDaMao();
         assert.equal(ids.length, total, `mão ${g}, jogada ${jogadas}: ${ids.length} cartas`);
         assert.equal(new Set(ids).size, total, `mão ${g}, jogada ${jogadas}: carta duplicada`);
         mao.jogadores.forEach((jogador, j) => {

@@ -53,6 +53,7 @@ import * as motor from '../motor/engine.js';
 import { sementeNova } from './aleatorio.js';
 import { rotuloCarta } from './cartas.js';
 import { ehOculta, nomeCamada, tamanhosDaMesa, ARQUITETURAS } from './rede.js';
+import { aplicarRestricoesDoBaralho } from './baralhos.js';
 import {
   BARALHO_MOTOR, TERRENO_MOTOR, INICIO_MOTOR, ATAQUE_PELO_TAMANHO,
   cartaParaTT, naipeParaTT, idDoNeuronio, lugarDoNeuronio, situacaoDaRede, motivoDaVitoria,
@@ -144,7 +145,8 @@ function montar(estadoMotor, config, jogadores, simulacao, cartas) {
  * @param {number} [opcoes.semente] Para partidas reproduzíveis.
  * @param {{nome:string, tipo?:string, oponente?:string}[]} opcoes.jogadores De 2 a 5.
  */
-export function novaMao(opcoes) {
+export function novaMao(opcoesPedidas) {
+  const opcoes = { ...opcoesPedidas, ...aplicarRestricoesDoBaralho({ ...opcoesPedidas, baralho: opcoesPedidas.baralho || 'classico' }) };
   const config = {
     baralho: opcoes.baralho || 'classico', terreno: opcoes.terreno || 'neutro', inicio: opcoes.inicio || 'revela-descarta',
     arquitetura: opcoes.arquitetura || 'padrao', baralhos: Math.max(1, Math.min(4, Number(opcoes.baralhos) || 1)),
