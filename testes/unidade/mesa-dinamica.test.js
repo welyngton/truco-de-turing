@@ -44,6 +44,13 @@ function contarCartas(mao) {
 }
 
 describe('Mesa: arquiteturas, jogadores e baralhos', () => {
+  it('o painel que amplia a carta se chama "Detalhe da carta", sem o termo técnico "inspeção"', () => {
+    assert.equal(L.ROTULO_DO_DETALHE, 'DETALHE DA CARTA');
+    assert.doesNotMatch(L.ROTULO_DO_DETALHE, /inspe/i);
+    /* o rótulo cabe na largura do painel esquerdo com a fonte de 12 px e espaçamento de 2 (cerca de 9 px por letra) */
+    assert.ok(L.ROTULO_DO_DETALHE.length * 9 < L.PAINEL_ESQ.l - 40);
+  });
+
   it('a mesa tem os tamanhos da arquitetura, com um neurônio a mais por camada para cada jogador além de 2', () => {
     // Cenário: as quatro arquiteturas do motor, com 2 e com 4 jogadores.
     for (const arquitetura of ['padrao', 'curta', 'larga', 'profunda']) {
