@@ -5,8 +5,8 @@
  * |---------------------|---------------------------------------------------------------|--------------|
  * | menu                | baião em Sol: sanfona, zabumba, triângulo e palmas; refrão que convida a jogar | 118 bpm |
  * | neutro (Planície)   | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm     |
- * | oceano              | valsa em Sol: marimba ao fundo, coro que preenche os repousos | 63 bpm (3/4) |
- * | montanha            | épica em Lá menor: trompa, harpa ao fundo e tambores nos repousos | 84 bpm   |
+ * | oceano              | valsa em Sol: flauta de pã, marimba ao fundo, coro nos repousos | 63 bpm (3/4) |
+ * | montanha            | épica em Lá menor: trompa, harpa ao fundo e xilofone nos repousos | 84 bpm   |
  * | pantano             | dança de fada em Ré menor: harmônica de vidro, glockenspiel e pizzicato | 60 bpm |
  *
  * Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As
@@ -138,6 +138,20 @@ function harmonicaDeVidro(saida, tempo, midi, duracao, volume = 0.05) {
 function marimba(saida, tempo, midi, volume = 0.05) {
   voz(saida, tempo, midi, 0.02, { forma: 'sine', volume, ataque: 0.003, liberacao: 0.45 });
   voz(saida, tempo, midi + 24, 0.01, { forma: 'sine', volume: volume * 0.25, ataque: 0.002, liberacao: 0.1 });
+}
+
+/** Xilofone: barra de madeira dura, ataque seco, harmônicos agudos que somem depressa. */
+function xilofone(saida, tempo, midi, volume = 0.04) {
+  voz(saida, tempo, midi, 0.02, { forma: 'sine', volume, ataque: 0.002, liberacao: 0.2 });
+  voz(saida, tempo, midi + 19, 0.01, { forma: 'sine', volume: volume * 0.45, ataque: 0.001, liberacao: 0.07 });
+  voz(saida, tempo, midi + 28, 0.01, { forma: 'sine', volume: volume * 0.18, ataque: 0.001, liberacao: 0.04 });
+}
+
+/** Flauta de pã: som de seno com um sopro de ar no começo de cada nota. */
+function flautaDePa(saida, tempo, midi, duracao, volume = 0.07) {
+  voz(saida, tempo, midi, duracao, { forma: 'sine', volume, ataque: 0.07, liberacao: 0.5, vibrato: 5 });
+  voz(saida, tempo, midi + 12, duracao, { forma: 'sine', volume: volume * 0.12, ataque: 0.09, liberacao: 0.4 });
+  chiado(saida, tempo, Math.min(duracao, 0.5), { volume: volume * 0.1, filtro: 2200, tipo: 'bandpass', ataque: 0.04 });
 }
 
 /** Pizzicato: corda beliscada, curta e abafada. */
@@ -288,13 +302,13 @@ export const MUSICAS = {
         coro(s, t, [a, b, c], d * 6.8, 0.016);
         if (compasso % 2 === 0) chiado(s, t, d * 10, { volume: 0.022, filtro: 600, tipo: 'lowpass', ataque: d * 4 }); /* onda */
       }
-      if (passo >= 2) marimba(s, t, [a, b, c, b][passo - 2] + 12, 0.032);
-      melodia(this.tema, compasso, passo, (nota, dur) => voz(s, t, nota, dur * 0.98, { forma: 'sine', volume: 0.07, ataque: 0.05, liberacao: 0.7, vibrato: 7 }), d);
+      if (passo >= 2) marimba(s, t, [a, b, c, b][passo - 2] + 12, 0.06);
+      melodia(this.tema, compasso, passo, (nota, dur) => flautaDePa(s, t, nota, dur * 0.98, 0.07), d);
     },
   },
 
   /* Épica em Lá menor: tema na trompa (macia, sem o ataque espetado da flauta), harpa ao fundo,
-     cordas em ostinato, metais sustentados e tambores que marcam os repousos do tema */
+     cordas em ostinato, metais sustentados e xilofone que marca os repousos do tema */
   montanha: {
     bpm: 84, tempos: 4, subdivisao: 2, balanco: 0,
     acordes: [[45, 57, 60, 64], [41, 57, 60, 65], [48, 55, 60, 64], [43, 55, 59, 62], [45, 57, 60, 64], [41, 57, 60, 65], [43, 55, 59, 62], [40, 56, 59, 64]],
@@ -311,11 +325,11 @@ export const MUSICAS = {
       if (passo === 0) {
         for (const n of acorde.slice(1)) voz(s, t, n, d * 7.5, { forma: 'sawtooth', volume: 0.016, filtro: 1200, ataque: 0.3, liberacao: 0.4 });
         voz(s, t, r - 12, d * 7.5, { forma: 'triangle', volume: 0.15, ataque: 0.05, liberacao: 0.3 });
-        tambor(s, t, { volume: 0.32, de: 120, para: 40, duracao: 0.6 });
+        xilofone(s, t, r + 24, 0.045);
       }
-      if (passo === 4) tambor(s, t, { volume: 0.2, de: 120, para: 40, duracao: 0.5 });
-      /* repousos do tema (fim das frases): os tambores respondem */
-      if (compasso % 4 === 3 && passo >= 6) { tambor(s, t, { volume: 0.3, de: 150, para: 60, duracao: 0.35 }); tambor(s, t + d / 2, { volume: 0.24, de: 170, para: 70, duracao: 0.25 }); }
+      if (passo === 4) xilofone(s, t, a + 12, 0.03);
+      /* repousos do tema (fim das frases): o xilofone responde */
+      if (compasso % 4 === 3 && passo >= 6) { xilofone(s, t, c + 24, 0.04); xilofone(s, t + d / 2, b + 24, 0.034); }
       if (compasso % 8 === 0 && passo === 0) chiado(s, t, 2.2, { volume: 0.04, filtro: 5000 }); /* prato */
       melodia(this.tema, compasso, passo, (nota, dur) => {
         voz(s, t, nota, dur * 0.95, { forma: 'sawtooth', volume: 0.03, filtro: 1100, ataque: 0.09, liberacao: 0.35, vibrato: 5 });

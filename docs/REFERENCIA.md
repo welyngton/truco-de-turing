@@ -748,7 +748,7 @@ Menu principal: apresentação do jogo, botões das telas e configuração da me
 
 ## `src/interface/musica.js`
 
-Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cada terreno. | Trilha | Estilo | Andamento | |---------------------|---------------------------------------------------------------|--------------| | menu | baião em Sol: sanfona, zabumba, triângulo e palmas; refrão que convida a jogar | 118 bpm | | neutro (Planície) | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm | | oceano | valsa em Sol: marimba ao fundo, coro que preenche os repousos | 63 bpm (3/4) | | montanha | épica em Lá menor: trompa, harpa ao fundo e tambores nos repousos | 84 bpm | | pantano | dança de fada em Ré menor: harmônica de vidro, glockenspiel e pizzicato | 60 bpm | Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As melodias são compostas (uma tabela de notas por compasso), então o laço sempre se repete igual e o tema fica na cabeça. Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio.
+Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cada terreno. | Trilha | Estilo | Andamento | |---------------------|---------------------------------------------------------------|--------------| | menu | baião em Sol: sanfona, zabumba, triângulo e palmas; refrão que convida a jogar | 118 bpm | | neutro (Planície) | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm | | oceano | valsa em Sol: flauta de pã, marimba ao fundo, coro nos repousos | 63 bpm (3/4) | | montanha | épica em Lá menor: trompa, harpa ao fundo e xilofone nos repousos | 84 bpm | | pantano | dança de fada em Ré menor: harmônica de vidro, glockenspiel e pizzicato | 60 bpm | Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As melodias são compostas (uma tabela de notas por compasso), então o laço sempre se repete igual e o tema fica na cabeça. Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -764,6 +764,8 @@ Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cad
 | `glockenspiel(saida, tempo, midi, volume = 0.05)` | função | Glockenspiel e caixinha de música: barra de metal, ataque seco e brilho agudo. |
 | `harmonicaDeVidro(saida, tempo, midi, duracao, volume = 0.05)` | função | Harmônica de vidro: senoides puras com entrada macia e um leve tremor. |
 | `marimba(saida, tempo, midi, volume = 0.05)` | função | Marimba: tecla de madeira, grave arredondado e um harmônico que some rápido. |
+| `xilofone(saida, tempo, midi, volume = 0.04)` | função | Xilofone: barra de madeira dura, ataque seco, harmônicos agudos que somem depressa. |
+| `flautaDePa(saida, tempo, midi, duracao, volume = 0.07)` | função | Flauta de pã: som de seno com um sopro de ar no começo de cada nota. |
 | `pizzicato(saida, tempo, midi, volume = 0.08)` | função | Pizzicato: corda beliscada, curta e abafada. |
 | `triangulo(saida, tempo, aberto, volume = 0.02)` | função | Triângulo do forró: barra de metal aguda; fechado é um toque curto, aberto soa mais. |
 | `palmas(saida, tempo, volume = 0.05)` | função | Palmas: estalo de ruído em banda média, com um eco curtinho. |
