@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.19.0 — 2026-11-18
+
+- feat: Planície com violinos, violoncelo e fagote (#94) ([#111](https://github.com/welyngton/truco-de-turing/pull/111), por [@welyngton](https://github.com/welyngton))
+
 ## 2.18.0 — 2026-11-18
 
 - feat: trilha do menu mais lenta e épica (#93) ([#110](https://github.com/welyngton/truco-de-turing/pull/110), por [@welyngton](https://github.com/welyngton))
