@@ -1721,8 +1721,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   };
   var powerbi = {
     id: "powerbi",
-    name: "Power BI",
-    emoji: "\u{1F4CA}",
+    name: "Power Bee-Ai",
+    emoji: "\u{1F41D}",
     scoreLabel: "soma",
     desc: "Depois de cada a\xE7\xE3o com cartas, sua m\xE3o \xE9 embaralhada com o limbo: as cartas que restam mudam aleatoriamente.",
     score: (state, p) => sumScore(state, p),
@@ -1738,7 +1738,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       const n = hand.length;
       state.hands[p] = pool.slice(0, n);
       state.limbo = pool.slice(n);
-      state.log.push({ type: "deck", p, text: "Power BI: as cartas da m\xE3o mudaram." });
+      state.log.push({ type: "deck", p, text: "Power Bee-Ai: as cartas da m\xE3o mudaram." });
     }
   };
   var BUILTIN_DECKS = [classic, backprop, nobreza, truco, fraternidade, yinyang, powerbi];
@@ -1955,7 +1955,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       resumo: "S\xF3 existem 2 e \xC1s. Tunagens, overfits e stack overflows a todo momento."
     },
     powerbi: {
-      nome: "Power BI",
+      nome: "Power Bee-Ai",
       resumo: "Depois de cada a\xE7\xE3o com cartas, a sua m\xE3o \xE9 embaralhada com o limbo: as cartas que sobraram mudam."
     }
   };
@@ -5495,143 +5495,134 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     ctx.fillText("YIN \xB7 YANG", W / 2, H / 2 + 79.5);
   }
   function versoPowerBI(ctx, W, H, aleatorio) {
-    let Y = "#f2c811", Y2 = "#e8a33a", T = "#3fc1c9";
+    const Y = "#f2c811", Y2 = "#e8a33a", T = "#3fc1c9";
+    const hexagono = (cx, cy, r2) => {
+      ctx.beginPath();
+      for (let k = 0; k < 6; k++) {
+        const a = Math.PI / 6 + k * Math.PI / 3;
+        const x = cx + r2 * Math.cos(a), y = cy + r2 * Math.sin(a);
+        if (k === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+    };
     ctx.save();
     caminhoArredondado(ctx, 9, 9, W - 18, H - 18, 9);
     ctx.clip();
     ctx.fillStyle = degradeLinear(ctx, 0, 0, 0, H, [[0, "#232838"], [1, "#0f121a"]]);
     ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = "rgba(242,200,17,.07)";
-    ctx.lineWidth = 0.8;
-    for (let g = 9; g < W; g += 12) {
-      ctx.beginPath();
-      ctx.moveTo(g, 0);
-      ctx.lineTo(g, H);
-      ctx.stroke();
-    }
-    for (let g2 = 9; g2 < H; g2 += 12) {
-      ctx.beginPath();
-      ctx.moveTo(0, g2);
-      ctx.lineTo(W, g2);
-      ctx.stroke();
-    }
-    let tiles = [[22, 24, 60, 40, "bar"], [92, 24, 60, 40, "line"], [162, 24, 56, 40, "pie"], [22, 284, 60, 30, "line"], [92, 284, 60, 30, "pie"], [162, 284, 56, 30, "bar"]];
-    tiles.forEach(function(t) {
-      ctx.fillStyle = "rgba(255,255,255,.05)";
-      caminhoArredondado(ctx, t[0], t[1], t[2], t[3], 4);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(242,200,17,.25)";
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-      ctx.globalAlpha = 0.55;
-      if (t[4] === "bar") {
-        for (let b = 0; b < 5; b++) {
-          let hh = 4 + aleatorio() * (t[3] - 14);
-          ctx.fillStyle = b % 2 ? T : Y;
-          ctx.fillRect(t[0] + 6 + b * 10, t[1] + t[3] - 5 - hh, 7, hh);
+    const r = 15, dx = r * Math.sqrt(3), dy = r * 1.5;
+    for (let linha2 = -1; linha2 * dy < H + r; linha2++) {
+      for (let col = -1; col * dx < W + r; col++) {
+        const cx = col * dx + (linha2 % 2 ? dx / 2 : 0), cy = linha2 * dy + 12;
+        hexagono(cx, cy, r - 1.2);
+        if (aleatorio() < 0.2) {
+          ctx.fillStyle = aleatorio() < 0.5 ? "rgba(242,200,17,.16)" : "rgba(63,193,201,.13)";
+          ctx.fill();
         }
-      } else if (t[4] === "line") {
-        ctx.strokeStyle = Y;
-        ctx.lineWidth = 1.6;
-        ctx.beginPath();
-        for (let p = 0; p <= 6; p++) {
-          let px = t[0] + 6 + p * (t[2] - 12) / 6, py = t[1] + 8 + aleatorio() * (t[3] - 16);
-          if (p === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
+        ctx.strokeStyle = "rgba(242,200,17,.22)";
+        ctx.lineWidth = 0.9;
         ctx.stroke();
-      } else {
-        let pcx = t[0] + t[2] / 2, pcy = t[1] + t[3] / 2;
-        [[0, 2.4, Y], [2.4, 4.4, T], [4.4, 6.283, Y2]].forEach(function(s) {
-          ctx.strokeStyle = s[2];
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.arc(pcx, pcy, Math.min(11, t[3] / 2 - 5), s[0], s[1]);
-          ctx.stroke();
-        });
       }
-      ctx.globalAlpha = 1;
-    });
+    }
     ctx.restore();
     ctx.strokeStyle = Y;
     ctx.lineWidth = 2.4;
     caminhoArredondado(ctx, 15, 15, W - 30, H - 30, 7);
     ctx.stroke();
-    let px0 = W / 2 - 74, py0 = H / 2 - 92, pw = 148, ph = 184;
+    const mx = W / 2, my = H / 2 - 8;
     sombraSuave(ctx, 12, 4, 0.6);
-    ctx.fillStyle = "#1b2030";
-    caminhoArredondado(ctx, px0, py0, pw, ph, 10);
+    ctx.fillStyle = degradeRadial(ctx, mx, my - 14, 6, mx, my, 84, [[0, "#2b3350"], [1, "#12151f"]]);
+    hexagono(mx, my, 76);
     ctx.fill();
     semSombra(ctx);
     ctx.strokeStyle = Y;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.stroke();
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#9aa3b8";
-    ctx.font = "700 8px Spectral, Georgia, serif";
-    ctx.fillText("ACUR\xC1CIA DA M\xC3O", px0 + 12, py0 + 16);
-    ctx.fillStyle = Y;
-    ctx.font = "800 22px Spectral, Georgia, serif";
-    ctx.fillText("?? %", px0 + 12, py0 + 36);
-    let rx = px0 + pw - 24, ry = py0 + 26;
+    ctx.strokeStyle = "rgba(242,200,17,.4)";
+    ctx.lineWidth = 1;
+    hexagono(mx, my, 68);
+    ctx.stroke();
     ctx.strokeStyle = T;
-    ctx.lineWidth = 2.4;
-    ctx.beginPath();
-    ctx.arc(rx, ry, 10, -0.3, Math.PI * 1.3);
-    ctx.stroke();
     ctx.fillStyle = T;
-    ctx.beginPath();
-    ctx.moveTo(rx + 12, ry - 8);
-    ctx.lineTo(rx + 11, ry + 2);
-    ctx.lineTo(rx + 3, ry - 4);
-    ctx.closePath();
-    ctx.fill();
-    let gx0 = px0 + 12, gy0 = py0 + 58, gw = pw - 24, gh = 52;
-    ctx.fillStyle = "rgba(255,255,255,.04)";
-    ctx.fillRect(gx0, gy0, gw, gh);
-    ctx.strokeStyle = "rgba(255,255,255,.12)";
-    ctx.lineWidth = 0.7;
-    [0.33, 0.66].forEach(function(f) {
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    [0, Math.PI].forEach(function(g) {
+      const a0 = g + 0.35, a1 = g + 2.2, R = 56;
       ctx.beginPath();
-      ctx.moveTo(gx0, gy0 + gh * f);
-      ctx.lineTo(gx0 + gw, gy0 + gh * f);
+      ctx.arc(mx, my, R, a0, a1);
+      ctx.stroke();
+      const ex = mx + R * Math.cos(a1), ey = my + R * Math.sin(a1), tx = -Math.sin(a1), ty = Math.cos(a1), nx = Math.cos(a1), ny = Math.sin(a1);
+      ctx.beginPath();
+      ctx.moveTo(ex + tx * 9, ey + ty * 9);
+      ctx.lineTo(ex + nx * 6, ey + ny * 6);
+      ctx.lineTo(ex - nx * 6, ey - ny * 6);
+      ctx.closePath();
+      ctx.fill();
+    });
+    ctx.lineCap = "butt";
+    ctx.save();
+    ctx.translate(mx, my + 2);
+    ctx.rotate(-0.35);
+    ctx.fillStyle = "rgba(190,235,240,.55)";
+    ctx.strokeStyle = "rgba(190,235,240,.9)";
+    ctx.lineWidth = 1.2;
+    [[-9, -20, -0.5], [11, -20, 0.5]].forEach(function(a) {
+      ctx.beginPath();
+      ctx.ellipse(a[0], a[1], 9, 17, a[2], 0, Math.PI * 2);
+      ctx.fill();
       ctx.stroke();
     });
-    let pts = [0.9, 0.7, 0.75, 0.5, 0.42, 0.3, 0.34, 0.18];
-    ctx.fillStyle = degradeLinear(ctx, 0, gy0, 0, gy0 + gh, [[0, "rgba(242,200,17,.35)"], [1, "rgba(242,200,17,0)"]]);
+    ctx.fillStyle = Y;
     ctx.beginPath();
-    ctx.moveTo(gx0, gy0 + gh);
-    pts.forEach(function(v, i) {
-      ctx.lineTo(gx0 + i * gw / (pts.length - 1), gy0 + v * gh);
+    ctx.ellipse(0, 4, 18, 25, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 18, 25, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = "#1a1612";
+    [[-4, 6], [10, 7], [24, 7]].forEach(function(b) {
+      ctx.fillRect(-22, b[0], 44, b[1] - 1);
     });
-    ctx.lineTo(gx0 + gw, gy0 + gh);
+    ctx.restore();
+    ctx.fillStyle = Y2;
+    ctx.beginPath();
+    ctx.moveTo(-3, 28);
+    ctx.lineTo(0, 37);
+    ctx.lineTo(3, 28);
     ctx.closePath();
     ctx.fill();
+    ctx.fillStyle = "#1a1612";
+    ctx.beginPath();
+    ctx.arc(0, -24, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    [-4, 4].forEach(function(o) {
+      ctx.beginPath();
+      ctx.arc(o, -25, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.fillStyle = "#1a1612";
+    [-4, 4].forEach(function(o) {
+      ctx.beginPath();
+      ctx.arc(o, -25, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    });
     ctx.strokeStyle = Y;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    pts.forEach(function(v, i) {
-      let x = gx0 + i * gw / (pts.length - 1), y = gy0 + v * gh;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    let dcx = px0 + 36, dcy = py0 + 142;
-    [[0, 3.1, Y], [3.1, 4.9, T], [4.9, 6.283, Y2]].forEach(function(s) {
-      ctx.strokeStyle = s[2];
-      ctx.lineWidth = 9;
+    ctx.lineWidth = 1.6;
+    [-1, 1].forEach(function(s) {
       ctx.beginPath();
-      ctx.arc(dcx, dcy, 17, s[0] - 1.57, s[1] - 1.57);
+      ctx.moveTo(s * 4, -32);
+      ctx.quadraticCurveTo(s * 9, -42, s * 15, -40);
       ctx.stroke();
+      ctx.fillStyle = Y;
+      ctx.beginPath();
+      ctx.arc(s * 15, -40, 2, 0, Math.PI * 2);
+      ctx.fill();
     });
-    [14, 26, 18, 32].forEach(function(hh, i) {
-      ctx.fillStyle = i % 2 ? T : Y;
-      ctx.fillRect(px0 + 74 + i * 15, py0 + 160 - hh, 10, hh);
-    });
-    ctx.fillStyle = "rgba(255,255,255,.25)";
-    ctx.fillRect(px0 + 70, py0 + 160, 66, 1);
-    legenda(ctx, W, H / 2 + 84, null, "DASHBOARD", Y, 150);
+    ctx.restore();
+    legenda(ctx, W, H / 2 + 84, null, "POWER BEE-AI", Y, 150);
   }
   function versoNobreza(ctx, W, H, aleatorio) {
     ctx.save();
@@ -9141,7 +9132,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return escolha === "sim" ? "Neste aparelho: ligadas." : escolha === "nao" ? "Neste aparelho: desligadas." : "Neste aparelho: ainda sem escolha.";
   }
   function abrirSobre() {
-    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="sobre-logo">' + LOGO_SVG + '</div><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><p class="homenagem"><b>Converg\xEAncia global</b>, a conquista final do jogo, \xE9 uma homenagem ao prof. Peng: ela vem para quem desbloqueia todas as outras. No treino de uma rede, convergir para o m\xEDnimo global \xE9 chegar ao melhor ponto da fun\xE7\xE3o de perda, em vez de parar num m\xEDnimo local. A medalha tem uma gradua\xE7\xE3o s\xF3 dela, a Singularidade, acima de Antimat\xE9ria.</p><h3>Autores</h3><ul class="autores"><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes e valida\xE7\xE3o das regras.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es nas regras.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Livro de conceitos.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Bugs e sugest\xF5es</h3><p>Encontrou um erro ou tem uma ideia? Conte pelas issues do projeto no GitHub (\xE9 preciso ter uma conta l\xE1). D\xE1 para ver antes o que j\xE1 foi relatado.</p><div class="linha"><a class="botao pequeno" id="s-reportar" href="https://github.com/welyngton/truco-de-turing/issues/new" target="_blank" rel="noopener">Reportar bug ou sugest\xE3o</a><a class="botao pequeno discreto" id="s-issues" href="https://github.com/welyngton/truco-de-turing/issues" target="_blank" rel="noopener">Ver issues abertas</a></div><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="sobre-logo">' + LOGO_SVG + '</div><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power Bee-Ai), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><p class="homenagem"><b>Converg\xEAncia global</b>, a conquista final do jogo, \xE9 uma homenagem ao prof. Peng: ela vem para quem desbloqueia todas as outras. No treino de uma rede, convergir para o m\xEDnimo global \xE9 chegar ao melhor ponto da fun\xE7\xE3o de perda, em vez de parar num m\xEDnimo local. A medalha tem uma gradua\xE7\xE3o s\xF3 dela, a Singularidade, acima de Antimat\xE9ria.</p><h3>Autores</h3><ul class="autores"><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes e valida\xE7\xE3o das regras.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es nas regras.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Livro de conceitos.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Bugs e sugest\xF5es</h3><p>Encontrou um erro ou tem uma ideia? Conte pelas issues do projeto no GitHub (\xE9 preciso ter uma conta l\xE1). D\xE1 para ver antes o que j\xE1 foi relatado.</p><div class="linha"><a class="botao pequeno" id="s-reportar" href="https://github.com/welyngton/truco-de-turing/issues/new" target="_blank" rel="noopener">Reportar bug ou sugest\xE3o</a><a class="botao pequeno discreto" id="s-issues" href="https://github.com/welyngton/truco-de-turing/issues" target="_blank" rel="noopener">Ver issues abertas</a></div><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
     for (const escolha of ["sim", "nao"]) {
       const botao = painel.elemento.querySelector("#s-estatisticas-" + escolha);
@@ -11710,9 +11701,9 @@ export default function (Motor) {
       this.textoFlutuante(610, 120, "O vento virou: " + naipe.simbolo + " " + naipe.nome + " revelado agora vale dobro", "#bfe7f4", 20);
       return 0;
     },
-    /** Baralho Power BI: as cartas da mão foram trocadas. */
+    /** Baralho Power Bee-Ai: as cartas da mão foram trocadas. */
     animar_powerbi(evento) {
-      mostrarAviso("Power BI", this.mao.jogadores[evento.jogador].nome + " atualizou o dashboard: as cartas da m\xE3o mudaram.", null, 3500);
+      mostrarAviso("Power Bee-Ai", this.mao.jogadores[evento.jogador].nome + " deu uma volta pela colmeia: as cartas da m\xE3o mudaram.", null, 3500);
       return 0;
     },
     /** Rede finalizada porque não sobrou neurônio livre na camada seguinte. */

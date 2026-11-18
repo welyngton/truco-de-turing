@@ -106,7 +106,7 @@ describe('duas pessoas e mão única', () => {
     } finally { await jogo.fechar(); }
   });
 
-  it('mão única sem truco (Power BI): "Nova partida" recomeça o placar', async () => {
+  it('mão única sem truco (Power Bee-Ai): "Nova partida" recomeça o placar', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
     try {

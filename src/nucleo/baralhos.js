@@ -54,7 +54,7 @@ export const BARALHOS = {
     resumo: 'Só existem 2 e Ás. Tunagens, overfits e stack overflows a todo momento.',
   },
   powerbi: {
-    nome: 'Power BI',
+    nome: 'Power Bee-Ai',
     resumo: 'Depois de cada ação com cartas, a sua mão é embaralhada com o limbo: as cartas que sobraram mudam.',
   },
 };
