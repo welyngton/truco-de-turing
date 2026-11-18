@@ -187,6 +187,44 @@ describe('ações da mesa', () => {
     } finally { await jogo.fechar(); }
   });
 
+  it('botões Tamanho e Naipe ordenam a mão (e invertem no clique seguinte), com seta, teclado e ordem mantida nas cartas novas', async () => {
+    const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
+    const { pagina } = jogo;
+    try {
+      await comecarPartida(pagina, { oponente: 'aleatorio', baralho: 'classico', terreno: 'neutro', inicio: 'sorteio' });
+      await carregarMontagem(pagina);
+      await esperarMinhaVez(pagina);
+      await naCena(pagina, 'M.darMao(cena.mao, 0, ["KE", "AO", "7C", "7O", "2P"]); cena.redesenhar();');
+      const naTela = () => naCena(pagina, `const dono = cena.mao.jogadores[0].mao; return cena.cartasDaMao.slice().sort((a, b) => a.x - b.x).map((i) => { const c = dono.find((k) => k.id === i.idCarta); return c.valor + c.naipe; }).join(' ');`);
+      const clicar = (criterio) => naCena(pagina, `const b = cena.painel.ordenar[arg]; b.emit('pointerover', { wasTouch: false }); b.emit('pointerdown'); b.emit('pointerup'); b.emit('pointerout');`, criterio);
+      const rotulo = (criterio) => naCena(pagina, 'return cena.painel.ordenar[arg].texto.text', criterio);
+      assert.equal(await naTela(), 'KE AO 7C 7O 2P', 'sem ordem escolhida, a mão aparece como veio');
+      assert.deepEqual([await rotulo('tamanho'), await rotulo('naipe')], ['Tamanho', 'Naipe']);
+      await clicar('tamanho');
+      assert.equal(await naTela(), 'KE 2P 7O 7C AO');
+      assert.equal(await rotulo('tamanho'), 'Tamanho \u25B2');
+      await clicar('tamanho');
+      assert.equal(await naTela(), 'AO 7C 7O 2P KE');
+      assert.equal(await rotulo('tamanho'), 'Tamanho \u25BC');
+      await clicar('naipe');
+      assert.equal(await naTela(), '7O AO 2P 7C KE');
+      assert.deepEqual([await rotulo('tamanho'), await rotulo('naipe')], ['Tamanho', 'Naipe \u25B2']);
+      /* teclado: T e N fazem o mesmo; N de novo inverte */
+      await pagina.keyboard.press('n');
+      assert.equal(await naTela(), 'KE 7C 2P AO 7O');
+      await pagina.keyboard.press('t');
+      assert.equal(await naTela(), 'KE 2P 7O 7C AO');
+      /* a ordem vale para cartas que chegam depois (aqui, uma mão nova) e não muda a mão do jogo */
+      await naCena(pagina, 'M.darMao(cena.mao, 0, ["JO", "3E", "AP", "8C", "5O", "9E"]); cena.redesenhar();');
+      assert.equal(await naTela(), 'JO 3E 5O 8C 9E AP');
+      assert.equal(await naCena(pagina, 'return cena.mao.jogadores[0].mao.map((c) => c.valor + c.naipe).join(" ")'), 'JO 3E AP 8C 5O 9E');
+      /* o botão cabe na barra e é grande o bastante para o toque */
+      const caixa = await naCena(pagina, 'const b = cena.painel.ordenar.tamanho; return { l: b.width, a: b.height };');
+      assert.ok(caixa.a >= 44 && caixa.l >= 100, JSON.stringify(caixa));
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
   it('dropout (escolher camadas e pagar), cancelar, transfer learning, passar a vez e vanishing gradient', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;

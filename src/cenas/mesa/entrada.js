@@ -16,7 +16,7 @@ import { abrirGrimorio } from '../../interface/telas/grimorio.js';
 import { abrirAjudaDasAcoes } from '../../interface/telas/ajudaDasAcoes.js';
 import { texturaDeInspecao } from '../recursos.js';
 import { registrarEvento, EVENTOS } from '../../interface/analise.js';
-import { colunaX, linhaY, NOME_DA_ACAO, cartaDaMesa } from './layout.js';
+import { colunaX, linhaY, NOME_DA_ACAO, ROTULO_DA_ORDEM, cartaDaMesa } from './layout.js';
 
 /** Ação do motor correspondente a cada botão (para o texto da regra). */
 const ACAO_DO_MOTOR = { tunagem: 'tune', overfit: 'overfit', earlystop: 'earlystop', stackoverflow: 'stackoverflow', dropout: 'dropout', transfer: 'transfer', passar: 'pass' };
@@ -237,6 +237,38 @@ export const metodosDeEntrada = {
         { rotulo: 'Cancelar', classe: 'discreto' },
         ...valores.map((v) => ({ rotulo: valores.length > 1 ? 'Trocar os quatro ' + nome(v) : 'Trocar', classe: 'vinho', acao: () => trocar(v) })),
       ]);
+  },
+
+  /**
+   * Botões Tamanho e Naipe: o primeiro clique ordena do menor ao maior; clicar de novo no mesmo
+   * critério inverte. A escolha fica na aplicação e vale nas próximas mãos e para cartas novas.
+   * @param {'tamanho'|'naipe'} criterio
+   */
+  ordenarMao(criterio) {
+    if (!this.mao || this.quemVe < 0) return;
+    const atual = this.app.ordemDaMao;
+    this.app.ordemDaMao = atual && atual.criterio === criterio ? { criterio, sentido: -atual.sentido } : { criterio, sentido: 1 };
+    this.atualizarRotulosDaOrdem();
+    this.desenharMaos();
+  },
+
+  /** Rótulos dos botões de ordenar: o ativo mostra a seta do sentido. */
+  atualizarRotulosDaOrdem() {
+    const ordem = this.app.ordemDaMao;
+    for (const [criterio, botao] of Object.entries(this.painel.ordenar)) {
+      const ativo = ordem && ordem.criterio === criterio;
+      botao.definirRotulo(ROTULO_DA_ORDEM[criterio] + (ativo ? (ordem.sentido > 0 ? ' \u25B2' : ' \u25BC') : ''));
+    }
+  },
+
+  /** Texto do quadro de instruções para os botões de ordenar. */
+  explicarOrdem(criterio) {
+    const ordem = this.app.ordemDaMao, ativo = ordem && ordem.criterio === criterio;
+    const como = criterio === 'tamanho'
+      ? 'Ordena a mão pelo valor das cartas no baralho escolhido (empate: A, 2 … K, depois o naipe).'
+      : 'Agrupa a mão por naipe (Ouros, Paus, Copas, Espadas), do menor ao maior dentro de cada um.';
+    return como + ' ' + (ativo ? 'Clique de novo para ' + (ordem.sentido > 0 ? 'inverter (decrescente).' : 'voltar ao crescente.') : 'Clique de novo para inverter.') +
+      ' Atalho: tecla ' + (criterio === 'tamanho' ? 'T' : 'N') + '. Só muda como as cartas aparecem.';
   },
 
   /** Botão Passar a vez. */

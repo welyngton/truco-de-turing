@@ -6,7 +6,7 @@
  */
 import { TAMANHO_CARTA } from '../../configuracao.js';
 import { rotuloCarta, NAIPE } from '../../nucleo/cartas.js';
-import { BARALHOS } from '../../nucleo/baralhos.js';
+import { BARALHOS, ordenarCartas } from '../../nucleo/baralhos.js';
 import { TERRENOS } from '../../nucleo/terrenos.js';
 import { ehOculta, nomeCamada } from '../../nucleo/rede.js';
 import { pontuarRede } from '../../nucleo/pontuacao.js';
@@ -83,7 +83,9 @@ export const metodosDeDesenho = {
     this.cartasDaMao = []; this.cartasDoAdversario = [];
     const debaixo = this.jogadorDeBaixo();
     const aberta = this.quemVe >= 0;
-    const cartas = mao.jogadores[debaixo].mao;
+    /* a ordem escolhida (Tamanho/Naipe) vale também para as cartas que chegarem depois; a mão do jogo não muda */
+    const ordem = this.app.ordemDaMao || { criterio: null, sentido: 1 };
+    const cartas = ordenarCartas(mao.jogadores[debaixo].mao, baralho, ordem.criterio, ordem.sentido);
     const espaco = Math.min(TAMANHO_CARTA.maoL + 8, 660 / Math.max(1, cartas.length));
     cartas.forEach((carta, i) => {
       const x = 610 + (i - (cartas.length - 1) / 2) * espaco;

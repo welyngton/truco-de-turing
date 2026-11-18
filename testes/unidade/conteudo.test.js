@@ -53,6 +53,27 @@ describe('grimorio.js', () => {
     assert.doesNotMatch(BARALHOS.powerbi.nome + BARALHOS.powerbi.resumo + Motor.decks.powerbi.desc, /power ?bi\b|dashboard/i);
   });
 
+  it('ordenarCartas: por tamanho (valor no baralho) e por naipe, crescente e decrescente, sem mexer na mão original', async () => {
+    const { ordenarCartas } = await import('../../src/nucleo/baralhos.js');
+    const c = (valor, naipe) => ({ id: valor + naipe, valor, naipe });
+    const mao = [c('K', 'E'), c('A', 'O'), c('7', 'C'), c('7', 'O'), c('2', 'P')];
+    const ids = (l) => l.map((x) => x.id).join(' ');
+    const original = ids(mao);
+    /* clássico: figuras 0 < 2 < 7 < Ás 11; no empate, o naipe (Ouros < Copas) */
+    assert.equal(ids(ordenarCartas(mao, 'classico', 'tamanho', 1)), 'KE 2P 7O 7C AO');
+    assert.equal(ids(ordenarCartas(mao, 'classico', 'tamanho', -1)), 'AO 7C 7O 2P KE');
+    /* naipe: Ouros, Paus, Copas, Espadas; dentro de cada um, do menor ao maior */
+    assert.equal(ids(ordenarCartas(mao, 'classico', 'naipe', 1)), '7O AO 2P 7C KE');
+    assert.equal(ids(ordenarCartas(mao, 'classico', 'naipe', -1)), ids(ordenarCartas(mao, 'classico', 'naipe', 1).reverse()));
+    /* truco: vale a ordem do truco, não a do clássico (a manilha 7♥ é a maior depois do Zap) */
+    const truco = ordenarCartas([c('7', 'C'), c('3', 'E'), c('4', 'P')], 'truco', 'tamanho', 1);
+    assert.equal(truco[truco.length - 1].id, '4P', 'o Zap (4♣) é a maior carta do truco');
+    /* sem critério ou critério desconhecido: mesma ordem, em uma cópia */
+    assert.equal(ids(ordenarCartas(mao, 'classico', null)), original);
+    assert.notEqual(ordenarCartas(mao, 'classico', null), mao);
+    assert.equal(ids(mao), original);
+  });
+
   it('terrenos: o terreno sem efeito aparece como "Planície" (o id continua neutro), sem sobrar "Mesa neutra"', () => {
     assert.deepEqual(Object.keys(TERRENOS), ['neutro', 'montanha', 'pantano', 'oceano']);
     assert.deepEqual(Object.values(TERRENOS).map((t) => t.nome), ['Planície', 'Montanha', 'Pântano', 'Oceano']);

@@ -5,7 +5,7 @@
  * `src/motor/engine/decks.js`. Aqui ficam o nome, o resumo do menu e o que a arte precisa.
  */
 import * as motor from '../motor/engine.js';
-import { NOME_VALOR, NAIPE } from './cartas.js';
+import { NOME_VALOR, NAIPE, VALORES, ORDEM_NAIPE } from './cartas.js';
 import { BARALHO_MOTOR, cartaParaMotor, cartaParaTT } from './traducao.js';
 
 /** Cartas de um baralho do motor, no formato da interface. */
@@ -89,6 +89,29 @@ export function pontosDaCarta(carta, baralho) {
   const dados = motor.Motor.decks[BARALHO_MOTOR[baralho]];
   const c = cartaParaMotor(carta);
   return dados && dados.cardValue ? dados.cardValue(c) : motor.nominalValue(c);
+}
+
+/**
+ * Cópia das cartas ordenada para mostrar a mão (não mexe na mão do jogo).
+ * `tamanho` segue o valor da carta no baralho escolhido (no Clássico, 2 a 10, figuras 0 e Ás 11; no
+ * Truco, a ordem do truco; os empates ficam na ordem A, 2 … K e depois nos naipes). `naipe` agrupa por
+ * naipe (Ouros, Paus, Copas, Espadas, a ordem de desempate do jogo), do menor ao maior dentro de cada um.
+ * @param {{valor: string, naipe: string}[]} cartas
+ * @param {string} baralho Chave de BARALHOS.
+ * @param {'tamanho'|'naipe'|null} criterio `null` mantém a ordem recebida.
+ * @param {1|-1} [sentido=1] 1 crescente, -1 decrescente.
+ */
+export function ordenarCartas(cartas, baralho, criterio, sentido = 1) {
+  const copia = cartas.slice();
+  if (criterio !== 'tamanho' && criterio !== 'naipe') return copia;
+  const tamanho = (c) => [pontosDaCarta(c, baralho), VALORES.indexOf(c.valor), ORDEM_NAIPE[c.naipe]];
+  const chave = (c) => (criterio === 'naipe' ? [ORDEM_NAIPE[c.naipe], ...tamanho(c)] : tamanho(c));
+  const comparar = (a, b) => {
+    const x = chave(a), y = chave(b);
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return (x[i] - y[i]) * sentido;
+    return 0;
+  };
+  return copia.sort(comparar);
 }
 
 /** Nome por extenso da carta, ou o nome da manilha ("Zap"). */
