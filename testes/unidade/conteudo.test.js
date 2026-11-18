@@ -47,6 +47,12 @@ describe('grimorio.js', () => {
     }
     assert.deepEqual(VERBETES.filter((v) => v.formula).map((v) => v.id), ['overfit', 'stackoverflow', 'transfer']);
   });
+  it('baralho "Power Bee-Ai": nome novo na interface e no motor, sem a marca "Power BI" (o id powerbi não muda)', () => {
+    assert.equal(BARALHOS.powerbi.nome, 'Power Bee-Ai');
+    assert.equal(Motor.decks.powerbi.name, 'Power Bee-Ai');
+    assert.doesNotMatch(BARALHOS.powerbi.nome + BARALHOS.powerbi.resumo + Motor.decks.powerbi.desc, /power ?bi\b|dashboard/i);
+  });
+
   it('terrenos: o terreno sem efeito aparece como "Planície" (o id continua neutro), sem sobrar "Mesa neutra"', () => {
     assert.deepEqual(Object.keys(TERRENOS), ['neutro', 'montanha', 'pantano', 'oceano']);
     assert.deepEqual(Object.values(TERRENOS).map((t) => t.nome), ['Planície', 'Montanha', 'Pântano', 'Oceano']);

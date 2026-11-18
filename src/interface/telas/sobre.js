@@ -31,7 +31,7 @@ export function abrirSobre() {
       '<li>Os jogadores se alternam ativando neurônios para ligar a entrada à saída. Vence a rede de maior soma: 2 a 10 pelo valor, Ás 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li>' +
       '<li>Ações com a mão: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e saída são imunes.</li>' +
       '<li>Desempates em cascata e três formas de decidir quem começa.</li>' +
-      '<li>Extensões propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, pântano, oceano), coringas e conquistas em graduações de bronze a antimatéria.</li>' +
+      '<li>Extensões propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power Bee-Ai), terrenos (montanha, pântano, oceano), coringas e conquistas em graduações de bronze a antimatéria.</li>' +
       '<li>Inspirações citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li>' +
       '</ul>' +
       '<h3>O professor</h3>' +

@@ -320,7 +320,7 @@ describe('aplicarJogada', () => {
     assert.equal(mao.eventos.at(-1).entram, 4);
     assert.throws(() => aplicarJogada(mao, { tipo: 'transfer', jogador: mao.vez, cartas: [] }), /indisponível/);
   });
-  it('Power BI embaralha a mão com o limbo depois de uma ação com cartas', () => {
+  it('Power Bee-Ai embaralha a mão com o limbo depois de uma ação com cartas', () => {
     const mao = maoNova({ baralho: 'powerbi' }), j = mao.vez;
     const cartas = darMao(mao, j, ['5E', '5C', '5P', '5O', '3E']).slice(0, 4).map((c) => c.id);
     aplicarJogada(mao, { tipo: 'transfer', jogador: j, cartas });

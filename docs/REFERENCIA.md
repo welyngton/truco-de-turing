@@ -186,7 +186,7 @@ Moldura medieval do retrato do professor no quadro de conquistas.
 
 ## `src/arte/versos.js`
 
-Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de computação), fraternidade (anéis), yin-yang (A e 2) e Power BI (painel de indicadores). Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
+Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de computação), fraternidade (anéis), yin-yang (A e 2) e Power Bee-Ai (abelha num favo de hexágonos). Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -197,7 +197,7 @@ Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol)
 | `versoFraternidade(ctx, W, H, aleatorio)` | função | Fraternidade: corrente de anéis dourados sobre verde, quatro naipes de mãos dadas |
 | `simboloYinYang(ctx, cx, cy, r)` | função | Yin-yang: campo dividido em preto e marfim, só Ás e Dois |
 | `versoYinYang(ctx, W, H, aleatorio)` | função | Verso do baralho yin-yang: metades clara e escura e o símbolo no centro. |
-| `versoPowerBI(ctx, W, H, aleatorio)` | função | Power BI: painel de indicadores (gráficos e um botão de atualizar), que embaralha a mão |
+| `versoPowerBI(ctx, W, H, aleatorio)` | função | Power Bee-Ai: favo de hexágonos com uma abelha no medalhão e setas de atualizar (a mão é embaralhada com o limbo) |
 | `versoNobreza(ctx, W, H, aleatorio)` | função | Nobreza: veludo púrpura com flores-de-lis e uma coroa dourada no medalhão |
 | `florDeLis(ctx, x, y, s)` | função | Flor-de-lis simples, centrada em (x, y), de tamanho s. |
 | `coroa(ctx, cx, cy, l, ouro)` | função | Coroa de três pontas com gemas, de largura l, base em (cx, cy). |
@@ -343,7 +343,7 @@ Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo
 | `animar_transfer()` | método | Transfer learning. |
 | `animar_completa(evento)` | método | Rede chegou à camada de saída. |
 | `animar_vento(evento)` | método | Terreno oceano: o vento mudou de naipe. |
-| `animar_powerbi(evento)` | método | Baralho Power BI: as cartas da mão foram trocadas. |
+| `animar_powerbi(evento)` | método | Baralho Power Bee-Ai: as cartas da mão foram trocadas. |
 | `animar_travada(evento)` | método | Rede finalizada porque não sobrou neurônio livre na camada seguinte. |
 | `animar_passe(evento)` | método | Alguém passou a vez. |
 | `animar_inicio(evento)` | método | Quem começa: mostra as cartas reveladas (ou anuncia o sorteio). |

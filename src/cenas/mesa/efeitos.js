@@ -162,9 +162,9 @@ export const metodosDeEfeitos = {
     return 0;
   },
 
-  /** Baralho Power BI: as cartas da mão foram trocadas. */
+  /** Baralho Power Bee-Ai: as cartas da mão foram trocadas. */
   animar_powerbi(evento) {
-    mostrarAviso('Power BI', this.mao.jogadores[evento.jogador].nome + ' atualizou o dashboard: as cartas da mão mudaram.', null, 3500);
+    mostrarAviso('Power Bee-Ai', this.mao.jogadores[evento.jogador].nome + ' deu uma volta pela colmeia: as cartas da mão mudaram.', null, 3500);
     return 0;
   },
 
