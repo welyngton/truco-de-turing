@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.8.1 — 2026-11-18
+
+- fix: o terreno sem efeito aparece como Planície, não como Mesa neutra ([#100](https://github.com/welyngton/truco-de-turing/pull/100), por [@welyngton](https://github.com/welyngton))
+
 ## 2.8.0 — 2026-11-15
 
 - feat: logo do jogo (favicon, menu, Sobre e README) ([#80](https://github.com/welyngton/truco-de-turing/pull/80), por [@welyngton](https://github.com/welyngton))

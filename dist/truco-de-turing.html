@@ -2034,7 +2034,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 
   // src/nucleo/terrenos.js
   var TERRENOS = {
-    neutro: { nome: "Mesa neutra", resumo: "Sem efeito. Feltro verde, caf\xE9 e truco." },
+    /* o id continua `neutro` (as escolhas salvas e as partidas online usam), mas o jogador vê "Planície" */
+    neutro: { nome: "Plan\xEDcie", resumo: "Sem efeito. Campo aberto de feltro verde, s\xF3 voc\xEA, o oponente e o truco." },
     montanha: { nome: "Montanha", resumo: "A trilha sobe: cada neur\xF4nio vale 1 ponto a mais por camada alcan\xE7ada (a oculta 1 ganha 1, a oculta 2 ganha 2\u2026)." },
     pantano: { nome: "P\xE2ntano", resumo: "A cada rodada, neur\xF4nios sem tunagem afundam e perdem 1 ponto. Tunar mant\xE9m o neur\xF4nio \xE0 tona." },
     oceano: { nome: "Oceano", resumo: "A cada rodada o vento escolhe um naipe. Neur\xF4nios desse naipe revelados na rodada valem o dobro para sempre." }
@@ -2737,7 +2738,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         melodia(this.tema, compasso, passo, (nota2, dur) => sanfona(s, t, nota2, dur * 0.9, 0.034), d);
       }
     },
-    /* Planície (mesa neutra): blues lento em Mi, 12 compassos; o tema é cantado, com notas longas e
+    /* Planície (id `neutro`): blues lento em Mi, 12 compassos; o tema é cantado, com notas longas e
        passos curtos, sobre baixo em mínimas, acordes macios e escovinha */
     neutro: {
       bpm: 72,
@@ -3483,8 +3484,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.8.0";
-  var DATA_DA_VERSAO = "2026-11-15";
+  var VERSAO = "2.8.1";
+  var DATA_DA_VERSAO = "2026-11-18";
 
   // src/aplicacao.js
   var OPCOES_PADRAO = {

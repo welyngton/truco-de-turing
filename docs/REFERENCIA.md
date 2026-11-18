@@ -120,7 +120,7 @@ Fundos da mesa: feltro verde (neutro) e um fundo por terreno (montanha, pântano
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `desenharFeltro(W, H, S)` | função (exportada) | Feltro verde da mesa neutra, com fibras e vinheta. |
+| `desenharFeltro(W, H, S)` | função (exportada) | Feltro verde da Planície, com fibras e vinheta. |
 | `fibras(ctx, W, H, aleatorio, n, clara, escura)` | função | Fibras do tecido: `n` riscos curtos alternando a cor clara e a escura. |
 | `mesaMontanha(ctx, W, H, aleatorio)` | função | Fundo da mesa no terreno montanha: céu de entardecer, cordilheira e trilha subindo. |
 | `vitoriaRegia(ctx, x, y, r, rot, aleatorio)` | função | Desenha uma vitória-régia (folha flutuante) no pântano. |
