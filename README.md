@@ -119,7 +119,7 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
 | Efeito de empilhar | Decidido pelo tamanho final da pilha: 2 = tunagem (própria) ou overfit (adversário); 3 = early stop; 4 = stack overflow. Vale também na própria rede (auto early stop, auto stack overflow). |
 | Dropout (professor) | Os neurônios desfeitos saem da mesa e vão para o cemitério, com as tunagens. Não gasta o turno. |
 | Camada sem neurônio livre (professor) | A rede é finalizada ali ("acabou o campo") e conta a soma parcial. |
-| Transfer learning (professor) | Não gasta o turno. |
+| Transfer learning (professor) | Não gasta o turno; o jogador escolhe qual quadra trocar e pode cancelar (uma vez por mão). |
 | Passar a vez | Só quem teve a rede interrompida por early stop, do rival ou aplicado em si, e ainda tem cartas (atacar não é obrigatório); ou quem não tem nenhuma outra jogada. Quem não pode jogar é pulado. |
 | Desempate pela carta mais alta | Compara a força da carta (Ás > K > Q > J > 10 … 2); o naipe só decide entre cartas iguais. |
 | Quem começa | Padrão: cada um revela uma carta, que vai para o cemitério. No menu também há a opção em que a carta volta para a mão e o sorteio. |

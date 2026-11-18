@@ -114,7 +114,7 @@ export function escolherDicaDeJogo(mao, j, partida, recentes = []) {
   /* 5. economia da mão */
   const valorTransfer = valorParaTransfer(mao, j);
   if (valorTransfer) dica('transfer', 'transfer', 'Quatro iguais na mão',
-    'Você tem quatro ' + valorTransfer + '. Se eles não servem para tunar nem atacar, o transfer learning troca todos por cartas novas do limbo.');
+    'Você tem quatro ' + valorTransfer + '. Se eles não servem para tunar nem atacar, o transfer learning troca os quatro por cartas novas do limbo (você confirma antes e pode cancelar).');
   if (eu.mao.length > 0 && eu.mao.length <= 2 && eu.situacao === 'construindo') dica('mao-curta', 'dropout', 'Poucas cartas na mão',
     'Restam ' + eu.mao.length + ' carta(s). Guarde-as para pagar um dropout se a rede entrar num caminho ruim, ou para um ataque decisivo.');
 

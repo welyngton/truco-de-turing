@@ -211,7 +211,20 @@ describe('ações da mesa', () => {
       await esperarMinhaVez(pagina);
       await naCena(pagina, 'M.darMao(cena.mao, 0, ["7E", "7C", "7P", "7O"]); cena.redesenhar();');
       await apertar(pagina, 'botaoTransfer');
+      /* não é automático nem obrigatório: o jogo pergunta; cancelar não troca nada */
+      assert.match(await pagina.locator('.camada:not(.transparente) h2').textContent(), /Transfer learning\?/);
+      await pagina.getByRole('button', { name: 'Cancelar' }).click();
+      assert.equal(await naCena(pagina, 'return cena.mao.jogadores[0].transferUsado'), false);
+      assert.deepEqual(await naCena(pagina, 'return cena.mao.jogadores[0].mao.map((c) => c.valor + c.naipe)'), ['7E', '7C', '7P', '7O']);
+      /* com duas quadras, o jogador escolhe qual trocar (uma só por mão) */
+      await naCena(pagina, 'M.darMao(cena.mao, 0, ["7E", "7C", "7P", "7O", "KE", "KC", "KP", "KO"]); cena.redesenhar();');
+      await apertar(pagina, 'botaoTransfer');
+      assert.deepEqual(await pagina.locator('.camada:not(.transparente) button').allTextContents(), ['Cancelar', 'Trocar os quatro Sete', 'Trocar os quatro Rei']);
+      const antes = await naCena(pagina, 'return cena.mao.jogadores[0].mao.map((c) => c.valor + ":" + c.id)');
+      await pagina.getByRole('button', { name: 'Trocar os quatro Rei' }).click();
       await esperarCena(pagina, 'return cena.mao.jogadores[0].transferUsado');
+      const depois = await naCena(pagina, 'return cena.mao.jogadores[0].mao.map((c) => c.valor + ":" + c.id)');
+      assert.deepEqual(depois.filter((c) => antes.includes(c)).sort(), antes.filter((c) => c.startsWith('7:')).sort(), 'só os reis saíram: os sete originais continuam na mão');
       /* o transfer não gasta a vez: o humano continua jogando */
       await esperarMinhaVez(pagina);
       /* vanishing gradient: quatro Reis seguidos na rede */
@@ -241,6 +254,7 @@ describe('ações da mesa', () => {
       /* "Pré-treinado" (fazer um transfer learning) vale na hora da jogada, sem esperar a mão acabar */
       await naCena(pagina, 'M.darMao(cena.mao, 0, ["7E", "7C", "7P", "7O"]); cena.redesenhar();');
       await apertar(pagina, 'botaoTransfer');
+      await pagina.getByRole('button', { name: 'Trocar' }).click();
       const aviso = pagina.locator('#avisos .aviso-conquista');
       await aviso.waitFor({ timeout: 10000 });
       /* lê tudo de uma vez: o aviso some sozinho depois de alguns segundos */

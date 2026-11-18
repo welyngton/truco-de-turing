@@ -302,14 +302,22 @@ export function camadasDesfaziveis(mao, j) {
   return jogador.caminho.length - 1;
 }
 
-/** Valor que o jogador tem quatro vezes na mão (para transfer learning), ou null. */
-export function valorParaTransfer(mao, j) {
+/**
+ * Valores que o jogador tem quatro vezes ou mais na mão (quadras para o transfer learning), na
+ * ordem em que aparecem na mão. Vazio se já usou o transfer nesta mão. O transfer não é
+ * automático nem obrigatório: quem escolhe se troca e qual quadra é o jogador.
+ */
+export function valoresParaTransfer(mao, j) {
   const jogador = mao.jogadores[j];
-  if (jogador.transferUsado) return null;
-  const conta = {};
-  for (const c of jogador.mao) conta[c.valor] = (conta[c.valor] || 0) + 1;
-  for (const valor in conta) if (conta[valor] >= 4) return valor;
-  return null;
+  if (jogador.transferUsado) return [];
+  const conta = new Map();
+  for (const c of jogador.mao) conta.set(c.valor, (conta.get(c.valor) || 0) + 1);
+  return [...conta].filter(([, n]) => n >= 4).map(([valor]) => valor);
+}
+
+/** Primeira quadra da mão (para dicas e botão), ou null. */
+export function valorParaTransfer(mao, j) {
+  return valoresParaTransfer(mao, j)[0] ?? null;
 }
 
 /**

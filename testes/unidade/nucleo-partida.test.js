@@ -336,6 +336,21 @@ describe('aplicarJogada', () => {
     assert.notEqual(aplicarRestricoesDoBaralho(entrada), entrada);
   });
 
+  it('transfer learning: lista cada quadra da mão, uma de cada vez, e some depois de usado', async () => {
+    const { valoresParaTransfer, valorParaTransfer } = await import('../../src/nucleo/partida.js');
+    const mao = novaMao({ jogadores: [{ nome: 'A' }, { nome: 'B' }], semente: 3 });
+    const carta = (valor, naipe, id) => ({ id, valor, naipe });
+    mao.jogadores[0].mao = [carta('7', 'E', 1), carta('K', 'C', 2), carta('7', 'C', 3), carta('K', 'P', 4), carta('7', 'P', 5), carta('7', 'O', 6), carta('K', 'E', 7), carta('K', 'O', 8), carta('3', 'E', 9)];
+    assert.deepEqual(valoresParaTransfer(mao, 0), ['7', 'K']);
+    assert.equal(valorParaTransfer(mao, 0), '7');
+    mao.jogadores[0].mao = mao.jogadores[0].mao.slice(0, 5);
+    assert.deepEqual(valoresParaTransfer(mao, 0), []);
+    assert.equal(valorParaTransfer(mao, 0), null);
+    mao.jogadores[0].mao = [carta('7', 'E', 1), carta('7', 'C', 3), carta('7', 'P', 5), carta('7', 'O', 6)];
+    mao.jogadores[0].transferUsado = true;
+    assert.deepEqual(valoresParaTransfer(mao, 0), []);
+  });
+
   it('Power Bee-Ai embaralha a mão com o limbo depois de uma ação com cartas', () => {
     const mao = maoNova({ baralho: 'powerbi' }), j = mao.vez;
     const cartas = darMao(mao, j, ['5E', '5C', '5P', '5O', '3E']).slice(0, 4).map((c) => c.id);

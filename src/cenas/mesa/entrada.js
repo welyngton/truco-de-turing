@@ -5,12 +5,12 @@
  * Modos de seleção (`this.modo`): 'livre' (padrão), 'inicio' (escolher a carta que decide quem
  * começa), 'dropout' (escolher até onde desfazer) e 'pagarDropout' (escolher as cartas que pagam).
  */
-import { rotuloCarta } from '../../nucleo/cartas.js';
+import { rotuloCarta, NOME_VALOR } from '../../nucleo/cartas.js';
 import { nomeCamada } from '../../nucleo/rede.js';
-import { valorParaTransfer, podePassar, camadasDesfaziveis } from '../../nucleo/partida.js';
+import { valorParaTransfer, valoresParaTransfer, podePassar, camadasDesfaziveis } from '../../nucleo/partida.js';
 import { Motor } from '../../motor/engine.js';
 import { Som } from '../../interface/som.js';
-import { confirmar, abrirPainel } from '../../interface/paineis.js';
+import { confirmar, abrirPainel, escaparHtml } from '../../interface/paineis.js';
 import { abrirRegras } from '../../interface/telas/regras.js';
 import { abrirGrimorio } from '../../interface/telas/grimorio.js';
 import { abrirAjudaDasAcoes } from '../../interface/telas/ajudaDasAcoes.js';
@@ -138,7 +138,7 @@ export const metodosDeEntrada = {
     }
     if (id === 'transfer') {
       const v = valorParaTransfer(mao, eu);
-      return v ? 'Transfer learning: troca os quatro ' + v + ' da mão por quatro cartas do limbo. Uma vez por mão; não gasta a vez.' : 'Transfer learning precisa de quatro cartas iguais na mão (uma vez por mão).' + regra;
+      return v ? 'Transfer learning: troca quatro cartas iguais da mão (' + v + (valoresParaTransfer(mao, eu).length > 1 ? ' ou outra quadra, você escolhe' : '') + ') por quatro do limbo. Você confirma antes e pode cancelar. Uma vez por mão; não gasta a vez.' : 'Transfer learning precisa de quatro cartas iguais na mão (uma vez por mão).' + regra;
     }
     if (id === 'passar') return podePassar(mao, eu) ? 'Passar: encerra a sua vez sem jogar.' + regra : 'Passar não está disponível: você ainda tem jogada.' + regra;
     return qtd || this.modo !== 'livre' ? 'Limpar a seleção e voltar ao começo da jogada (Esc).' : 'Nada selecionado.';
@@ -217,12 +217,26 @@ export const metodosDeEntrada = {
     this.redesenhar();
   },
 
-  /** Botão Transfer: troca as quatro cartas iguais da mão. */
+  /**
+   * Botão Transfer learning: não é jogada obrigatória, então pergunta antes. Com uma quadra, pede
+   * a confirmação; com mais de uma, o jogador escolhe qual trocar (uma só por mão) ou cancela.
+   */
   fazerTransfer() {
-    const eu = this.quemVe, valor = valorParaTransfer(this.mao, eu);
-    if (!valor) return;
-    const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
-    this.executarJogada({ tipo: 'transfer', jogador: eu, cartas });
+    if (!this.ehVezDoHumano()) return;
+    const eu = this.quemVe, valores = valoresParaTransfer(this.mao, eu);
+    if (!valores.length) return;
+    const trocar = (valor) => {
+      const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
+      this.executarJogada({ tipo: 'transfer', jogador: eu, cartas });
+    };
+    const nome = (v) => NOME_VALOR[v] || v;
+    confirmar('Transfer learning?',
+      (valores.length > 1 ? 'Você tem mais de uma quadra na mão. Escolha qual trocar por quatro cartas do limbo (só uma por mão). ' : 'Trocar os quatro ' + escaparHtml(nome(valores[0])) + ' da mão por quatro cartas do limbo? ') +
+        'Uma vez por mão; não gasta a vez e você pode cancelar.',
+      [
+        { rotulo: 'Cancelar', classe: 'discreto' },
+        ...valores.map((v) => ({ rotulo: valores.length > 1 ? 'Trocar os quatro ' + nome(v) : 'Trocar', classe: 'vinho', acao: () => trocar(v) })),
+      ]);
   },
 
   /** Botão Passar a vez. */
