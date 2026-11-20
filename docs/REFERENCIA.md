@@ -677,6 +677,8 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 | `gravacao` | constante | Gravação na conta em andamento (uma por vez), ou null. |
 | `gravarDeNovo` | constante | Alguém pediu para gravar enquanto outra gravação corria? (vira uma gravação só, logo depois) |
 | `pendente` | constante | O progresso ficou sem subir por falta de conexão? Sobe sozinho quando a conexão voltar. |
+| `placarPublicado` | constante | Último placar publicado por conta (sem a hora), para só gravar de novo quando algo mudou. |
+| `publicarPlacar(app, conta, forcar = false)` | função (exportada) | Publica o resumo anônimo da conta em `placar/<uid>` (issue #154), se mudou desde a última vez. Falhar aqui não atrapalha o progresso: o placar só alimenta o painel de conquistas globais, e o painel publica de novo ao abrir. `forcar` ignora a comparação (o painel quer o dado de agora). |
 | `semConexao` | constante | O erro é de falta de conexão (e vale tentar de novo quando ela voltar)? |
 | `navegadorSemConexao` | constante | O navegador diz que está sem conexão? |
 | `sincronizar(app)` | função | Sobe o progresso para a conta juntando com o que já está lá (`juntarParaGravar`, numa transação), para um aparelho não apagar o que outro gravou. O que vier da conta (conquistas ganhas em outro aparelho) entra também neste aparelho, sem aviso. Uma gravação por vez: pedidos que chegam no meio viram uma gravação só, logo depois. Sem conexão, o progresso fica pendente, com um aviso só, e sobe sozinho quando a conexão volta (evento `online`, ligado em `usarConta`). |
@@ -821,7 +823,7 @@ Tela de avatares: o jogador escolhe o retrato que aparece no placar. Os bloquead
 
 ## `src/interface/telas/conquistas.js`
 
-Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela.
+Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela. Dois botões levam à página de estatísticas pessoais (estatisticas.js) e ao painel de conquistas globais (conquistasGlobais.js), issue #154.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -830,6 +832,30 @@ Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as 
 | `origemDasConquistas()` | função (exportada) | De quem são as conquistas da tela: da conta conectada (com o nome), da conta que ainda está sendo retomada, ou só deste aparelho. |
 | `conteudoHtml(p)` | função | Origem, resumo e lista de medalhas (a parte que muda quando a conta entra ou sai). |
 | `abrirConquistas(app)` | função (exportada) | Abre o quadro de conquistas. Se a conta entrar (ou sair) com o quadro aberto, ele se atualiza. |
+
+## `src/interface/telas/conquistasGlobais.js`
+
+Painel "Conquistas globais" (issue #154), aberto pela tela de Conquistas: - "Estatísticas globais": onde o jogador conectado fica entre os demais em cada número (posição, quanto % dos jogadores ele passa, o líder e a mediana); - "Raridade das conquistas": quantos % dos jogadores já desbloquearam cada medalha, das mais raras para as mais comuns. Os dados vêm do Firestore (`placar/`, online/placar.js): resumos anônimos, sem nome nem e-mail de ninguém. Só quem está conectado a uma conta vê e participa; as outras pessoas veem o convite para entrar. Ao abrir, o painel publica o placar do próprio jogador, para ele já aparecer.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `estatisticasGlobaisHtml(analise)` | função (exportada) | HTML da área "Estatísticas globais": o resumo da posição e a tabela por número. |
+| `raridadeHtml(analise)` | função (exportada) | HTML da área "Raridade das conquistas". |
+| `convite()` | função | Mensagem para quem ainda não pode ver o painel (sem conta ou sem Firebase). |
+| `abrirConquistasGlobais(app)` | função (exportada) | Abre o painel. Se a conta entrar (ou sair) com ele aberto, ele se atualiza. |
+
+## `src/interface/telas/estatisticas.js`
+
+Página de estatísticas pessoais (issue #154), no estilo das páginas de estatísticas dos jogos de mundo aberto: tudo o que o jogo contou sobre a pessoa, do tempo acumulado em partida às ações na rede, em seções. Aberta pela tela de Conquistas. Vale com ou sem conta: lê o progresso do aparelho, que com a conta conectada já está junto com o dela. `secoesDeEstatisticas` só monta os números (testável no Node); `abrirEstatisticas` desenha.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `NOMES_DAS_ACOES` | constante (exportada) | Nome de cada ação contada (`acao_jogada`): o tipo da jogada ou o efeito que a pilha teve. |
+| `favorito(tabela, nomes)` | função | Chave com mais jogadas numa tabela (`{ id: { jogadas, vencidas } }`) e o texto "nome · N jogadas · X% de vitórias". |
+| `secoesDeEstatisticas(progresso)` | função (exportada) | As seções da página: `[{ titulo, linhas: [[rótulo, valor]] }]`, com os valores já em texto. |
+| `secaoHtml(secao)` | função (exportada) | HTML de uma seção: título e tabela de pares rótulo/valor. |
+| `origemDasEstatisticas()` | função | De quem são os números: da conta conectada, da conta que ainda está sendo retomada, ou só deste aparelho. |
+| `abrirEstatisticas(app)` | função (exportada) | Abre a página de estatísticas pessoais. |
 
 ## `src/interface/telas/grimorio.js`
 
@@ -1198,17 +1224,20 @@ Estatísticas do jogador (issue #66): acessos, partidas, mãos, truco, salas onl
 |---|---|---|
 | `estatisticasIniciais()` | função (exportada) | Estatísticas vazias. |
 | `GRUPOS` | constante | Grupos de contadores simples (nome → número). |
+| `LIMITE_DE_PARTIDA_MS` | constante | Mais que isso numa partida (6 h) é relógio errado ou aba esquecida aberta: não entra no tempo. |
 | `TABELAS` | constante | Tabelas por chave (id → `{ jogadas, vencidas }`). |
 | `estatisticasDe(progresso)` | função (exportada) | Garante `progresso.estatisticas` completo (progressos antigos não têm; versões novas ganham campos) e o devolve. |
 | `tipoDeAparelho(janela = globalThis)` | função (exportada) | Celular ou computador, pelo jeito de apontar e pelo tamanho da tela. |
 | `registrarAcesso(progresso, { agora = Date.now()` | função (exportada) | Conta uma abertura do jogo. |
+| `somarTempo(e, duracaoMs)` | função | Soma a duração de uma partida (ms) ao tempo acumulado, ignorando valores que não fazem sentido. |
+| `registrarRecordes(r, dados)` | função | Recordes de uma mão que acabou: maior rede e a sequência de mãos vencidas. |
 | `contarEvento(progresso, nome, dados = {})` | função (exportada) | Atualiza os contadores a partir de um evento do jogo (os nomes de `EVENTOS`, em interface/analise.js). |
 | `mesclarEstatisticas(local, conta)` | função (exportada) | Junta as estatísticas do aparelho com as da conta, como o resto do progresso (contas.js): cada contador fica com o maior dos dois, para as mesmas partidas não contarem duas vezes; o primeiro acesso é o mais antigo e o último, o mais recente (com a versão e o aparelho dele). |
 | `resumoDoJogador(progresso)` | função (exportada) | Números de cabeçalho da conta, para listar e ordenar jogadores sem abrir cada estatística. |
 
 ## `src/online/firebase.js`
 
-Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte das salas pela internet (Firestore). O SDK só é baixado do CDN quando o projeto está configurado (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado. Dados no Firestore (ver firestore.rules): - `contas/{uid}`: o progresso, as estatísticas, o perfil e o resumo da conta (contas.js, `documentoDaConta`); cada conta lê e grava a própria, e administradores leem todas; - `admins/{uid}`: quem é administrador (documento criado à mão no console); - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação. Cada mensagem leva o `uid` de quem enviou (as regras conferem) e vence em `expira`; mensagens vencidas são apagadas por `limparMensagensVencidas` (issue #62).
+Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte das salas pela internet (Firestore). O SDK só é baixado do CDN quando o projeto está configurado (configuracao.js) e alguém usa uma dessas funções; sem configuração, nada aqui é carregado. Dados no Firestore (ver firestore.rules): - `contas/{uid}`: o progresso, as estatísticas, o perfil e o resumo da conta (contas.js, `documentoDaConta`); cada conta lê e grava a própria, e administradores leem todas; - `placar/{uid}`: o resumo anônimo da conta (só números e ids de conquistas), lido por quem está conectado para a raridade das conquistas e a posição entre os jogadores (placar.js); - `admins/{uid}`: quem é administrador (documento criado à mão no console); - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação. Cada mensagem leva o `uid` de quem enviou (as regras conferem) e vence em `expira`; mensagens vencidas são apagadas por `limparMensagensVencidas` (issue #62).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1225,8 +1254,23 @@ Firebase: contas (Google ou e-mail e senha), progresso na conta e o transporte d
 | `juntarNaConta(uid, montar)` | função (exportada) | Grava na conta juntando com o que já está lá, numa transação: lê o documento, monta o novo com `montar(naConta)` e grava. Se outro aparelho gravar no meio, o Firestore repete a transação com o documento novo. Sem conexão, falha (código `unavailable`), e quem chama tenta de novo depois. |
 | `ehAdministrador(uid)` | função (exportada) | A conta é administradora? Vale quem tem um documento em `admins/<uid>` (criado à mão no console do Firebase); as regras deixam cada conta ler só o próprio. Qualquer falha conta como "não", para a tela Jogadores simplesmente não aparecer. |
 | `listarContas()` | função (exportada) | Todas as contas, com o `uid` de cada uma (issue #66). As regras só deixam administradores ler; para as outras contas a leitura falha com `permission-denied`. |
+| `salvarPlacar(uid, placar)` | função (exportada) | Publica o resumo anônimo da conta em `placar/<uid>` (online/placar.js). As regras só deixam a própria conta gravar; qualquer conta conectada lê todos. |
+| `listarPlacar()` | função (exportada) | Todos os documentos do placar, com o `uid` de cada um (issue #154). |
 | `transporteFirebase(codigo)` | função (exportada) | Transporte de sala pelo Firestore: cada mensagem vira um documento em `salas/{codigo}/mensagens`; todos ouvem a coleção e recebem os documentos novos. Cada mensagem enviada leva o `uid` da conta conectada (as regras recusam outro) e a data em que vence (`expira`); a sala recebe o `uid` junto e o usa para saber quem é quem (sala.js). `aoFalhar(cb)` avisa quando o Firestore recusa ler ou gravar (regras, conexão), para a tela dizer ao jogador em vez de a sala ficar parada em silêncio. |
 | `limparMensagensVencidas(limite = LIMPEZA_POR_VEZ)` | função (exportada) | Apaga mensagens vencidas (`expira` no passado) de todas as salas, até `limite` por vez. As regras deixam qualquer conta achar e apagar só as vencidas. O Firestore do plano gratuito não tem a limpeza automática (TTL), então o jogo faz isso quando alguém abre uma sala pela internet. A margem de 10 minutos cobre o relógio do aparelho adiantado em relação ao do servidor. |
+
+## `src/online/placar.js`
+
+Placar global (issue #154): cada conta publica em `placar/<uid>` um resumo anônimo do próprio progresso (só números e os ids das conquistas, sem nome nem e-mail), e quem está conectado lê todos eles para ver a raridade das conquistas e a própria posição entre os jogadores. As contas em si (`contas/<uid>`) continuam privadas. Só lógica, sem navegador nem Firebase (testável no Node): montar o documento do placar a partir do progresso (`placarDoJogador`) e analisar os documentos lidos (`analisarPlacar`).
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `CAMPOS_DO_PLACAR` | constante (exportada) | Números do placar: chave no documento, nome na tela e como mostrar (`tempo` vira horas e minutos). São as chaves aceitas pelas regras do Firestore (firestore.rules, `placarValido`). |
+| `MAXIMO_DE_IDS` | constante (exportada) | Quantas conquistas cabem no documento (as regras aceitam até isso). |
+| `placarDoJogador(progresso, agora = Date.now()` | função (exportada) | Documento que a conta publica em `placar/<uid>`. |
+| `formatarCampo(campo, valor)` | função (exportada) | Texto do valor de um campo: números com separador de milhar e o tempo em horas e minutos. |
+| `formatarTempo(ms)` | função (exportada) | Duração em português: "2 h 05 min", "7 min 30 s" ou "45 s". |
+| `analisarPlacar(docs, uid)` | função (exportada) | Analisa os documentos do placar do ponto de vista de `uid`. - raridade de cada conquista: quantos jogadores a têm e a porcentagem (da mais rara à mais comum); - posição em cada campo: 1 + quantos têm valor maior (empate divide a posição), a porcentagem de jogadores que ficaram abaixo e o valor do líder e o da mediana. |
 
 ## `src/online/sala.js`
 

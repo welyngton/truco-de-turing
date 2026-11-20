@@ -17,6 +17,8 @@ const { abrirAvatares } = await import('../../src/interface/telas/avatares.js');
 const { abrirRegras } = await import('../../src/interface/telas/regras.js');
 const { abrirGrimorio, htmlDoVerbete } = await import('../../src/interface/telas/grimorio.js');
 const { abrirConquistas, medalhaHtml } = await import('../../src/interface/telas/conquistas.js');
+const { abrirEstatisticas } = await import('../../src/interface/telas/estatisticas.js');
+const { abrirConquistasGlobais } = await import('../../src/interface/telas/conquistasGlobais.js');
 const { abrirSobre } = await import('../../src/interface/telas/sobre.js');
 const { abrirMods, REPOSITORIO, ARQUIVOS_DE_MODS } = await import('../../src/interface/telas/mods.js');
 const { abrirRevisao } = await import('../../src/interface/telas/revisao.js');
@@ -431,6 +433,35 @@ describe('telas', () => {
     assert.ok($('#c-retrato canvas'));
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
     assert.match(medalhaHtml(CONQUISTAS[0], false), /cadeado|bloquead/);
+  });
+  it('conquistas: botões levam à página de estatísticas e ao painel de conquistas globais (#154)', async () => {
+    const app = appFalso();
+    abrirConquistas(app);
+    assert.equal($('#c-estatisticas').textContent, 'Estatísticas');
+    assert.equal($('#c-globais').textContent, 'Conquistas globais');
+    clicar($('#c-estatisticas'));
+    assert.equal($$('.camada').length, 2, 'abre por cima, sem fechar o quadro');
+    assert.match($('.folha.estatisticas h2').textContent, /Estatísticas/);
+    assert.deepEqual($$('.estatisticas-secao h3').map((h) => h.textContent), ['Tempo', 'Partidas', 'Mãos', 'Ações na rede', 'Truco e partidas online', 'Favoritos', 'Conquistas e biblioteca']);
+    assert.match($('.folha.estatisticas .conquistas-origem').textContent, /Estatísticas só deste aparelho|Estatísticas deste aparelho/);
+    assert.match($('.estatisticas-secao dl').textContent, /Tempo acumulado em partida/);
+    clicar($('.folha.estatisticas [data-fechar]'));
+    assert.equal($$('.camada').length, 1);
+    clicar($('#c-globais'));
+    assert.equal($$('.camada').length, 2);
+    assert.match($('.conquistas-globais h2').textContent, /Conquistas globais/);
+    clicar($('.conquistas-globais [data-fechar]'));
+    assert.equal($$('.camada').length, 1);
+  });
+  it('estatísticas e conquistas globais abrem sozinhas; sem conta, o painel global convida a entrar', async () => {
+    abrirEstatisticas(appFalso());
+    assert.equal($$('.estatisticas-secao').length, 7);
+    paineis.fecharTodos();
+    abrirConquistasGlobais(appFalso());
+    await esperar(30);
+    assert.ok($('.global-conteudo').textContent.length > 20, 'diz o que fazer');
+    assert.equal($('#g-raridade'), null, 'sem conta não há comparação');
+    assert.equal($('#g-estatisticas'), null);
   });
   it('sobre: versão, disciplina, professor e autores', () => {
     abrirSobre();

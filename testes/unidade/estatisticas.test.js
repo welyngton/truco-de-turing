@@ -28,8 +28,8 @@ describe('estatísticas do jogador', () => {
     const p = {};
     assert.equal(registrarAcesso(p, { agora: 1000, versao: '2.4.7', aparelho: 'computador' }), 1);
     assert.equal(registrarAcesso(p, { agora: 5000, versao: '2.5.0', aparelho: 'celular' }), 2);
-    assert.deepEqual({ ...p.estatisticas, partidas: 0, maos: 0, trucos: 0, online: 0, porOponente: 0, porBaralho: 0, porTerreno: 0 },
-      { acessos: 2, primeiroAcesso: 1000, ultimoAcesso: 5000, versao: '2.5.0', aparelho: 'celular', partidas: 0, maos: 0, trucos: 0, online: 0, porOponente: 0, porBaralho: 0, porTerreno: 0 });
+    assert.deepEqual({ ...p.estatisticas, partidas: 0, maos: 0, trucos: 0, online: 0, acoes: 0, recordes: 0, porOponente: 0, porBaralho: 0, porTerreno: 0 },
+      { acessos: 2, primeiroAcesso: 1000, ultimoAcesso: 5000, versao: '2.5.0', aparelho: 'celular', tempoDePartida: 0, partidas: 0, maos: 0, trucos: 0, online: 0, acoes: 0, recordes: 0, porOponente: 0, porBaralho: 0, porTerreno: 0 });
   });
 
   it('tipo de aparelho: computador, celular ou tablet', () => {

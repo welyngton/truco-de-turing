@@ -37,6 +37,21 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm run build
+      # Regras do Firestore (firestore.rules): o painel de conquistas globais depende da coleção
+      # `placar`. Roda antes do site, com a mesma conta de serviço; se ela não tiver permissão para
+      # publicar regras (papel "Firebase Rules Admin"), o site sobe mesmo assim e o aviso aponta o
+      # passo manual: Firestore > Regras, no console do Firebase, colando firestore.rules.
+      - name: Publicar as regras do Firestore
+        env:
+          CONTA_DE_SERVICO: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$CONTA_DE_SERVICO" > "$RUNNER_TEMP/conta-de-servico.json"
+          if GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/conta-de-servico.json" npx --yes firebase-tools@15 deploy --only firestore:rules --project truco-e26e8-703bc --non-interactive; then
+            echo "Regras do Firestore publicadas."
+          else
+            echo "::warning title=Regras do Firestore::Não foi possível publicar firestore.rules por aqui. Publique à mão em Firestore > Regras (console do Firebase) ou dê o papel Firebase Rules Admin à conta de serviço."
+          fi
+          rm -f "$RUNNER_TEMP/conta-de-servico.json"
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

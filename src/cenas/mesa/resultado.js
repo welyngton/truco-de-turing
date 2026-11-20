@@ -102,7 +102,7 @@ export const metodosDoResultado = {
       soma: this.pontuacoes[eu] ? this.pontuacoes[eu].total : 0, dicas: this.dicasNaMao ? 1 : 0,
     });
     if (!partida.encerrada) return;
-    const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0 };
+    const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0, duracaoMs: this.partidaIniciadaEm ? Math.max(0, Date.now() - this.partidaIniciadaEm) : 0 };
     registrarEvento(EVENTOS.jogoFinalizado, { ...final, venceu: venceu ? 1 : 0 });
     registrarEvento(venceu ? EVENTOS.vitoria : EVENTOS.derrota, final);
   },

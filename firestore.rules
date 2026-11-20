@@ -17,6 +17,35 @@ service cloud.firestore {
       allow read: if administrador();
     }
 
+    // Placar global (issue #154): resumo anônimo de cada conta, só números e a lista de ids das
+    // conquistas, sem nome nem e-mail. Quem está conectado lê todos (raridade das conquistas e a
+    // própria posição); cada conta grava só o próprio e ninguém apaga.
+    function placarValido() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['conquistas', 'maosVencidas', 'maos', 'partidasVencidas', 'pontos', 'maiorRede',
+          'maiorSequencia', 'dropouts', 'vitoriasZen', 'trucos', 'verbetes', 'tempo', 'ids', 'atualizado'])
+        && d.keys().hasAll(['conquistas', 'ids'])
+        && d.conquistas is int && d.conquistas >= 0
+        && d.ids is list && d.ids.size() <= 200
+        && (!('maos' in d) || (d.maos is int && d.maos >= 0))
+        && (!('maosVencidas' in d) || (d.maosVencidas is int && d.maosVencidas >= 0))
+        && (!('partidasVencidas' in d) || (d.partidasVencidas is int && d.partidasVencidas >= 0))
+        && (!('pontos' in d) || (d.pontos is int && d.pontos >= 0))
+        && (!('maiorRede' in d) || (d.maiorRede is int && d.maiorRede >= 0))
+        && (!('maiorSequencia' in d) || (d.maiorSequencia is int && d.maiorSequencia >= 0))
+        && (!('dropouts' in d) || (d.dropouts is int && d.dropouts >= 0))
+        && (!('vitoriasZen' in d) || (d.vitoriasZen is int && d.vitoriasZen >= 0))
+        && (!('trucos' in d) || (d.trucos is int && d.trucos >= 0))
+        && (!('verbetes' in d) || (d.verbetes is int && d.verbetes >= 0))
+        && (!('tempo' in d) || (d.tempo is int && d.tempo >= 0))
+        && (!('atualizado' in d) || d.atualizado is int);
+    }
+    match /placar/{uid} {
+      allow read: if conectado();
+      allow create, update: if conectado() && request.auth.uid == uid && placarValido();
+      allow delete: if false;
+    }
+
     // Cada conta só consegue saber se ela mesma é administradora. Ninguém grava pelo jogo.
     match /admins/{uid} {
       allow get: if conectado() && request.auth.uid == uid;
