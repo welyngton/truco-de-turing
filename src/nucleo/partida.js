@@ -27,6 +27,7 @@
  *   eventos: Evento[],                         // fila consumida pela interface para animar
  *   registro: string[],                        // texto do histórico de jogadas
  *   historico: number[][],                     // soma de cada rede a cada jogada (curva de treino)
+ *   lances: Lance[],                           // o que cada jogador fez, em ordem (ver "Lances" abaixo)
  *   resultado: { somas, vencedor, motivo, travados } | null,
  *   simulacao: boolean,                        // em simulações, não gera eventos nem textos
  * }
@@ -35,6 +36,15 @@
  * Jogador: `{ indice, nome, tipo: 'humano'|'oponente', oponente, mao, caminho, situacao, dropouts,
  * acoesUsadas, transferUsado, cartaInicial, estatisticas }`. `situacao` é 'construindo',
  * 'concluida', 'earlystop', 'overflow' ou 'travada' (ficou sem neurônio livre na camada seguinte).
+ *
+ * ## Lances
+ * Cada jogada aplicada vira um lance em `mao.lances` (fora das simulações), para as conquistas lerem o que
+ * aconteceu na mão: `{ tipo, jogador, camada, alvo, proprio, cartas, consomeVez, valor, camadas, revelouMaior }`.
+ * `tipo` é 'ativar', 'tunagem', 'overfit', 'earlystop', 'stackoverflow', 'dropout', 'transfer', 'passar' ou
+ * 'travada' (rede finalizada por falta de neurônio livre; não é jogada de ninguém). `camada` é a do neurônio
+ * (na travada, a camada que faltou), `alvo` o dono da rede atingida (o próprio jogador na tunagem), `cartas` quantas
+ * cartas da mão a jogada gastou, `valor` os pontos do neurônio ativado depois de todos os bônus, `camadas`
+ * as camadas desfeitas pelo dropout e `revelouMaior` se o neurônio ativado depois dele vale mais que o desfeito.
  *
  * ## Jogadas
  * `{ tipo: 'inicio', jogador, carta }`, `{ tipo: 'ativar', jogador, neuronio }`,
@@ -121,7 +131,7 @@ function montar(estadoMotor, config, jogadores, simulacao, cartas) {
     camadas: [], neuronios: {}, jogadores,
     limbo: [], cemiterio: [],
     vez: 0, primeiro: 0, rodada: 1, turno: 0, vento: null,
-    fase: 'inicio', eventos: [], registro: [], historico: [], resultado: null, simulacao,
+    fase: 'inicio', eventos: [], registro: [], historico: [], lances: [], dropoutsPendentes: {}, resultado: null, simulacao,
   };
   estadoMotor.layers.forEach((camada, c) => {
     mao.camadas.push(camada.map((_, p) => {
@@ -231,6 +241,13 @@ function anotar(mao, texto) {
 /** Soma atual da rede de cada jogador, pelo motor. */
 function somas(mao) {
   return mao.jogadores.map((_, j) => motor.score(mao.estadoMotor, j).total);
+}
+
+/** Guarda um lance da mão para as conquistas (ignorado em simulação). Devolve o lance. */
+function lance(mao, dados) {
+  const l = { camada: -1, alvo: -1, proprio: false, cartas: 0, consomeVez: true, ...dados };
+  if (!mao.simulacao) mao.lances.push(l);
+  return l;
 }
 
 /** Guarda a soma atual de cada rede para a curva de treino. */
@@ -463,6 +480,37 @@ function narrarEmpilhamento(mao, jogada, antes) {
   emitir(mao, { tipo: efeito.tipo, jogador: j, dono, neuronio: jogada.neuronio, cartas: removidas, proprio: efeito.proprio });
 }
 
+/** Lance de uma ativação; se vinha de um dropout, diz se o neurônio novo vale mais que o desfeito. */
+function guardarAtivacao(mao, jogada) {
+  if (mao.simulacao) return;
+  const j = jogada.jogador, neuronio = mao.neuronios[jogada.neuronio];
+  const item = motor.score(mao.estadoMotor, j).items[neuronio.camada];
+  const valor = item ? item.subtotal : 0;
+  lance(mao, { tipo: 'ativar', jogador: j, camada: neuronio.camada, alvo: j, valor });
+  const pendente = mao.dropoutsPendentes[j];
+  if (pendente && pendente.camada === neuronio.camada) pendente.lance.revelouMaior = valor > pendente.valor;
+  delete mao.dropoutsPendentes[j];
+}
+
+/** Lance de uma tunagem ou de um ataque (overfit, early stop ou stack overflow, no outro ou em si). */
+function guardarEmpilhamento(mao, jogada, antes) {
+  if (mao.simulacao || !antes.efeito) return;
+  const { efeito, dono, jogadas } = antes;
+  lance(mao, {
+    tipo: efeito.tipo, jogador: jogada.jogador, alvo: dono,
+    camada: mao.neuronios[jogada.neuronio].camada, proprio: efeito.proprio, cartas: jogadas.length,
+  });
+}
+
+/** Lance de um dropout, que fica pendente até o jogador ativar um neurônio no lugar do desfeito. */
+function guardarDropout(mao, jogada, antes) {
+  if (mao.simulacao) return;
+  const j = jogada.jogador;
+  const camadas = antes.desfeitos.map((id) => mao.neuronios[id].camada).sort((a, b) => a - b);
+  const l = lance(mao, { tipo: 'dropout', jogador: j, alvo: j, camada: camadas[0], camadas, cartas: jogada.n, consomeVez: false, revelouMaior: false });
+  mao.dropoutsPendentes[j] = { lance: l, camada: camadas[0], valor: antes.valores[camadas[0]] };
+}
+
 /** Fim da mão: resultado no formato da interface. */
 function encerrar(mao) {
   const estadoMotor = mao.estadoMotor;
@@ -521,6 +569,8 @@ export function aplicarJogada(mao, jogada) {
   } else if (jogada.tipo === 'dropout') {
     antes.pagas = (jogada.pagamento || []).map(carta);
     antes.desfeitos = jogador.caminho.slice(-jogada.n).reverse();
+    /* pontos de cada neurônio da rede antes do dropout, para comparar com o que entra no lugar (conquistas) */
+    if (!mao.simulacao) antes.valores = motor.score(estadoMotor, j).items.map((item) => item.subtotal);
   } else if (jogada.tipo === 'transfer') {
     antes.saem = (jogada.cartas || []).map(carta);
     antes.maoAntes = jogador.mao.length;
@@ -539,9 +589,10 @@ export function aplicarJogada(mao, jogada) {
     case 'inicio':
       if (mao.fase !== 'inicio') anunciarInicio(mao);
       return mao;
-    case 'ativar': narrarAtivacao(mao, jogada); break;
-    case 'empilhar': narrarEmpilhamento(mao, jogada, antes); break;
+    case 'ativar': narrarAtivacao(mao, jogada); guardarAtivacao(mao, jogada); break;
+    case 'empilhar': narrarEmpilhamento(mao, jogada, antes); guardarEmpilhamento(mao, jogada, antes); break;
     case 'dropout':
+      guardarDropout(mao, jogada, antes);
       jogador.acoesUsadas++;
       emitir(mao, { tipo: 'dropout', jogador: j, neuronios: antes.desfeitos, pagas: antes.pagas });
       anotar(mao, jogador.nome + ' fez dropout (GatoNet) de ' + jogada.n + ' camada(s): os neurônios foram para o cemitério.');
@@ -550,11 +601,13 @@ export function aplicarJogada(mao, jogada) {
       const entram = jogador.mao.length - (antes.maoAntes - 4);
       jogador.acoesUsadas++;
       jogador.estatisticas.transfer++;
+      lance(mao, { tipo: 'transfer', jogador: j, cartas: 4, consomeVez: false });
       emitir(mao, { tipo: 'transfer', jogador: j, saem: antes.saem, entram });
       anotar(mao, jogador.nome + ' fez TRANSFER LEARNING: trocou quatro ' + antes.saem[0].valor + ' por ' + entram + ' carta(s) do limbo.');
       break;
     }
     case 'passar':
+      lance(mao, { tipo: 'passar', jogador: j });
       emitir(mao, { tipo: 'passe', jogador: j });
       anotar(mao, jogador.nome + ' passou a vez.');
       break;
@@ -566,6 +619,7 @@ export function aplicarJogada(mao, jogada) {
   }
   mao.jogadores.forEach((outro, i) => {
     if (outro.situacao !== 'travada' || antes.finalizadas[i]) return;
+    lance(mao, { tipo: 'travada', jogador: i, camada: outro.caminho.length, consomeVez: false });
     emitir(mao, { tipo: 'travada', jogador: i, camada: outro.caminho.length });
     anotar(mao, outro.nome + ' ficou sem neurônio livre na camada ' + nomeCamada(outro.caminho.length, mao.camadas.length) + ': a rede foi finalizada.');
   });

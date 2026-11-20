@@ -13,7 +13,7 @@ import { mesclarEstatisticas, resumoDoJogador } from './estatisticas.js';
 export const TEXTO_DA_CONTA = 'Quem entra numa conta tem guardados nela, no Firebase do jogo: nome, e-mail, conquistas, verbetes lidos, avatar e as estatísticas de jogo (acessos, partidas, mãos e vitórias). Os responsáveis pelo jogo conseguem ver esses dados. Sem conta, tudo isso fica só neste aparelho.';
 
 /** Contadores que só crescem: na mescla vale o maior. */
-const CONTADORES = ['vitorias', 'maos', 'dropouts', 'vitoriasZen'];
+const CONTADORES = ['vitorias', 'maos', 'dropouts', 'vitoriasZen', 'pontos'];
 /** Conjuntos marcados (id → valor): na mescla vale a união. */
 const CONJUNTOS = ['lidos', 'terrenos', 'baralhos', 'arquiteturas'];
 

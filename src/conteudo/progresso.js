@@ -12,7 +12,7 @@ const CHAVE_ANTIGA = 'truco-de-turing:v1';
 /** Progresso vazio. */
 function progressoInicial() {
   return {
-    vitorias: 0, maos: 0, dropouts: 0, vitoriasZen: 0,
+    vitorias: 0, maos: 0, dropouts: 0, vitoriasZen: 0, pontos: 0,
     verbetesLidos: 0, lidos: {}, terrenos: {}, baralhos: {}, arquiteturas: {}, desbloqueadas: {}, avatar: 'p1',
     mudo: false, musica: true, musicaEscolhida: false, tutorialVisto: false, opcoes: null,
   };

@@ -20,7 +20,7 @@ jobs:
     # o commit de versão do robô não precisa testar de novo
     if: github.event_name == 'pull_request' || !startsWith(github.event.head_commit.message, 'Versão ')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

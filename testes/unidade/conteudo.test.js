@@ -105,6 +105,7 @@ describe('conquistas.js', () => {
   /** Contexto mínimo de fim de mão; `mudar` ajusta o que o teste precisa. */
   function contexto(mudar = () => {}) {
     const mao = maoAteOFim();
+    mao.lances = []; /* as conquistas dos lances partem de uma mão sem lances, sem depender do sorteio */
     const ctx = {
       mao, eu: 0, venceu: false, completa: true, partida: novaPartida(12), venceuPartida: false, valorDaMao: 1, oponenteCorreu: false,
       opcoes: { oponente: 'guloso' },
@@ -113,6 +114,11 @@ describe('conquistas.js', () => {
     mudar(ctx);
     return ctx;
   }
+  /** Lance da mão (ver nucleo/partida.js), com os campos que não importam no valor padrão. */
+  const L = (tipo, jogador, extra = {}) => ({ tipo, jogador, camada: -1, alvo: -1, proprio: false, cartas: 0, consomeVez: true, ...extra });
+  const ataque = (tipo, camada, cartas = 1) => L(tipo, 0, { alvo: 1, camada, cartas });
+  const dropout = (camadas, revelouMaior = false) => L('dropout', 0, { alvo: 0, camada: camadas[0], camadas, cartas: camadas.length, consomeVez: false, revelouMaior });
+  const reason = (c, ...motivos) => motivos.forEach((m, i) => { c.mao.estadoMotor.nets[i].reason = m; });
   /** Todas as conquistas desbloqueadas, menos a final e as de `faltando`. */
   const todasMenos = (...faltando) => Object.fromEntries(CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL && !faltando.includes(c.id)).map((c) => [c.id, 1]));
   /** Para cada conquista: um contexto em que ela vale e outro em que não vale. */
@@ -155,6 +161,72 @@ describe('conquistas.js', () => {
     bigdata: [(c) => { c.venceu = true; c.mao.config.baralhos = 3; }, (c) => { c.venceu = true; c.mao.config.baralhos = 2; }],
     profunda: [(c) => { c.venceu = true; c.mao.config.arquitetura = 'profunda'; }, (c) => { c.venceu = true; c.mao.config.arquitetura = 'larga'; }],
     arquiteto: [(c) => { c.progresso.arquiteturas = { padrao: true, curta: true, profunda: true, larga: true }; }, (c) => { c.progresso.arquiteturas = { padrao: true, curta: true, profunda: true }; }],
+    /* conquistas sugeridas pelo professor Peng (issue #117) */
+    fio: [(c) => { c.mao.estadoMotor.tiebreak = 'naipe'; c.mao.estadoMotor.ranking = [1, 0]; }, (c) => { c.mao.estadoMotor.tiebreak = null; }],
+    validacao: [
+      (c) => { c.venceu = true; c.mao.lances = [dropout([1, 2]), dropout([3]), dropout([5, 4])]; },
+      (c) => { c.venceu = true; c.mao.lances = [dropout([1, 2]), dropout([3]), dropout([4])]; },
+    ],
+    coldstart: [(c) => { c.mao.lances = [L('stackoverflow', 1, { alvo: 0, camada: 1, cartas: 2 })]; }, (c) => { c.mao.lances = [L('stackoverflow', 1, { alvo: 0, camada: 2, cartas: 2 })]; }],
+    featureeng: [
+      (c) => { c.venceu = true; c.mao.config.arquitetura = 'profunda'; c.mao.jogadores[0].estatisticas.tunagens = 5; },
+      (c) => { c.venceu = true; c.mao.config.arquitetura = 'profunda'; c.mao.jogadores[0].estatisticas.tunagens = 4; },
+    ],
+    uno: [
+      (c) => { c.mao.lances = [L('tunagem', 1, { alvo: 1, camada: 2, cartas: 1 }), ataque('stackoverflow', 2, 2)]; },
+      (c) => { c.mao.lances = [L('tunagem', 1, { alvo: 1, camada: 2, cartas: 1 }), L('ativar', 1, { camada: 3 }), ataque('stackoverflow', 3, 2)]; },
+    ],
+    namekusei: [
+      (c) => { c.venceuPartida = true; c.partidaIniciadaEm = Date.now() - 4 * 60 * 1000; },
+      (c) => { c.venceuPartida = true; c.partidaIniciadaEm = Date.now() - 6 * 60 * 1000; },
+    ],
+    semspoon: [
+      (c) => { c.mao.lances = [L('ativar', 1, { camada: 0 }), L('ativar', 1, { camada: 1 }), ataque('stackoverflow', 1, 3)]; },
+      (c) => { c.mao.lances = [L('ativar', 1, { camada: 1 }), ataque('overfit', 1), L('ativar', 1, { camada: 1 }), ataque('stackoverflow', 1, 3)]; },
+    ],
+    cincoreis: [
+      (c) => { c.venceuPartida = true; c.mao.jogadores = Array(5).fill(c.mao.jogadores[0]); },
+      (c) => { c.venceuPartida = true; c.mao.jogadores = Array(4).fill(c.mao.jogadores[0]); },
+    ],
+    semquerer: [
+      (c) => { c.venceu = true; c.mao.lances = [dropout([2], true), dropout([3], true), dropout([2, 1], true)]; },
+      (c) => { c.venceu = true; c.mao.lances = [dropout([2], true), dropout([3], false), dropout([2, 1], true)]; },
+    ],
+    uniao: [(c) => { c.mao.lances = [L('travada', 1, { camada: 3, consomeVez: false })]; }, (c) => { c.mao.lances = [L('travada', 1, { camada: 6, consomeVez: false })]; }],
+    bias: [
+      (c) => { c.mao.lances = [ataque('overfit', 2), dropout([1]), ataque('overfit', 2), L('transfer', 0, { cartas: 4, consomeVez: false }), ataque('overfit', 3)]; },
+      (c) => { c.mao.lances = [ataque('overfit', 2), L('ativar', 0, { camada: 1 }), ataque('overfit', 2), ataque('overfit', 3)]; },
+    ],
+    exodia: [
+      (c) => { c.venceu = true; c.mao.estadoMotor.hands[0] = [[1, 'S'], [10, 'S'], [11, 'S'], [12, 'S'], [13, 'S'], [5, 'H']].map(([rank, suit], id) => ({ id, rank, suit })); },
+      (c) => { c.venceu = true; c.mao.estadoMotor.hands[0] = [[1, 'S'], [10, 'S'], [11, 'S'], [12, 'S'], [13, 'H']].map(([rank, suit], id) => ({ id, rank, suit })); },
+    ],
+    dominio: [
+      (c) => { c.mao.estadoMotor.hands[0] = []; c.mao.lances = [ataque('overfit', 2, 1), ataque('earlystop', 2, 2), ataque('stackoverflow', 3, 2)]; },
+      (c) => { c.mao.estadoMotor.hands[0] = []; c.mao.lances = [ataque('overfit', 2, 1), L('tunagem', 0, { alvo: 0, camada: 2, cartas: 1 }), ataque('stackoverflow', 3, 3)]; },
+    ],
+    redencao: [
+      (c) => { c.mao.lances = [L('stackoverflow', 0, { alvo: 0, proprio: true, camada: 5, cartas: 3 })]; },
+      (c) => { c.mao.lances = [L('stackoverflow', 0, { alvo: 0, proprio: true, camada: 4, cartas: 3 })]; },
+    ],
+    balas: [
+      (c) => { c.venceu = true; c.mao.lances = [L('travada', 0, { camada: 2, consomeVez: false })]; },
+      (c) => { c.venceu = true; c.mao.lances = [L('travada', 1, { camada: 2, consomeVez: false })]; },
+    ],
+    diganome: [(c) => { c.progresso.pontos = 737000; }, (c) => { c.progresso.pontos = 736999; }],
+    portal: [
+      (c) => { c.venceu = true; c.mao.resultado.somas = [101, 0]; c.mao.jogadores[0].estatisticas.overflows = 1; },
+      (c) => { c.venceu = true; c.mao.resultado.somas = [100, 0]; c.mao.jogadores[0].estatisticas.overflows = 1; },
+    ],
+    alianca: [
+      (c) => { c.venceu = true; c.mao.lances = [L('tunagem', 0, { alvo: 0, camada: 2, cartas: 1 }), dropout([2]), L('transfer', 0, { cartas: 4, consomeVez: false }), ataque('overfit', 2), ataque('earlystop', 3, 2)]; },
+      (c) => { c.venceu = true; c.mao.lances = [L('tunagem', 0, { alvo: 0, camada: 2, cartas: 1 }), dropout([2]), ataque('overfit', 2), L('earlystop', 0, { alvo: 0, proprio: true, camada: 3, cartas: 2 })]; },
+    ],
+    doismais: [(c) => { reason(c, 'earlystop', 'auto-stackoverflow'); }, (c) => { reason(c, 'earlystop', 'output'); }],
+    virada: [
+      (c) => { c.venceu = true; c.mao.historico = [[0, 0], [10, 70], [80, 75]]; },
+      (c) => { c.venceu = true; c.mao.historico = [[0, 0], [10, 69], [80, 75]]; },
+    ],
     /* conquista final: todas as outras desbloqueadas; faltando uma, não vale */
     convergencia: [(c) => { c.progresso.desbloqueadas = todasMenos(); }, (c) => { c.progresso.desbloqueadas = todasMenos('zap'); }],
   };

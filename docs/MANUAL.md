@@ -403,6 +403,17 @@ conferida logo depois de cada jogada e o aviso sobe na hora. Toda conquista nova
 A conquista final (`CONQUISTA_FINAL`, "Convergência global") conta todas as outras sozinha (`progressoDaFinal`):
 a conquista nova entra na conta sem mais nada. Mantenha a final no fim de `CONQUISTAS`.
 
+**Conquistas que dependem do que aconteceu na mão.** O motor decide as regras, mas o que cada jogador *fez* e
+*em que ordem* fica em `mao.lances` (`nucleo/partida.js`, seção "Lances"): um lance por jogada aplicada, com
+`tipo` (`ativar`, `tunagem`, `overfit`, `earlystop`, `stackoverflow`, `dropout`, `transfer`, `passar` ou `travada`),
+`jogador`, `camada`, `alvo`, `proprio`, `cartas` gastas, `consomeVez` e, nas ativações, o `valor` do neurônio depois de
+todos os bônus; o dropout guarda as `camadas` desfeitas e `revelouMaior`, que diz se o neurônio ativado depois dele vale
+mais que o desfeito. Simulações (`copiarMao`) não guardam lances. O teste da conquista lê essa lista (ver `lancesDa`,
+`meusLances` e `ataqueMeu` em `conteudo/conquistas.js`); a soma da rede a cada jogada continua em `mao.historico`.
+Contadores que atravessam as mãos ficam no progresso (`pontos`, para "Diga meu nome") e a hora de início da partida
+em `partidaIniciadaEm` (guardada na cena da mesa e passada no contexto; para "Adeus, Namekusei"). Os testes com jogadas reais estão em
+`testes/unidade/conquistas-lances.test.js`; os casos de cada conquista, em `conteudo.test.js`.
+
 ### Novo verbete do Glossário
 Acrescente em `VERBETES` (`conteudo/grimorio.js`) `{ id, titulo, categoria, conceito, equacao, noJogo, limite }`
 (e, se quiser, `figura`, com o nome de uma figura de `conteudo/figurasDaBiblioteca.js`, e `fonte`). A equação é

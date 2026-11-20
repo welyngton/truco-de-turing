@@ -7,6 +7,7 @@
 import { carregarProgresso, salvarProgresso } from './conteudo/progresso.js';
 import { CONQUISTAS, GRADUACOES, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA, CONQUISTA_FINAL, progressoDaFinal } from './conteudo/conquistas.js';
 import { VERBETES } from './conteudo/grimorio.js';
+import { pontuarRede } from './nucleo/pontuacao.js';
 import { Som } from './interface/som.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, avisarConquista } from './interface/paineis.js';
@@ -165,6 +166,8 @@ export const Aplicacao = {
     const jogador = ctx.mao.jogadores[ctx.eu];
     p.maos++;
     p.dropouts += jogador.dropouts;
+    /* "Diga meu nome": a soma da rede de cada mão entra no total de pontos de todas as mãos */
+    p.pontos = (p.pontos || 0) + Math.round(pontuarRede(ctx.mao, ctx.eu).total);
     if (ctx.venceu) {
       p.vitorias++;
       if (ctx.completa && jogador.acoesUsadas === 0) p.vitoriasZen++;

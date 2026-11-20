@@ -6,9 +6,13 @@
  * ```
  * { mao, eu, venceu, completa,          // estado final da mão, índice do humano, resultado, se foi jogada até o fim
  *   partida, venceuPartida, valorDaMao,  // camada de truco
+ *   partidaIniciadaEm,                   // hora (ms) em que a partida começou, para a partida rápida
  *   oponenteCorreu, opcoes,              // se o oponente correu do truco; opções do menu
  *   progresso }                          // contadores acumulados (ver progresso.js)
  * ```
+ * Os testes das conquistas novas leem também `mao.lances` (o que cada jogador fez, em ordem; ver nucleo/partida.js)
+ * e `partidaIniciadaEm`.
+ *
  * As de `VALEM_NA_HORA` também são avaliadas logo depois de cada jogada, no meio da mão, com um
  * contexto menor: `{ mao, eu, opcoes, progresso }`.
  */
@@ -16,7 +20,7 @@ import { pontuarRede } from '../nucleo/pontuacao.js';
 import { TERRENOS } from '../nucleo/terrenos.js';
 import { BARALHOS } from '../nucleo/baralhos.js';
 import { VERBETES } from './grimorio.js';
-import { ARQUITETURAS } from '../nucleo/rede.js';
+import { ARQUITETURAS, TAMANHO_MAO } from '../nucleo/rede.js';
 
 /**
  * Graduações com nome e cor da medalha. `especial` ganha medalha furta-cor e aviso maior: é a
@@ -48,6 +52,25 @@ export function progressoDaFinal(desbloqueadas = {}) {
 
 /** Atalho: dados do jogador humano na mão encerrada. */
 const meu = (c) => c.mao.jogadores[c.eu];
+
+/* ---- leitura dos lances da mão (mao.lances, ver nucleo/partida.js) ---- */
+
+/** Ataques ao neurônio de alguém: overfit, early stop e stack overflow. */
+const ATAQUES = ['overfit', 'earlystop', 'stackoverflow'];
+/** Motivos de uma rede ter parado por early stop ou stack overflow, do adversário ou da própria. */
+const PARADAS = ['earlystop', 'stackoverflow', 'auto-earlystop', 'auto-stackoverflow'];
+/** Lances da mão (vazio se a mão não os guardou). */
+const lancesDa = (c) => c.mao.lances || [];
+/** Lances do jogador humano. */
+const meusLances = (c) => lancesDa(c).filter((l) => l.jogador === c.eu);
+/** Ataque do jogador a um neurônio de outro jogador (`tipo` opcional). */
+const ataqueMeu = (c, l, tipo) => l.jogador === c.eu && l.alvo !== c.eu && (tipo ? l.tipo === tipo : ATAQUES.includes(l.tipo));
+/** Camada oculta da mesa (nem entrada nem saída)? */
+const ehOcultaDaMesa = (c, camada) => camada > 0 && camada < c.mao.camadas.length - 1;
+/** Alguma carta de valor `rank` e naipe `suit` do motor sobra na mão? Para o Royal Flush: A, 10, J, Q e K do mesmo naipe. */
+const temRoyalFlush = (cartas) => ['S', 'H', 'C', 'D'].some((naipe) => [1, 10, 11, 12, 13].every((rank) => cartas.some((k) => k.suit === naipe && k.rank === rank)));
+/** Maior desvantagem do jogador em relação ao líder entre os outros, olhando a soma de cada rede a cada jogada. */
+const maiorDesvantagem = (c) => Math.max(0, ...(c.mao.historico || []).map((soma) => Math.max(...soma.filter((_, i) => i !== c.eu)) - soma[c.eu]));
 
 export const CONQUISTAS = [
   { id: 'primeira', nome: 'Primeira época', descricao: 'Vença sua primeira mão.', graduacao: 'bronze', teste: (c) => c.venceu },
@@ -86,15 +109,76 @@ export const CONQUISTAS = [
   { id: 'bigdata', nome: 'Big data', descricao: 'Vença uma mão jogada com 3 baralhos.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.config.baralhos >= 3 },
   { id: 'profunda', nome: 'Deep learning de verdade', descricao: 'Vença uma mão na arquitetura profunda.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.config.arquitetura === 'profunda' },
   { id: 'arquiteto', nome: 'Arquiteto de redes', descricao: 'Vença mãos em todas as arquiteturas (padrão, curta, profunda e larga).', graduacao: 'platina', teste: (c) => Object.keys(ARQUITETURAS).every((a) => c.progresso.arquiteturas && c.progresso.arquiteturas[a]) },
+  /* conquistas sugeridas pelo professor Peng (issue #117): leem os lances da mão e, algumas, o relógio da partida */
+  { id: 'fio', nome: 'Por um fio', descricao: 'Vença ou perca uma mão por algum critério de desempate.', graduacao: 'prata', teste: (c) => c.completa && !!c.mao.estadoMotor.tiebreak && (c.mao.estadoMotor.ranking || []).slice(0, 2).includes(c.eu) },
+  { id: 'validacao', nome: 'Validação cruzada', descricao: 'Vença uma mão aplicando dropouts em todas as camadas ocultas.', graduacao: 'prata', teste: (c) => c.venceu && c.mao.camadas.every((_, camada) => !ehOcultaDaMesa(c, camada) || meusLances(c).some((l) => l.tipo === 'dropout' && l.camadas.includes(camada))) },
+  { id: 'coldstart', nome: 'Cold start', descricao: 'Sofra um stack overflow na primeira camada oculta.', graduacao: 'ouro', teste: (c) => lancesDa(c).some((l) => l.tipo === 'stackoverflow' && l.alvo === c.eu && l.camada === 1) },
+  { id: 'featureeng', nome: 'Feature Engineering', descricao: 'Vença uma mão aplicando pelo menos 5 tunagens numa rede de arquitetura profunda.', graduacao: 'ouro', teste: (c) => c.venceu && c.mao.config.arquitetura === 'profunda' && meu(c).estatisticas.tunagens >= 5 },
+  {
+    id: 'uno', nome: 'Uno Reverse Card', descricao: 'Aplique stack overflow num neurônio em que o seu oponente acabou de aplicar tunagem.', graduacao: 'ouro',
+    teste: (c) => {
+      const lances = lancesDa(c);
+      return lances.some((l, i) => {
+        if (!ataqueMeu(c, l, 'stackoverflow')) return false;
+        /* a jogada anterior de verdade: sem as redes travadas nem os dropouts e transfers do próprio jogador */
+        let k = i - 1;
+        while (k >= 0 && (lances[k].tipo === 'travada' || (lances[k].jogador === c.eu && !lances[k].consomeVez))) k--;
+        return k >= 0 && lances[k].tipo === 'tunagem' && lances[k].jogador === l.alvo && lances[k].camada === l.camada;
+      });
+    },
+  },
+  { id: 'namekusei', nome: 'Adeus, Namekusei', descricao: 'Vença uma partida de 12 tentos em menos de 5 minutos.', graduacao: 'ouro', teste: (c) => c.venceuPartida && c.partida.alvo === 12 && !!c.partidaIniciadaEm && Date.now() - c.partidaIniciadaEm < 5 * 60 * 1000 },
+  {
+    id: 'semspoon', nome: 'There is no spoon', descricao: 'Aplique um stack overflow no oponente no primeiro neurônio que ele revelar (a entrada é imune, então vale o primeiro oculto).', graduacao: 'ouro',
+    teste: (c) => {
+      const lances = lancesDa(c);
+      return lances.some((l, i) => ataqueMeu(c, l, 'stackoverflow') && l.camada === 1
+        && lances.slice(0, i).filter((o) => o.tipo === 'ativar' && o.jogador === l.alvo && o.camada === 1).length === 1);
+    },
+  },
+  { id: 'cincoreis', nome: 'A escada dos cinco Reis', descricao: 'Vença uma partida de 12 tentos com 5 jogadores.', graduacao: 'ouro', teste: (c) => c.venceuPartida && c.partida.alvo === 12 && c.mao.jogadores.length === 5 },
+  { id: 'semquerer', nome: 'Foi sem querer querendo', descricao: 'Vença uma mão aplicando pelo menos 3 dropouts que revelaram a seguir cartas de maior valor, depois de todos os bônus.', graduacao: 'ouro', teste: (c) => c.venceu && meusLances(c).filter((l) => l.tipo === 'dropout' && l.revelouMaior).length >= 3 },
+  { id: 'uniao', nome: 'Na União Soviética, a dimensão é VC', descricao: 'Impeça o seu oponente de prosseguir na rede por falta de neurônios disponíveis em alguma camada oculta.', graduacao: 'adamantium', teste: (c) => lancesDa(c).some((l) => l.tipo === 'travada' && l.jogador !== c.eu && ehOcultaDaMesa(c, l.camada)) },
+  {
+    id: 'bias', nome: 'All your bias are belong to us', descricao: 'Aplique overfit no oponente em 3 turnos consecutivos.', graduacao: 'adamantium',
+    teste: (c) => {
+      /* só os lances que gastam a vez contam como turno; dropout e transfer não interrompem a sequência */
+      const turnos = meusLances(c).filter((l) => l.consomeVez);
+      return turnos.some((_, i) => i >= 2 && turnos.slice(i - 2, i + 1).every((l) => ataqueMeu(c, l, 'overfit')));
+    },
+  },
+  { id: 'exodia', nome: 'Exodia, obliterar!', descricao: 'Ganhe uma mão com um Royal Flush dentre as cartas não jogadas.', graduacao: 'adamantium', teste: (c) => c.venceu && temRoyalFlush(c.mao.estadoMotor.hands[c.eu]) },
+  {
+    id: 'dominio', nome: 'Expansão de Domínio', descricao: 'Esvazie a sua mão apenas aplicando ações contra cartas do adversário.', graduacao: 'adamantium',
+    teste: (c) => {
+      const gastos = meusLances(c).filter((l) => l.cartas > 0);
+      const maoInicial = TAMANHO_MAO * (c.mao.estadoMotor.handCopies || 1);
+      return c.mao.estadoMotor.hands[c.eu].length === 0 && gastos.length > 0 && gastos.every((l) => ataqueMeu(c, l)) && gastos.reduce((soma, l) => soma + l.cartas, 0) === maoInicial;
+    },
+  },
+  { id: 'redencao', nome: 'Redenção de Akaza', descricao: 'Perca uma mão após aplicar stack overflow em si mesmo na última camada oculta da rede.', graduacao: 'adamantium', teste: (c) => c.completa && !c.venceu && meusLances(c).some((l) => l.tipo === 'stackoverflow' && l.alvo === c.eu && l.camada === c.mao.camadas.length - 2) },
+  { id: 'balas', nome: 'Ideias são à prova de balas', descricao: 'Vença uma mão após ser impedido de prosseguir na rede por falta de neurônios disponíveis em alguma camada oculta.', graduacao: 'adamantium', teste: (c) => c.venceu && lancesDa(c).some((l) => l.tipo === 'travada' && l.jogador === c.eu && ehOcultaDaMesa(c, l.camada)) },
+  { id: 'diganome', nome: 'Diga meu nome', descricao: 'Acumule um total de 737000 pontos no placar ao longo de todas as mãos e partidas.', graduacao: 'adamantium', teste: (c) => c.progresso.pontos >= 737000 },
+  { id: 'portal', nome: 'Portal C-137', descricao: 'Vença uma mão com mais de 100 pontos tendo aplicado stack overflow no oponente.', graduacao: 'antimateria', teste: (c) => c.venceu && c.mao.resultado.somas[c.eu] > 100 && meu(c).estatisticas.overflows > 0 },
+  {
+    id: 'alianca', nome: 'Aliança Shinobi no Jutsu', descricao: 'Vença uma mão aplicando 5 tipos de ações distintas.', graduacao: 'antimateria',
+    teste: (c) => {
+      /* tunagem, dropout e transfer, mais cada ataque ao adversário (early stop e stack overflow em si não contam como outro tipo) */
+      const tipos = new Set(meusLances(c).filter((l) => ['tunagem', 'dropout', 'transfer'].includes(l.tipo) || ataqueMeu(c, l)).map((l) => l.tipo));
+      return c.venceu && tipos.size >= 5;
+    },
+  },
+  { id: 'doismais', nome: '2 + 2 = ?', descricao: 'Perca uma mão em que ambos os jogadores sofreram early stop ou stack overflow.', graduacao: 'antimateria', teste: (c) => c.completa && !c.venceu && c.mao.estadoMotor.nets.every((rede) => PARADAS.includes(rede.reason)) },
+  { id: 'virada', nome: 'Rede da virada, rede do amor', descricao: 'Vença uma mão revertendo uma desvantagem de 60 pontos ou mais no placar.', graduacao: 'antimateria', teste: (c) => c.venceu && maiorDesvantagem(c) >= 60 },
   /* conquista final (CONQUISTA_FINAL), sempre a última da lista: a Aplicacao a concede logo depois da última que faltava */
   { id: 'convergencia', nome: 'Convergência global', descricao: 'Desbloqueie todas as outras conquistas. Em homenagem ao prof. Peng Yaohao.', graduacao: 'singularidade', teste: (c) => { const { feitas, total } = progressoDaFinal(c.progresso.desbloqueadas); return feitas === total; } },
 ];
 
 /** Conquistas que podem ser ganhas mesmo quando a mão termina porque alguém correu do truco. */
-export const VALEM_SEM_MAO_COMPLETA = new Set(['correu', 'campeao', 'maquina', 'primeira', 'dez', 'cinquenta', 'gato10', 'gato100', 'biblio', 'truco', 'doze', 'cartografo', 'colecionador', 'arquiteto']);
+export const VALEM_SEM_MAO_COMPLETA = new Set(['correu', 'campeao', 'maquina', 'primeira', 'dez', 'cinquenta', 'gato10', 'gato100', 'biblio', 'truco', 'doze', 'cartografo', 'colecionador', 'arquiteto', 'namekusei', 'diganome']);
 
 /**
  * Conquistas que valem na hora da jogada, sem esperar a mão acabar: dependem só do que o jogador já
  * fez (ações e dropouts). Na jogada, `progresso.dropouts` já soma os dropouts da mão em andamento.
  */
-export const VALEM_NA_HORA = new Set(['gato10', 'gato100', 'desk', 'transfer', 'overfit', 'earlystop', 'overflow', 'tunador']);
+export const VALEM_NA_HORA = new Set(['gato10', 'gato100', 'desk', 'transfer', 'overfit', 'earlystop', 'overflow', 'tunador', 'coldstart', 'uno', 'semspoon', 'uniao', 'bias', 'dominio']);

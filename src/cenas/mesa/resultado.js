@@ -47,7 +47,7 @@ export const metodosDoResultado = {
     const valeConquistas = this.valemConquistas(), eu = this.cadeiraDasConquistas();
     const novasNoFim = valeConquistas ? this.app.registrarMao({
       mao, eu, venceu: vencedor === eu, completa, partida,
-      venceuPartida: partida.encerrada && partida.vencedor === eu, valorDaMao,
+      venceuPartida: partida.encerrada && partida.vencedor === eu, valorDaMao, partidaIniciadaEm: this.partidaIniciadaEm,
       oponenteCorreu: this.oponenteCorreu, opcoes: this.opcoes,
     }) : [];
     /* a lista do resultado tem as da mão inteira: as que vieram na hora da jogada e as do fim */
@@ -236,7 +236,7 @@ export const metodosDoResultado = {
     });
     painel.elemento.querySelector('#r-proxima').addEventListener('click', () => {
       painel.fechar();
-      if (partidaAcabou) { this.partida = novaPartida(this.opcoes.alvo, this.numJogadores); this.historicoDaPartida = []; if (this.online) this.partidasOnline++; }
+      if (partidaAcabou) { this.partida = novaPartida(this.opcoes.alvo, this.numJogadores); this.partidaIniciadaEm = Date.now(); this.historicoDaPartida = []; if (this.online) this.partidasOnline++; }
       else proximaMao(this.partida);
       this.iniciarMao();
     });
