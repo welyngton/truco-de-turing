@@ -6,6 +6,8 @@
  * Dados no Firestore (ver firestore.rules):
  * - `contas/{uid}`: o progresso, as estatísticas, o perfil e o resumo da conta (contas.js,
  *   `documentoDaConta`); cada conta lê e grava a própria, e administradores leem todas;
+ * - `placar/{uid}`: o resumo anônimo da conta (só números e ids de conquistas), lido por quem está
+ *   conectado para a raridade das conquistas e a posição entre os jogadores (placar.js);
  * - `admins/{uid}`: quem é administrador (documento criado à mão no console);
  * - `salas/{codigo}/mensagens/{id}`: as mensagens da sala (sala.js), em ordem de chegada ao
  *   servidor. A ordem das ações do jogo não depende disso: o anfitrião numera cada ação. Cada
@@ -138,6 +140,27 @@ export async function ehAdministrador(uid) {
 export async function listarContas() {
   const { fs, banco } = await carregar();
   const resultado = await fs.getDocs(fs.collection(banco, 'contas'));
+  return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
+}
+
+/* ------------------------------------------------------------------ placar */
+
+/**
+ * Publica o resumo anônimo da conta em `placar/<uid>` (online/placar.js). As regras só deixam a
+ * própria conta gravar; qualquer conta conectada lê todos.
+ */
+export async function salvarPlacar(uid, placar) {
+  const { fs, banco } = await carregar();
+  await fs.setDoc(fs.doc(banco, 'placar', uid), JSON.parse(JSON.stringify(placar)));
+}
+
+/**
+ * Todos os documentos do placar, com o `uid` de cada um (issue #154).
+ * @returns {Promise<object[]>}
+ */
+export async function listarPlacar() {
+  const { fs, banco } = await carregar();
+  const resultado = await fs.getDocs(fs.collection(banco, 'placar'));
   return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
 }
 

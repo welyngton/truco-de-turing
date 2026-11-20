@@ -247,6 +247,18 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .conquista b { display: block; font-family: var(--fonte-interface); font-size: 15px; }
 .conquista small { display: block; font-family: var(--fonte-interface); font-size: 13px; color: #5a4630; line-height: 1.3; }
 .conquista .graduacao { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6b1a22; font-weight: 700; }
+.conquistas-atalhos { margin: 8px 0 4px; flex-wrap: wrap; }
+.estatisticas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 4px 28px; max-height: 62vh; overflow: auto; padding-right: 4px; }
+.estatisticas-secao h3 { margin-top: 14px; border-bottom: 2px solid rgba(107, 26, 34, 0.25); padding-bottom: 3px; }
+.estatisticas-secao dl { margin: 6px 0 0; }
+.estatisticas-secao dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px dotted rgba(60, 40, 20, 0.25); font-size: 14.5px; }
+.estatisticas-secao dt { color: #5a4630; }
+.estatisticas-secao dd { margin: 0; font-weight: 700; text-align: right; color: #2b1608; }
+.conquistas-globais .global-conteudo { max-height: 66vh; overflow: auto; padding-right: 4px; }
+.global-resumo { font-size: 16px; }
+.global-resumo b { color: #6b1a22; }
+.global-tabela { overflow-x: auto; }
+.conquista.raridade .progresso-final { margin-top: 4px; }
 .conquistas-rodape { font-size: 13px; color: #7a6a4c; margin-top: 12px; }
 /* graduação Singularidade (conquista final): medalha furta-cor, com aro claro e brilho */
 .medalha.especial {

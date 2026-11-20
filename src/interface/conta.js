@@ -20,7 +20,8 @@
  */
 import { mesclarProgresso, juntarParaGravar, documentoDaConta } from '../online/contas.js';
 import { estatisticasDe } from '../online/estatisticas.js';
-import { firebaseConfigurado, contaGuardada, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta, juntarNaConta } from '../online/firebase.js';
+import { placarDoJogador } from '../online/placar.js';
+import { firebaseConfigurado, contaGuardada, sairDaConta, carregarProgressoDaConta, salvarProgressoNaConta, juntarNaConta, salvarPlacar } from '../online/firebase.js';
 import { explicarErroFirebase } from '../online/errosFirebase.js';
 import { mostrarAviso } from './paineis.js';
 import { definirConta } from './analise.js';
@@ -43,6 +44,24 @@ let gravacao = null;
 let gravarDeNovo = false;
 /** O progresso ficou sem subir por falta de conexão? Sobe sozinho quando a conexão voltar. */
 let pendente = false;
+
+/** Último placar publicado por conta (sem a hora), para só gravar de novo quando algo mudou. */
+const placarPublicado = new Map();
+
+/**
+ * Publica o resumo anônimo da conta em `placar/<uid>` (issue #154), se mudou desde a última vez.
+ * Falhar aqui não atrapalha o progresso: o placar só alimenta o painel de conquistas globais, e o
+ * painel publica de novo ao abrir. `forcar` ignora a comparação (o painel quer o dado de agora).
+ * @returns {Promise<object>} O placar publicado.
+ */
+export async function publicarPlacar(app, conta, forcar = false) {
+  const placar = placarDoJogador(app.progresso);
+  const { atualizado, ...numeros } = placar, chave = JSON.stringify(numeros);
+  if (!forcar && placarPublicado.get(conta.uid) === chave) return placar;
+  await salvarPlacar(conta.uid, placar);
+  placarPublicado.set(conta.uid, chave);
+  return placar;
+}
 
 /** O erro é de falta de conexão (e vale tentar de novo quando ela voltar)? */
 const semConexao = (e) => !!e && (['unavailable', 'deadline-exceeded'].includes(e.code) || /offline/i.test(e.message || ''));
@@ -77,6 +96,7 @@ async function gravarNaConta(app, conta) {
     if (atual !== conta) return;
     app.progresso = juntarParaGravar(app.progresso, gravado);
     app.salvarSoLocal();
+    publicarPlacar(app, conta).catch(() => { /* o placar é um extra: a próxima gravação tenta de novo */ });
     /* o que veio de outro aparelho pode ter completado as outras: a final chega agora (e sobe na gravação seguinte) */
     app.conferirConquistaFinal?.();
     if (pendente) mostrarAviso('Conta', 'A conexão voltou: o progresso deste aparelho subiu para a conta.', null, 5000);

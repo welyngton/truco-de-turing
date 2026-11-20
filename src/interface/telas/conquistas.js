@@ -2,9 +2,12 @@
  * @file Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as
  * medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha
  * que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque
- * no alto, com o progresso até ela.
+ * no alto, com o progresso até ela. Dois botões levam à página de estatísticas pessoais
+ * (estatisticas.js) e ao painel de conquistas globais (conquistasGlobais.js), issue #154.
  */
 import { abrirAvatares } from './avatares.js';
+import { abrirEstatisticas } from './estatisticas.js';
+import { abrirConquistasGlobais } from './conquistasGlobais.js';
 import { CONQUISTAS, GRADUACOES, CONQUISTA_FINAL, progressoDaFinal } from '../../conteudo/conquistas.js';
 import { desenharRetratoEmMoldura } from '../../arte/retrato.js';
 import { FOTO_PROFESSOR } from '../../recursos/retratoProfessor.js';
@@ -66,11 +69,15 @@ export function abrirConquistas(app) {
     '<aside class="guilda"><div class="retrato" id="c-retrato" role="img" aria-label="Retrato do prof. Peng Yaohao em moldura medieval"></div>' +
     '<p class="guilda-nota">Guardião do salão das conquistas. Cada medalha aqui foi conquistada contra os oponentes da mesa.</p></aside>' +
     '<div class="conquistas-principal"><h2>Conquistas</h2>' +
+    '<div class="linha conquistas-atalhos"><button class="botao pequeno" id="c-estatisticas">Estatísticas</button>' +
+    '<button class="botao pequeno" id="c-globais">Conquistas globais</button></div>' +
     '<div class="conquistas-conteudo">' + conteudoHtml(app.progresso) + '</div>' +
     '<p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
   let pararDeOuvir = () => {};
   const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar: () => pararDeOuvir() });
   painel.elemento.querySelector('#c-avatares').addEventListener('click', () => abrirAvatares(app));
+  painel.elemento.querySelector('#c-estatisticas').addEventListener('click', () => abrirEstatisticas(app));
+  painel.elemento.querySelector('#c-globais').addEventListener('click', () => abrirConquistasGlobais(app));
   pararDeOuvir = aoMudarDeConta(() => {
     const conteudo = painel.elemento.querySelector('.conquistas-conteudo');
     if (!conteudo || !conteudo.isConnected) { pararDeOuvir(); return; }

@@ -10,7 +10,7 @@
 import { mesclarEstatisticas, resumoDoJogador } from './estatisticas.js';
 
 /** O que fica guardado na conta, em palavras para quem joga (tela "Sobre" e "Jogar online"). */
-export const TEXTO_DA_CONTA = 'Quem entra numa conta tem guardados nela, no Firebase do jogo: nome, e-mail, conquistas, verbetes lidos, avatar e as estatísticas de jogo (acessos, partidas, mãos e vitórias). Os responsáveis pelo jogo conseguem ver esses dados. Sem conta, tudo isso fica só neste aparelho.';
+export const TEXTO_DA_CONTA = 'Quem entra numa conta tem guardados nela, no Firebase do jogo: nome, e-mail, conquistas, verbetes lidos, avatar e as estatísticas de jogo (acessos, partidas, mãos e vitórias). Os responsáveis pelo jogo conseguem ver esses dados. Para o painel de conquistas globais, a conta também publica um resumo anônimo (só números e quais conquistas você tem, sem nome nem e-mail), que os outros jogadores conectados veem misturado ao de todo mundo. Sem conta, tudo isso fica só neste aparelho.';
 
 /** Contadores que só crescem: na mescla vale o maior. */
 const CONTADORES = ['vitorias', 'maos', 'dropouts', 'vitoriasZen', 'pontos'];

@@ -61,6 +61,8 @@ const SDK = {
         if (!f().docs['admins/uid-teste']) throw erro('permission-denied');
         return { docs: Object.keys(f().docs).filter((k) => k.startsWith('contas/')).map((k) => ({ id: k.slice(7), data: () => f().docs[k] })) };
       }
+      /* o placar global (#154): todos os documentos de \`placar/\`, legíveis por quem está conectado */
+      if (c === 'placar') return { docs: Object.keys(f().docs).filter((k) => k.startsWith('placar/')).map((k) => ({ id: k.slice(7), data: () => f().docs[k] })) };
       f().buscas = (f().buscas || 0) + 1; return { docs: (f().vencidas || []).map((ref) => ({ ref })) };
     };
     export const writeBatch = () => { const lote = []; return { delete: (ref) => lote.push(ref), commit: async () => { banco(); f().apagadas = (f().apagadas || []).concat(lote); } }; };`,
@@ -180,6 +182,78 @@ describe('conta pelo Firebase (#40)', () => {
       await pagina.evaluate(() => { document.querySelector('#avisos').innerHTML = ''; const app = globalThis.__TRUCO_DE_TURING__; app.salvar(); app.salvar(); });
       await pagina.waitForTimeout(800);
       assert.equal(await pagina.locator('#avisos .aviso').count(), 0);
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+});
+
+describe('conquistas globais (#154)', () => {
+  /** Fecha o que estiver aberto e abre o painel "Conquistas globais" pelo quadro de conquistas. */
+  async function abrirGlobais(pagina) {
+    await pagina.locator('.folha.online [data-fechar]').first().click();
+    await pagina.click('#m-conquistas');
+    await pagina.click('#c-globais');
+  }
+
+  it('com conta: publica o placar anônimo e mostra a posição entre os jogadores e a raridade das conquistas', async () => {
+    const outros = {
+      'placar/outro1': { conquistas: 5, maos: 100, maosVencidas: 60, tempo: 36000, ids: ['fio', 'uno', 'bias', 'primeira', 'dez'], atualizado: 1 },
+      'placar/outro2': { conquistas: 1, maos: 3, maosVencidas: 1, tempo: 60, ids: ['fio'], atualizado: 1 },
+    };
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: { ...outros } });
+    const { pagina } = jogo;
+    try {
+      await entrar(pagina);
+      await pagina.evaluate(() => {
+        const app = globalThis.__TRUCO_DE_TURING__;
+        app.progresso.desbloqueadas = { fio: 1, primeira: 2 }; app.progresso.vitorias = 8; app.progresso.maos = 20;
+        app.salvar();
+      });
+      await abrirGlobais(pagina);
+      await pagina.waitForSelector('#g-estatisticas');
+      const texto = await pagina.locator('.conquistas-globais').textContent();
+      assert.match(texto, /entre 3 jogadores.*2º em conquistas.*à frente de 50%/s);
+      assert.match(texto, /Raridade das conquistas/);
+      assert.match(await pagina.locator('[data-conquista="fio"]').textContent(), /você tem.*100%.*3 jogadores de 3/s);
+      assert.match(await pagina.locator('[data-conquista="bias"]').textContent(), /33,3%.*1 jogador de 3/s);
+      const doc = await pagina.evaluate(() => globalThis.__FIREBASE_FALSO__.docs['placar/uid-teste']);
+      assert.equal(doc.conquistas, 2);
+      assert.deepEqual(doc.ids.sort(), ['fio', 'primeira']);
+      assert.equal(doc.maosVencidas, 8);
+      assert.ok(!JSON.stringify(doc).includes('Ada') && !JSON.stringify(doc).includes('exemplo.com'), 'o placar não leva nome nem e-mail');
+      assert.ok(!texto.includes('outro1'), 'os outros jogadores são anônimos');
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
+  it('regras sem a coleção placar: o painel explica o erro e o resto do jogo segue', async () => {
+    const jogo = await abrirConta({ login: 'ok', banco: 'ok', docs: {} });
+    const { pagina } = jogo;
+    try {
+      await entrar(pagina);
+      await pagina.evaluate(() => { globalThis.__FIREBASE_FALSO__.banco = 'permission-denied'; });
+      await abrirGlobais(pagina);
+      await pagina.waitForFunction(() => /firestore\.rules/.test(document.querySelector('.global-conteudo').textContent));
+      assert.equal(await pagina.locator('#g-estatisticas').count(), 0);
+      await pagina.click('.conquistas-globais [data-fechar]');
+      assert.equal(await pagina.locator('#c-estatisticas').isVisible(), true, 'o quadro de conquistas continua');
+    } finally { await jogo.fechar(); }
+  });
+
+  it('sem conta: convida a entrar em Jogar online; a página de estatísticas abre mesmo assim', async () => {
+    const jogo = await abrirJogo(servidor.url);
+    const { pagina } = jogo;
+    try {
+      await esperarMenu(pagina);
+      await pagina.evaluate(() => { globalThis.__TRUCO_DE_TURING__.progresso.tutorialVisto = true; });
+      await pagina.click('#m-conquistas');
+      await pagina.click('#c-estatisticas');
+      await pagina.waitForSelector('.estatisticas-secao');
+      assert.equal(await pagina.locator('.estatisticas-secao').count(), 7);
+      await pagina.click('.folha.estatisticas [data-fechar]');
+      await pagina.click('#c-globais');
+      const texto = await pagina.locator('.global-conteudo').textContent();
+      assert.match(texto, /Jogar online|não está configurado/);
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });

@@ -254,6 +254,6 @@ describe('jogadas e abandono', () => {
       ['acao_jogada', { acao: 'dropout', baralho: 'classico', terreno: 'pantano', camada: 2, mao: 3 }],
     ]);
     metodosDeEntrada.registrarAbandono.call(cena);
-    assert.deepEqual(eventos().at(-1), ['jogo_abandonado', { baralho: 'classico', terreno: 'pantano', oponente: 'guloso', maos: 3, tentos: 4, online: 0, conta: 0 }]);
+    assert.deepEqual(eventos().at(-1), ['jogo_abandonado', { baralho: 'classico', terreno: 'pantano', oponente: 'guloso', maos: 3, tentos: 4, online: 0, duracaoMs: 0, conta: 0 }]);
   });
 });

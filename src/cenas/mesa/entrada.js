@@ -294,7 +294,7 @@ export const metodosDeEntrada = {
     registrarEvento(EVENTOS.jogoAbandonado, {
       baralho: config.baralho, terreno: config.terreno, oponente: this.opcoes ? this.opcoes.oponente : '',
       maos: this.partida ? this.partida.numeroMao + 1 : 0, tentos: this.partida ? this.partida.tentos[eu] || 0 : 0,
-      online: this.online ? 1 : 0,
+      online: this.online ? 1 : 0, duracaoMs: this.partidaIniciadaEm ? Math.max(0, Date.now() - this.partidaIniciadaEm) : 0,
     });
   },
 

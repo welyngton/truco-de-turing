@@ -19,12 +19,16 @@ export function estatisticasIniciais() {
     maos: { jogadas: 0, vencidas: 0 },
     trucos: { pedidos: 0 },
     online: { salasCriadas: 0, salasEntradas: 0, partidas: 0 },
+    /* tempo acumulado em partidas (ms), ações por tipo e recordes (issue #154) */
+    tempoDePartida: 0, acoes: {}, recordes: { maiorRede: 0, maiorSequencia: 0, sequenciaAtual: 0 },
     porOponente: {}, porBaralho: {}, porTerreno: {},
   };
 }
 
 /** Grupos de contadores simples (nome → número). */
-const GRUPOS = ['partidas', 'maos', 'trucos', 'online'];
+const GRUPOS = ['partidas', 'maos', 'trucos', 'online', 'acoes', 'recordes'];
+/** Mais que isso numa partida (6 h) é relógio errado ou aba esquecida aberta: não entra no tempo. */
+const LIMITE_DE_PARTIDA_MS = 6 * 60 * 60 * 1000;
 /** Tabelas por chave (id → `{ jogadas, vencidas }`). */
 const TABELAS = ['porOponente', 'porBaralho', 'porTerreno'];
 
@@ -73,6 +77,20 @@ const somarNaTabela = (tabela, chave, venceu) => {
   if (venceu) linha.vencidas += 1;
 };
 
+/** Soma a duração de uma partida (ms) ao tempo acumulado, ignorando valores que não fazem sentido. */
+function somarTempo(e, duracaoMs) {
+  const ms = Number(duracaoMs);
+  if (Number.isFinite(ms) && ms > 0 && ms <= LIMITE_DE_PARTIDA_MS) e.tempoDePartida += Math.round(ms);
+}
+
+/** Recordes de uma mão que acabou: maior rede e a sequência de mãos vencidas. */
+function registrarRecordes(r, dados) {
+  const soma = Math.round(Number(dados.soma) || 0);
+  if (soma > r.maiorRede) r.maiorRede = soma;
+  r.sequenciaAtual = dados.venceu ? r.sequenciaAtual + 1 : 0;
+  if (r.sequenciaAtual > r.maiorSequencia) r.maiorSequencia = r.sequenciaAtual;
+}
+
 /**
  * Atualiza os contadores a partir de um evento do jogo (os nomes de `EVENTOS`, em
  * interface/analise.js).
@@ -89,23 +107,30 @@ export function contarEvento(progresso, nome, dados = {}) {
       if (dados.online) e.online.partidas += 1;
       return true;
     case 'jogo_finalizado':
+      somarTempo(e, dados.duracaoMs);
       e.partidas.terminadas += 1;
       if (dados.venceu) e.partidas.vencidas += 1;
       /* na partida online o "oponente" do menu não joga: a tabela é só do jogo contra o computador */
       if (!dados.online) somarNaTabela(e.porOponente, dados.oponente, !!dados.venceu);
       return true;
     case 'jogo_abandonado':
+      somarTempo(e, dados.duracaoMs);
       e.partidas.abandonadas += 1;
       return true;
     case 'fim_mao':
       e.maos.jogadas += 1;
       if (dados.venceu) e.maos.vencidas += 1;
+      registrarRecordes(e.recordes, dados);
       somarNaTabela(e.porBaralho, dados.baralho, !!dados.venceu);
       somarNaTabela(e.porTerreno, dados.terreno, !!dados.venceu);
       return true;
     case 'truco':
       if (!dados.meu) return false;
       e.trucos.pedidos += 1;
+      return true;
+    case 'acao_jogada':
+      if (!dados.acao) return false;
+      e.acoes[dados.acao] = (e.acoes[dados.acao] || 0) + 1;
       return true;
     case 'sala_online':
       if (dados.acao === 'criar') e.online.salasCriadas += 1;
@@ -129,6 +154,7 @@ export function mesclarEstatisticas(local, conta) {
   const b = estatisticasDe({ estatisticas: JSON.parse(JSON.stringify(conta)) });
   const m = estatisticasIniciais();
   m.acessos = Math.max(a.acessos, b.acessos);
+  m.tempoDePartida = Math.max(a.tempoDePartida || 0, b.tempoDePartida || 0);
   m.primeiroAcesso = Math.min(a.primeiroAcesso || Infinity, b.primeiroAcesso || Infinity);
   if (!Number.isFinite(m.primeiroAcesso)) m.primeiroAcesso = 0;
   const recente = b.ultimoAcesso > a.ultimoAcesso ? b : a;

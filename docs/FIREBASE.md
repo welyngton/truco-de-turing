@@ -51,6 +51,11 @@ npx firebase-tools login
 npx firebase-tools deploy --only firestore
 ```
 
+O workflow **Deploy** publica `firestore.rules` junto com o site (passo "Publicar as regras do
+Firestore"). Se a conta de serviço não tiver o papel *Firebase Rules Admin*, esse passo só avisa e
+as regras precisam ser coladas à mão no console (Firestore > Regras); sem as regras novas o painel
+de conquistas globais mostra o erro `permission-denied` e o resto do jogo segue normal.
+
 **Publique as regras depois que o site com a versão nova estiver no ar** (o merge na `main`
 publica o GitHub Pages em alguns minutos). As regras novas recusam mensagens sem `uid` e
 `expira`, e quem ainda estiver com a versão antiga aberta perde a sala até recarregar a página.
@@ -58,6 +63,9 @@ publica o GitHub Pages em alguns minutos). As regras novas recusam mensagens sem
 O que as regras deixam fazer:
 
 - `contas/{uid}`: cada conta lê e grava só o próprio progresso.
+- `placar/{uid}` (issue #154): resumo anônimo de cada conta para o painel de conquistas globais, só
+  números e os ids das conquistas, sem nome nem e-mail. Quem está conectado lê todos; cada conta
+  grava só o próprio, com os campos e tipos conferidos pelas regras, e ninguém apaga.
 - `salas/{codigo}/mensagens/{id}`: quem está conectado e sabe o código da sala lê as mensagens.
   Mensagem nova só dos tipos que a sala usa (`sala`, `ola`, `pedido`, `acao`, `vivo`, `tchau`), com
   o `uid` de quem envia (ninguém grava em nome de outra conta), a hora do servidor em `em` e a data

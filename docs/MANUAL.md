@@ -108,7 +108,7 @@ src/
     medalha.js                HTML da medalha de uma conquista (quadro, resultado e aviso do alto)
     menu.js                   menu inicial e configuração da mesa
     analise.js                Google Analytics: consentimento, carga do gtag.js e eventos
-    telas/                    regras, grimório, conquistas, sobre e revisão da mão
+    telas/                    regras, grimório, conquistas (com estatisticas.js e conquistasGlobais.js), sobre e revisão da mão
   cenas/
     recursos.js               câmera, texto nítido, fundo e texturas sob demanda
     CenaCarregamento.js       espera fontes e gera texturas fixas

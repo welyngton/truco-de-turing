@@ -77,6 +77,42 @@ describe('firestore.rules (emulador)', { skip: SEM_EMULADOR }, () => {
     });
   });
 
+  describe('placar global (#154)', () => {
+    const placar = (extra = {}) => ({ conquistas: 2, maos: 10, maosVencidas: 6, tempo: 900, ids: ['fio', 'uno'], atualizado: 1, ...extra });
+
+    it('quem está conectado lê o placar de todos; sem conta, não', async () => {
+      await semRegras((db) => setDoc(doc(db, 'placar', 'ana'), placar()));
+      await assertSucceeds(getDoc(doc(banco('beto'), 'placar', 'ana')));
+      assert.equal((await assertSucceeds(getDocs(collection(banco('beto'), 'placar')))).size, 1);
+      await assertFails(getDoc(doc(banco(null), 'placar', 'ana')));
+      await assertFails(getDocs(collection(banco(null), 'placar')));
+    });
+
+    it('cada conta grava só o próprio documento, e ninguém apaga', async () => {
+      await assertSucceeds(setDoc(doc(banco('ana'), 'placar', 'ana'), placar()));
+      await assertSucceeds(setDoc(doc(banco('ana'), 'placar', 'ana'), placar({ conquistas: 3, ids: ['fio', 'uno', 'bias'] })));
+      await assertFails(setDoc(doc(banco('beto'), 'placar', 'ana'), placar({ conquistas: 99 })));
+      await assertFails(setDoc(doc(banco(null), 'placar', 'ana'), placar()));
+      await assertFails(deleteDoc(doc(banco('ana'), 'placar', 'ana')));
+    });
+
+    it('só aceita os números e os ids do placar: nada de nome, e-mail ou valores fora do formato', async () => {
+      const ana = doc(banco('ana'), 'placar', 'ana');
+      await assertFails(setDoc(ana, placar({ nome: 'Ana' })));
+      await assertFails(setDoc(ana, placar({ email: 'ana@exemplo.com' })));
+      await assertFails(setDoc(ana, placar({ maos: -1 })));
+      await assertFails(setDoc(ana, placar({ maos: 'dez' })));
+      await assertFails(setDoc(ana, placar({ ids: 'fio' })));
+      await assertFails(setDoc(ana, placar({ ids: Array.from({ length: 201 }, (_, i) => 'c' + i) })));
+      await assertFails(setDoc(ana, { maos: 1 }));
+    });
+
+    it('o placar não abre as contas: o documento da conta continua privado', async () => {
+      await semRegras(async (db) => { await setDoc(doc(db, 'contas', 'ana'), { perfil: { email: 'ana@exemplo.com' } }); await setDoc(doc(db, 'placar', 'ana'), placar()); });
+      await assertFails(getDoc(doc(banco('beto'), 'contas', 'ana')));
+    });
+  });
+
   describe('mensagens da sala: criar', () => {
     it('a conta grava mensagem com o próprio uid', async () => {
       await assertSucceeds(addDoc(mensagens(banco('ana')), mensagem('ana')));
