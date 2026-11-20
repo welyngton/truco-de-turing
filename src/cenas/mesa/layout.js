@@ -13,15 +13,6 @@
 import { TAMANHOS_CAMADAS } from '../../nucleo/rede.js';
 import { CORES, CORES_CSS, TAMANHO_CARTA, CORES_JOGADORES, CORES_JOGADORES_CSS } from '../../configuracao.js';
 
-/**
- * Rótulo do painel que mostra a carta ampliada ao passar o cursor ou tocar (no código, "inspeção").
- * O jogador lê "Detalhe da carta": "inspeção" é termo de quem desenvolve.
- */
-export const ROTULO_DO_DETALHE = 'DETALHE DA CARTA';
-
-/** Rótulo dos botões que ordenam a mão (a seta ▲ crescente ou ▼ decrescente é somada ao do botão ativo). */
-export const ROTULO_DA_ORDEM = { tamanho: 'Tamanho', naipe: 'Naipe' };
-
 /** Painel esquerdo (inspeção, pilhas e dica). */
 export const PAINEL_ESQ = { x: 8, y: 8, l: 244, a: 704 };
 /** Painel direito (placar, curva, registro e ações). */
@@ -44,9 +35,7 @@ export const ESQ = {
  */
 export const DIR = {
   tituloMao: 28, subtitulo: 49, blocos: 64, alturaBloco: 102, passoBloco: 108, avatar: 58,
-  rotuloCurva: 292, curva: 304, alturaCurva: 64, registro: 380, alturaRegistro: 86,
-  /* botões que ordenam a mão (Tamanho e Naipe), logo abaixo do registro e acima do TRUCO */
-  ordenar: 495, alturaOrdenar: 44,
+  rotuloCurva: 292, curva: 304, alturaCurva: 64, registro: 380, alturaRegistro: 132,
   truco: 540, alturaTruco: 40,
   /*
    * Ações: duas linhas de quatro botões. Em cima, as que empilham cartas
@@ -65,7 +54,7 @@ export const NOME_DA_ACAO = {
 /** Ações da barra, na ordem: [id, rótulo, linha]. O id é o tipo de alvo (ver calcularAlvos) ou a ação. */
 export const BARRA_DE_ACOES = [
   ['tunagem', 'Tunagem', 0], ['overfit', 'Overfit', 0], ['earlystop', 'Early\nstop', 0], ['stackoverflow', 'Stack\noverflow', 0],
-  ['dropout', 'Dropout', 1], ['transfer', 'Transfer\nlearning', 1], ['passar', 'Passar', 1], ['limpar', 'Limpar', 1],
+  ['dropout', 'Dropout', 1], ['transfer', 'Transfer', 1], ['passar', 'Passar', 1], ['limpar', 'Limpar', 1],
 ];
 
 /**

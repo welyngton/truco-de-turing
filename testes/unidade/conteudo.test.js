@@ -47,59 +47,7 @@ describe('grimorio.js', () => {
     }
     assert.deepEqual(VERBETES.filter((v) => v.formula).map((v) => v.id), ['overfit', 'stackoverflow', 'transfer']);
   });
-  it('baralho "Power Bee-Ai": nome novo na interface e no motor, sem a marca "Power BI" (o id powerbi não muda)', () => {
-    assert.equal(BARALHOS.powerbi.nome, 'Power Bee-Ai');
-    assert.equal(Motor.decks.powerbi.name, 'Power Bee-Ai');
-    assert.doesNotMatch(BARALHOS.powerbi.nome + BARALHOS.powerbi.resumo + Motor.decks.powerbi.desc, /power ?bi\b|dashboard/i);
-  });
-
-  it('ordenarCartas: por tamanho (valor no baralho) e por naipe, crescente e decrescente, sem mexer na mão original', async () => {
-    const { ordenarCartas } = await import('../../src/nucleo/baralhos.js');
-    const c = (valor, naipe) => ({ id: valor + naipe, valor, naipe });
-    const mao = [c('K', 'E'), c('A', 'O'), c('7', 'C'), c('7', 'O'), c('2', 'P')];
-    const ids = (l) => l.map((x) => x.id).join(' ');
-    const original = ids(mao);
-    /* clássico: figuras 0 < 2 < 7 < Ás 11; no empate, o naipe (Ouros < Copas) */
-    assert.equal(ids(ordenarCartas(mao, 'classico', 'tamanho', 1)), 'KE 2P 7O 7C AO');
-    assert.equal(ids(ordenarCartas(mao, 'classico', 'tamanho', -1)), 'AO 7C 7O 2P KE');
-    /* naipe: Ouros, Paus, Copas, Espadas; dentro de cada um, do menor ao maior */
-    assert.equal(ids(ordenarCartas(mao, 'classico', 'naipe', 1)), '7O AO 2P 7C KE');
-    assert.equal(ids(ordenarCartas(mao, 'classico', 'naipe', -1)), ids(ordenarCartas(mao, 'classico', 'naipe', 1).reverse()));
-    /* truco: vale a ordem do truco, não a do clássico (a manilha 7♥ é a maior depois do Zap) */
-    const truco = ordenarCartas([c('7', 'C'), c('3', 'E'), c('4', 'P')], 'truco', 'tamanho', 1);
-    assert.equal(truco[truco.length - 1].id, '4P', 'o Zap (4♣) é a maior carta do truco');
-    /* sem critério ou critério desconhecido: mesma ordem, em uma cópia */
-    assert.equal(ids(ordenarCartas(mao, 'classico', null)), original);
-    assert.notEqual(ordenarCartas(mao, 'classico', null), mao);
-    assert.equal(ids(mao), original);
-  });
-
-  it('equipe: dados completos, sem currículo inventado, cartão com foto ou iniciais', async () => {
-    const { EQUIPE, iniciaisDe } = await import('../../src/conteudo/equipe.js');
-    const { cartaoDaPessoa, ABAS_DO_SOBRE } = await import('../../src/interface/telas/sobre.js');
-    assert.deepEqual(ABAS_DO_SOBRE.map((a) => a[0]), ['jogo', 'equipe']);
-    assert.equal(new Set(EQUIPE.map((p) => p.id)).size, EQUIPE.length);
-    for (const p of EQUIPE) assert.ok(p.nome && p.papel, p.id);
-    assert.deepEqual(EQUIPE.filter((p) => p.foto).map((p) => p.id), ['peng']);
-    assert.deepEqual(EQUIPE.filter((p) => !p.curriculo).map((p) => p.id), ['welyngton', 'diego', 'vinicius', 'suzy']);
-    assert.equal(iniciaisDe('Welyngton José Vinicius Dal Prá'), 'WP');
-    assert.equal(iniciaisDe('Suzy Arcanjo'), 'SA');
-    assert.equal(iniciaisDe('Madonna'), 'M');
-    assert.equal(iniciaisDe(''), '');
-    const semCv = cartaoDaPessoa({ id: 'x', nome: 'Ana <b>', papel: 'Teste', foto: null, curriculo: null });
-    assert.match(semCv, /a-caminho/); assert.match(semCv, /iniciais/); assert.doesNotMatch(semCv, /<b>/);
-    const comFoto = cartaoDaPessoa({ id: 'y', nome: 'Beto', papel: 'Teste', foto: 'professor', curriculo: 'Texto.' });
-    assert.match(comFoto, /data-foto="professor"/); assert.match(comFoto, /Texto\./); assert.doesNotMatch(comFoto, /a-caminho/);
-  });
-
-  it('terrenos: o terreno sem efeito aparece como "Planície" (o id continua neutro), sem sobrar "Mesa neutra"', () => {
-    assert.deepEqual(Object.keys(TERRENOS), ['neutro', 'montanha', 'pantano', 'oceano']);
-    assert.deepEqual(Object.values(TERRENOS).map((t) => t.nome), ['Planície', 'Montanha', 'Pântano', 'Oceano']);
-    for (const t of Object.values(TERRENOS)) assert.doesNotMatch(t.nome + ' ' + t.resumo, /neutr/i);
-    assert.equal(Motor.terrains.none.name, TERRENOS.neutro.nome);
-  });
-
-  it('Livro de conceitos: todo verbete tem equação em MathML e "até onde vale a comparação"; as figuras existem', () => {
+  it('Glossário: todo verbete tem equação em MathML e "até onde vale a comparação"; as figuras existem', () => {
     for (const v of VERBETES) {
       assert.match(v.equacao, /^(<math display="block">.*?<\/math>)+$/s, v.id);
       assert.ok(v.limite && v.limite.length > 20, v.id);
@@ -116,7 +64,7 @@ describe('grimorio.js', () => {
     assert.match(v.stackoverflow.conceito, /outro fenômeno/);
     assert.match(v.perda.noJogo, /sobe/);
   });
-  it('ajuda das ações: cada ação da barra tem verbete no Livro de conceitos e regra no motor', () => {
+  it('ajuda das ações: cada ação da barra tem verbete no Glossário e regra no motor', () => {
     const ids = new Set(VERBETES.map((x) => x.id));
     for (const a of ACOES_DA_AJUDA) {
       assert.ok(ids.has(a.verbete), a.id);

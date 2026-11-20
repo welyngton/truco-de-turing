@@ -11,7 +11,7 @@ import { VERBETES, NOME_DA_BIBLIOTECA } from '../../conteudo/grimorio.js';
 import { desenharVerso } from '../../arte/versos.js';
 import { desenharCartaCompleta } from '../../arte/cartas.js';
 import { desenharCartaDeTerreno } from '../../arte/cartasDeTerreno.js';
-import { abrirPainel, escaparHtml, confirmar } from '../paineis.js';
+import { abrirPainel, escaparHtml } from '../paineis.js';
 import { abrirAjudaDasAcoes, ACOES_DA_AJUDA } from './ajudaDasAcoes.js';
 import { abrirGrimorio } from './grimorio.js';
 
@@ -114,8 +114,6 @@ function desenharArte(raiz) {
  * @param {string} [abaInicial] Uma das chaves de ABAS_DAS_REGRAS.
  */
 export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
-  /* o tutorial é uma mão de treino contra o computador: não vale dentro de uma sala online */
-  const podeTreinar = !!app && typeof app.iniciarTutorial === 'function' && !app.online;
   const conteudo = { jogar: COMO_JOGAR, acoes: abaDeAcoes(), pontuacao: PONTUACAO, extensoes: abaDeExtensoes(), dicas: DICAS };
   const html = '<div class="folha regras"><button class="fechar-x" data-fechar aria-label="Fechar">×</button>' +
       '<h2>Regras</h2>' +
@@ -123,8 +121,7 @@ export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
         '<button role="tab" data-aba="' + id + '" aria-selected="' + (id === abaInicial) + '">' + nome + '</button>').join('') + '</nav>' +
       ABAS_DAS_REGRAS.map(([id]) => '<section class="aba" role="tabpanel" data-aba="' + id + '"' + (id === abaInicial ? '' : ' hidden') + '>' + conteudo[id] + '</section>').join('') +
       '<p class="nota-regras">Os conceitos de redes neurais por trás de cada jogada estão no ' + NOME_DA_BIBLIOTECA + '.</p>' +
-      '<div class="linha fim" style="margin-top:14px">' + (podeTreinar ? '<button class="botao vinho" id="r-tutorial">Fazer o tutorial</button>' : '') +
-      '<button class="botao discreto" id="r-biblioteca">' + NOME_DA_BIBLIOTECA + '</button><button class="botao" data-fechar>Entendi</button></div></div>';
+      '<div class="linha fim" style="margin-top:14px"><button class="botao discreto" id="r-biblioteca">' + NOME_DA_BIBLIOTECA + '</button><button class="botao" data-fechar>Entendi</button></div></div>';
   if (app) { app.progresso.tutorialVisto = true; app.salvar(); }
   const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar });
   const raiz = painel.elemento;
@@ -135,21 +132,10 @@ export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
   };
   raiz.querySelectorAll('.abas [data-aba]').forEach((b) => b.addEventListener('click', () => mostrarAba(b.dataset.aba)));
   mostrarAba(abaInicial);
-  /* o Livro de conceitos e a ajuda abrem por cima; as regras continuam abertas embaixo */
+  /* o Glossário e a ajuda abrem por cima; as regras continuam abertas embaixo */
   const appDaBiblioteca = app || { progresso: { lidos: {} }, marcarVerbeteLido() {} };
   raiz.querySelector('#r-ajuda-acoes').addEventListener('click', () => abrirAjudaDasAcoes(appDaBiblioteca));
   raiz.querySelector('#r-biblioteca').addEventListener('click', () => abrirGrimorio(appDaBiblioteca));
-  const treino = raiz.querySelector('#r-tutorial');
-  if (treino) {
-    treino.addEventListener('click', () => {
-      /* dentro de uma partida, o tutorial a abandona: confirma antes */
-      if (!document.body.classList.contains('em-partida')) { painel.fechar(); app.iniciarTutorial(); return; }
-      confirmar('Fazer o tutorial?', 'A partida em andamento será abandonada e o tutorial começa numa mesa de treino.', [
-        { rotulo: 'Continuar a partida', classe: 'discreto' },
-        { rotulo: 'Fazer o tutorial', classe: 'vinho', acao: () => { painel.fechar(); app.iniciarTutorial(); } },
-      ]);
-    });
-  }
   raiz.querySelectorAll('[data-verbete]').forEach((b) => b.addEventListener('click', () => abrirGrimorio(appDaBiblioteca, b.dataset.verbete)));
   return painel;
 }

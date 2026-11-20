@@ -81,7 +81,7 @@ export function mostrarAviso(titulo, texto, tipo, duracaoMs = 5200) {
 }
 
 /**
- * Dica de jogo do modo "dicas", no estilo do Livro de conceitos: título, conselho e o conceito de redes
+ * Dica de jogo do modo "dicas", no estilo do Glossário: título, conselho e o conceito de redes
  * neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha).
  */
 export function mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito) {
@@ -216,19 +216,17 @@ export function confirmar(titulo, texto, botoes, opcoes = {}) {
 let dicaFlutuante = null;
 
 /**
- * Mostra uma dica no estilo do Livro de conceitos ao lado de um elemento da mesa (botão, carta).
+ * Mostra uma dica no estilo do Glossário ao lado de um elemento da mesa (botão, carta).
  * Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo.
  * @param {string} titulo
  * @param {string} html Corpo da dica (já escapado por quem chama).
  * @param {{x: number, y: number, l: number, a: number}} alvo Retângulo do elemento, em pixels da página.
- * @param {string} [cor] Cor da ação (a mesma do botão), na faixa da borda esquerda.
  */
-export function mostrarDicaFlutuante(titulo, html, alvo, cor) {
+export function mostrarDicaFlutuante(titulo, html, alvo) {
   esconderDicaFlutuante();
   const caixa = document.createElement('div');
   caixa.className = 'dica-flutuante';
   caixa.setAttribute('role', 'tooltip');
-  if (cor) caixa.style.borderLeft = '7px solid ' + cor;
   caixa.innerHTML = '<b>' + escaparHtml(titulo) + '</b>' + html;
   document.body.appendChild(caixa);
   const l = caixa.offsetWidth, a = caixa.offsetHeight, margem = 10;

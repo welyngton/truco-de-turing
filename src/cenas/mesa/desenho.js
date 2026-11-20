@@ -6,7 +6,7 @@
  */
 import { TAMANHO_CARTA } from '../../configuracao.js';
 import { rotuloCarta, NAIPE } from '../../nucleo/cartas.js';
-import { BARALHOS, ordenarCartas } from '../../nucleo/baralhos.js';
+import { BARALHOS } from '../../nucleo/baralhos.js';
 import { TERRENOS } from '../../nucleo/terrenos.js';
 import { ehOculta, nomeCamada } from '../../nucleo/rede.js';
 import { pontuarRede } from '../../nucleo/pontuacao.js';
@@ -83,9 +83,7 @@ export const metodosDeDesenho = {
     this.cartasDaMao = []; this.cartasDoAdversario = [];
     const debaixo = this.jogadorDeBaixo();
     const aberta = this.quemVe >= 0;
-    /* a ordem escolhida (Tamanho/Naipe) vale também para as cartas que chegarem depois; a mão do jogo não muda */
-    const ordem = this.app.ordemDaMao || { criterio: null, sentido: 1 };
-    const cartas = ordenarCartas(mao.jogadores[debaixo].mao, baralho, ordem.criterio, ordem.sentido);
+    const cartas = mao.jogadores[debaixo].mao;
     const espaco = Math.min(TAMANHO_CARTA.maoL + 8, 660 / Math.max(1, cartas.length));
     cartas.forEach((carta, i) => {
       const x = 610 + (i - (cartas.length - 1) / 2) * espaco;
@@ -345,7 +343,6 @@ export const metodosDeDesenho = {
       return 'Decidindo quem começa…';
     }
     const daVez = mao.jogadores[mao.vez];
-    if (this.tutorial && !this.ehVezDoHumano()) return 'Leia o balão do Percy e toque em Continuar.';
     if (!this.ehVezDoHumano()) return daVez.tipo === 'oponente' ? daVez.nome + ' está pensando…' : mao.vez === eu ? 'Sua vez.' : 'Vez de ' + daVez.nome + '.';
     if (this.modo === 'dropout') return 'Dropout: clique no neurônio oculto da sua rede até onde quer desfazer. Cada camada custa 1 carta da mão. Esc cancela.';
     if (this.modo === 'pagarDropout') return 'Escolha ' + this.camadasDropout + ' carta(s) da mão para pagar o dropout (' + this.selecao.length + '/' + this.camadasDropout + '). Esc cancela.';
@@ -421,11 +418,9 @@ export const metodosDeDesenho = {
         const manter = new Set(this.alvosDaAcao(this.acaoEscolhida));
         for (const id of Object.keys(this.alvos)) if (!manter.has(id)) delete this.alvos[id];
       }
-      if (this.tutorial) this.filtrarAlvosDoTutorial();
       return;
     }
     for (const n of alvosDeAtivacao(mao, eu)) this.alvos[n.id] = { tipo: 'ativar' };
-    if (this.tutorial) this.filtrarAlvosDoTutorial();
   },
 
   /**
@@ -470,7 +465,7 @@ export const metodosDeDesenho = {
     const d = this.camadaDestaques;
     d.clear();
     const pulso = 0.55 + 0.45 * Math.sin(tempo / 180);
-    if (this.modo === 'inicio' && !this.tutorial) {
+    if (this.modo === 'inicio') {
       for (const imagem of this.cartasDaMao) { d.lineStyle(3, 0xf6dc8f, pulso); d.strokeRoundedRect(imagem.x - 50, imagem.y - 69, 100, 138, 10); }
     }
     for (const [id, alvo] of Object.entries(this.alvos || {})) {
@@ -478,6 +473,5 @@ export const metodosDeDesenho = {
       d.lineStyle(alvo.tipo === 'ativar' ? 2.5 : 4, COR_DO_ALVO[alvo.tipo], pulso);
       d.strokeRoundedRect(colunaX(n.camada) - ml - 5, linhaY(n.camada, n.posicao) - ma - 5, ml * 2 + 10, ma * 2 + 10, 9);
     }
-    if (this.tutorial) this.desenharDestaqueDoTutorial(tempo);
   },
 };

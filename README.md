@@ -86,7 +86,7 @@ src/motor/                 motor de regras: estado, ações, baralhos, terrenos,
 src/nucleo/                camada de tradução (sem Phaser): entrega às telas a mão, as jogadas,
                            a pontuação e os oponentes no formato da interface, sobre o motor;
                            e o modo truco
-src/conteudo/              Livro de conceitos, conquistas, textos e progresso salvo
+src/conteudo/              Glossário, conquistas, textos e progresso salvo
 src/arte/                  arte procedural em canvas: cartas, versos, mesas, avatares, ícones
 src/interface/             menu, telas HTML, avisos e som (WebAudio)
 src/cenas/                 cenas do Phaser: carregamento, menu e mesa
@@ -119,7 +119,7 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
 | Efeito de empilhar | Decidido pelo tamanho final da pilha: 2 = tunagem (própria) ou overfit (adversário); 3 = early stop; 4 = stack overflow. Vale também na própria rede (auto early stop, auto stack overflow). |
 | Dropout (professor) | Os neurônios desfeitos saem da mesa e vão para o cemitério, com as tunagens. Não gasta o turno. |
 | Camada sem neurônio livre (professor) | A rede é finalizada ali ("acabou o campo") e conta a soma parcial. |
-| Transfer learning (professor) | Não gasta o turno; o jogador escolhe qual quadra trocar e pode cancelar (uma vez por mão). |
+| Transfer learning (professor) | Não gasta o turno. |
 | Passar a vez | Só quem teve a rede interrompida por early stop, do rival ou aplicado em si, e ainda tem cartas (atacar não é obrigatório); ou quem não tem nenhuma outra jogada. Quem não pode jogar é pulado. |
 | Desempate pela carta mais alta | Compara a força da carta (Ás > K > Q > J > 10 … 2); o naipe só decide entre cartas iguais. |
 | Quem começa | Padrão: cada um revela uma carta, que vai para o cemitério. No menu também há a opção em que a carta volta para a mão e o sorteio. |
@@ -135,27 +135,24 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
   - *Zé do Ruído* (fácil): sorteia uma jogada válida; bom para aprender as regras.
   - *Gradiente Guloso* (médio): como a descida de gradiente, escolhe o lance que mais melhora o placar agora, sem olhar adiante.
   - *Mestre Monte Carlo* (difícil): sorteia as cartas ocultas, simula dezenas de partidas para cada lance e escolhe o que mais venceu; mostra a própria chance de vitória e truca com base nas simulações.
-- **7 baralhos e 4 terrenos**: Clássico, Truco com manilhas, Nobreza, Backprop (o naipe é o peso, as figuras são ativações e a rede vale a saída do forward pass), Fraternidade, Yin-yang (sempre com 1 baralho e arquitetura curta, até haver coringas) e Power Bee-Ai; Planície, Montanha, Pântano e Oceano, cada terreno com ambiente animado (sombras de nuvens e sementes ao vento na Planície; neve, névoa e rajadas na Montanha; neblina, vaga-lumes, bolhas e fogo-fátuo no Pântano; cáusticas, brilhos e vento no Oceano). As cartas da mesa são sempre opacas: por cima delas passam só partículas pequenas (flocos, sementes, bolhas, brilhos, riscos de vento); neblina, cáusticas, sombras e halos ficam por trás.
+- **7 baralhos e 4 terrenos**: Clássico, Truco com manilhas, Nobreza, Backprop (o naipe é o peso, as figuras são ativações e a rede vale a saída do forward pass), Fraternidade, Yin-yang e Power BI; mesa neutra, Montanha, Pântano e Oceano, cada terreno com ambiente animado (sombras de nuvens e sementes ao vento na Planície; neve, névoa e rajadas na Montanha; neblina, vaga-lumes, bolhas e fogo-fátuo no Pântano; cáusticas, brilhos e vento no Oceano). As cartas da mesa são sempre opacas: por cima delas passam só partículas pequenas (flocos, sementes, bolhas, brilhos, riscos de vento); neblina, cáusticas, sombras e halos ficam por trás.
 - **36 conquistas** em graduações de bronze a antimatéria, incluindo as do enunciado (Desk rejection, Marcha dos patos, Contra tudo e contra todos, Artilheiro dos gols inúteis, 100 dropouts…) e as da fusão (baralhos Nobreza e Backprop, mesas de 4 e 5 jogadores, 3 baralhos, arquiteturas), e a conquista final, **Convergência global** (graduação Singularidade), para quem desbloqueia todas as outras, em homenagem ao prof. Peng Yaohao. Cada conquista sobe num aviso no alto da tela, com a medalha, na hora em que acontece.
 - **9 avatares** para o jogador, 6 deles liberados por conquistas (Menu > Avatar).
 - **Modo dicas**: dicas de estratégia a cada vez, sempre com o conceito de redes neurais por trás, e explicações nos botões (mouse ou segurar no celular); só usam o que está à vista e nunca dizem qual carta virada escolher. Mãos com dicas não valem conquistas.
-- **Som e música com ícones**: alto-falante e nota musical (cortados quando desligados), sempre à vista no menu e na mesa, com nome acessível, estado (`aria-pressed`) e alvo de toque de pelo menos 44 px; a escolha é lembrada.
-- **Sobre em duas abas**: "O jogo" e "Equipe", com um cartão por pessoa (foto e mini-CV, em `src/conteudo/equipe.js`). O retrato do prof. Peng saiu das Conquistas e está no cartão dele; mini-CVs que ainda não chegaram avisam "a caminho".
-- **Ordenar a mão**: botões Tamanho e Naipe na mesa (teclas T e N); cada clique ordena e o seguinte inverte (▲ crescente, ▼ decrescente), respeitando a ordem de valor do baralho escolhido. A ordem vale para as cartas que chegam depois e só muda como a mão aparece.
-- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Livro de conceitos e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
-- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Livro de conceitos.
-- **Trilha sonora** (ligada por padrão): baião épico no menu (cordas de orquestra, zabumba, tímpano e palmas), blues lento na Planície (dois violinos, violoncelo e fagote), valsa com flauta de pã e marimba no oceano, épica com trompa, harpa e xilofone na montanha e um lamento sombrio com órgão, sino e glockenspiel ao fundo no pântano; fanfarra e confete na vitória.
+- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Glossário e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
+- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Glossário.
+- **Trilha sonora** (ligada por padrão): baião animado no menu (sanfona, zabumba, triângulo e palmas), blues lento na Planície (mesa neutra), valsa com marimba no oceano, épica com trompa, harpa e tambores na montanha e uma dança de fada com harmônica de vidro e glockenspiel no pântano; fanfarra e confete na vitória.
 - **Feedback visual**: conexões com espessura proporcional ao valor (como no Playground), curva de treino, explosões, banners, músicas e sons.
 
 ## Conteúdo educativo
 
-Cada mecânica corresponde a um verbete do **Livro de conceitos** (antes Glossário, Biblioteca de conceitos e, no começo, Grimório), que aparece como aviso na
+Cada mecânica corresponde a um verbete do **Glossário** (antes Biblioteca de conceitos e, no começo, Grimório), que aparece como aviso na
 primeira vez em que acontece: neurônio, função de ativação, saturação da ativação (o aviso "Saída saturada" do baralho
 Backprop), camadas e arquiteturas, propagação direta, pesos, curva de treino, retropropagação (e por que o baralho
 Backprop, que só faz o forward pass, tem esse nome), fine-tuning, overfitting, dropout, early stopping, stack overflow, vanishing gradient, transfer
 learning, ruído, Monte Carlo, mudança de distribuição (terrenos como weight decay e concept drift) e decisão sob
 incerteza (truco). Cada verbete traz a equação, uma figura quando ajuda, como aparece no jogo e até onde a comparação
-vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Aprender mais".
+vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Ver o conceito".
 
 ## Estatísticas de uso
 
@@ -177,7 +174,6 @@ Eventos (`EVENTOS` em `analise.js`):
 | `fim_mao` | fim de cada mão | baralho, terreno, oponente, jogadores, online, venceu, completa, valor, soma, dicas |
 | `acao_jogada` | cada jogada de quem está no aparelho | acao (inicio, ativar, tunagem, overfit, earlystop, stackoverflow, dropout, transfer, passar), baralho, terreno, camada, mao |
 | `truco` | pedido de truco | valor, quem, meu (1 se foi de quem joga no aparelho) |
-| `tutorial` | treino guiado do Percy | etapa (iniciado, passo, concluido, abandonado), passo |
 | `menu_clique` | botões do menu inicial | botao (jogar, jogar_online, como_jogar, glossario, conquistas, avatar, mods, sobre) |
 | `menu_opcao` | mudança numa escolha do menu | campo, valor |
 | `mesa_clique` | REGRAS e MENU da mesa e as opções deles | botao |
@@ -251,7 +247,7 @@ Autores:
 - Peng Yaohao: especificação inicial, gerência do projeto, validação e feedbacks
 - Welyngton José Vinicius Dal Prá ([@welyngton](https://github.com/welyngton)): Truco de Turing (interface, arte, sons, conquistas e modo truco)
 - Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande)): testes e validação das regras
-- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações no Livro de conceitos
+- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações no Glossário
 - Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções nas regras
 - 
 <!-- /autores -->

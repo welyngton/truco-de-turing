@@ -5,20 +5,18 @@
  * Modos de seleção (`this.modo`): 'livre' (padrão), 'inicio' (escolher a carta que decide quem
  * começa), 'dropout' (escolher até onde desfazer) e 'pagarDropout' (escolher as cartas que pagam).
  */
-import { rotuloCarta, NOME_VALOR } from '../../nucleo/cartas.js';
+import { rotuloCarta } from '../../nucleo/cartas.js';
 import { nomeCamada } from '../../nucleo/rede.js';
-import { valorParaTransfer, valoresParaTransfer, podePassar, camadasDesfaziveis } from '../../nucleo/partida.js';
+import { valorParaTransfer, podePassar, camadasDesfaziveis } from '../../nucleo/partida.js';
 import { Motor } from '../../motor/engine.js';
-import { retanguloNaTela } from '../recursos.js';
-import { htmlDosControlesDeSom, ligarControlesDeSom } from '../../interface/controlesDeSom.js';
 import { Som } from '../../interface/som.js';
-import { confirmar, abrirPainel, escaparHtml } from '../../interface/paineis.js';
+import { confirmar, abrirPainel } from '../../interface/paineis.js';
 import { abrirRegras } from '../../interface/telas/regras.js';
 import { abrirGrimorio } from '../../interface/telas/grimorio.js';
 import { abrirAjudaDasAcoes } from '../../interface/telas/ajudaDasAcoes.js';
 import { texturaDeInspecao } from '../recursos.js';
 import { registrarEvento, EVENTOS } from '../../interface/analise.js';
-import { colunaX, linhaY, NOME_DA_ACAO, ROTULO_DA_ORDEM, cartaDaMesa } from './layout.js';
+import { colunaX, linhaY, NOME_DA_ACAO, cartaDaMesa } from './layout.js';
 
 /** Ação do motor correspondente a cada botão (para o texto da regra). */
 const ACAO_DO_MOTOR = { tunagem: 'tune', overfit: 'overfit', earlystop: 'earlystop', stackoverflow: 'stackoverflow', dropout: 'dropout', transfer: 'transfer', passar: 'pass' };
@@ -75,7 +73,6 @@ export const metodosDeEntrada = {
    */
   executarAcao(tipo) {
     if (!this.ehVezDoHumano()) return;
-    if (this.tutorial && !this.tutorialLibera(tipo)) return;
     const alvos = this.alvosDaAcao(tipo);
     if (!alvos.length) return;
     /* um só alvo, na rede de outro (ou tunagem): executa direto; na própria rede (early stop,
@@ -92,7 +89,6 @@ export const metodosDeEntrada = {
    */
   acionarDropout() {
     if (!this.ehVezDoHumano()) return;
-    if (this.tutorial && !this.tutorialLibera('dropout')) return;
     const n = this.selecao.length;
     if (n && this.modo === 'livre' && n <= camadasDesfaziveis(this.mao, this.quemVe)) {
       this.executarJogada({ tipo: 'dropout', jogador: this.quemVe, n, pagamento: this.selecao.slice() });
@@ -142,7 +138,7 @@ export const metodosDeEntrada = {
     }
     if (id === 'transfer') {
       const v = valorParaTransfer(mao, eu);
-      return v ? 'Transfer learning: troca quatro cartas iguais da mão (' + v + (valoresParaTransfer(mao, eu).length > 1 ? ' ou outra quadra, você escolhe' : '') + ') por quatro do limbo. Você confirma antes e pode cancelar. Uma vez por mão; não gasta a vez.' : 'Transfer learning precisa de quatro cartas iguais na mão (uma vez por mão).' + regra;
+      return v ? 'Transfer learning: troca os quatro ' + v + ' da mão por quatro cartas do limbo. Uma vez por mão; não gasta a vez.' : 'Transfer learning precisa de quatro cartas iguais na mão (uma vez por mão).' + regra;
     }
     if (id === 'passar') return podePassar(mao, eu) ? 'Passar: encerra a sua vez sem jogar.' + regra : 'Passar não está disponível: você ainda tem jogada.' + regra;
     return qtd || this.modo !== 'livre' ? 'Limpar a seleção e voltar ao começo da jogada (Esc).' : 'Nada selecionado.';
@@ -174,14 +170,12 @@ export const metodosDeEntrada = {
   aoClicarNaCarta(idCarta) {
     const mao = this.mao, eu = this.quemVe;
     if (mao.fase === 'inicio' && this.modo === 'inicio') {
-      if (this.tutorial && !this.tutorialLiberaCarta(idCarta)) return;
       this.modo = 'livre';
       Som.colocarCarta();
       this.executarJogada({ tipo: 'inicio', jogador: eu, carta: idCarta });
       return;
     }
     if (!this.ehVezDoHumano()) return;
-    if (this.tutorial && !this.tutorialLiberaCarta(idCarta)) return;
     Som.selecionar();
     const i = this.selecao.indexOf(idCarta);
     if (this.modo === 'pagarDropout') {
@@ -223,106 +217,33 @@ export const metodosDeEntrada = {
     this.redesenhar();
   },
 
-  /**
-   * Botão Transfer learning: não é jogada obrigatória, então pergunta antes. Com uma quadra, pede
-   * a confirmação; com mais de uma, o jogador escolhe qual trocar (uma só por mão) ou cancela.
-   */
+  /** Botão Transfer: troca as quatro cartas iguais da mão. */
   fazerTransfer() {
-    if (!this.ehVezDoHumano()) return;
-    if (this.tutorial) return this.avisarTutorial();
-    const eu = this.quemVe, valores = valoresParaTransfer(this.mao, eu);
-    if (!valores.length) return;
-    const trocar = (valor) => {
-      const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
-      this.executarJogada({ tipo: 'transfer', jogador: eu, cartas });
-    };
-    const nome = (v) => NOME_VALOR[v] || v;
-    confirmar('Transfer learning?',
-      (valores.length > 1 ? 'Você tem mais de uma quadra na mão. Escolha qual trocar por quatro cartas do limbo (só uma por mão). ' : 'Trocar os quatro ' + escaparHtml(nome(valores[0])) + ' da mão por quatro cartas do limbo? ') +
-        'Uma vez por mão; não gasta a vez e você pode cancelar.',
-      [
-        { rotulo: 'Cancelar', classe: 'discreto' },
-        ...valores.map((v) => ({ rotulo: valores.length > 1 ? 'Trocar os quatro ' + nome(v) : 'Trocar', classe: 'vinho', acao: () => trocar(v) })),
-      ]);
-  },
-
-  /**
-   * Botões Tamanho e Naipe: o primeiro clique ordena do menor ao maior; clicar de novo no mesmo
-   * critério inverte. A escolha fica na aplicação e vale nas próximas mãos e para cartas novas.
-   * @param {'tamanho'|'naipe'} criterio
-   */
-  ordenarMao(criterio) {
-    if (!this.mao || this.quemVe < 0) return;
-    const atual = this.app.ordemDaMao;
-    this.app.ordemDaMao = atual && atual.criterio === criterio ? { criterio, sentido: -atual.sentido } : { criterio, sentido: 1 };
-    this.atualizarRotulosDaOrdem();
-    this.desenharMaos();
-  },
-
-  /** Rótulos dos botões de ordenar: o ativo mostra a seta do sentido. */
-  atualizarRotulosDaOrdem() {
-    const ordem = this.app.ordemDaMao;
-    for (const [criterio, botao] of Object.entries(this.painel.ordenar)) {
-      const ativo = ordem && ordem.criterio === criterio;
-      botao.definirRotulo(ROTULO_DA_ORDEM[criterio] + (ativo ? (ordem.sentido > 0 ? ' \u25B2' : ' \u25BC') : ''));
-    }
-  },
-
-  /**
-   * Ícones de som e música da mesa: dois botões HTML (com `aria-pressed`) postos sobre o canvas, nos
-   * espaços da fileira dos botões de ordenar. Seguem o canvas quando a janela muda de tamanho.
-   * @param {number[]} centros Centro x de cada ícone, em coordenadas do mundo.
-   * @param {number} y Centro y, em coordenadas do mundo.
-   * @param {number} lado Lado do botão, em coordenadas do mundo.
-   */
-  criarControlesDeSomDaMesa(centros, y, lado) {
-    const molde = document.createElement('div');
-    molde.innerHTML = htmlDosControlesDeSom(this.app);
-    const raiz = molde.firstElementChild;
-    raiz.classList.add('na-mesa');
-    document.body.appendChild(raiz);
-    ligarControlesDeSom(raiz, this.app, () => this.opcoes.terreno, () => this.atualizarChaves());
-    const botoes = [...raiz.querySelectorAll('[data-controle-som]')];
-    const posicionar = () => botoes.forEach((b, j) => {
-      const r = retanguloNaTela(this, centros[j], y, lado, lado);
-      Object.assign(b.style, { left: r.x + 'px', top: r.y + 'px', width: r.l + 'px', height: r.a + 'px' });
-    });
-    posicionar();
-    this.time.delayedCall(0, posicionar);
-    this.scale.on('resize', posicionar);
-    this.events.once('shutdown', () => { this.scale.off('resize', posicionar); raiz.remove(); });
-  },
-
-  /** Texto do quadro de instruções para os botões de ordenar. */
-  explicarOrdem(criterio) {
-    const ordem = this.app.ordemDaMao, ativo = ordem && ordem.criterio === criterio;
-    const como = criterio === 'tamanho'
-      ? 'Ordena a mão pelo valor das cartas no baralho escolhido (empate: A, 2 … K, depois o naipe).'
-      : 'Agrupa a mão por naipe (Ouros, Paus, Copas, Espadas), do menor ao maior dentro de cada um.';
-    return como + ' ' + (ativo ? 'Clique de novo para ' + (ordem.sentido > 0 ? 'inverter (decrescente).' : 'voltar ao crescente.') : 'Clique de novo para inverter.') +
-      ' Atalho: tecla ' + (criterio === 'tamanho' ? 'T' : 'N') + '. Só muda como as cartas aparecem.';
+    const eu = this.quemVe, valor = valorParaTransfer(this.mao, eu);
+    if (!valor) return;
+    const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
+    this.executarJogada({ tipo: 'transfer', jogador: eu, cartas });
   },
 
   /** Botão Passar a vez. */
   passarAVez() {
-    if (this.tutorial && this.ehVezDoHumano() && !this.tutorialLibera('passar')) return;
     if (this.ehVezDoHumano() && podePassar(this.mao, this.quemVe)) this.executarJogada({ tipo: 'passar', jogador: this.quemVe });
   },
 
   /** Botão Menu: confirma antes de abandonar a partida. */
   /**
-   * Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só.
+   * Botão REGRAS da mesa: como jogar, Glossário e a chave das dicas, numa janela só.
    */
   abrirRegrasDaMesa() {
     const dicas = this.app.dicasLigadas;
     registrarEvento(EVENTOS.mesaClique, { botao: 'regras' });
     const painel = abrirPainel(
       '<div class="folha estreita janela-da-mesa"><h2>Regras</h2>' +
-      '<p>Consulte as regras, a ajuda de cada ação, os conceitos de redes neurais do Livro de conceitos ou ligue as dicas durante a partida.</p>' +
+      '<p>Consulte as regras, a ajuda de cada ação, os conceitos de redes neurais do Glossário ou ligue as dicas durante a partida.</p>' +
       '<div class="grade-de-botoes">' +
       '<button class="botao" data-opcao="regras">Como jogar</button>' +
       '<button class="botao" data-opcao="ajuda">Ajuda das ações</button>' +
-      '<button class="botao" data-opcao="grimorio">Livro de conceitos</button>' +
+      '<button class="botao" data-opcao="grimorio">Glossário</button>' +
       '<button class="botao ' + (dicas ? 'discreto' : 'vinho') + '" data-opcao="dicas" data-chave="dicas">' + (dicas ? 'Desligar dicas' : 'Ativar dicas') + '</button>' +
       '<button class="botao discreto" data-fechar>Voltar ao jogo</button>' +
       '</div></div>', { fechaAoClicarFora: true });
@@ -378,7 +299,6 @@ export const metodosDeEntrada = {
   },
 
   perguntarSeVoltaAoMenu() {
-    if (this.tutorial) return this.sairDoTutorial();
     confirmar('Abandonar a partida?', 'O placar de tentos desta partida será perdido. Conquistas já desbloqueadas ficam salvas.', [
       { rotulo: 'Continuar jogando', classe: 'discreto' },
       { rotulo: 'Voltar ao menu', classe: 'vinho', acao: () => { this.registrarAbandono(); this.app.irParaMenu(); } },

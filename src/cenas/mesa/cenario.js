@@ -7,13 +7,13 @@
 import { FONTES, RESOLUCAO, CORES, TAMANHO_CARTA } from '../../configuracao.js';
 import { nomeCamada } from '../../nucleo/rede.js';
 import { TERRENOS } from '../../nucleo/terrenos.js';
-import { desenharBotao, MARGEM_BOTAO, PALETAS_DOS_BOTOES, COR_DA_ACAO } from '../../arte/botoes.js';
+import { desenharBotao, MARGEM_BOTAO } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
 import { texturaDeInspecao } from '../recursos.js';
-import { PAINEL_ESQ, PAINEL_DIR, ROTULO_DO_DETALHE, ROTULO_DA_ORDEM, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
+import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
 
 /** Cor do rótulo de cada variante de botão. */
-const COR_ROTULO = Object.fromEntries(Object.entries(PALETAS_DOS_BOTOES).map(([v, p]) => [v, p.texto]));
+const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
 /** Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. */
 const TEMPO_DE_SEGURAR = 450;
 
@@ -46,7 +46,7 @@ export const metodosDoCenario = {
         ajustarLinha(aviso, aviso.text, 11.5, coluna + 6, 8);
       }
     }
-    this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, ROTULO_DO_DETALHE, { fontFamily: FONTES.titulo, fontStyle: '700', fontSize: '12px', color: '#e8d6a8', letterSpacing: 2 }).setOrigin(0.5).setDepth(7);
+    this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, 'INSPEÇÃO', { fontFamily: FONTES.titulo, fontStyle: '700', fontSize: '12px', color: '#e8d6a8', letterSpacing: 2 }).setOrigin(0.5).setDepth(7);
   },
 
   /**
@@ -124,7 +124,7 @@ export const metodosDoCenario = {
       if (botao.habilitado === sim) return botao;
       botao.habilitado = sim;
       pintar(sim ? 'normal' : 'inativo');
-      texto.setColor(sim ? COR_ROTULO[variante] : variante === 'ouro' || variante === 'pedra' ? '#8c7f63' : '#b9a6a6');
+      texto.setColor(sim ? COR_ROTULO[variante] : variante === 'vinho' ? '#a77a7a' : '#8c7f63');
       return botao;
     };
     botao.definirRotulo(rotulo);
@@ -185,7 +185,7 @@ export const metodosDoCenario = {
     });
     p.dica = this.criarTexto(PAINEL_ESQ.x + 14, ESQ.dica, '', { fontSize: '13.5px', color: '#efe3c6', wordWrap: { width: PAINEL_ESQ.l - 28 }, lineSpacing: 1 });
 
-    /* só dois botões no rodapé: REGRAS (como jogar, Livro de conceitos e dicas) e MENU (som, música, sair) */
+    /* só dois botões no rodapé: REGRAS (como jogar, Glossário e dicas) e MENU (som, música, sair) */
     const lb = (PAINEL_ESQ.l - 28 - 10) / 2, pedra = { tamanho: 17, variante: 'pedra' };
     p.botaoRegras = this.criarBotao(PAINEL_ESQ.x + 14 + lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, 'REGRAS', () => this.abrirRegrasDaMesa(), pedra);
     p.botaoMenu = this.criarBotao(PAINEL_ESQ.x + PAINEL_ESQ.l - 14 - lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, 'MENU', () => this.abrirMenuDaMesa(), pedra);
@@ -276,24 +276,11 @@ export const metodosDoCenario = {
     const rx = PAINEL_DIR.x + 12, rl = PAINEL_DIR.l - 24, rc = PAINEL_DIR.x + PAINEL_DIR.l / 2;
     /* TRUCO! e, ao lado, o "?" com a ajuda das ações (regra, quando acende e o conceito) */
     const lado = DIR.alturaTruco + 4, lt = rl - lado - 6;
-    p.truco = this.criarBotao(rx + lt / 2, DIR.truco, lt, DIR.alturaTruco, 'TRUCO!', () => this.pedirTrucoHumano(), { variante: COR_DA_ACAO.truco, tamanho: 20, dica: 'truco' });
+    p.truco = this.criarBotao(rx + lt / 2, DIR.truco, lt, DIR.alturaTruco, 'TRUCO!', () => this.pedirTrucoHumano(), { variante: 'vinho', tamanho: 20, dica: 'truco' });
     p.botaoAjuda = this.criarBotao(rx + rl - lado / 2, DIR.truco, lado, DIR.alturaTruco, '?', () => this.abrirAjudaDaMesa(), {
       variante: 'pedra', tamanho: 22,
       explicar: () => 'Ajuda das ações: a regra de cada jogada, quando o botão acende e o conceito de redes neurais por trás dela.',
     });
-    /* Ordenar a mão: Tamanho e Naipe; cada clique ordena e o seguinte inverte (▲ crescente, ▼ decrescente) */
-    /* a fileira tem 4 espaços: Tamanho, Naipe e os dois ícones de som e música (HTML sobre o canvas) */
-    const ladoIcone = DIR.alturaOrdenar, ol = (rl - 6 * 3 - ladoIcone * 2) / 2;
-    p.ordenar = {};
-    ['tamanho', 'naipe'].forEach((criterio, i) => {
-      p.ordenar[criterio] = this.criarBotao(rx + ol / 2 + i * (ol + 6), DIR.ordenar, ol, DIR.alturaOrdenar, ROTULO_DA_ORDEM[criterio], () => this.ordenarMao(criterio), {
-        variante: 'pedra', tamanho: 14, explicar: () => this.explicarOrdem(criterio),
-      });
-    });
-    this.criarControlesDeSomDaMesa([0, 1].map((j) => rx + (ol + 6) * 2 + ladoIcone / 2 + j * (ladoIcone + 6)), DIR.ordenar, ladoIcone);
-    this.input.keyboard?.on('keydown-T', () => this.ordenarMao('tamanho'));
-    this.input.keyboard?.on('keydown-N', () => this.ordenarMao('naipe'));
-    this.atualizarRotulosDaOrdem();
     const espaco = 6, bl = (rl - espaco * 3) / 4, coluna = (i) => rx + bl / 2 + i * (bl + espaco);
     const acoes = {
       tunagem: () => this.executarAcao('tunagem'), overfit: () => this.executarAcao('overfit'),
@@ -305,7 +292,7 @@ export const metodosDoCenario = {
     for (const [id, rotulo, linha] of BARRA_DE_ACOES) {
       const y = linha === 0 ? DIR.acoes : DIR.acoes2, i = porLinha[linha]++;
       p.acoes[id] = this.criarBotao(coluna(i), y, bl, DIR.alturaAcao, rotulo, acoes[id], {
-        variante: COR_DA_ACAO[id], tamanho: 13, dica: ['dropout', 'transfer', 'passar'].includes(id) ? id : undefined,
+        tamanho: 13, dica: ['dropout', 'transfer', 'passar'].includes(id) ? id : undefined,
         explicar: () => this.explicarAcao(id),
       });
     }

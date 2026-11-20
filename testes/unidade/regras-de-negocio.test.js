@@ -498,7 +498,7 @@ describe('Camada de truco (partida até 12 tentos)', () => {
 
 describe('Invariantes em partidas aleatórias', () => {
   it('RN-40 em 300 mãos aleatórias (5 baralhos x 4 terrenos x 3 inícios) nenhuma carta some ou duplica, os donos batem com as redes e toda mão termina', () => {
-    // O baralho de truco usa 2 baralhos de 27 cartas (54); os outros, 52. No Power Bee-Ai a mão é
+    // O baralho de truco usa 2 baralhos de 27 cartas (54); os outros, 52. No Power BI a mão é
     // embaralhada com o limbo, sem criar cartas.
     const baralhos = ['classico', 'truco', 'fraternidade', 'yinyang', 'powerbi'];
     const terrenos = ['neutro', 'montanha', 'pantano', 'oceano'];
@@ -510,13 +510,7 @@ describe('Invariantes em partidas aleatórias', () => {
         semente: 500 + g, jogadores: JOGADORES,
         baralho: baralhos[g % 5], terreno: terrenos[Math.floor(g / 5) % 4], inicio: inicios[g % 3],
       });
-      const idsDaMao = () => [
-        ...mao.camadas.flat().flatMap((n) => n.cartas.map((c) => c.id)),
-        ...mao.jogadores.flatMap((j) => j.mao.map((c) => c.id)),
-        ...mao.limbo.map((c) => c.id), ...mao.cemiterio.map((c) => c.id),
-      ];
-      /* o Yin-yang usa a arquitetura curta (#90), que não distribui o baralho inteiro: o total é o do início da mão */
-      const total = mao.config.baralho === 'yinyang' ? idsDaMao().length : mao.config.baralho === 'truco' ? 54 : 52;
+      const total = mao.config.baralho === 'truco' ? 54 : 52;
       let jogadas = 0;
       while (mao.fase !== 'fim' && jogadas < 500) {
         if (mao.fase === 'inicio') {
@@ -526,7 +520,11 @@ describe('Invariantes em partidas aleatórias', () => {
         const legais = jogadasLegais(mao, mao.vez, { comDropout: true });
         aplicarJogada(mao, legais[sortear(legais.length)]);
         jogadas++;
-        const ids = idsDaMao();
+        const ids = [
+          ...mao.camadas.flat().flatMap((n) => n.cartas.map((c) => c.id)),
+          ...mao.jogadores.flatMap((j) => j.mao.map((c) => c.id)),
+          ...mao.limbo.map((c) => c.id), ...mao.cemiterio.map((c) => c.id),
+        ];
         assert.equal(ids.length, total, `mão ${g}, jogada ${jogadas}: ${ids.length} cartas`);
         assert.equal(new Set(ids).size, total, `mão ${g}, jogada ${jogadas}: carta duplicada`);
         mao.jogadores.forEach((jogador, j) => {

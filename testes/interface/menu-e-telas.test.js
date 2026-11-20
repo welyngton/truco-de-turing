@@ -15,7 +15,7 @@ before(async () => { servidor = await subirServidor(); });
 after(() => servidor.fechar());
 
 describe('menu e telas', () => {
-  it('carrega, mostra o menu com as escolhas e abre Regras (abas, ajuda das ações), Livro de conceitos, Conquistas, Mods e Sobre', async () => {
+  it('carrega, mostra o menu com as escolhas e abre Regras (abas, ajuda das ações), Glossário, Conquistas, Mods e Sobre', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
     try {
@@ -46,23 +46,9 @@ describe('menu e telas', () => {
       await pagina.mouse.click(5, 5);
       await pagina.waitForFunction(async () => (await import('/src/interface/musica.js')).Musica.tocando());
       assert.equal(await musicaDoMenu(), true);
-      /* Yin-yang fixa 1 baralho e a arquitetura curta (com explicação) e, ao sair dele, as escolhas voltam */
-      await pagina.selectOption('#m-arquitetura', 'larga');
-      await pagina.selectOption('#m-baralhos', '3');
-      await pagina.selectOption('#m-baralho', 'yinyang');
-      assert.equal(await pagina.locator('#m-arquitetura').inputValue(), 'curta');
-      assert.equal(await pagina.locator('#m-baralhos').inputValue(), '1');
-      assert.ok(await pagina.locator('#m-arquitetura').isDisabled() && await pagina.locator('#m-baralhos').isDisabled());
-      assert.match(await pagina.locator('#m-mesa-dica').textContent(), /Yin-yang só tem 2 e Ás/);
-      await pagina.selectOption('#m-baralho', 'classico');
-      assert.equal(await pagina.locator('#m-arquitetura').inputValue(), 'larga');
-      assert.equal(await pagina.locator('#m-baralhos').inputValue(), '3');
-      assert.ok(await pagina.locator('#m-arquitetura').isEnabled() && await pagina.locator('#m-baralhos').isEnabled());
-      await pagina.selectOption('#m-arquitetura', 'padrao');
-      await pagina.selectOption('#m-baralhos', '1');
       await pagina.selectOption('#m-terreno', 'oceano');
       await pagina.waitForSelector('.miniatura img');
-      for (const [botao, texto] of [['#m-regras', 'Regras'], ['#m-grimorio', 'Livro de conceitos'], ['#m-conquistas', 'Conquistas'], ['#m-mods', 'Mods'], ['#m-sobre', 'Sobre']]) {
+      for (const [botao, texto] of [['#m-regras', 'Regras'], ['#m-grimorio', 'Glossário'], ['#m-conquistas', 'Conquistas'], ['#m-mods', 'Mods'], ['#m-sobre', 'Sobre']]) {
         await pagina.click(botao);
         await pagina.waitForSelector('.camada:not(.transparente) h2');
         assert.match(await pagina.locator('.camada:not(.transparente) h2').first().textContent(), new RegExp(texto));
@@ -81,7 +67,7 @@ describe('menu e telas', () => {
           /* a equação é desenhada (MathML com altura de verdade, não texto cru) */
           assert.ok(await pagina.locator('#g-verbete .equacao math').evaluate((m) => m.getBoundingClientRect().height > 20));
           await capturar(pagina, '28-biblioteca-dropout');
-          /* fecha o Livro de conceitos e a ajuda; as regras continuam abertas */
+          /* fecha o Glossário e a ajuda; as regras continuam abertas */
           await pagina.locator('.camada:not(.transparente) [data-fechar] >> nth=-1').click();
           await pagina.locator('.ajuda-acoes [data-fechar] >> nth=0').click();
         }
@@ -94,27 +80,8 @@ describe('menu e telas', () => {
           assert.ok(await pagina.locator('#g-verbete .aprofundar .formula math').evaluate((m) => m.getBoundingClientRect().height > 20));
           await capturar(pagina, '01b-grimorio-formulas');
         }
-        if (botao === '#m-conquistas') {
-          /* o retrato do professor saiu daqui (foi para o cartão dele, na aba Equipe do Sobre) */
-          await pagina.waitForSelector('.conquistas-lista');
-          assert.equal(await pagina.locator('#c-retrato, .guilda, .conquistas-salao canvas').count(), 0);
-          await capturar(pagina, '02-conquistas');
-        }
-        if (botao === '#m-sobre') {
-          assert.match(await pagina.locator('.versao').textContent(), /Versão \d+\.\d+\.\d+/);
-          /* duas abas: "O jogo" (aberta) e "Equipe" (um cartão por pessoa; a foto do professor no cartão dele) */
-          assert.deepEqual(await pagina.locator('.folha.sobre .abas [role="tab"]').allTextContents(), ['O jogo', 'Equipe']);
-          assert.match(await pagina.locator('section.aba[data-aba="jogo"]').textContent(), /Yu-Gi-Oh!, UNO e Geometry Dash/);
-          assert.equal(await pagina.locator('section.aba[data-aba="equipe"]').isHidden(), true);
-          await pagina.click('.abas [data-aba="equipe"]');
-          assert.equal(await pagina.locator('.pessoa-cartao').count(), 5);
-          await pagina.waitForSelector('.pessoa-cartao[data-pessoa="peng"] .pessoa-foto canvas');
-          assert.equal(await pagina.locator('.pessoa-cartao canvas').count(), 1, 'só o professor tem foto por enquanto');
-          assert.equal(await pagina.locator('.pessoa-cartao[data-pessoa="diego"] .iniciais').textContent(), 'DC');
-          assert.equal(await pagina.locator('.pessoa-cartao .a-caminho').count(), 4, 'os mini-CVs que faltam avisam que vão chegar');
-          assert.equal(await pagina.locator('section.aba[data-aba="jogo"]').isHidden(), true);
-          await capturar(pagina, '02b-sobre-equipe');
-        }
+        if (botao === '#m-conquistas') { await pagina.waitForSelector('#c-retrato canvas'); await capturar(pagina, '02-conquistas'); }
+        if (botao === '#m-sobre') assert.match(await pagina.locator('.versao').textContent(), /Versão \d+\.\d+\.\d+/);
         if (botao === '#m-mods') await capturar(pagina, '24-mods');
         await pagina.click('.camada:not(.transparente) [data-fechar] >> nth=0');
       }
@@ -128,48 +95,6 @@ describe('menu e telas', () => {
       await pagina.locator('.avatares [data-fechar] >> nth=0').click();
       assert.equal(await pagina.evaluate(() => globalThis.__TRUCO_DE_TURING__.progresso.avatar), 'robo');
       assert.notEqual(await pagina.locator('#m-avatar-img').getAttribute('src'), antes);
-      assert.deepEqual(jogo.erros, []);
-    } finally { await jogo.fechar(); }
-  });
-
-  it('ícones de som e música: sempre à vista no menu e na mesa, com estado, alvo de 44 px, lembrados e em sincronia', async () => {
-    const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
-    const { pagina } = jogo;
-    try {
-      await esperarMenu(pagina);
-      const som = pagina.getByRole('button', { name: 'Efeitos sonoros' }), musica = pagina.getByRole('button', { name: 'Música', exact: true });
-      for (const botao of [som, musica]) {
-        assert.equal(await botao.getAttribute('aria-pressed'), 'true', 'começam ligados');
-        const caixa = await botao.boundingBox();
-        assert.ok(caixa.width >= 44 && caixa.height >= 44, 'alvo de toque: ' + JSON.stringify(caixa));
-      }
-      /* desligar: o estado, o ícone e a escolha (salva no progresso) mudam */
-      const cheio = await som.innerHTML();
-      await som.click();
-      assert.equal(await som.getAttribute('aria-pressed'), 'false');
-      assert.notEqual(await som.innerHTML(), cheio, 'o ícone troca (cortado quando desligado)');
-      await musica.click();
-      assert.equal(await musica.getAttribute('aria-pressed'), 'false');
-      const salvo = () => pagina.evaluate(() => globalThis.__TRUCO_DE_TURING__.progresso);
-      assert.deepEqual([(await salvo()).mudo, (await salvo()).musica], [true, false]);
-      /* a mesa abre com o mesmo estado e tem os seus próprios ícones, sobre o canvas */
-      await comecarPartida(pagina, { oponente: 'aleatorio' });
-      const naMesa = pagina.locator('.controles-som.na-mesa .icone-som');
-      assert.equal(await naMesa.count(), 2);
-      assert.deepEqual(await naMesa.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-pressed'))), ['false', 'false']);
-      for (const caixa of await naMesa.evaluateAll((bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; }))) {
-        assert.ok(caixa.w >= 40 && caixa.h >= 40 && caixa.l >= 0 && caixa.t >= 0, 'ícone da mesa dentro da tela e com bom tamanho: ' + JSON.stringify(caixa));
-      }
-      /* ligar na mesa vale para tudo: progresso, o outro conjunto e a janela MENU */
-      await naMesa.nth(0).click();
-      assert.equal((await salvo()).mudo, false);
-      await naMesa.nth(1).click();
-      assert.equal((await salvo()).musica, true);
-      await pagina.waitForFunction(async () => (await import('/src/interface/musica.js')).Musica.tocando());
-      await naCena(pagina, 'cena.abrirMenuDaMesa();');
-      assert.equal((await pagina.locator('[data-chave="som"]').textContent()), 'Som: sim');
-      await pagina.locator('[data-chave="som"]').click();
-      assert.deepEqual(await naMesa.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-pressed'))), ['false', 'true'], 'o botão do MENU também repinta os ícones');
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });

@@ -166,7 +166,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .menu-mais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 8px; }
 /* os seis botões têm o mesmo tamanho: colunas e linhas iguais, conteúdo centrado, e o retrato do
    Avatar não aumenta a altura do botão (margem negativa compensa o tamanho dele) */
-.menu-mais .botao { font-size: 13px; padding: 9px 6px; white-space: normal; line-height: 1.1; text-align: center; display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.menu-mais .botao { font-size: 13px; padding: 9px 6px; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .menu-mais .botao-avatar img { width: 1.9em; height: 1.9em; margin-block: -0.5em; flex: none; }
 @media (max-width: 520px) { .menu-mais { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .menu-painel { padding: 22px 24px; }
@@ -176,7 +176,6 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
   font: 600 16px var(--fonte-interface); color: var(--tinta);
   background: #fbf4e2; border: 2px solid #2b1608; border-radius: 8px; padding: 8px 10px; width: 100%;
 }
-.campo select:disabled { opacity: .6; cursor: not-allowed; }
 .campo .dica { font-size: 14px; color: #5a4630; line-height: 1.35; min-width: 0; }
 /* dois campos curtos lado a lado (jogadores e humanos; arquitetura e baralhos; início e partida) */
 .campos-duplos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
@@ -218,8 +217,11 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 
 /* ---------- Conquistas ---------- */
 .folha.larga { width: min(1060px, 100%); }
-/* retrato do professor: agora no cartão dele, na aba Equipe do Sobre (#91) */
-.pessoa-foto.retrato canvas { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35)); }
+.conquistas-salao { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; align-items: start; }
+.guilda { text-align: center; position: sticky; top: 0; }
+.guilda .retrato { aspect-ratio: 240 / 330; max-width: 230px; margin: 0 auto; }
+.guilda .retrato canvas { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); }
+.guilda-nota { font-style: italic; font-size: 14px; color: #5a4630; margin: 6px auto 0; max-width: 26ch; }
 .conquistas-principal { min-width: 0; }
 /* de quem são as conquistas: da conta conectada ou só deste aparelho */
 .conquistas-origem { margin: 2px 0 0; font-size: 14px; color: #5a4630; }
@@ -461,6 +463,9 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 }
 @media (max-width: 760px) {
   .grimorio { grid-template-columns: minmax(0, 1fr); }
+  .conquistas-salao { grid-template-columns: minmax(0, 1fr); }
+  .guilda { position: static; }
+  .guilda .retrato { max-width: 180px; }
   .resultado-grade { grid-template-columns: minmax(0, 1fr); }
   .folha { padding: 22px 18px; font-size: 16px; }
   .grito-truco .grito { font-size: 46px; }
@@ -469,7 +474,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
   .camada, .folha, .aviso, .trofeu, .folha.vitoria, .aviso.aviso-conquista.especial { animation: none; }
 }
 
-/* Livro de conceitos: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
+/* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
 .grimorio-verbete .aprofundar { margin-top: 14px; border-top: 1px solid rgba(43, 22, 8, 0.2); padding-top: 4px; }
 .grimorio-verbete .aprofundar h3 { margin: 8px 0 4px; }
 .grimorio-verbete .aprofundar .formula { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
@@ -570,62 +575,3 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .faixa-estatisticas-botoes { display: flex; gap: 6px; flex: none; }
 @media (max-width: 560px) { .faixa-estatisticas { flex-direction: column; align-items: stretch; } }
 .estatisticas-situacao { font-weight: 600; }
-
-/* ícones de som e música (controlesDeSom.js): alvo de toque de 44 px, estado em aria-pressed */
-.controles-som { display: flex; gap: 8px; }
-.icone-som {
-  width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
-  color: #f6ecd6; background: linear-gradient(#bcae8b, #6f6146 14%, #4d4129 78%, #241d10);
-  border: 2px solid #0b0907; border-radius: 10px; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-.icone-som svg { width: 26px; height: 26px; }
-.icone-som:hover { filter: brightness(1.15); }
-.icone-som:focus-visible { outline: 3px solid #f6dc8f; outline-offset: 2px; }
-.icone-som[aria-pressed='false'] { color: #b9a98a; background: linear-gradient(#4a4232, #342e22 14%, #262118 78%, #120f0a); }
-.menu-capa { position: relative; }
-.menu-capa > .controles-som { position: absolute; top: 0; right: 0; }
-.menu-capa h1 { padding-right: 112px; }
-/* na mesa, o par fica sobre o canvas, na fileira dos botões de ordenar (posicionado em pixels pelo código) */
-.controles-som.na-mesa { position: fixed; z-index: 4; gap: 0; display: block; }
-.controles-som.na-mesa .icone-som { position: fixed; }
-.controles-som.na-mesa .icone-som svg { width: 58%; height: 58%; }
-/* aba Equipe do Sobre: um cartão por pessoa, com foto (ou iniciais) e mini-CV */
-.equipe { display: grid; gap: 12px; margin: 12px 0; }
-.pessoa-cartao { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; align-items: start; background: rgba(255, 248, 230, 0.7); border: 1px solid rgba(60, 40, 20, 0.2); border-radius: 10px; padding: 12px 14px; }
-.pessoa-foto { width: 110px; }
-.pessoa-foto.retrato { aspect-ratio: 240 / 330; }
-.pessoa-foto.iniciais { height: 110px; border-radius: 50%; display: grid; place-items: center; font: 700 34px var(--fonte-titulo); letter-spacing: 0.04em; color: #f6dc8f; background: radial-gradient(circle at 35% 30%, #7a1626, #3a0810); border: 3px solid #d9b260; }
-.pessoa-texto h4 { margin: 0; font: 700 17px var(--fonte-titulo); color: #2b1608; }
-.pessoa-papel { margin: 2px 0 6px; font-size: 13.5px; font-style: italic; color: #6b1a22; }
-.pessoa-cv { margin: 0; font-size: 14.5px; line-height: 1.4; }
-.pessoa-cv.a-caminho { font-style: italic; color: #7a6a4c; }
-@media (max-width: 560px) {
-  .pessoa-cartao { grid-template-columns: minmax(0, 1fr); justify-items: start; }
-  .pessoa-foto { width: 96px; }
-  .pessoa-foto.iniciais { height: 96px; }
-}
-
-/* Tutorial (cenas/mesa/tutorial.js): o balão de fala do Percy, ao lado da mesa */
-.tutorial-balao {
-  position: fixed; z-index: 7; left: 8px; top: 8px; width: min(340px, 34vw); min-width: 250px;
-  display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; align-items: start;
-  background: var(--pergaminho); color: var(--tinta); border: 3px solid #0d0a08; border-radius: 14px;
-  padding: 10px 12px 10px 8px; box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6); font-family: var(--fonte-texto); font-size: 14px; line-height: 1.4;
-  animation: subir 0.2s ease-out;
-}
-.tutorial-balao::after { content: ''; position: absolute; left: 28px; bottom: -14px; border: 8px solid transparent; border-top-color: #0d0a08; }
-.tutorial-balao .rosto-do-assistente { display: block; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4)); }
-.tutorial-nome { font: 700 12px var(--fonte-titulo); letter-spacing: 0.06em; color: #6b1a22; margin: 0 0 2px; }
-.tutorial-fala { margin: 0; }
-.tutorial-fala b { color: #6b1a22; }
-.tutorial-rodape { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
-.tutorial-passo { font-size: 11.5px; color: #7a6a4c; }
-.tutorial-botoes { display: flex; gap: 6px; margin-left: auto; }
-.tutorial-botoes .botao { padding: 6px 12px; font-size: 13px; min-height: 34px; }
-.tutorial-balao.aviso-do-passo { animation: tremer 0.35s; }
-@keyframes tremer { 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
-@media (max-width: 760px), (max-height: 520px) {
-  .tutorial-balao { width: min(300px, 52vw); min-width: 0; font-size: 12.5px; grid-template-columns: 44px minmax(0, 1fr); padding: 7px 9px 7px 6px; }
-  .tutorial-balao .rosto-do-assistente { width: 44px; height: 44px; }
-  .tutorial-botoes .botao { padding: 4px 9px; font-size: 12px; min-height: 30px; }
-}

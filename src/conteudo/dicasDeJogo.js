@@ -6,7 +6,7 @@
  * nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica.
  *
  * `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos
- * primeiro), ou uma dica geral de estratégia ligada a um verbete do Livro de conceitos. Não depende do Phaser:
+ * primeiro), ou uma dica geral de estratégia ligada a um verbete do Glossário. Não depende do Phaser:
  * roda também no Node (testes).
  */
 import { ehFigura, PLURAL_FIGURA, NAIPE } from '../nucleo/cartas.js';
@@ -18,7 +18,7 @@ import { podeTrucar } from '../nucleo/truco.js';
 
 /**
  * Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma
- * boa prática do jogo a um verbete do Livro de conceitos (`verbete`).
+ * boa prática do jogo a um verbete do Glossário (`verbete`).
  */
 export const DICAS_GERAIS = [
   { id: 'geral-mao', verbete: 'pesos', titulo: 'Sua mão é o seu orçamento',
@@ -114,7 +114,7 @@ export function escolherDicaDeJogo(mao, j, partida, recentes = []) {
   /* 5. economia da mão */
   const valorTransfer = valorParaTransfer(mao, j);
   if (valorTransfer) dica('transfer', 'transfer', 'Quatro iguais na mão',
-    'Você tem quatro ' + valorTransfer + '. Se eles não servem para tunar nem atacar, o transfer learning troca os quatro por cartas novas do limbo (você confirma antes e pode cancelar).');
+    'Você tem quatro ' + valorTransfer + '. Se eles não servem para tunar nem atacar, o transfer learning troca todos por cartas novas do limbo.');
   if (eu.mao.length > 0 && eu.mao.length <= 2 && eu.situacao === 'construindo') dica('mao-curta', 'dropout', 'Poucas cartas na mão',
     'Restam ' + eu.mao.length + ' carta(s). Guarde-as para pagar um dropout se a rede entrar num caminho ruim, ou para um ataque decisivo.');
 

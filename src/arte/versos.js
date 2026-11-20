@@ -1,6 +1,6 @@
 /**
  * @file Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de
- * computação), fraternidade (anéis), yin-yang (A e 2) e Power Bee-Ai (abelha num favo de hexágonos).
+ * computação), fraternidade (anéis), yin-yang (A e 2) e Power BI (painel de indicadores).
  *
  * Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas
  * resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
@@ -203,63 +203,69 @@ function versoYinYang(ctx, W, H, aleatorio) {
   ctx.fillText('YIN · YANG', W / 2, H / 2 + 79.5);
 }
 
-/** Power Bee-Ai: favo de hexágonos com uma abelha no medalhão e setas de atualizar (a mão é embaralhada com o limbo) */
+/** Power BI: painel de indicadores (gráficos e um botão de atualizar), que embaralha a mão */
 function versoPowerBI(ctx, W, H, aleatorio) {
-  const Y = '#f2c811', Y2 = '#e8a33a', T = '#3fc1c9';
-  const hexagono = (cx, cy, r) => {
-    ctx.beginPath();
-    for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a); if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
-    ctx.closePath();
-  };
+  let Y = '#f2c811', Y2 = '#e8a33a', T = '#3fc1c9';
   ctx.save(); caminhoArredondado(ctx, 9, 9, W - 18, H - 18, 9); ctx.clip();
   ctx.fillStyle = degradeLinear(ctx, 0, 0, 0, H, [[0, '#232838'], [1, '#0f121a']]);
   ctx.fillRect(0, 0, W, H);
-  /* favo: hexágonos em colunas alternadas; alguns com mel (preenchidos) */
-  const r = 15, dx = r * Math.sqrt(3), dy = r * 1.5;
-  for (let linha = -1; linha * dy < H + r; linha++) {
-    for (let col = -1; col * dx < W + r; col++) {
-      const cx = col * dx + (linha % 2 ? dx / 2 : 0), cy = linha * dy + 12;
-      hexagono(cx, cy, r - 1.2);
-      if (aleatorio() < 0.2) { ctx.fillStyle = aleatorio() < 0.5 ? 'rgba(242,200,17,.16)' : 'rgba(63,193,201,.13)'; ctx.fill(); }
-      ctx.strokeStyle = 'rgba(242,200,17,.22)'; ctx.lineWidth = 0.9; ctx.stroke();
+  ctx.strokeStyle = 'rgba(242,200,17,.07)'; ctx.lineWidth = 0.8;
+  for (let g = 9; g < W; g += 12) { ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, H); ctx.stroke(); }
+  for (let g2 = 9; g2 < H; g2 += 12) { ctx.beginPath(); ctx.moveTo(0, g2); ctx.lineTo(W, g2); ctx.stroke(); }
+  /* azulejos de mini gráficos */
+  let tiles = [[22, 24, 60, 40, 'bar'], [92, 24, 60, 40, 'line'], [162, 24, 56, 40, 'pie'], [22, 284, 60, 30, 'line'], [92, 284, 60, 30, 'pie'], [162, 284, 56, 30, 'bar']];
+  tiles.forEach(function (t) {
+    ctx.fillStyle = 'rgba(255,255,255,.05)'; caminhoArredondado(ctx, t[0], t[1], t[2], t[3], 4); ctx.fill();
+    ctx.strokeStyle = 'rgba(242,200,17,.25)'; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.globalAlpha = 0.55;
+    if (t[4] === 'bar') {
+      for (let b = 0; b < 5; b++) { let hh = 4 + aleatorio() * (t[3] - 14); ctx.fillStyle = b % 2 ? T : Y; ctx.fillRect(t[0] + 6 + b * 10, t[1] + t[3] - 5 - hh, 7, hh); }
+    } else if (t[4] === 'line') {
+      ctx.strokeStyle = Y; ctx.lineWidth = 1.6; ctx.beginPath();
+      for (let p = 0; p <= 6; p++) { let px = t[0] + 6 + p * (t[2] - 12) / 6, py = t[1] + 8 + aleatorio() * (t[3] - 16); if (p === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+      ctx.stroke();
+    } else {
+      let pcx = t[0] + t[2] / 2, pcy = t[1] + t[3] / 2;
+      [[0, 2.4, Y], [2.4, 4.4, T], [4.4, 6.283, Y2]].forEach(function (s) { ctx.strokeStyle = s[2]; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(pcx, pcy, Math.min(11, t[3] / 2 - 5), s[0], s[1]); ctx.stroke(); });
     }
-  }
+    ctx.globalAlpha = 1;
+  });
   ctx.restore();
   ctx.strokeStyle = Y; ctx.lineWidth = 2.4; caminhoArredondado(ctx, 15, 15, W - 30, H - 30, 7); ctx.stroke();
-  /* medalhão hexagonal */
-  const mx = W / 2, my = H / 2 - 8;
+  /* painel central */
+  let px0 = W / 2 - 74, py0 = H / 2 - 92, pw = 148, ph = 184;
   sombraSuave(ctx, 12, 4, 0.6);
-  ctx.fillStyle = degradeRadial(ctx, mx, my - 14, 6, mx, my, 84, [[0, '#2b3350'], [1, '#12151f']]);
-  hexagono(mx, my, 76); ctx.fill();
+  ctx.fillStyle = '#1b2030'; caminhoArredondado(ctx, px0, py0, pw, ph, 10); ctx.fill();
   semSombra(ctx);
-  ctx.strokeStyle = Y; ctx.lineWidth = 3; ctx.stroke();
-  ctx.strokeStyle = 'rgba(242,200,17,.4)'; ctx.lineWidth = 1; hexagono(mx, my, 68); ctx.stroke();
-  /* setas de atualizar em volta da abelha */
-  ctx.strokeStyle = T; ctx.fillStyle = T; ctx.lineWidth = 3; ctx.lineCap = 'round';
-  [0, Math.PI].forEach(function (g) {
-    const a0 = g + 0.35, a1 = g + 2.2, R = 56;
-    ctx.beginPath(); ctx.arc(mx, my, R, a0, a1); ctx.stroke();
-    const ex = mx + R * Math.cos(a1), ey = my + R * Math.sin(a1), tx = -Math.sin(a1), ty = Math.cos(a1), nx = Math.cos(a1), ny = Math.sin(a1);
-    ctx.beginPath(); ctx.moveTo(ex + tx * 9, ey + ty * 9); ctx.lineTo(ex + nx * 6, ey + ny * 6); ctx.lineTo(ex - nx * 6, ey - ny * 6); ctx.closePath(); ctx.fill();
-  });
-  ctx.lineCap = 'butt';
-  /* abelha: asas, corpo listrado, cabeça, olhos, antenas e ferrão */
-  ctx.save(); ctx.translate(mx, my + 2); ctx.rotate(-0.35);
-  ctx.fillStyle = 'rgba(190,235,240,.55)'; ctx.strokeStyle = 'rgba(190,235,240,.9)'; ctx.lineWidth = 1.2;
-  [[-9, -20, -0.5], [11, -20, 0.5]].forEach(function (a) { ctx.beginPath(); ctx.ellipse(a[0], a[1], 9, 17, a[2], 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
-  ctx.fillStyle = Y; ctx.beginPath(); ctx.ellipse(0, 4, 18, 25, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.save(); ctx.beginPath(); ctx.ellipse(0, 4, 18, 25, 0, 0, Math.PI * 2); ctx.clip();
-  ctx.fillStyle = '#1a1612';
-  [[-4, 6], [10, 7], [24, 7]].forEach(function (b) { ctx.fillRect(-22, b[0], 44, b[1] - 1); });
-  ctx.restore();
-  ctx.fillStyle = Y2; ctx.beginPath(); ctx.moveTo(-3, 28); ctx.lineTo(0, 37); ctx.lineTo(3, 28); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#1a1612'; ctx.beginPath(); ctx.arc(0, -24, 10, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff'; [-4, 4].forEach(function (o) { ctx.beginPath(); ctx.arc(o, -25, 2.6, 0, Math.PI * 2); ctx.fill(); });
-  ctx.fillStyle = '#1a1612'; [-4, 4].forEach(function (o) { ctx.beginPath(); ctx.arc(o, -25, 1.1, 0, Math.PI * 2); ctx.fill(); });
-  ctx.strokeStyle = Y; ctx.lineWidth = 1.6;
-  [-1, 1].forEach(function (s) { ctx.beginPath(); ctx.moveTo(s * 4, -32); ctx.quadraticCurveTo(s * 9, -42, s * 15, -40); ctx.stroke(); ctx.fillStyle = Y; ctx.beginPath(); ctx.arc(s * 15, -40, 2, 0, Math.PI * 2); ctx.fill(); });
-  ctx.restore();
-  legenda(ctx, W, H / 2 + 84, null, 'POWER BEE-AI', Y, 150);
+  ctx.strokeStyle = Y; ctx.lineWidth = 2; ctx.stroke();
+  /* KPI */
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#9aa3b8'; ctx.font = '700 8px Spectral, Georgia, serif'; ctx.fillText('ACURÁCIA DA MÃO', px0 + 12, py0 + 16);
+  ctx.fillStyle = Y; ctx.font = '800 22px Spectral, Georgia, serif'; ctx.fillText('?? %', px0 + 12, py0 + 36);
+  /* botão de atualizar (as cartas mudam) */
+  let rx = px0 + pw - 24, ry = py0 + 26;
+  ctx.strokeStyle = T; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.arc(rx, ry, 10, -0.3, Math.PI * 1.3); ctx.stroke();
+  ctx.fillStyle = T; ctx.beginPath(); ctx.moveTo(rx + 12, ry - 8); ctx.lineTo(rx + 11, ry + 2); ctx.lineTo(rx + 3, ry - 4); ctx.closePath(); ctx.fill();
+  /* gráfico de linha da curva de treino */
+  let gx0 = px0 + 12, gy0 = py0 + 58, gw = pw - 24, gh = 52;
+  ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(gx0, gy0, gw, gh);
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 0.7;
+  [0.33, 0.66].forEach(function (f) { ctx.beginPath(); ctx.moveTo(gx0, gy0 + gh * f); ctx.lineTo(gx0 + gw, gy0 + gh * f); ctx.stroke(); });
+  let pts = [0.9, 0.7, 0.75, 0.5, 0.42, 0.3, 0.34, 0.18];
+  ctx.fillStyle = degradeLinear(ctx, 0, gy0, 0, gy0 + gh, [[0, 'rgba(242,200,17,.35)'], [1, 'rgba(242,200,17,0)']]);
+  ctx.beginPath(); ctx.moveTo(gx0, gy0 + gh);
+  pts.forEach(function (v, i) { ctx.lineTo(gx0 + i * gw / (pts.length - 1), gy0 + v * gh); });
+  ctx.lineTo(gx0 + gw, gy0 + gh); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = Y; ctx.lineWidth = 2; ctx.beginPath();
+  pts.forEach(function (v, i) { let x = gx0 + i * gw / (pts.length - 1), y = gy0 + v * gh; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+  ctx.stroke();
+  /* rosca + barras */
+  let dcx = px0 + 36, dcy = py0 + 142;
+  [[0, 3.1, Y], [3.1, 4.9, T], [4.9, 6.283, Y2]].forEach(function (s) { ctx.strokeStyle = s[2]; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(dcx, dcy, 17, s[0] - 1.57, s[1] - 1.57); ctx.stroke(); });
+  [14, 26, 18, 32].forEach(function (hh, i) { ctx.fillStyle = i % 2 ? T : Y; ctx.fillRect(px0 + 74 + i * 15, py0 + 160 - hh, 10, hh); });
+  ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(px0 + 70, py0 + 160, 66, 1);
+  legenda(ctx, W, H / 2 + 84, null, 'DASHBOARD', Y, 150);
 }
 
 /** Nobreza: veludo púrpura com flores-de-lis e uma coroa dourada no medalhão */

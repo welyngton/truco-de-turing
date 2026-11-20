@@ -11,13 +11,12 @@
  * | entrada.js    | cliques e toques do jogador                                        |
  * | turnos.js     | fluxo da mão: iniciar, executar jogada, vez de cada jogador         |
  * | truco.js      | pedir, anunciar e responder truco                                  |
- * | efeitos.js    | animações dos eventos, faíscas, faixas, balão e avisos do Livro de conceitos  |
+ * | efeitos.js    | animações dos eventos, faíscas, faixas, balão e avisos do Glossário  |
  * | ambiente.js   | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento)  |
  * | paineis.js    | painéis de leitura: placar por camada, registro completo, cemitério  |
  * | online.js     | partida online: ações pela sala, fila, vez dos outros aparelhos      |
  * | resultado.js  | fim da mão, tentos, conquistas, comemoração e tela de resultado     |
  * | dicas.js      | modo dicas: sugestão de jogada e dicas flutuantes dos botões        |
- * | tutorial.js   | tutorial: mão de treino, balões do assistente e roteiro fixo         |
  *
  * Estado principal da cena:
  * - `this.partida`: placar de tentos e truco (nucleo/truco.js);
@@ -46,8 +45,6 @@ import { metodosDeDicas } from './dicas.js';
 import { metodosDosPaineis } from './paineis.js';
 import { metodosDoAmbiente } from './ambiente.js';
 import { metodosOnline } from './online.js';
-import { metodosDoTutorial } from './tutorial.js';
-import { OPCOES_DO_TUTORIAL } from '../../conteudo/tutorial.js';
 import { Musica } from '../../interface/musica.js';
 import { esconderDicaFlutuante } from '../../interface/paineis.js';
 
@@ -58,12 +55,8 @@ export class CenaMesa extends Phaser.Scene {
   create() {
     this.app = Aplicacao;
     this.prepararOnline();
-    /* tutorial: mesa de treino fixa (cartas combinadas, ver nucleo/tutorial.js); não vale no online */
-    const treino = !this.online && !!this.app.tutorialAgora;
-    this.app.tutorialAgora = false;
-    this.tutorial = null;
     /* online: as opções são as da sala, iguais em todos os aparelhos; cada um vê só a própria mão */
-    this.opcoes = normalizarOpcoes(treino ? OPCOES_DO_TUTORIAL : this.online ? this.online.sala.config.opcoes : this.app.opcoes);
+    this.opcoes = normalizarOpcoes(this.online ? this.online.sala.config.opcoes : this.app.opcoes);
     this.numJogadores = this.opcoes.jogadores;
     this.humanos = this.online ? 1 : this.opcoes.humanos;
     this.variosHumanos = !this.online && this.humanos > 1;
@@ -91,8 +84,7 @@ export class CenaMesa extends Phaser.Scene {
     this.historicoDaPartida = [];
     if (this.app.progresso.musica) Musica.tocar(this.opcoes.terreno);
     const comecar = () => this.iniciarMao();
-    if (treino) { this.prepararTutorial(); comecar(); }
-    else if (!this.app.progresso.tutorialVisto) abrirRegras(this.app, comecar);
+    if (!this.app.progresso.tutorialVisto) abrirRegras(this.app, comecar);
     else comecar();
   }
 
@@ -107,4 +99,4 @@ export class CenaMesa extends Phaser.Scene {
 
 Object.assign(CenaMesa.prototype,
   metodosDoCenario, metodosDeDesenho, metodosDeEntrada, metodosDeTurnos,
-  metodosDoTruco, metodosDeEfeitos, metodosDoResultado, metodosDeDicas, metodosDosPaineis, metodosDoAmbiente, metodosOnline, metodosDoTutorial);
+  metodosDoTruco, metodosDeEfeitos, metodosDoResultado, metodosDeDicas, metodosDosPaineis, metodosDoAmbiente, metodosOnline);
