@@ -27,6 +27,14 @@ const cartasForaDoLugar = (pagina) => naCena(pagina, `
   }
   return erradas;`);
 
+/**
+ * Espera nenhuma animação estar mexendo nas cartas da mesa. O CI é bem mais lento que uma máquina
+ * comum, então um tempo fixo não serve. Uma carta presa no meio da distribuição não tem animação
+ * ativa, então continua sendo pega pela conferência logo depois.
+ */
+const esperarCartasParadas = (pagina) => esperarCena(pagina,
+  'return Object.values(cena.visuais).every((v) => !cena.tweens.isTweening(v.imagem))', 30000);
+
 /** Abre uma partida e espera a mesa, sem acelerar o tempo (as animações correm na velocidade real). */
 async function abrirMesa(jogo, antesDeDistribuir) {
   const { pagina } = jogo;
@@ -53,7 +61,8 @@ describe('cartas da mesa inteiras e no lugar', () => {
             setTimeout(() => this.aoPassarNoNeuronio(id, true), arg);
             setTimeout(() => this.aoPassarNoNeuronio(id, false), arg + 150);
           };` });
-        await jogo.pagina.waitForTimeout(1200);
+        await jogo.pagina.waitForTimeout(400);
+        await esperarCartasParadas(jogo.pagina);
         assert.deepEqual(await cartasForaDoLugar(jogo.pagina), []);
         assert.deepEqual(jogo.erros, []);
       } finally { await jogo.fechar(); }
@@ -83,7 +92,8 @@ describe('cartas da mesa inteiras e no lugar', () => {
         await pagina.mouse.move(p.x + (i % 3) - 1, p.y + (i % 5) - 2, { steps: 2 });
       }
       await pagina.mouse.move(5, 5);
-      await pagina.waitForTimeout(1000);
+      await pagina.waitForTimeout(400);
+      await esperarCartasParadas(pagina);
       assert.deepEqual(await cartasForaDoLugar(pagina), []);
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
@@ -95,6 +105,7 @@ describe('cartas da mesa inteiras e no lugar', () => {
       await abrirMesa(jogo);
       await naCena(jogo.pagina, 'cena.time.timeScale = 8; cena.tweens.timeScale = 8;');
       await jogarAteOResultado(jogo.pagina);
+      await esperarCartasParadas(jogo.pagina);
       assert.deepEqual(await cartasForaDoLugar(jogo.pagina), []);
     } finally { await jogo.fechar(); }
   });
