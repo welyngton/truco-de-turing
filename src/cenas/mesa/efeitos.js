@@ -58,9 +58,10 @@ export const metodosDeEfeitos = {
   /** Neurônio revelado: gira a carta e mostra os pontos ganhos. */
   animar_ativacao(evento) {
     const mao = this.mao, baralho = mao.config.baralho;
-    const imagem = this.visuais[evento.neuronio].imagem;
+    const v = this.visuais[evento.neuronio], imagem = v.imagem;
+    if (v.giro) v.giro.stop();
     imagem.scaleX = 0;
-    this.tweens.add({ targets: imagem, scaleX: imagem.escalaBaseX, duration: 200, ease: 'Sine.out' });
+    v.giro = this.tweens.add({ targets: imagem, scaleX: imagem.escalaBaseX, duration: 200, ease: 'Sine.out', onComplete: () => { v.giro = null; } });
     Som.virarCarta();
     const { x, y } = this.posicaoDoNeuronio(evento.neuronio);
     const pontuado = this.pontuacoes[evento.jogador].neuronios.find((n) => n.neuronio.id === evento.neuronio);
