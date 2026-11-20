@@ -22,16 +22,26 @@ import { colunaX, linhaY, NOME_DA_ACAO, cartaDaMesa } from './layout.js';
 const ACAO_DO_MOTOR = { tunagem: 'tune', overfit: 'overfit', earlystop: 'earlystop', stackoverflow: 'stackoverflow', dropout: 'dropout', transfer: 'transfer', passar: 'pass' };
 
 export const metodosDeEntrada = {
-  /** Aproxima a carta da mesa sob o cursor (zoom leve, por cima das vizinhas) e a devolve ao sair. */
+  /**
+   * Aproxima a carta da mesa sob o cursor (zoom leve, por cima das vizinhas) e a devolve ao sair.
+   *
+   * Só mexe na escala e só interrompe as próprias animações de escala (o zoom anterior e o giro da
+   * carta revelada). Nunca interrompe a distribuição (alpha e y): antes, com `killTweensOf`, um
+   * cursor ou dedo parado onde a carta ia cair a deixava transparente e deslocada para cima.
+   */
   realcarNeuronio(id, entrando) {
     const v = this.visuais && this.visuais[id];
     if (!v || !v.imagem.visible) return;
     if (v.profundidade === undefined) v.profundidade = v.imagem.depth;
     const { l, a } = cartaDaMesa(), f = entrando ? 1.28 : 1;
     const bx = l / v.imagem.frame.width, by = a / v.imagem.frame.height;
-    this.tweens.killTweensOf(v.imagem);
+    for (const chave of ['zoom', 'giro']) if (v[chave]) { v[chave].stop(); v[chave] = null; }
+    v.realcado = entrando;
     v.imagem.setDepth(entrando ? 9 : v.profundidade);
-    this.tweens.add({ targets: v.imagem, scaleX: bx * f, scaleY: by * f, duration: 110, ease: 'Quad.easeOut' });
+    v.zoom = this.tweens.add({
+      targets: v.imagem, scaleX: bx * f, scaleY: by * f, duration: 110, ease: 'Quad.easeOut',
+      onComplete: () => { v.zoom = null; },
+    });
   },
 
   /** Cursor sobre um neurônio: mostra a carta na inspeção e explica o efeito de clicar. */

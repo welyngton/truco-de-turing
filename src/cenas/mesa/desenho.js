@@ -60,6 +60,7 @@ export const metodosDeDesenho = {
           continue;
         }
         v.imagem.setVisible(true);
+        this.repousarCarta(v);
         if (n.revelado) {
           ajustarCartaDaMesa(v.imagem.setTexture(texturaDaCartaNaMesa(this, n.cartas[0], baralho)));
           v.memoria.setVisible(false);
@@ -73,6 +74,18 @@ export const metodosDeDesenho = {
     }
     this.desenharMaos();
     this.atualizarPaineis();
+  },
+
+  /**
+   * Garante que a carta da mesa está inteira e no lugar: opaca, na posição e na profundidade de
+   * descanso. Não mexe enquanto a distribuição ainda anima a carta; mantém por cima a que está
+   * sob o cursor. Rede de segurança contra qualquer animação interrompida no meio.
+   */
+  repousarCarta(v) {
+    if (v.distribuicao || v.x === undefined) return;
+    if (v.imagem.alpha !== 1) v.imagem.setAlpha(1);
+    if (v.imagem.x !== v.x || v.imagem.y !== v.y) v.imagem.setPosition(v.x, v.y);
+    v.imagem.setDepth(v.realcado ? 9 : v.profundidade);
   },
 
   /** Desenha a mão do jogador de baixo (aberta) e a do de cima (versos). */

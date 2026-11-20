@@ -128,10 +128,16 @@ export const metodosDeTurnos = {
         const pilha = this.add.text(x + ml * 0.62, y - ma * 0.78, '', etiqueta).setOrigin(0.5).setDepth(4);
         const pontos = this.add.text(x + ml * 0.62, y + ma * 0.8, '', ponto).setOrigin(0.5).setDepth(4).setVisible(false);
         const memoria = this.add.text(x, y + ma * 0.74, '', lembranca).setOrigin(0.5).setDepth(4);
-        this.visuais[n.id] = { imagem, pilha, memoria, pontos };
+        /* x, y e profundidade são o lugar de descanso da carta: redesenhar() a devolve para cá */
+        const v = { imagem, pilha, memoria, pontos, x, y, profundidade: imagem.depth, realcado: false };
+        this.visuais[n.id] = v;
         this.objetosDoTabuleiro.push(imagem, pilha, memoria, pontos);
         imagem.setAlpha(0).y -= 30;
-        this.tweens.add({ targets: imagem, alpha: 1, y, duration: 260, delay: n.camada * 40 + n.posicao * 25, ease: 'Back.out' });
+        /* a distribuição mexe só em alpha e y; o realce do cursor mexe só na escala, sem interrompê-la */
+        v.distribuicao = this.tweens.add({
+          targets: imagem, alpha: 1, y, duration: 260, delay: n.camada * 40 + n.posicao * 25, ease: 'Back.out',
+          onComplete: () => { v.distribuicao = null; imagem.setAlpha(1).setY(y); },
+        });
       }
     }
   },
