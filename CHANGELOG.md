@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.21.0 — 2026-11-20
+
+- feat: 20 novas conquistas sugeridas pelo professor Peng (#117) ([#153](https://github.com/welyngton/truco-de-turing/pull/153), por [@welyngton](https://github.com/welyngton))
+
 ## 2.20.2 — 2026-11-19
 
 - revert: volta o jogo ao estado do PR #80 (v2.8.0) ([#114](https://github.com/welyngton/truco-de-turing/pull/114), por [@welyngton](https://github.com/welyngton))
