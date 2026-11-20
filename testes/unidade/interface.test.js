@@ -26,6 +26,7 @@ const { VERBETES } = await import('../../src/conteudo/grimorio.js');
 const { CONQUISTAS, CONQUISTA_FINAL } = await import('../../src/conteudo/conquistas.js');
 const { novaPartida, marcarTentos } = await import('../../src/nucleo/truco.js');
 const { maoAteOFim } = await import('../apoio/estados.js');
+const { pontuarRede } = await import('../../src/nucleo/pontuacao.js');
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -534,6 +535,23 @@ describe('aplicacao.js', () => {
     const repetidas = Aplicacao.registrarMao({ mao, eu: 0, venceu: true, completa: false, partida: novaPartida(12), venceuPartida: false, valorDaMao: 1, oponenteCorreu: false, opcoes: {} });
     assert.ok(!repetidas.some((c) => ids.includes(c.id)));
     assert.ok(!repetidas.some((c) => c.id === 'zen'));
+  });
+  it('registrarMao: soma a pontuação da rede de cada mão em "pontos" e concede "Diga meu nome" no total', () => {
+    const p = Aplicacao.progresso;
+    const mao = maoAteOFim();
+    const soma = Math.round(pontuarRede(mao, 0).total);
+    const ctx = () => ({ mao, eu: 0, venceu: false, completa: true, partida: novaPartida(12), venceuPartida: false, valorDaMao: 1, oponenteCorreu: false, opcoes: {} });
+    p.desbloqueadas = {}; p.pontos = 100;
+    Aplicacao.registrarMao(ctx());
+    assert.equal(p.pontos, 100 + soma);
+    Aplicacao.registrarMao({ ...ctx(), completa: false });
+    assert.equal(p.pontos, 100 + 2 * soma, 'também conta a mão encerrada por truco');
+    assert.ok(!p.desbloqueadas.diganome);
+    p.pontos = 737000 - soma;
+    const novas = Aplicacao.registrarMao(ctx()).map((c) => c.id);
+    assert.equal(p.pontos, 737000);
+    assert.ok(novas.includes('diganome'));
+    p.pontos = 0; p.desbloqueadas = {};
   });
   it('marcarVerbeteLido: conta cada verbete uma vez e concede "Bibliotecário" no fim', () => {
     const p = Aplicacao.progresso;

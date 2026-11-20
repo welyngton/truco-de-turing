@@ -290,6 +290,50 @@ describe('ações da mesa', () => {
     } finally { await jogo.fechar(); }
   });
 
+  it('conquista nova (professor Peng): stack overflow no primeiro neurônio oculto do oponente sobe o aviso "There is no spoon"', async () => {
+    const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
+    const { pagina } = jogo;
+    try {
+      await comecarPartida(pagina, { oponente: 'aleatorio', baralho: 'classico', terreno: 'neutro', inicio: 'sorteio' });
+      await carregarMontagem(pagina);
+      await esperarMinhaVez(pagina);
+      /* o oponente só tem a entrada e nenhuma carta: a única jogada dele é revelar o primeiro neurônio oculto */
+      await naCena(pagina, `
+        for (const j of [0, 1]) { M.reabrirRede(cena.mao, j); M.montarRede(cena.mao, j, [[j ? '2C' : '2E']]); }
+        M.darMao(cena.mao, 1, []);
+        M.ajustar(cena.mao, { vez: 1 });
+        cena.redesenhar();
+        cena.avancar();`);
+      await esperarCena(pagina, 'return cena.mao.jogadores[1].caminho.length === 2');
+      await esperarMinhaVez(pagina);
+      const ok = await naCena(pagina, `
+        const c = cena.mao.jogadores[1].caminho, n = cena.mao.neuronios[c[c.length - 1]];
+        M.darMao(cena.mao, 0, Array.from({ length: 4 }, (_, i) => [n.cartas[0].valor, 'ECPO'[i]]));
+        cena.redesenhar();
+        for (let i = 0; i < 3; i++) cena.aoClicarNaCarta(cena.mao.jogadores[0].mao[i].id);
+        if (!cena.alvos[n.id]) return 'sem alvo';
+        cena.aoPassarNoNeuronio(n.id, true);
+        cena.aoClicarNoNeuronio(n.id);
+        return true;`);
+      assert.equal(ok, true);
+      await esperarCena(pagina, `return cena.linhaDoTempo.some((p) => p.eventos.includes('stackoverflow'))`);
+      /* os avisos sobem em fila: primeiro "Segmentation fault", depois a conquista nova, com medalha e ícone */
+      const aviso = pagina.locator('#avisos .aviso-conquista');
+      await aviso.waitFor({ timeout: 10000 });
+      const vistos = [];
+      for (let i = 0; i < 4 && await aviso.count(); i++) {
+        vistos.push(await aviso.first().evaluate((a) => ({ texto: a.textContent, icone: !!a.querySelector('.medalha svg path, .medalha svg circle, .medalha svg rect, .medalha svg text') })));
+        await aviso.first().click();
+      }
+      const spoon = vistos.find((v) => /There is no spoon/.test(v.texto));
+      assert.ok(spoon, 'aviso da conquista nova: ' + JSON.stringify(vistos.map((v) => v.texto)));
+      assert.match(spoon.texto, /Conquista · Ouro/);
+      assert.ok(spoon.icone, 'com o ícone da medalha');
+      assert.ok(vistos.some((v) => /Segmentation fault/.test(v.texto)));
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
+
   it('baralho Backprop: saída baixa depois das ativações avisa "saída saturada", e não vanishing gradient', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
