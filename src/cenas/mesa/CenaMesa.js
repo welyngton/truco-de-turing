@@ -63,6 +63,7 @@ export class CenaMesa extends Phaser.Scene {
     /* a geometria da mesa vale para a partida inteira: arquitetura e número de jogadores não mudam */
     definirMesa(tamanhosDaMesa(this.opcoes.arquitetura, this.numJogadores));
     this.partida = novaPartida(this.opcoes.alvo, this.numJogadores);
+    this.partidaIniciadaEm = Date.now(); /* relógio da conquista "Adeus, Namekusei"; fica na cena, e não na partida, que é igual em todas as telas online */
     this.mao = null;
 
     ajustarCamera(this);

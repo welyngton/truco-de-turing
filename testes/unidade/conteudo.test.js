@@ -177,8 +177,8 @@ describe('conquistas.js', () => {
       (c) => { c.mao.lances = [L('tunagem', 1, { alvo: 1, camada: 2, cartas: 1 }), L('ativar', 1, { camada: 3 }), ataque('stackoverflow', 3, 2)]; },
     ],
     namekusei: [
-      (c) => { c.venceuPartida = true; c.partida.iniciadaEm = Date.now() - 4 * 60 * 1000; },
-      (c) => { c.venceuPartida = true; c.partida.iniciadaEm = Date.now() - 6 * 60 * 1000; },
+      (c) => { c.venceuPartida = true; c.partidaIniciadaEm = Date.now() - 4 * 60 * 1000; },
+      (c) => { c.venceuPartida = true; c.partidaIniciadaEm = Date.now() - 6 * 60 * 1000; },
     ],
     semspoon: [
       (c) => { c.mao.lances = [L('ativar', 1, { camada: 0 }), L('ativar', 1, { camada: 1 }), ataque('stackoverflow', 1, 3)]; },

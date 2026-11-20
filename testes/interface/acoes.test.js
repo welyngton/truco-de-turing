@@ -297,6 +297,7 @@ describe('ações da mesa', () => {
       await comecarPartida(pagina, { oponente: 'aleatorio', baralho: 'classico', terreno: 'neutro', inicio: 'sorteio' });
       await carregarMontagem(pagina);
       await esperarMinhaVez(pagina);
+      assert.ok(await naCena(pagina, 'return Date.now() - cena.partidaIniciadaEm < 60000'), 'a cena guarda a hora em que a partida começou');
       /* o oponente só tem a entrada e nenhuma carta: a única jogada dele é revelar o primeiro neurônio oculto */
       await naCena(pagina, `
         for (const j of [0, 1]) { M.reabrirRede(cena.mao, j); M.montarRede(cena.mao, j, [[j ? '2C' : '2E']]); }

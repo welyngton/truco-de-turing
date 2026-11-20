@@ -4,8 +4,7 @@
  * TRUCO! (3) → SEIS! (6) → NOVE! (9) → DOZE! (12). Quem corre entrega o valor atual.
  * Mão de onze: com alguém a um tento da vitória, ninguém pode trucar.
  *
- * Estado da partida: `{ alvo, tentos: [n, n, …], numeroMao, valor, aumentadoPor, pedido, encerrada, vencedor, iniciadaEm }`.
- * `iniciadaEm` é a hora (ms) em que a partida foi criada, para a conquista da partida rápida.
+ * Estado da partida: `{ alvo, tentos: [n, n, …], numeroMao, valor, aumentadoPor, pedido, encerrada, vencedor }`.
  * `pedido` é `{ por, para }` enquanto um truco espera resposta.
  *
  * O truco é de um contra um: com mais de 2 jogadores a partida continua valendo tentos (cada mão
@@ -24,7 +23,7 @@ export const GRITO_TRUCO = { 3: 'TRUCO!', 6: 'SEIS!', 9: 'NOVE!', 12: 'DOZE!' };
  * @param {number} [jogadores=2] Com mais de 2 jogadores não há truco.
  */
 export function novaPartida(alvo, jogadores = 2) {
-  return { alvo, tentos: new Array(jogadores).fill(0), numeroMao: 0, valor: 1, aumentadoPor: -1, pedido: null, encerrada: false, vencedor: -1, iniciadaEm: Date.now() };
+  return { alvo, tentos: new Array(jogadores).fill(0), numeroMao: 0, valor: 1, aumentadoPor: -1, pedido: null, encerrada: false, vencedor: -1 };
 }
 
 /** A partida aceita pedidos de truco (só entre 2 jogadores e valendo mais de uma mão)? */

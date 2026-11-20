@@ -254,16 +254,15 @@ describe('conquistas lidas dos lances, com jogadas de verdade', () => {
     for (const id of ['fio', 'validacao', 'semquerer', 'balas', 'redencao', 'portal', 'alianca', 'doismais', 'virada', 'exodia', 'featureeng']) assert.ok(!VALEM_NA_HORA.has(id), id + ' espera o fim da mão');
     for (const id of ['namekusei', 'diganome']) assert.ok(VALEM_SEM_MAO_COMPLETA.has(id), id + ' vale mesmo se a mão acabou por truco');
   });
-  it('Adeus, Namekusei: o relógio conta da criação da partida até a vitória', () => {
+  it('Adeus, Namekusei: o relógio conta do começo da partida até a vitória, e só em partida de 12 tentos', () => {
     const mao = maoNova();
     const partida = novaPartida(12);
-    assert.ok(Date.now() - partida.iniciadaEm < 1000);
-    const c = (extra) => vale('namekusei', mao, 0, { venceuPartida: true, partida, ...extra });
-    assert.ok(c());
-    partida.iniciadaEm = Date.now() - 5 * 60 * 1000 - 1;
-    assert.ok(!c(), 'cinco minutos ou mais não vale');
-    partida.iniciadaEm = Date.now() - 60 * 1000;
-    assert.ok(!c({ venceuPartida: false }));
-    assert.ok(!vale('namekusei', mao, 0, { venceuPartida: true, partida: novaPartida(6) }), 'só partida de 12 tentos');
+    const c = (minutos, extra) => vale('namekusei', mao, 0, { venceuPartida: true, partida, partidaIniciadaEm: Date.now() - minutos * 60 * 1000, ...extra });
+    assert.ok(c(0));
+    assert.ok(c(4.9));
+    assert.ok(!c(5), 'cinco minutos ou mais não vale');
+    assert.ok(!c(1, { venceuPartida: false }));
+    assert.ok(!c(1, { partida: novaPartida(6) }), 'só partida de 12 tentos');
+    assert.ok(!c(1, { partidaIniciadaEm: undefined }), 'sem horário de início, não vale');
   });
 });

@@ -541,7 +541,7 @@ Avatares que o jogador pode escolher. Os livres valem desde o início; os outros
 
 ## `src/conteudo/conquistas.js`
 
-Conquistas e suas graduações (bronze a antimatéria, como sugere a especificação, e a Singularidade da conquista final, "Convergência global", em homenagem ao prof. Peng). Cada conquista tem um `teste(ctx)` avaliado ao fim de cada mão contra oponentes. O contexto é: ``` { mao, eu, venceu, completa, // estado final da mão, índice do humano, resultado, se foi jogada até o fim partida, venceuPartida, valorDaMao, // camada de truco oponenteCorreu, opcoes, // se o oponente correu do truco; opções do menu progresso } // contadores acumulados (ver progresso.js) ``` Os testes das conquistas novas leem também `mao.lances` (o que cada jogador fez, em ordem; ver nucleo/partida.js) e `partida.iniciadaEm`. As de `VALEM_NA_HORA` também são avaliadas logo depois de cada jogada, no meio da mão, com um contexto menor: `{ mao, eu, opcoes, progresso }`.
+Conquistas e suas graduações (bronze a antimatéria, como sugere a especificação, e a Singularidade da conquista final, "Convergência global", em homenagem ao prof. Peng). Cada conquista tem um `teste(ctx)` avaliado ao fim de cada mão contra oponentes. O contexto é: ``` { mao, eu, venceu, completa, // estado final da mão, índice do humano, resultado, se foi jogada até o fim partida, venceuPartida, valorDaMao, // camada de truco partidaIniciadaEm, // hora (ms) em que a partida começou, para a partida rápida oponenteCorreu, opcoes, // se o oponente correu do truco; opções do menu progresso } // contadores acumulados (ver progresso.js) ``` Os testes das conquistas novas leem também `mao.lances` (o que cada jogador fez, em ordem; ver nucleo/partida.js) e `partidaIniciadaEm`. As de `VALEM_NA_HORA` também são avaliadas logo depois de cada jogada, no meio da mão, com um contexto menor: `{ mao, eu, opcoes, progresso }`.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1142,7 +1142,7 @@ Tradução entre o vocabulário do Truco de Turing (interface) e o do motor (reg
 
 ## `src/nucleo/truco.js`
 
-Camada de truco: a partida vale tentos e cada mão pode ser trucada. TRUCO! (3) → SEIS! (6) → NOVE! (9) → DOZE! (12). Quem corre entrega o valor atual. Mão de onze: com alguém a um tento da vitória, ninguém pode trucar. Estado da partida: `{ alvo, tentos: [n, n, …], numeroMao, valor, aumentadoPor, pedido, encerrada, vencedor, iniciadaEm }`. `iniciadaEm` é a hora (ms) em que a partida foi criada, para a conquista da partida rápida. `pedido` é `{ por, para }` enquanto um truco espera resposta. O truco é de um contra um: com mais de 2 jogadores a partida continua valendo tentos (cada mão vale 1 para quem vence), mas ninguém pode trucar.
+Camada de truco: a partida vale tentos e cada mão pode ser trucada. TRUCO! (3) → SEIS! (6) → NOVE! (9) → DOZE! (12). Quem corre entrega o valor atual. Mão de onze: com alguém a um tento da vitória, ninguém pode trucar. Estado da partida: `{ alvo, tentos: [n, n, …], numeroMao, valor, aumentadoPor, pedido, encerrada, vencedor }`. `pedido` é `{ por, para }` enquanto um truco espera resposta. O truco é de um contra um: com mais de 2 jogadores a partida continua valendo tentos (cada mão vale 1 para quem vence), mas ninguém pode trucar.
 
 | Nome | Tipo | Descrição |
 |---|---|---|

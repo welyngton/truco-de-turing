@@ -6,11 +6,12 @@
  * ```
  * { mao, eu, venceu, completa,          // estado final da mão, índice do humano, resultado, se foi jogada até o fim
  *   partida, venceuPartida, valorDaMao,  // camada de truco
+ *   partidaIniciadaEm,                   // hora (ms) em que a partida começou, para a partida rápida
  *   oponenteCorreu, opcoes,              // se o oponente correu do truco; opções do menu
  *   progresso }                          // contadores acumulados (ver progresso.js)
  * ```
  * Os testes das conquistas novas leem também `mao.lances` (o que cada jogador fez, em ordem; ver nucleo/partida.js)
- * e `partida.iniciadaEm`.
+ * e `partidaIniciadaEm`.
  *
  * As de `VALEM_NA_HORA` também são avaliadas logo depois de cada jogada, no meio da mão, com um
  * contexto menor: `{ mao, eu, opcoes, progresso }`.
@@ -126,7 +127,7 @@ export const CONQUISTAS = [
       });
     },
   },
-  { id: 'namekusei', nome: 'Adeus, Namekusei', descricao: 'Vença uma partida de 12 tentos em menos de 5 minutos.', graduacao: 'ouro', teste: (c) => c.venceuPartida && c.partida.alvo === 12 && !!c.partida.iniciadaEm && Date.now() - c.partida.iniciadaEm < 5 * 60 * 1000 },
+  { id: 'namekusei', nome: 'Adeus, Namekusei', descricao: 'Vença uma partida de 12 tentos em menos de 5 minutos.', graduacao: 'ouro', teste: (c) => c.venceuPartida && c.partida.alvo === 12 && !!c.partidaIniciadaEm && Date.now() - c.partidaIniciadaEm < 5 * 60 * 1000 },
   {
     id: 'semspoon', nome: 'There is no spoon', descricao: 'Aplique um stack overflow no oponente no primeiro neurônio que ele revelar (a entrada é imune, então vale o primeiro oculto).', graduacao: 'ouro',
     teste: (c) => {

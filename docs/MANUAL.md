@@ -411,7 +411,7 @@ todos os bônus; o dropout guarda as `camadas` desfeitas e `revelouMaior`, que d
 mais que o desfeito. Simulações (`copiarMao`) não guardam lances. O teste da conquista lê essa lista (ver `lancesDa`,
 `meusLances` e `ataqueMeu` em `conteudo/conquistas.js`); a soma da rede a cada jogada continua em `mao.historico`.
 Contadores que atravessam as mãos ficam no progresso (`pontos`, para "Diga meu nome") e a hora de início da partida
-em `partida.iniciadaEm` (para "Adeus, Namekusei"). Os testes com jogadas reais estão em
+em `partidaIniciadaEm` (guardada na cena da mesa e passada no contexto; para "Adeus, Namekusei"). Os testes com jogadas reais estão em
 `testes/unidade/conquistas-lances.test.js`; os casos de cada conquista, em `conteudo.test.js`.
 
 ### Novo verbete do Glossário
