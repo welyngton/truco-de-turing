@@ -298,13 +298,13 @@ describe('ações da mesa', () => {
       await carregarMontagem(pagina);
       await esperarMinhaVez(pagina);
       assert.ok(await naCena(pagina, 'return Date.now() - cena.partidaIniciadaEm < 60000'), 'a cena guarda a hora em que a partida começou');
-      /* o oponente só tem a entrada e nenhuma carta: a única jogada dele é revelar o primeiro neurônio oculto */
+      /* o oponente só tem a entrada e nenhuma carta: revela o primeiro neurônio oculto (jogada aplicada direto, sem depender do sorteio do bot) */
       await naCena(pagina, `
         for (const j of [0, 1]) { M.reabrirRede(cena.mao, j); M.montarRede(cena.mao, j, [[j ? '2C' : '2E']]); }
         M.darMao(cena.mao, 1, []);
         M.ajustar(cena.mao, { vez: 1 });
         cena.redesenhar();
-        cena.avancar();`);
+        cena.executarJogada({ tipo: 'ativar', jogador: 1, neuronio: cena.mao.camadas[1].find((n) => n.dono === -1 && !n.removido).id });`);
       await esperarCena(pagina, 'return cena.mao.jogadores[1].caminho.length === 2');
       await esperarMinhaVez(pagina);
       const ok = await naCena(pagina, `
@@ -318,13 +318,20 @@ describe('ações da mesa', () => {
         return true;`);
       assert.equal(ok, true);
       await esperarCena(pagina, `return cena.linhaDoTempo.some((p) => p.eventos.includes('stackoverflow'))`);
-      /* os avisos sobem em fila: primeiro "Segmentation fault", depois a conquista nova, com medalha e ícone */
-      const aviso = pagina.locator('#avisos .aviso-conquista');
-      await aviso.waitFor({ timeout: 10000 });
+      /* os avisos sobem em fila (primeiro "Segmentation fault", depois a conquista nova), cada um com medalha e ícone.
+         Lê e fecha pelo próprio DOM, sem o clique do Playwright, que espera o aviso parar de animar e some junto
+         com ele numa máquina lenta. */
       const vistos = [];
-      for (let i = 0; i < 4 && await aviso.count(); i++) {
-        vistos.push(await aviso.first().evaluate((a) => ({ texto: a.textContent, icone: !!a.querySelector('.medalha svg path, .medalha svg circle, .medalha svg rect, .medalha svg text') })));
-        await aviso.first().click();
+      for (let i = 0; i < 200 && !vistos.some((v) => /There is no spoon/.test(v.texto)); i++) {
+        const lido = await pagina.evaluate(() => {
+          const a = document.querySelector('#avisos .aviso-conquista');
+          if (!a) return null;
+          const texto = a.textContent, icone = !!a.querySelector('.medalha svg path, .medalha svg circle, .medalha svg rect, .medalha svg text');
+          a.click();
+          return { texto, icone };
+        });
+        if (lido) vistos.push(lido);
+        await pagina.waitForTimeout(100);
       }
       const spoon = vistos.find((v) => /There is no spoon/.test(v.texto));
       assert.ok(spoon, 'aviso da conquista nova: ' + JSON.stringify(vistos.map((v) => v.texto)));
