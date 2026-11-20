@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.20.2 — 2026-11-19
+
+- revert: volta o jogo ao estado do PR #80 (v2.8.0) ([#114](https://github.com/welyngton/truco-de-turing/pull/114), por [@welyngton](https://github.com/welyngton))
+
 ## 2.20.1 — 2026-11-18
 
 - Tutorial guiado com o assistente Percy ([#113](https://github.com/welyngton/truco-de-turing/pull/113), por [@welyngton](https://github.com/welyngton))
