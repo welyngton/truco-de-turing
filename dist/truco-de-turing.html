@@ -3641,7 +3641,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.22.0";
+  var VERSAO = "2.22.1";
   var DATA_DA_VERSAO = "2026-11-20";
 
   // src/aplicacao.js
@@ -10950,6 +10950,7 @@ export default function (Motor) {
             continue;
           }
           v.imagem.setVisible(true);
+          this.repousarCarta(v);
           if (n.revelado) {
             ajustarCartaDaMesa(v.imagem.setTexture(texturaDaCartaNaMesa(this, n.cartas[0], baralho)));
             v.memoria.setVisible(false);
@@ -10962,6 +10963,17 @@ export default function (Motor) {
       }
       this.desenharMaos();
       this.atualizarPaineis();
+    },
+    /**
+     * Garante que a carta da mesa está inteira e no lugar: opaca, na posição e na profundidade de
+     * descanso. Não mexe enquanto a distribuição ainda anima a carta; mantém por cima a que está
+     * sob o cursor. Rede de segurança contra qualquer animação interrompida no meio.
+     */
+    repousarCarta(v) {
+      if (v.distribuicao || v.x === void 0) return;
+      if (v.imagem.alpha !== 1) v.imagem.setAlpha(1);
+      if (v.imagem.x !== v.x || v.imagem.y !== v.y) v.imagem.setPosition(v.x, v.y);
+      v.imagem.setDepth(v.realcado ? 9 : v.profundidade);
     },
     /** Desenha a mão do jogador de baixo (aberta) e a do de cima (versos). */
     desenharMaos() {
@@ -11375,16 +11387,35 @@ export default function (Motor) {
   // src/cenas/mesa/entrada.js
   var ACAO_DO_MOTOR = { tunagem: "tune", overfit: "overfit", earlystop: "earlystop", stackoverflow: "stackoverflow", dropout: "dropout", transfer: "transfer", passar: "pass" };
   var metodosDeEntrada = {
-    /** Aproxima a carta da mesa sob o cursor (zoom leve, por cima das vizinhas) e a devolve ao sair. */
+    /**
+     * Aproxima a carta da mesa sob o cursor (zoom leve, por cima das vizinhas) e a devolve ao sair.
+     *
+     * Só mexe na escala e só interrompe as próprias animações de escala (o zoom anterior e o giro da
+     * carta revelada). Nunca interrompe a distribuição (alpha e y): antes, com `killTweensOf`, um
+     * cursor ou dedo parado onde a carta ia cair a deixava transparente e deslocada para cima.
+     */
     realcarNeuronio(id, entrando) {
       const v = this.visuais && this.visuais[id];
       if (!v || !v.imagem.visible) return;
       if (v.profundidade === void 0) v.profundidade = v.imagem.depth;
       const { l, a } = cartaDaMesa(), f = entrando ? 1.28 : 1;
       const bx = l / v.imagem.frame.width, by = a / v.imagem.frame.height;
-      this.tweens.killTweensOf(v.imagem);
+      for (const chave of ["zoom", "giro"]) if (v[chave]) {
+        v[chave].stop();
+        v[chave] = null;
+      }
+      v.realcado = entrando;
       v.imagem.setDepth(entrando ? 9 : v.profundidade);
-      this.tweens.add({ targets: v.imagem, scaleX: bx * f, scaleY: by * f, duration: 110, ease: "Quad.easeOut" });
+      v.zoom = this.tweens.add({
+        targets: v.imagem,
+        scaleX: bx * f,
+        scaleY: by * f,
+        duration: 110,
+        ease: "Quad.easeOut",
+        onComplete: () => {
+          v.zoom = null;
+        }
+      });
     },
     /** Cursor sobre um neurônio: mostra a carta na inspeção e explica o efeito de clicar. */
     aoPassarNoNeuronio(id, entrando) {
@@ -11761,10 +11792,22 @@ export default function (Motor) {
           const pilha = this.add.text(x + ml * 0.62, y - ma * 0.78, "", etiqueta).setOrigin(0.5).setDepth(4);
           const pontos = this.add.text(x + ml * 0.62, y + ma * 0.8, "", ponto).setOrigin(0.5).setDepth(4).setVisible(false);
           const memoria = this.add.text(x, y + ma * 0.74, "", lembranca).setOrigin(0.5).setDepth(4);
-          this.visuais[n.id] = { imagem, pilha, memoria, pontos };
+          const v = { imagem, pilha, memoria, pontos, x, y, profundidade: imagem.depth, realcado: false };
+          this.visuais[n.id] = v;
           this.objetosDoTabuleiro.push(imagem, pilha, memoria, pontos);
           imagem.setAlpha(0).y -= 30;
-          this.tweens.add({ targets: imagem, alpha: 1, y, duration: 260, delay: n.camada * 40 + n.posicao * 25, ease: "Back.out" });
+          v.distribuicao = this.tweens.add({
+            targets: imagem,
+            alpha: 1,
+            y,
+            duration: 260,
+            delay: n.camada * 40 + n.posicao * 25,
+            ease: "Back.out",
+            onComplete: () => {
+              v.distribuicao = null;
+              imagem.setAlpha(1).setY(y);
+            }
+          });
         }
       }
     },
@@ -12050,9 +12093,12 @@ export default function (Motor) {
     /** Neurônio revelado: gira a carta e mostra os pontos ganhos. */
     animar_ativacao(evento) {
       const mao = this.mao, baralho = mao.config.baralho;
-      const imagem = this.visuais[evento.neuronio].imagem;
+      const v = this.visuais[evento.neuronio], imagem = v.imagem;
+      if (v.giro) v.giro.stop();
       imagem.scaleX = 0;
-      this.tweens.add({ targets: imagem, scaleX: imagem.escalaBaseX, duration: 200, ease: "Sine.out" });
+      v.giro = this.tweens.add({ targets: imagem, scaleX: imagem.escalaBaseX, duration: 200, ease: "Sine.out", onComplete: () => {
+        v.giro = null;
+      } });
       Som.virarCarta();
       const { x, y } = this.posicaoDoNeuronio(evento.neuronio);
       const pontuado = this.pontuacoes[evento.jogador].neuronios.find((n) => n.neuronio.id === evento.neuronio);

@@ -287,6 +287,7 @@ Parte da CenaMesa: desenhar o estado da mão na tela. Neurônios, mãos, placar,
 | `inspecionar(textura, nota)` | método | Mostra uma textura na inspeção, com uma nota explicativa embaixo. |
 | `mostrarDica(texto)` | método | Mostra a dica do turno no rodapé do painel esquerdo. |
 | `redesenhar()` | método | Redesenha tudo a partir do estado: pontuações, alvos, neurônios, mãos e painéis. |
+| `repousarCarta(v)` | método | Garante que a carta da mesa está inteira e no lugar: opaca, na posição e na profundidade de descanso. Não mexe enquanto a distribuição ainda anima a carta; mantém por cima a que está sob o cursor. Rede de segurança contra qualquer animação interrompida no meio. |
 | `desenharMaos()` | método | Desenha a mão do jogador de baixo (aberta) e a do de cima (versos). |
 | `posicaoDaMaoDeCima(k, n)` | método | Centro e largura do leque de cartas de um adversário no alto da mesa. |
 | `notaDaCartaDaMao(carta)` | método | Nota da inspeção para uma carta da mão: onde ela pode ser usada agora. |
@@ -363,7 +364,7 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `ACAO_DO_MOTOR` | constante | Ação do motor correspondente a cada botão (para o texto da regra). |
-| `realcarNeuronio(id, entrando)` | método | Aproxima a carta da mesa sob o cursor (zoom leve, por cima das vizinhas) e a devolve ao sair. |
+| `realcarNeuronio(id, entrando)` | método | Aproxima a carta da mesa sob o cursor (zoom leve, por cima das vizinhas) e a devolve ao sair. Só mexe na escala e só interrompe as próprias animações de escala (o zoom anterior e o giro da carta revelada). Nunca interrompe a distribuição (alpha e y): antes, com `killTweensOf`, um cursor ou dedo parado onde a carta ia cair a deixava transparente e deslocada para cima. |
 | `aoPassarNoNeuronio(id, entrando)` | método | Cursor sobre um neurônio: mostra a carta na inspeção e explica o efeito de clicar. |
 | `executarAcao(tipo)` | método | Botão de empilhar da barra (tunagem, overfit, early stop, stack overflow): com um alvo só, joga direto; com mais de um (vários rivais), destaca só os alvos dessa ação e espera o clique. |
 | `acionarDropout()` | método | Botão Dropout: com cartas selecionadas, desfaz uma camada por carta e paga com elas; sem seleção, entra no modo de escolher até onde desfazer no tabuleiro. |
