@@ -10,17 +10,14 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 |---|---|---|
 | `OPCOES_PADRAO` | constante (exportada) | Opções usadas na primeira visita. `jogadores` é o total na mesa (2 a 5), `humanos` quantos deles jogam no mesmo aparelho (os outros são oponentes do perfil `oponente`), `arquitetura` é uma das arquiteturas do motor e `baralhos` quantos baralhos entram na partida. |
 | `faixaDeExperiencia(maos)` | função (exportada) | Faixa de experiência do jogador pelo número de mãos jogadas (propriedade `experiencia`). |
-| `normalizarOpcoes(opcoes)` | função (exportada) | Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. Também aplica as restrições do baralho (Yin-yang: 1 baralho e arquitetura curta), valendo para opções salvas e para salas online. |
+| `normalizarOpcoes(opcoes)` | função (exportada) | Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. |
 | `iniciar()` | método | Carrega opções e preferência de som. |
 | `atualizarJogadorNasEstatisticas()` | método | Passa às estatísticas de uso a experiência, as conquistas, o avatar, os verbetes lidos, os acessos e as partidas. |
 | `salvar()` | método | Grava o progresso. |
 | `salvarOpcoes()` | método | Grava as escolhas do menu para a próxima visita. |
 | `alternarSom()` | método | Liga ou desliga o som e lembra a escolha. |
 | `alternarMusica(terreno)` | método | Liga ou desliga a música de fundo e lembra a escolha. |
-| `deveFazerOTutorial()` | método | Primeira vez de quem nunca jogou uma mão nem fez o tutorial: o Jogar abre o tutorial. |
-| `jogar()` | método | Sai do menu e abre a mesa (na primeira vez, com o tutorial). |
-| `iniciarTutorial()` | método | Abre a mesa de treino (botão "Fazer o tutorial" de Como jogar), do menu ou de uma partida em andamento. |
-| `abrirMesa()` | método | Troca a tela atual pela mesa (a cena da mesa lê `tutorialAgora` ao ser criada). |
+| `jogar()` | método | Sai do menu e abre a mesa. |
 | `irParaMenu()` | método | Volta da mesa para o menu. |
 | `modoImersivo()` | método | Em celulares e tablets: tela cheia e trava na horizontal, onde o navegador permite (Chrome no Android). No iPhone isso não existe; ali vale o aviso para girar o aparelho. |
 | `registrarMao(ctx)` | método | Registra o fim de uma mão contra o computador e devolve as conquistas novas. |
@@ -29,14 +26,6 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 | `conferirConquistaFinal()` | método | Concede a conquista final a quem já tem todas as outras e ainda não a recebeu (por exemplo, quem completou as conquistas antes de ela existir). Devolve as desbloqueadas agora. |
 | `marcarVerbeteLido(id)` | método | Marca um verbete como lido e concede "Bibliotecário" quando todos foram lidos. |
 | `conquistasNovas(candidatas, ctx, progresso)` | função | Conquistas de `candidatas` que ainda estão bloqueadas e cujo teste passa no contexto `ctx`. Um teste que dá erro conta como não cumprido. |
-
-## `src/arte/assistente.js`
-
-Rosto do Percy, o assistente do tutorial: uma cabeça redonda de perceptron, com antena de neurônio e olhos-camada. É um SVG pequeno (HTML), usado nos balões de fala.
-
-| Nome | Tipo | Descrição |
-|---|---|---|
-| `rostoDoAssistente()` | função (exportada) | SVG do rosto do assistente (64 x 64), sem texto, para decoração. |
 
 ## `src/arte/avatares.js`
 
@@ -56,9 +45,6 @@ Texturas dos botões da mesa e da faísca das explosões. São imagens próprias
 |---|---|---|
 | `desenharFaisca(S, cor)` | função (exportada) | Faísca radial (32x32 base) usada nas explosões de partículas, na cor pedida. |
 | `MARGEM_BOTAO` | constante (exportada) | Margem em volta do botão, reservada para a sombra. |
-| `PALETAS_DOS_BOTOES` | constante (exportada) | Paletas dos botões: `gradiente` (do brilho do topo à base, 4 tons; o 2º é a cor "da cara" do botão) e `texto` (cor do rótulo, com contraste mínimo de 4,5:1 sobre o botão: ver o teste de arte). Cada ação da mesa tem a sua cor (`COR_DA_ACAO`), para o jogador gravar cada função pela cor. |
-| `COR_DA_ACAO` | constante (exportada) | Variante (paleta) de cada botão de ação da mesa, uma por ação. |
-| `corDaAcao(acao)` | função (exportada) | Cor "da cara" (CSS) de uma ação, para as dicas e a ajuda usarem a mesma cor do botão. |
 | `desenharBotao(w, h, S, variante, estado)` | função (exportada) | Textura de um botão de w × h (base). |
 
 ## `src/arte/cartas.js`
@@ -134,7 +120,7 @@ Fundos da mesa: feltro verde (neutro) e um fundo por terreno (montanha, pântano
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `desenharFeltro(W, H, S)` | função (exportada) | Feltro verde da Planície, com fibras e vinheta. |
+| `desenharFeltro(W, H, S)` | função (exportada) | Feltro verde da mesa neutra, com fibras e vinheta. |
 | `fibras(ctx, W, H, aleatorio, n, clara, escura)` | função | Fibras do tecido: `n` riscos curtos alternando a cor clara e a escura. |
 | `mesaMontanha(ctx, W, H, aleatorio)` | função | Fundo da mesa no terreno montanha: céu de entardecer, cordilheira e trilha subindo. |
 | `vitoriaRegia(ctx, x, y, r, rot, aleatorio)` | função | Desenha uma vitória-régia (folha flutuante) no pântano. |
@@ -200,7 +186,7 @@ Moldura medieval do retrato do professor no quadro de conquistas.
 
 ## `src/arte/versos.js`
 
-Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de computação), fraternidade (anéis), yin-yang (A e 2) e Power Bee-Ai (abelha num favo de hexágonos). Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
+Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de computação), fraternidade (anéis), yin-yang (A e 2) e Power BI (painel de indicadores). Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -211,7 +197,7 @@ Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol)
 | `versoFraternidade(ctx, W, H, aleatorio)` | função | Fraternidade: corrente de anéis dourados sobre verde, quatro naipes de mãos dadas |
 | `simboloYinYang(ctx, cx, cy, r)` | função | Yin-yang: campo dividido em preto e marfim, só Ás e Dois |
 | `versoYinYang(ctx, W, H, aleatorio)` | função | Verso do baralho yin-yang: metades clara e escura e o símbolo no centro. |
-| `versoPowerBI(ctx, W, H, aleatorio)` | função | Power Bee-Ai: favo de hexágonos com uma abelha no medalhão e setas de atualizar (a mão é embaralhada com o limbo) |
+| `versoPowerBI(ctx, W, H, aleatorio)` | função | Power BI: painel de indicadores (gráficos e um botão de atualizar), que embaralha a mão |
 | `versoNobreza(ctx, W, H, aleatorio)` | função | Nobreza: veludo púrpura com flores-de-lis e uma coroa dourada no medalhão |
 | `florDeLis(ctx, x, y, s)` | função | Flor-de-lis simples, centrada em (x, y), de tamanho s. |
 | `coroa(ctx, cx, cy, l, ouro)` | função | Coroa de três pontas com gemas, de largura l, base em (cx, cy). |
@@ -241,7 +227,7 @@ Cena do menu: fundo animado (uma rede neural pulsando e cartas flutuando) atrás
 
 ## `src/cenas/mesa/CenaMesa.js`
 
-Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os métodos ficam em arquivos separados por assunto e são copiados para o protótipo no fim deste arquivo: | Arquivo | Assunto | |---------------|--------------------------------------------------------------------| | cenario.js | molduras fixas, botões e criação dos textos dos painéis | | desenho.js | desenhar o estado: neurônios, mãos, placar, curva, dica, alvos | | entrada.js | cliques e toques do jogador | | turnos.js | fluxo da mão: iniciar, executar jogada, vez de cada jogador | | truco.js | pedir, anunciar e responder truco | | efeitos.js | animações dos eventos, faíscas, faixas, balão e avisos do Livro de conceitos | | ambiente.js | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento) | | paineis.js | painéis de leitura: placar por camada, registro completo, cemitério | | online.js | partida online: ações pela sala, fila, vez dos outros aparelhos | | resultado.js | fim da mão, tentos, conquistas, comemoração e tela de resultado | | dicas.js | modo dicas: sugestão de jogada e dicas flutuantes dos botões | | tutorial.js | tutorial: mão de treino, balões do assistente e roteiro fixo | Estado principal da cena: - `this.partida`: placar de tentos e truco (nucleo/truco.js); - `this.mao`: estado da mão atual (nucleo/partida.js); - `this.quemVe`: índice do jogador que está olhando a tela (-1 enquanto o aparelho troca de mãos); - `this.numJogadores`, `this.humanos`, `this.variosHumanos`: quem está na mesa (os humanos são os primeiros índices; os demais são oponentes do computador); - `this.modo`, `this.selecao`, `this.alvos`: o que o jogador está escolhendo; - `this.ocupada`: verdadeiro durante animações e a vez do oponente (bloqueia cliques); - `this.encerrada`: a mão acabou.
+Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os métodos ficam em arquivos separados por assunto e são copiados para o protótipo no fim deste arquivo: | Arquivo | Assunto | |---------------|--------------------------------------------------------------------| | cenario.js | molduras fixas, botões e criação dos textos dos painéis | | desenho.js | desenhar o estado: neurônios, mãos, placar, curva, dica, alvos | | entrada.js | cliques e toques do jogador | | turnos.js | fluxo da mão: iniciar, executar jogada, vez de cada jogador | | truco.js | pedir, anunciar e responder truco | | efeitos.js | animações dos eventos, faíscas, faixas, balão e avisos do Glossário | | ambiente.js | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento) | | paineis.js | painéis de leitura: placar por camada, registro completo, cemitério | | online.js | partida online: ações pela sala, fila, vez dos outros aparelhos | | resultado.js | fim da mão, tentos, conquistas, comemoração e tela de resultado | | dicas.js | modo dicas: sugestão de jogada e dicas flutuantes dos botões | Estado principal da cena: - `this.partida`: placar de tentos e truco (nucleo/truco.js); - `this.mao`: estado da mão atual (nucleo/partida.js); - `this.quemVe`: índice do jogador que está olhando a tela (-1 enquanto o aparelho troca de mãos); - `this.numJogadores`, `this.humanos`, `this.variosHumanos`: quem está na mesa (os humanos são os primeiros índices; os demais são oponentes do computador); - `this.modo`, `this.selecao`, `this.alvos`: o que o jogador está escolhendo; - `this.ocupada`: verdadeiro durante animações e a vez do oponente (bloqueia cliques); - `this.encerrada`: a mão acabou.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -324,7 +310,7 @@ Parte da CenaMesa: desenhar o estado da mão na tela. Neurônios, mãos, placar,
 
 ## `src/cenas/mesa/dicas.js`
 
-Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo do Livro de conceitos: uma oportunidade, um risco ou uma estratégia geral, sempre com o conceito de redes neurais por trás. As dicas usam só informação pública e nunca apontam qual neurônio oculto ativar; - **dicas flutuantes** nos botões de ação (Dropout, Transfer, Passar e TRUCO): ao passar o mouse ou, no celular, ao segurar o botão. Explicam a ação, o que vale fazer agora (no truco, a chance estimada por simulação) e o conceito do Livro de conceitos; - a chance estimada de vitória também na caixa de resposta ao truco. Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas estatísticas. O aviso aparece ao ligar.
+Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo do Glossário: uma oportunidade, um risco ou uma estratégia geral, sempre com o conceito de redes neurais por trás. As dicas usam só informação pública e nunca apontam qual neurônio oculto ativar; - **dicas flutuantes** nos botões de ação (Dropout, Transfer, Passar e TRUCO): ao passar o mouse ou, no celular, ao segurar o botão. Explicam a ação, o que vale fazer agora (no truco, a chance estimada por simulação) e o conceito do Glossário; - a chance estimada de vitória também na caixa de resposta ao truco. Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas estatísticas. O aviso aparece ao ligar.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -341,7 +327,7 @@ Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a c
 
 ## `src/cenas/mesa/efeitos.js`
 
-Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js) em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do oponente e avisos do Livro de conceitos.
+Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js) em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do oponente e avisos do Glossário.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -357,7 +343,7 @@ Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo
 | `animar_transfer()` | método | Transfer learning. |
 | `animar_completa(evento)` | método | Rede chegou à camada de saída. |
 | `animar_vento(evento)` | método | Terreno oceano: o vento mudou de naipe. |
-| `animar_powerbi(evento)` | método | Baralho Power Bee-Ai: as cartas da mão foram trocadas. |
+| `animar_powerbi(evento)` | método | Baralho Power BI: as cartas da mão foram trocadas. |
 | `animar_travada(evento)` | método | Rede finalizada porque não sobrou neurônio livre na camada seguinte. |
 | `animar_passe(evento)` | método | Alguém passou a vez. |
 | `animar_inicio(evento)` | método | Quem começa: mostra as cartas reveladas (ou anuncia o sorteio). |
@@ -368,7 +354,7 @@ Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo
 | `faixa(texto, cor = '#f6dc8f', tamanho = 48, icone = null)` | método | Faixa grande no centro do tabuleiro (gritos de truco, ataques). |
 | `falar(texto, quem)` | método | Balão de fala de um oponente. Fica à esquerda do placar, na altura do bloco dele, com a ponta virada para o avatar. |
 | `impactoDoTruco(valor)` | método | Impacto do grito de truco: tapa na mesa, flash e tremor de tela mais fortes que o do stack overflow, crescendo a cada degrau (TRUCO 3, SEIS 6, NOVE 9, DOZE 12). |
-| `avisarVerbete(id)` | método | Mostra uma vez por sessão o resumo do verbete do Livro de conceitos ligado ao que aconteceu. |
+| `avisarVerbete(id)` | método | Mostra uma vez por sessão o resumo do verbete do Glossário ligado ao que aconteceu. |
 
 ## `src/cenas/mesa/entrada.js`
 
@@ -386,13 +372,9 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | `aoClicarNaCarta(idCarta)` | método | Clique numa carta da mão: escolhe a carta de início, paga o dropout ou monta a seleção. |
 | `cancelarSelecao()` | método | Esc: limpa a seleção e sai do modo de dropout. |
 | `alternarDropout()` | método | Botão Dropout: entra ou sai do modo de escolher o alcance. |
-| `fazerTransfer()` | método | Botão Transfer learning: não é jogada obrigatória, então pergunta antes. Com uma quadra, pede a confirmação; com mais de uma, o jogador escolhe qual trocar (uma só por mão) ou cancela. |
-| `ordenarMao(criterio)` | método | Botões Tamanho e Naipe: o primeiro clique ordena do menor ao maior; clicar de novo no mesmo critério inverte. A escolha fica na aplicação e vale nas próximas mãos e para cartas novas. |
-| `atualizarRotulosDaOrdem()` | método | Rótulos dos botões de ordenar: o ativo mostra a seta do sentido. |
-| `criarControlesDeSomDaMesa(centros, y, lado)` | método | Ícones de som e música da mesa: dois botões HTML (com `aria-pressed`) postos sobre o canvas, nos espaços da fileira dos botões de ordenar. Seguem o canvas quando a janela muda de tamanho. |
-| `explicarOrdem(criterio)` | método | Texto do quadro de instruções para os botões de ordenar. |
+| `fazerTransfer()` | método | Botão Transfer: troca as quatro cartas iguais da mão. |
 | `passarAVez()` | método | Botão Passar a vez. |
-| `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só. |
+| `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Glossário e a chave das dicas, numa janela só. |
 | `abrirAjudaDaMesa()` | método | Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. |
 | `abrirMenuDaMesa()` | método | Botão MENU da mesa: som e música (a janela fica aberta para ligar e desligar), voltar ao jogo ou abandonar a partida. |
 | `registrarAbandono()` | método | Estatísticas de uso: saiu da partida antes do fim (`jogo_abandonado`). |
@@ -403,8 +385,6 @@ Geometria da mesa e utilitários de texto que se ajusta ao espaço. Tudo em coor
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `ROTULO_DO_DETALHE` | constante (exportada) | Rótulo do painel que mostra a carta ampliada ao passar o cursor ou tocar (no código, "inspeção"). O jogador lê "Detalhe da carta": "inspeção" é termo de quem desenvolve. |
-| `ROTULO_DA_ORDEM` | constante (exportada) | Rótulo dos botões que ordenam a mão (a seta ▲ crescente ou ▼ decrescente é somada ao do botão ativo). |
 | `PAINEL_ESQ` | constante (exportada) | Painel esquerdo (inspeção, pilhas e dica). |
 | `PAINEL_DIR` | constante (exportada) | Painel direito (placar, curva, registro e ações). |
 | `ESQ` | constante (exportada) | Posições verticais dentro do painel esquerdo, de cima para baixo. `pilha` é o tamanho das cartas do limbo e do cemitério. |
@@ -510,33 +490,6 @@ Parte da CenaMesa: o fluxo da mão. Começar a mão, executar jogadas, decidir q
 | `passarAparelho(j, continuar)` | método | Modo de dois jogadores: esconde a mão e pede para passar o aparelho. |
 | `vezDoOponente()` | método | Vez do oponente do computador: talvez pede truco, depois escolhe e executa a jogada. `this.notaDoOponente` substitui a linha de nível no painel ("pensando…", resultado da simulação). |
 
-## `src/cenas/mesa/tutorial.js`
-
-Parte da CenaMesa: o tutorial. Uma mão de treino com cartas combinadas de antemão (nucleo/tutorial.js), um assistente (Percy) que fala em balões ao lado da mesa e um roteiro (conteudo/tutorial.js) que só deixa o jogador fazer a jogada destacada em cada passo. Como se encaixa no fluxo da mesa (turnos.js): - `this.tutorial = { i }` guarda em que passo do roteiro a mão está; sem tutorial, é null; - `avancar()` chama `tutorialNaVez()` antes de tudo: um passo só de fala prende o fluxo até o jogador tocar em "Continuar"; um passo de jogada só mostra o balão; - `executarJogada()` só aceita a jogada do passo (`tutorialPermite`) e depois anda o roteiro; - a vez do rival espera o "Continuar" do passo e então joga a jogada combinada; - o fim da mão e as conquistas, estatísticas e placar da partida ficam de fora.
-
-| Nome | Tipo | Descrição |
-|---|---|---|
-| `BOTAO_DO_EMPILHAR` | constante | Botão da barra de ações de cada jogada de empilhar (a chave de `painel.acoes`). |
-| `passoDoTutorial()` | método | O passo do roteiro em que a mão está, ou null (sem tutorial ou roteiro acabado). |
-| `tutorialEsperaOJogador()` | método | O passo atual espera uma jogada do jogador? |
-| `tutorialPermite(jogada)` | método | A jogada é a que o passo atual espera? (Vale para o jogador e para o rival.) |
-| `tutorialNaVez()` | método | Primeira coisa de `avancar()` no tutorial: mostra o balão do passo atual. Devolve true quando o passo é só uma fala, e então o fluxo espera o "Continuar". |
-| `continuarTutorial()` | método | "Continuar" numa fala: anda o roteiro e retoma o fluxo. |
-| `jogarPeloRival(passo)` | método | O rival faz a jogada combinada do passo. |
-| `vezDoRivalNoTutorial()` | método | Vez do rival no tutorial: não pensa nem sorteia, espera o "Continuar" do balão. |
-| `andarNoRoteiro()` | método | Depois de uma jogada aceita: anda o roteiro. |
-| `avisarTutorial()` | método | O jogador tentou outra jogada: o balão treme e o quadro de instruções lembra a jogada do passo. |
-| `tutorialLibera(chave)` | método | Botão da barra liberado no passo atual? Dropout e Passar nos seus passos, e a ação de empilhar do passo (tunagem, overfit, early stop). Se não, avisa e devolve false. |
-| `tutorialLiberaCarta(idCarta)` | método | Carta da mão liberada no passo atual (valor certo, ou a revelação de início)? Se não, avisa. |
-| `filtrarAlvosDoTutorial()` | método | Deixa só o neurônio do passo como alvo clicável (os outros alvos ficam apagados). |
-| `mostrarBalao(passo)` | método | Mostra (ou troca) o balão do passo; sem passo, fecha. |
-| `esconderBotaoContinuar()` | método | Some com o botão "Continuar" (a jogada do rival já foi mandada). |
-| `fecharBalao()` | método | Tira o balão da tela. |
-| `prepararTutorial()` | método | Prepara o tutorial na criação da cena (mesa de treino, balão e marcação de que o treino foi visto). |
-| `sairDoTutorial()` | método | Botão "Sair" do balão (e "Sair da partida" do menu da mesa): confirma e volta ao menu. |
-| `terminarTutorial()` | método | O roteiro acabou: marca o treino como feito e oferece jogar de verdade. |
-| `desenharDestaqueDoTutorial(tempo)` | método | Contorno dourado pulsante no que o passo pede: as cartas da mão (ou a revelação de início), o neurônio e o botão da ação, na ordem em que o jogador usa. |
-
 ## `src/cenas/recursos.js`
 
 Recursos compartilhados pelas cenas do Phaser: texto nítido, câmera ajustada à tela, fundo da mesa e texturas das cartas geradas sob demanda. As texturas são geradas pela arte (pasta arte/) na densidade certa para cada uso e guardadas no gerenciador de texturas do Phaser com chaves descritivas ('carta-mesa:truco:4P', 'verso-mao@yinyang').
@@ -601,25 +554,17 @@ Conquistas e suas graduações (bronze a antimatéria, como sugere a especifica�
 
 ## `src/conteudo/dicasDeJogo.js`
 
-Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por trás. Regra de ouro: as dicas usam **só informação pública** — as cartas da mão de quem pede a dica, os neurônios já revelados na mesa, as somas e o placar. Nunca apontam qual neurônio oculto ativar nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica. `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos primeiro), ou uma dica geral de estratégia ligada a um verbete do Livro de conceitos. Não depende do Phaser: roda também no Node (testes).
+Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por trás. Regra de ouro: as dicas usam **só informação pública** — as cartas da mão de quem pede a dica, os neurônios já revelados na mesa, as somas e o placar. Nunca apontam qual neurônio oculto ativar nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica. `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos primeiro), ou uma dica geral de estratégia ligada a um verbete do Glossário. Não depende do Phaser: roda também no Node (testes).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `DICAS_GERAIS` | constante (exportada) | Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma boa prática do jogo a um verbete do Livro de conceitos (`verbete`). |
+| `DICAS_GERAIS` | constante (exportada) | Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma boa prática do jogo a um verbete do Glossário (`verbete`). |
 | `contarValores(mao)` | função | Contagem de cartas da mão por valor. |
 | `escolherDicaDeJogo(mao, j, partida, recentes = [])` | função (exportada) | Escolhe a dica de jogo para o jogador `j` agora. |
 
-## `src/conteudo/equipe.js`
-
-A equipe do jogo, mostrada na aba "Equipe" da tela Sobre (um cartão por pessoa). É só dados: para completar um cartão, preencha `curriculo` (um parágrafo curto, texto simples) e, se houver foto, `foto`. Pessoa sem `curriculo` aparece com "Mini-CV a caminho"; sem `foto`, com as iniciais. Os textos vêm de cada pessoa: não inventamos currículo de ninguém. Campos: - `id`: identificador estável; - `nome`, `papel`: como aparecem no cartão; - `curriculo`: mini-CV (ou `null` enquanto não chega); - `foto`: chave da foto (`'professor'` usa o retrato em moldura; `null` mostra as iniciais).
-
-| Nome | Tipo | Descrição |
-|---|---|---|
-| `iniciaisDe(nome)` | função (exportada) | Iniciais para o cartão sem foto: primeira e última palavra do nome (Welyngton Prá → "WP"). |
-
 ## `src/conteudo/figurasDaBiblioteca.js`
 
-Figuras do Livro de conceitos: diagramas em SVG, desenhados à mão e embutidos no verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e escalam com a largura do verbete.
+Figuras do Glossário: diagramas em SVG, desenhados à mão e embutidos no verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e escalam com a largura do verbete.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -639,7 +584,7 @@ Figuras do Livro de conceitos: diagramas em SVG, desenhados à mão e embutidos 
 
 ## `src/conteudo/grimorio.js`
 
-Livro de conceitos (antes Glossário, "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com fórmulas MathML na linha, montadas com `na`) e `formula` (MathML em bloco), redigidos por Suzy Arcanjo (issue #23 do repositório original). Toda a matemática é MathML nativo, desenhado pelo próprio navegador: funciona sem rede e no arquivo único.
+Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com fórmulas MathML na linha, montadas com `na`) e `formula` (MathML em bloco), redigidos por Suzy Arcanjo (issue #23 do repositório original). Toda a matemática é MathML nativo, desenhado pelo próprio navegador: funciona sem rede e no arquivo único.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -676,17 +621,6 @@ Textos de ambientação das cartas e falas dos oponentes.
 | `AMBIENTACAO` | constante (exportada) | Frase em itálico na caixa de texto de cada carta (por valor, ou pelo nome da manilha). |
 | `PROVOCACOES` | constante (exportada) | Falas dos oponentes por situação. |
 | `provocar(situacao)` | função (exportada) | Sorteia uma fala da situação. |
-
-## `src/conteudo/tutorial.js`
-
-Conteúdo do tutorial: o assistente (Percy), a mesa e as mãos combinadas de antemão e o roteiro, passo a passo. Só dados; quem monta a mão e confere as jogadas é `nucleo/tutorial.js`, e quem mostra os balões é a cena da mesa (`cenas/mesa/tutorial.js`). Um passo sem `jogada` é só uma fala ("Continuar"). Um passo com `jogada` espera essa jogada: do jogador (`jogador: 0`), que só consegue fazer exatamente a jogada destacada, ou do rival (`jogador: 1`), que a faz quando o jogador toca em "Continuar". A jogada nomeia o neurônio pelo id da mesa ('C1N1') e as cartas pelo valor ('6'), nunca pelo id, porque os ids nascem na montagem.
-
-| Nome | Tipo | Descrição |
-|---|---|---|
-| `ASSISTENTE` | constante (exportada) | O assistente que fala nos balões. |
-| `MESA_DO_TUTORIAL` | constante (exportada) | A mesa do treino: arquitetura curta (entrada 3, três camadas ocultas de 4 e saída 3), 2 jogadores. Cada linha é uma camada; cada valor é a carta virada no neurônio daquela posição (o id do neurônio é 'C' + camada + 'N' + posição). |
-| `OPCOES_DO_TUTORIAL` | constante (exportada) | Opções fixas da mesa do treino: arquitetura curta, um oponente e uma mão só (sem truco). |
-| `ROTEIRO` | constante (exportada) | Roteiro do tutorial. |
 
 ## `src/interface/analise.js`
 
@@ -746,19 +680,6 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 | `sairDaContaAtual()` | função (exportada) | Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. |
 | `retomarConta(app)` | função (exportada) | Ao abrir o jogo, retoma a conta de quem já entrou neste navegador. Sem a marca do login (ou sem o Firebase configurado), não faz nada e não baixa o SDK. Com a marca, espera a sessão que o Firebase guardou: - sessão encerrada (saiu em outro lugar, expirou): apaga a marca e segue sem conta; - sessão válida: junta o progresso como no login e volta a salvar na conta; - falha ao ler ou gravar a conta: avisa, segue com o progresso do aparelho e mantém a marca, para tentar de novo na próxima visita. |
 
-## `src/interface/controlesDeSom.js`
-
-Ícones de ligar e desligar os efeitos sonoros e a música, sempre à vista no menu e na mesa. São botões HTML (alto-falante e nota musical, com um corte quando desligados) com nome acessível e estado em `aria-pressed` (apertado = ligado). Todos os conjuntos abertos (menu, mesa) mostram o mesmo estado: `atualizarControlesDeSom` repinta todos de uma vez. A escolha é lembrada pela aplicação (`alternarSom` e `alternarMusica`).
-
-| Nome | Tipo | Descrição |
-|---|---|---|
-| `iconeDeSom(ligado)` | função (exportada) | Alto-falante, com ondas quando ligado e cortado por uma barra quando desligado. |
-| `iconeDeMusica(ligado)` | função (exportada) | Nota musical, cortada por uma barra quando desligada. |
-| `htmlDoBotao(chave, ligado)` | função | HTML de um dos botões. `ligado` é o estado inicial. |
-| `htmlDosControlesDeSom(app)` | função (exportada) | HTML do par de ícones, já no estado atual. |
-| `atualizarControlesDeSom(app)` | função (exportada) | Repinta todos os ícones de som e música abertos (menu e mesa) conforme o estado da aplicação. |
-| `ligarControlesDeSom(raiz, app, terreno, aoMudar)` | função (exportada) | Liga os cliques dos ícones dentro de `raiz`. |
-
 ## `src/interface/logo.js`
 
 A logo do Truco de Turing: uma carta com uma rede neural (três entradas, quatro neurônios no meio e duas saídas, uma azul e outra laranja, como no teste de Turing). Os textos já estão em curvas, então a logo não depende da fonte. Os mesmos desenhos estão em `docs/logo/` (SVG e PNG) para o README, redes sociais e impressão.
@@ -790,14 +711,14 @@ Menu principal: apresentação do jogo, botões das telas e configuração da me
 | `mostrarMiniatura(elemento, chave, desenhar)` | função | Mostra a miniatura `chave` dentro do elemento, desenhando-a na primeira vez com `desenhar()`. |
 | `opcoesHtml(rotulos, selecionado)` | função | Gera as `<option>` de uma lista. `rotulos` mapeia valor → texto (ou objeto com `nome`). |
 | `BOTOES_DO_MENU` | constante (exportada) | Botões do menu inicial e o nome de cada um nas estatísticas de uso (evento `menu_clique`). |
-| `htmlDoMenu(opcoes, app)` | função | HTML do menu. |
+| `htmlDoMenu(opcoes)` | função | HTML do menu. |
 | `abrirMenu(app)` | função (exportada) | Abre o menu principal. |
 | `atualizarDicas()` | função | Atualiza descrições, listas dependentes e miniaturas conforme as escolhas. |
 | `lerEscolhas()` | função | Guarda as escolhas atuais na aplicação (as opções que não estão nesta tela continuam como estavam). |
 
 ## `src/interface/musica.js`
 
-Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cada terreno. | Trilha | Estilo | Andamento | |---------------------|---------------------------------------------------------------|--------------| | menu | baião épico em Sol: cordas, zabumba, tímpano e palmas; refrão que convida a jogar | 100 bpm | | neutro (Planície) | blues lento em Mi: dois violinos no tema, violoncelo e fagote no apoio | 72 bpm | | oceano | valsa em Sol: flauta de pã, marimba ao fundo, coro nos repousos | 63 bpm (3/4) | | montanha | épica em Lá menor: trompa, harpa ao fundo e xilofone nos repousos | 84 bpm | | pantano | lamento sombrio em Ré menor: órgão, zumbido grave, sino e glockenspiel de apoio | 56 bpm | Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As melodias são compostas (uma tabela de notas por compasso), então o laço sempre se repete igual e o tema fica na cabeça. Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio.
+Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cada terreno. | Trilha | Estilo | Andamento | |---------------------|---------------------------------------------------------------|--------------| | menu | baião em Sol: sanfona, zabumba, triângulo e palmas; refrão que convida a jogar | 118 bpm | | neutro (Planície) | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm | | oceano | valsa em Sol: marimba ao fundo, coro que preenche os repousos | 63 bpm (3/4) | | montanha | épica em Lá menor: trompa, harpa ao fundo e tambores nos repousos | 84 bpm | | pantano | dança de fada em Ré menor: harmônica de vidro, glockenspiel e pizzicato | 60 bpm | Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As melodias são compostas (uma tabela de notas por compasso), então o laço sempre se repete igual e o tema fica na cabeça. Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -811,15 +732,12 @@ Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cad
 | `sino(saida, tempo, midi, volume = 0.06)` | função | Sino: parciais inarmônicas que somem devagar. |
 | `harpa(saida, tempo, midi, volume = 0.04)` | função | Harpa: corda dedilhada que soa e some devagar. |
 | `glockenspiel(saida, tempo, midi, volume = 0.05)` | função | Glockenspiel e caixinha de música: barra de metal, ataque seco e brilho agudo. |
+| `harmonicaDeVidro(saida, tempo, midi, duracao, volume = 0.05)` | função | Harmônica de vidro: senoides puras com entrada macia e um leve tremor. |
 | `marimba(saida, tempo, midi, volume = 0.05)` | função | Marimba: tecla de madeira, grave arredondado e um harmônico que some rápido. |
-| `xilofone(saida, tempo, midi, volume = 0.04)` | função | Xilofone: barra de madeira dura, ataque seco, harmônicos agudos que somem depressa. |
-| `flautaDePa(saida, tempo, midi, duracao, volume = 0.07)` | função | Flauta de pã: som de seno com um sopro de ar no começo de cada nota. |
+| `pizzicato(saida, tempo, midi, volume = 0.08)` | função | Pizzicato: corda beliscada, curta e abafada. |
 | `triangulo(saida, tempo, aberto, volume = 0.02)` | função | Triângulo do forró: barra de metal aguda; fechado é um toque curto, aberto soa mais. |
 | `palmas(saida, tempo, volume = 0.05)` | função | Palmas: estalo de ruído em banda média, com um eco curtinho. |
-| `cordas(saida, tempo, midi, duracao, volume = 0.03)` | função | Cordas (orquestra): dois dentes de serra levemente desafinados, ataque lento e vibrato leve. |
-| `violino(saida, tempo, midi, duracao, volume = 0.03)` | função | Violino: serra filtrada com ataque de arco e vibrato; dois violinistas levemente desafinados. |
-| `violoncelo(saida, tempo, midi, duracao, volume = 0.1)` | função | Violoncelo: serra escura, arco lento e vibrato fundo. |
-| `fagote(saida, tempo, midi, duracao, volume = 0.03)` | função | Fagote: palheta nasalada e redonda, apoio no meio do acorde. |
+| `sanfona(saida, tempo, midi, duracao, volume = 0.03)` | função | Sanfona: duas palhetas levemente desafinadas (o "batimento" da sanfona), fole com vibrato. |
 | `coro(saida, tempo, notas, duracao, volume = 0.018)` | função | Coro (pad): acorde de senoides que entra e sai devagar e passa um pouco do compasso. |
 | `melodia(tabela, compasso, passo, tocarNota, d)` | função | Toca a nota da melodia composta que começa neste passo, se houver. Tabela: [passo, midi, passos]. |
 | `gravarTrilha(saida, nome, segundos)` | função (exportada) | Toca `segundos` da trilha `nome` numa saída qualquer (por exemplo, um OfflineAudioContext) a partir do tempo 0. Usado para gravar amostras das trilhas e nos testes. |
@@ -841,7 +759,7 @@ Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápi
 | `fecharTodos()` | função (exportada) | Fecha todas as telas abertas. |
 | `trocarAviso(aviso)` | função | Troca o aviso comum do topo pelo novo. As medalhas de conquista ficam, porque têm fila própria. |
 | `mostrarAviso(titulo, texto, tipo, duracaoMs = 5200)` | função (exportada) | Mostra um aviso rápido no topo da tela (um aviso comum por vez, abaixo da medalha de conquista, se houver). |
-| `mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito)` | função (exportada) | Dica de jogo do modo "dicas", no estilo do Livro de conceitos: título, conselho e o conceito de redes neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha). |
+| `mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito)` | função (exportada) | Dica de jogo do modo "dicas", no estilo do Glossário: título, conselho e o conceito de redes neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha). |
 | `DURACAO_DO_AVISO_DE_CONQUISTA` | constante (exportada) | Tempo de cada aviso de conquista na tela, em milissegundos (um toque fecha antes). |
 | `ESPERA_DEPOIS_DE_FECHAR` | constante | Espera depois de fechar uma tela, antes de voltar a mostrar medalhas (a resposta do truco pode abrir outro pedido). |
 | `filaDeConquistas` | constante | Avisos de conquista esperando a vez, na ordem em que foram ganhos. |
@@ -854,7 +772,7 @@ Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápi
 | `retomarConquistas()` | função | Uma tela fechou: se a fila estava esperando, ela volta a andar daqui a pouco. |
 | `limparAvisosDeConquista()` | função (exportada) | Esvazia a fila e tira da tela o aviso de conquista atual. |
 | `confirmar(titulo, texto, botoes, opcoes = {})` | função (exportada) | Caixa de confirmação com botões. |
-| `mostrarDicaFlutuante(titulo, html, alvo, cor)` | função (exportada) | Mostra uma dica no estilo do Livro de conceitos ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
+| `mostrarDicaFlutuante(titulo, html, alvo)` | função (exportada) | Mostra uma dica no estilo do Glossário ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
 | `esconderDicaFlutuante()` | função (exportada) | Esconde a dica flutuante, se houver. |
 
 ## `src/interface/som.js`
@@ -875,11 +793,11 @@ Efeitos sonoros sintetizados com WebAudio (nenhum arquivo de áudio). O navegado
 
 ## `src/interface/telas/ajudaDasAcoes.js`
 
-Ajuda das ações, como o botão botão "?": um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Aprender mais" que abre o verbete certo do Livro de conceitos.
+Ajuda das ações, como o botão botão "?": um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Ver o conceito" que abre o verbete certo do Glossário.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no motor (de onde vêm a regra e o conceito); `verbete` é o verbete do Livro de conceitos. |
+| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no motor (de onde vêm a regra e o conceito); `verbete` é o verbete do Glossário. |
 | `doMotor(id)` | função | Ação do motor, ou um objeto vazio se o motor não tiver aquele id. |
 | `abrirAjudaDasAcoes(app, idInicial)` | função (exportada) | Abre a ajuda das ações. |
 
@@ -895,7 +813,7 @@ Tela de avatares: o jogador escolhe o retrato que aparece no placar. Os bloquead
 
 ## `src/interface/telas/conquistas.js`
 
-Quadro de conquistas: as medalhas (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela.
+Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -907,12 +825,12 @@ Quadro de conquistas: as medalhas (desbloqueadas coloridas; bloqueadas em cinza,
 
 ## `src/interface/telas/grimorio.js`
 
-Tela do Livro de conceitos (antes Glossário, "Biblioteca de conceitos" e "Grimório"): lista de verbetes à esquerda e o verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
+Tela do Glossário (antes "Biblioteca de conceitos" e "Grimório"): lista de verbetes à esquerda e o verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `htmlDoVerbete(v)` | função (exportada) | Corpo do verbete: a ideia do dia a dia (verbetes de Ação), o conceito, a equação, a figura, como aparece no jogo, até onde a comparação vale, a matemática para se aprofundar, a fonte e a autoria. Equação, "aprofundar" e fórmula (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador. |
-| `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre o Livro de conceitos. |
+| `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre o Glossário. |
 | `desenharLista(ativo)` | função | Desenha a lista com o verbete ativo destacado. |
 | `mostrar(id)` | função | Mostra um verbete e o marca como lido. |
 
@@ -975,7 +893,7 @@ Tela de regras, com o conteúdo do manual de regras e as decisões da fusão, em
 
 ## `src/interface/telas/revisao.js`
 
-Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da linha do tempo guardada pela mesa (cenas/mesa/turnos.js): - um resumo com os momentos-chave (maior salto, golpe mais duro, a virada) e o que cada um fez; - a curva de treino das duas redes, passo a passo, com marcas nas ações importantes; - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais do Livro de conceitos; - na partida com várias mãos, o placar mão a mão.
+Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da linha do tempo guardada pela mesa (cenas/mesa/turnos.js): - um resumo com os momentos-chave (maior salto, golpe mais duro, a virada) e o que cada um fez; - a curva de treino das duas redes, passo a passo, com marcas nas ações importantes; - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais do Glossário; - na partida com várias mãos, o placar mão a mão.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -983,7 +901,7 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 | `placar` | constante | Junta números com ' × ' (placar de 2 a 5 jogadores). |
 | `MARCAS` | constante | Cor e rótulo de cada tipo de acontecimento marcado na curva. |
 | `tipoDoPasso(passo)` | função | Tipo principal de um passo: o evento mais marcante, ou o tipo da jogada. |
-| `VERBETE_DO_TIPO` | constante | Verbete do Livro de conceitos ligado a cada tipo de passo. |
+| `VERBETE_DO_TIPO` | constante | Verbete do Glossário ligado a cada tipo de passo. |
 | `variacoes(passos)` | função | Diferença das somas em relação ao passo anterior. |
 | `momentosChave(passos, nomes)` | função | Momentos-chave da mão, em frases curtas. |
 | `contagens(passos)` | função | Quantas vezes cada jogador fez cada tipo de ação. |
@@ -994,16 +912,12 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre", em duas abas. "O jogo": a logo, a versão, a disciplina, as regras originais e as inspirações, as estatísticas de uso (ligar e desligar), os dados da conta, o botão para reportar bugs e sugestões (issues do GitHub) e a licença. "Equipe": um cartão por pessoa, com foto e mini-CV (dados em `conteudo/equipe.js`), e a homenagem ao prof. Peng na conquista final.
+Tela "Sobre": a logo, versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `situacaoDasEstatisticas()` | função | Situação das estatísticas de uso neste aparelho, em texto. |
-| `ABAS_DO_SOBRE` | constante (exportada) | Abas da tela, na ordem: [id, nome]. |
-| `cartaoDaPessoa(pessoa)` | função (exportada) | Cartão de uma pessoa da equipe. Sem mini-CV, avisa que ele ainda vai chegar. |
-| `abaDoJogo()` | função | Conteúdo da aba "O jogo". |
-| `abaDaEquipe()` | função | Conteúdo da aba "Equipe". |
-| `abrirSobre(abaInicial = 'jogo')` | função (exportada) | Abre a tela "Sobre". |
+| `abrirSobre()` | função (exportada) | Abre a tela "Sobre". |
 
 ## `src/motor/bot.js`
 
@@ -1064,10 +978,7 @@ Baralhos do jogo e valor em pontos das cartas. As regras de cada baralho (cartas
 |---|---|---|
 | `montarBaralho(chave)` | função | Cartas de um baralho do motor, no formato da interface. |
 | `BARALHOS` | constante (exportada) | Cada baralho tem: `nome`, `resumo` (texto do menu) e `montar()`, que gera as cartas. Opcionais: - `manilhas`: nome especial de cartas (truco), usado na arte; - `figurasValem`: as figuras valem pontos próprios e não formam par nem trio (truco, nobreza); - `forward`: a rede vale a ativação da saída, calculada camada a camada (backprop). |
-| `RESTRICOES_DO_BARALHO` | constante (exportada) | Restrições de mesa de alguns baralhos. O Yin-yang só tem 2 e Ás, então mais de um baralho ou uma rede grande deixam as mãos repetitivas e fáceis de somar: fica em 1 baralho e na arquitetura curta, pelo menos até haver coringas para equilibrar (prof. Peng Yaohao, #90). A regra vale em `novaMao` e em `normalizarOpcoes`, então vale também online e nas opções salvas. |
-| `aplicarRestricoesDoBaralho(opcoes)` | função (exportada) | Devolve uma cópia das opções com as restrições do baralho aplicadas (`baralhos` e `arquitetura`). |
 | `pontosDaCarta(carta, baralho)` | função (exportada) | Pontos de uma carta isolada no baralho escolhido: no clássico, 2 a 10 pelo número, Ás 11 e figuras 0; no truco, o valor da carta na ordem do truco. |
-| `ordenarCartas(cartas, baralho, criterio, sentido = 1)` | função (exportada) | Cópia das cartas ordenada para mostrar a mão (não mexe na mão do jogo). `tamanho` segue o valor da carta no baralho escolhido (no Clássico, 2 a 10, figuras 0 e Ás 11; no Truco, a ordem do truco; os empates ficam na ordem A, 2 … K e depois nos naipes). `naipe` agrupa por naipe (Ouros, Paus, Copas, Espadas, a ordem de desempate do jogo), do menor ao maior dentro de cada um. |
 | `nomeDaCarta(carta, baralho)` | função (exportada) | Nome por extenso da carta, ou o nome da manilha ("Zap"). |
 | `manilhaDaCarta(carta, baralho)` | função (exportada) | Nome da manilha, se a carta for uma no baralho escolhido. |
 
@@ -1133,7 +1044,7 @@ Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor. E
 | `todasAsCartas(estadoMotor)` | função | Todas as cartas da partida no estado do motor, onde quer que estejam. |
 | `indexarCartas(estadoMotor)` | função | Converte as cartas do motor para o formato da interface, uma vez por partida. motor, e id do motor por id da interface. |
 | `montar(estadoMotor, config, jogadores, simulacao, cartas)` | função | Monta a visão da interface em volta de um estado do motor. |
-| `novaMao(opcoesPedidas)` | função (exportada) | Cria uma mão nova: o motor embaralha, monta a mesa, distribui as cartas e separa o limbo. |
+| `novaMao(opcoes)` | função (exportada) | Cria uma mão nova: o motor embaralha, monta a mesa, distribui as cartas e separa o limbo. |
 | `copiarMao(mao, estadoMotor = motor.cloneState(mao.estadoMotor)` | função (exportada) | Cópia leve da mão para simulações (sem eventos, textos ou histórico). |
 | `atualizarVisao(mao)` | função (exportada) | Refaz a visão da interface a partir do estado do motor (`mao.estadoMotor`). É chamada depois de cada jogada; ferramentas e testes que mexem direto em `mao.estadoMotor` também precisam chamá-la. |
 | `emitir(mao, evento)` | função | Coloca um evento na fila da interface (ignorado em simulação). |
@@ -1147,8 +1058,7 @@ Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor. E
 | `efeitoDoEmpilhamento(mao, j, neuronio, n)` | função (exportada) | Efeito de empilhar `n` cartas no neurônio, pelo tamanho final da pilha: 2 = tunagem (própria) ou overfit (adversário); 3 = early stop; 4 = stack overflow. |
 | `podeEmpilhar(mao, j, idNeuronio, idsCartas)` | função (exportada) | Diz se o jogador pode empilhar essas cartas da mão nesse neurônio (quem decide é o motor). |
 | `camadasDesfaziveis(mao, j)` | função (exportada) | Quantas camadas ocultas o jogador pode desfazer com dropout. |
-| `valoresParaTransfer(mao, j)` | função (exportada) | Valores que o jogador tem quatro vezes ou mais na mão (quadras para o transfer learning), na ordem em que aparecem na mão. Vazio se já usou o transfer nesta mão. O transfer não é automático nem obrigatório: quem escolhe se troca e qual quadra é o jogador. |
-| `valorParaTransfer(mao, j)` | função (exportada) | Primeira quadra da mão (para dicas e botão), ou null. |
+| `valorParaTransfer(mao, j)` | função (exportada) | Valor que o jogador tem quatro vezes na mão (para transfer learning), ou null. |
 | `podePassar(mao, j)` | função (exportada) | Passar a vez: só quem teve a rede interrompida por early stop e ainda tem cartas (atacar não é obrigatório), ou quem não tem nenhuma outra jogada que gaste a vez. |
 | `jogadasLegais(mao, j, opcoes = {})` | função (exportada) | Lista as jogadas legais do jogador, geradas pelo motor. |
 | `idsNoMotor(mao, j, ids)` | função | Ids do motor das cartas da mão do jogador, a partir dos ids da interface. |
@@ -1235,19 +1145,6 @@ Camada de truco: a partida vale tentos e cada mão pode ser trucada. TRUCO! (3) 
 | `responderTruco(partida, j, resposta)` | função (exportada) | Responde ao pedido pendente. |
 | `marcarTentos(partida, vencedor, pontos)` | função (exportada) | Soma os tentos da mão ao vencedor e encerra a partida se ele chegou ao alvo. Devolve os tentos ganhos. |
 | `proximaMao(partida)` | função (exportada) | Prepara a próxima mão da partida. |
-
-## `src/nucleo/tutorial.js`
-
-Mão do tutorial: a mesa e as mãos combinadas de antemão (conteudo/tutorial.js) e a conferência das jogadas do roteiro. Sem sorteio: o roteiro joga a mesma mão sempre, e cada jogada é validada pelo motor como numa partida de verdade.
-
-| Nome | Tipo | Descrição |
-|---|---|---|
-| `SEMENTE_DO_TUTORIAL` | constante | Semente fixa só para o motor ter o que embaralhar; as cartas da mesa e das mãos são trocadas em seguida. |
-| `novaMaoDoTutorial(jogadores)` | função (exportada) | Cria a mão do tutorial: o motor monta a mesa e as cartas de cada neurônio e de cada mão são trocadas pelas do roteiro (como `testes/apoio/montagem.js`, que faz o mesmo para montar situações). |
-| `cartasDoValor(mao, j, valor, n)` | função | Ids das primeiras `n` cartas de valor `valor` na mão do jogador `j`. |
-| `jogadaDoPasso(mao, passo)` | função (exportada) | A jogada de um passo do roteiro, com os ids de carta da mão atual. |
-| `inicioDoRival(mao)` | função (exportada) | A carta que o rival revela na escolha de quem começa. |
-| `jogadaCombina(mao, passo, jogada)` | função (exportada) | A jogada feita é a do passo? Compara o tipo, o neurônio e as cartas (pelo valor e pela quantidade, não pelo id: a mão tem cartas de naipes diferentes de mesmo valor). |
 
 ## `src/online/configuracao.js`
 

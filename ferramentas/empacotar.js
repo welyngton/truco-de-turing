@@ -22,9 +22,7 @@ const { outputFiles } = await build({
   bundle: true,
   format: 'iife',
   target: ['es2020', 'safari14'],
-  /* Sem espaços nem quebras de linha (os nomes ficam como estão, para depurar). Foi o que devolveu
-     margem ao limite de 700 KB do arquivo único (#78) sem mexer no jogo. */
-  minifyWhitespace: true,
+  minify: false,
   sourcemap: process.env.MAPA ? 'inline' : false,
   legalComments: 'none',
   write: false,

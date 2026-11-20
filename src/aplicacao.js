@@ -7,9 +7,7 @@
 import { carregarProgresso, salvarProgresso } from './conteudo/progresso.js';
 import { CONQUISTAS, GRADUACOES, VALEM_SEM_MAO_COMPLETA, VALEM_NA_HORA, CONQUISTA_FINAL, progressoDaFinal } from './conteudo/conquistas.js';
 import { VERBETES } from './conteudo/grimorio.js';
-import { aplicarRestricoesDoBaralho } from './nucleo/baralhos.js';
 import { Som } from './interface/som.js';
-import { atualizarControlesDeSom } from './interface/controlesDeSom.js';
 import { Musica } from './interface/musica.js';
 import { fecharTodos, avisarConquista } from './interface/paineis.js';
 import { medalhaHtml } from './interface/medalha.js';
@@ -35,8 +33,7 @@ export function faixaDeExperiencia(maos) {
 
 /**
  * Normaliza as opções do menu: completa as que faltam (progresso de versões antigas) e converte
- * o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`. Também aplica as restrições do
- * baralho (Yin-yang: 1 baralho e arquitetura curta), valendo para opções salvas e para salas online.
+ * o antigo oponente "2 humanos no mesmo aparelho" em `humanos: 2`.
  */
 export function normalizarOpcoes(opcoes) {
   const o = { ...OPCOES_PADRAO, ...(opcoes || {}) };
@@ -44,7 +41,7 @@ export function normalizarOpcoes(opcoes) {
   o.jogadores = Math.max(2, Math.min(5, Number(o.jogadores) || 2));
   o.humanos = Math.max(1, Math.min(o.jogadores, Number(o.humanos) || 1));
   o.baralhos = Math.max(1, Math.min(4, Number(o.baralhos) || 1));
-  return aplicarRestricoesDoBaralho(o);
+  return o;
 }
 
 export const Aplicacao = {
@@ -52,7 +49,7 @@ export const Aplicacao = {
   progresso: carregarProgresso(),
   /** Escolhas do menu: oponente, baralho, terreno, inicio, alvo, jogadores, humanos, arquitetura, baralhos. */
   opcoes: null,
-  /** Verbetes do Livro de conceitos já mostrados como aviso nesta sessão. */
+  /** Verbetes do Glossário já mostrados como aviso nesta sessão. */
   verbetesAvisados: {},
   /** Instância do Phaser.Game (definida em principal.js). */
   jogo: null,
@@ -104,7 +101,6 @@ export const Aplicacao = {
     Som.definirMudo(this.progresso.mudo);
     this.salvar();
     registrarEvento(EVENTOS.audio, { tipo: 'som', ligado: this.progresso.mudo ? 0 : 1 });
-    atualizarControlesDeSom(this);
   },
 
   /**
@@ -116,44 +112,20 @@ export const Aplicacao = {
     this.progresso.musicaEscolhida = true;
     this.salvar();
     registrarEvento(EVENTOS.audio, { tipo: 'musica', ligado: this.progresso.musica ? 1 : 0 });
-    if (this.progresso.musica && terreno) { Som.desbloquear(); Musica.tocar(terreno); } else Musica.parar();
-    atualizarControlesDeSom(this);
+    if (this.progresso.musica && terreno) Musica.tocar(terreno); else Musica.parar();
   },
 
-  /** Primeira vez de quem nunca jogou uma mão nem fez o tutorial: o Jogar abre o tutorial. */
-  deveFazerOTutorial() {
-    const p = this.progresso;
-    return !this.online && !p.treinoVisto && !(p.maos > 0);
-  },
-
-  /** Sai do menu e abre a mesa (na primeira vez, com o tutorial). */
+  /** Sai do menu e abre a mesa. */
   jogar() {
     const o = this.opcoes || OPCOES_PADRAO;
-    this.tutorialAgora = this.deveFazerOTutorial();
-    if (!this.tutorialAgora) {
-      registrarEvento(EVENTOS.jogoIniciado, {
-        baralho: o.baralho, terreno: o.terreno, oponente: o.oponente, arquitetura: o.arquitetura,
-        jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: this.online ? 1 : 0,
-      });
-    }
-    this.abrirMesa();
-  },
-
-  /** Abre a mesa de treino (botão "Fazer o tutorial" de Como jogar), do menu ou de uma partida em andamento. */
-  iniciarTutorial() {
-    if (this.online) return;
-    this.tutorialAgora = true;
-    this.abrirMesa();
-  },
-
-  /** Troca a tela atual pela mesa (a cena da mesa lê `tutorialAgora` ao ser criada). */
-  abrirMesa() {
+    registrarEvento(EVENTOS.jogoIniciado, {
+      baralho: o.baralho, terreno: o.terreno, oponente: o.oponente, arquitetura: o.arquitetura,
+      jogadores: o.jogadores, humanos: o.humanos, baralhos: o.baralhos, alvo: o.alvo, online: this.online ? 1 : 0,
+    });
     fecharTodos();
     this.modoImersivo();
     document.body.classList.add('em-partida');
     this.jogo.scene.stop('Menu');
-    /* do tutorial para uma partida (ou ao contrário), a mesa atual dá lugar a uma nova */
-    if (this.jogo.scene.isActive && this.jogo.scene.isActive('Mesa')) this.jogo.scene.stop('Mesa');
     this.jogo.scene.start('Mesa');
   },
 

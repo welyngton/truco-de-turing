@@ -1,7 +1,7 @@
 /**
  * @file Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js)
  * em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do
- * oponente e avisos do Livro de conceitos.
+ * oponente e avisos do Glossário.
  */
 import { MUNDO, RESOLUCAO, FONTES, TAMANHO_CARTA } from '../../configuracao.js';
 import { NAIPE, ehFigura } from '../../nucleo/cartas.js';
@@ -162,9 +162,9 @@ export const metodosDeEfeitos = {
     return 0;
   },
 
-  /** Baralho Power Bee-Ai: as cartas da mão foram trocadas. */
+  /** Baralho Power BI: as cartas da mão foram trocadas. */
   animar_powerbi(evento) {
-    mostrarAviso('Power Bee-Ai', this.mao.jogadores[evento.jogador].nome + ' deu uma volta pela colmeia: as cartas da mão mudaram.', null, 3500);
+    mostrarAviso('Power BI', this.mao.jogadores[evento.jogador].nome + ' atualizou o dashboard: as cartas da mão mudaram.', null, 3500);
     return 0;
   },
 
@@ -317,7 +317,7 @@ export const metodosDeEfeitos = {
     camera.flash(180, 255, 210, 120);
   },
 
-  /** Mostra uma vez por sessão o resumo do verbete do Livro de conceitos ligado ao que aconteceu. */
+  /** Mostra uma vez por sessão o resumo do verbete do Glossário ligado ao que aconteceu. */
   avisarVerbete(id) {
     const avisados = this.app.verbetesAvisados;
     if (avisados[id]) return;

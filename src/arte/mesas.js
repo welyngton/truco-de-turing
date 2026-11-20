@@ -8,7 +8,7 @@ import { brilho, criarTela, degradeLinear, degradeRadial, geradorComSemente, has
 import { desenharEmblema } from './emblemas.js';
 import { montanhas } from './cenarios.js';
 
-/** Feltro verde da Planície, com fibras e vinheta. */
+/** Feltro verde da mesa neutra, com fibras e vinheta. */
 export function desenharFeltro(W, H, S) {
   let o = criarTela(W, H, S || 1), ctx = o.ctx;
   let aleatorio = geradorComSemente(4242);

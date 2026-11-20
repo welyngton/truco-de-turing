@@ -12,7 +12,6 @@ import { COR_JOGADOR_CSS } from './layout.js';
 export const metodosDoTruco = {
   /** Botão TRUCO! do jogador humano. */
   pedirTrucoHumano() {
-    if (this.tutorial) return;
     if (!this.ehVezDoHumano() || !podeTrucar(this.partida, this.quemVe)) return;
     this.anunciarTruco(this.quemVe);
   },

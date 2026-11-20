@@ -102,7 +102,7 @@ describe('paineis.js', () => {
     assert.equal(aviso.getAttribute('role'), 'status');
     assert.deepEqual([a.vezes, b.vezes], [1, 0], 'o som toca quando o aviso aparece');
     /* um aviso comum não apaga a medalha, e a medalha fica acima dele */
-    paineis.mostrarAviso('Livro de conceitos · Dropout', 'texto');
+    paineis.mostrarAviso('Glossário · Dropout', 'texto');
     paineis.mostrarDicaDeJogo('Corrida', 'Ataque agora.', '', '');
     assert.deepEqual(medalhasNaTela(), [a.titulo]);
     assert.equal($('#avisos').firstElementChild, $('#avisos .aviso-conquista'));
@@ -205,7 +205,7 @@ describe('som.js e musica.js', () => {
   });
   it('trilha do menu: baião animado (andamento, percussão em todo tempo, refrão em duas partes)', () => {
     const m = MUSICAS.menu, passos = m.tempos * m.subdivisao;
-    assert.ok(m.bpm >= 96 && m.bpm <= 108, 'andamento mais lento e épico');
+    assert.ok(m.bpm >= 110, 'andamento animado');
     assert.equal(m.acordes.length, 16, 'partes A e B de 8 compassos');
     assert.ok(m.acordes.some(([r]) => r % 12 === 5), 'o Fá natural do mixolídio na parte B');
     /* todo tempo do compasso tem percussão (zabumba, palmas ou triângulo) */
@@ -359,7 +359,7 @@ describe('telas', () => {
     assert.ok($$('#g-lista .lido').length >= 2);
     abrirGrimorio(app, 'nao-existe');
   });
-  it('Livro de conceitos: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
+  it('Glossário: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
     abrirGrimorio(appFalso(), 'overfit');
     const texto = $('#g-verbete').textContent;
     for (const trecho of ['A ideia', 'No jogo', 'Até onde vale a comparação', 'Para se aprofundar', 'Suzy Arcanjo']) assert.match(texto, new RegExp(trecho));
@@ -370,15 +370,15 @@ describe('telas', () => {
     const curto = htmlDoVerbete(VERBETES.find((v) => !v.ideia));
     assert.doesNotMatch(curto, /A ideia|Para se aprofundar|Colaboração/);
   });
-  it('Livro de conceitos: título novo, equação, figura e "até onde vale a comparação"', () => {
+  it('Glossário: título novo, equação, figura e "até onde vale a comparação"', () => {
     abrirGrimorio(appFalso(), 'dropout');
-    assert.match($('.camada h2').textContent, /Livro de conceitos/);
+    assert.match($('.camada h2').textContent, /Glossário/);
     assert.ok($('#g-verbete .equacao math'));
     assert.ok($('#g-verbete .figura svg'));
     assert.match($('#g-verbete .limite').textContent, /Até onde vale/);
     assert.match($('#g-verbete .fonte').textContent, /Srivastava/);
   });
-  it('regras em abas: troca de aba, ajuda das ações e "Aprender mais" abrindo o verbete certo', () => {
+  it('regras em abas: troca de aba, ajuda das ações e "Ver o conceito" abrindo o verbete certo', () => {
     const app = appFalso();
     abrirRegras(app);
     const abas = $$('.abas [data-aba]').map((b) => b.textContent);
@@ -427,12 +427,11 @@ describe('telas', () => {
     assert.equal(final.querySelector('.barra').getAttribute('aria-valuenow'), '1');
     assert.equal($$('.conquistas-lista .conquista.final').length, 0, 'e não se repete na lista');
     await esperar(50);
-    assert.equal($('#c-retrato'), null, 'o retrato do professor saiu daqui (está na aba Equipe do Sobre)');
-    assert.equal($('.guilda'), null);
+    assert.ok($('#c-retrato canvas'));
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
     assert.match(medalhaHtml(CONQUISTAS[0], false), /cadeado|bloquead/);
   });
-  it('sobre: versão, disciplina, professor e autores, em duas abas (O jogo e Equipe)', async () => {
+  it('sobre: versão, disciplina, professor e autores', () => {
     abrirSobre();
     const texto = $('.camada').textContent;
     assert.ok(texto.includes('Versão ' + VERSAO));
@@ -441,9 +440,6 @@ describe('telas', () => {
     assert.match($('.sobre-logo svg').getAttribute('aria-label'), /Truco de Turing/);
     assert.equal($('.sobre-logo svg text'), null);
     assert.match($('.homenagem').textContent, /Convergência global.*homenagem ao prof\. Peng.*Singularidade/s);
-    assert.match(texto, /Yu-Gi-Oh!, UNO e Geometry Dash/);
-    await esperar(50);
-    assert.ok($('.pessoa-cartao[data-pessoa="peng"] .pessoa-foto canvas'), 'a foto do professor está no cartão dele');
     for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
     /* bugs e sugestões: o botão leva às issues do repositório, em outra aba */
     const reportar = $('#s-reportar');

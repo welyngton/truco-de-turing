@@ -8,7 +8,6 @@
  */
 import { avatarDoJogador } from '../../conteudo/avatares.js';
 import { novaMao, aplicarJogada, jogadasLegais, camadasDesfaziveis } from '../../nucleo/partida.js';
-import { novaMaoDoTutorial, inicioDoRival } from '../../nucleo/tutorial.js';
 import { podeTrucar } from '../../nucleo/truco.js';
 import { OPONENTES, escolherJogada, querTrucar } from '../../nucleo/oponentes/index.js';
 import { mostrarAviso, confirmar } from '../../interface/paineis.js';
@@ -94,7 +93,7 @@ export const metodosDeTurnos = {
     liberarCartasDaMao(this);
 
     const o = this.opcoes;
-    this.mao = this.tutorial ? novaMaoDoTutorial(this.montarJogadores()) : novaMao({
+    this.mao = novaMao({
       baralho: o.baralho, terreno: o.terreno, inicio: o.inicio, arquitetura: o.arquitetura, baralhos: o.baralhos,
       jogadores: this.montarJogadores(),
       /* online: a mesma semente em todos os aparelhos (ver online.js) */
@@ -143,19 +142,8 @@ export const metodosDeTurnos = {
   executarJogada(jogada, daRede = false) {
     /* online: a jogada vai para a sala e volta numerada (online.js) */
     if (this.online && !daRede) return this.enviarOnline({ tipo: 'jogada', cadeira: jogada.jogador, jogada });
-    /* tutorial: só vale a jogada do passo (a do jogador e a do rival vêm do roteiro) */
-    if (this.tutorial && !this.tutorialPermite(jogada)) {
-      this.selecao = [];
-      this.acaoEscolhida = null;
-      if (this.modo !== 'inicio') this.modo = 'livre';
-      this.avisarTutorial();
-      this.redesenhar();
-      return;
-    }
     try {
       aplicarJogada(this.mao, jogada);
-      /* o rival revela a carta combinada logo depois do jogador (a escolha de quem começa) */
-      if (this.tutorial && jogada.tipo === 'inicio') aplicarJogada(this.mao, inicioDoRival(this.mao));
     } catch (erro) {
       mostrarAviso('Jogada inválida', erro.message);
       this.redesenhar();
@@ -166,9 +154,8 @@ export const metodosDeTurnos = {
     this.selecao = [];
     this.acaoEscolhida = null;
     if (this.modo !== 'inicio') this.modo = 'livre';
-    this.andarNoRoteiro();
     const eventos = this.mao.eventos.splice(0);
-    if (!this.tutorial) this.registrarJogadaNasEstatisticas(jogada, eventos);
+    this.registrarJogadaNasEstatisticas(jogada, eventos);
     this.conferirConquistasDaJogada();
     this.ocupada = true;
     this.redesenhar();
@@ -198,7 +185,6 @@ export const metodosDeTurnos = {
     if (this.encerrada || !this.scene.isActive()) return;
     const mao = this.mao;
     if (this.partida.pedido) return;
-    if (this.tutorial && this.tutorialNaVez()) return;
     if (mao.fase === 'fim') return this.encerrarMao(null);
     if (mao.fase === 'inicio') return this.avancarNoInicio();
     const vez = mao.vez, jogador = mao.jogadores[vez];
@@ -210,7 +196,7 @@ export const metodosDeTurnos = {
     this.modo = 'livre';
     const jogadas = jogadasLegais(mao, vez);
     const soPassar = jogadas.length === 1 && jogadas[0].tipo === 'passar';
-    if (soPassar && !this.tutorial && (camadasDesfaziveis(mao, vez) === 0 || jogador.mao.length === 0)) {
+    if (soPassar && (camadasDesfaziveis(mao, vez) === 0 || jogador.mao.length === 0)) {
       /* nada a fazer: passa sozinho, com aviso */
       this.ocupada = true;
       this.redesenhar();
@@ -249,11 +235,9 @@ export const metodosDeTurnos = {
   avancarNoInicio() {
     const mao = this.mao;
     if (this.online) return this.avancarNoInicioOnline();
-    if (!this.tutorial) {
-      mao.jogadores.forEach((jogador, j) => {
-        if (jogador.tipo === 'oponente' && !jogador.cartaInicial) aplicarJogada(mao, escolherJogada(mao, j));
-      });
-    }
+    mao.jogadores.forEach((jogador, j) => {
+      if (jogador.tipo === 'oponente' && !jogador.cartaInicial) aplicarJogada(mao, escolherJogada(mao, j));
+    });
     const esperando = mao.jogadores.findIndex((jogador) => jogador.tipo === 'humano' && !jogador.cartaInicial);
     if (esperando < 0) {
       const eventos = mao.eventos.splice(0);
@@ -282,7 +266,6 @@ export const metodosDeTurnos = {
    * `this.notaDoOponente` substitui a linha de nível no painel ("pensando…", resultado da simulação).
    */
   vezDoOponente() {
-    if (this.tutorial) return this.vezDoRivalNoTutorial();
     const mao = this.mao, vez = mao.vez, perfil = mao.jogadores[vez].oponente;
     /* uma decisão por vez: chamadas repetidas para a mesma vez (online, quando alguém cai) não jogam duas vezes */
     const chave = mao.turno + ':' + vez + ':' + mao.registro.length;

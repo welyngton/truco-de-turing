@@ -1,5 +1,5 @@
 /**
- * @file Livro de conceitos (antes Glossário, "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do
+ * @file Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do
  * jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome
  * antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador.
  *
@@ -15,7 +15,7 @@
  */
 
 /** Nome da tela, num lugar só. */
-export const NOME_DA_BIBLIOTECA = 'Livro de conceitos';
+export const NOME_DA_BIBLIOTECA = 'Glossário';
 
 /* ---------- pedacinhos de MathML ---------- */
 const bloco = (...partes) => '<math display="block">' + partes.join('') + '</math>';

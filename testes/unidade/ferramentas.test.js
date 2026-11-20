@@ -125,7 +125,7 @@ describe('empacotar.js', () => {
     const externos = [...pagina.matchAll(/<(?:script[^>]*\ssrc|link[^>]*\shref)="(https?:[^"]+)"/g)].map((m) => new URL(m[1]).hostname);
     assert.deepEqual([...new Set(externos)].sort(), ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com']);
     /* as três fórmulas vão montadas pelos auxiliares de MathML, sem nenhum LaTeX sobrando */
-    assert.equal((pagina.match(/formula:\s*bloco\(/g) || []).length, 3);
+    assert.equal((pagina.match(/formula: bloco\(/g) || []).length, 3);
     assert.doesNotMatch(pagina, /\\(frac|sum|lambda|theta|cdot|qquad)\b/);
   });
 });

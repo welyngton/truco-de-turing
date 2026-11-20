@@ -53,7 +53,6 @@ import * as motor from '../motor/engine.js';
 import { sementeNova } from './aleatorio.js';
 import { rotuloCarta } from './cartas.js';
 import { ehOculta, nomeCamada, tamanhosDaMesa, ARQUITETURAS } from './rede.js';
-import { aplicarRestricoesDoBaralho } from './baralhos.js';
 import {
   BARALHO_MOTOR, TERRENO_MOTOR, INICIO_MOTOR, ATAQUE_PELO_TAMANHO,
   cartaParaTT, naipeParaTT, idDoNeuronio, lugarDoNeuronio, situacaoDaRede, motivoDaVitoria,
@@ -145,8 +144,7 @@ function montar(estadoMotor, config, jogadores, simulacao, cartas) {
  * @param {number} [opcoes.semente] Para partidas reproduzíveis.
  * @param {{nome:string, tipo?:string, oponente?:string}[]} opcoes.jogadores De 2 a 5.
  */
-export function novaMao(opcoesPedidas) {
-  const opcoes = { ...opcoesPedidas, ...aplicarRestricoesDoBaralho({ ...opcoesPedidas, baralho: opcoesPedidas.baralho || 'classico' }) };
+export function novaMao(opcoes) {
   const config = {
     baralho: opcoes.baralho || 'classico', terreno: opcoes.terreno || 'neutro', inicio: opcoes.inicio || 'revela-descarta',
     arquitetura: opcoes.arquitetura || 'padrao', baralhos: Math.max(1, Math.min(4, Number(opcoes.baralhos) || 1)),
@@ -302,22 +300,14 @@ export function camadasDesfaziveis(mao, j) {
   return jogador.caminho.length - 1;
 }
 
-/**
- * Valores que o jogador tem quatro vezes ou mais na mão (quadras para o transfer learning), na
- * ordem em que aparecem na mão. Vazio se já usou o transfer nesta mão. O transfer não é
- * automático nem obrigatório: quem escolhe se troca e qual quadra é o jogador.
- */
-export function valoresParaTransfer(mao, j) {
-  const jogador = mao.jogadores[j];
-  if (jogador.transferUsado) return [];
-  const conta = new Map();
-  for (const c of jogador.mao) conta.set(c.valor, (conta.get(c.valor) || 0) + 1);
-  return [...conta].filter(([, n]) => n >= 4).map(([valor]) => valor);
-}
-
-/** Primeira quadra da mão (para dicas e botão), ou null. */
+/** Valor que o jogador tem quatro vezes na mão (para transfer learning), ou null. */
 export function valorParaTransfer(mao, j) {
-  return valoresParaTransfer(mao, j)[0] ?? null;
+  const jogador = mao.jogadores[j];
+  if (jogador.transferUsado) return null;
+  const conta = {};
+  for (const c of jogador.mao) conta[c.valor] = (conta[c.valor] || 0) + 1;
+  for (const valor in conta) if (conta[valor] >= 4) return valor;
+  return null;
 }
 
 /**
