@@ -260,6 +260,18 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .conquista b { display: block; font-family: var(--fonte-interface); font-size: 15px; }
 .conquista small { display: block; font-family: var(--fonte-interface); font-size: 13px; color: #5a4630; line-height: 1.3; }
 .conquista .graduacao { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6b1a22; font-weight: 700; }
+.conquistas-atalhos { margin: 8px 0 4px; flex-wrap: wrap; }
+.estatisticas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 4px 28px; max-height: 62vh; overflow: auto; padding-right: 4px; }
+.estatisticas-secao h3 { margin-top: 14px; border-bottom: 2px solid rgba(107, 26, 34, 0.25); padding-bottom: 3px; }
+.estatisticas-secao dl { margin: 6px 0 0; }
+.estatisticas-secao dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px dotted rgba(60, 40, 20, 0.25); font-size: 14.5px; }
+.estatisticas-secao dt { color: #5a4630; }
+.estatisticas-secao dd { margin: 0; font-weight: 700; text-align: right; color: #2b1608; }
+.conquistas-globais .global-conteudo { max-height: 66vh; overflow: auto; padding-right: 4px; }
+.global-resumo { font-size: 16px; }
+.global-resumo b { color: #6b1a22; }
+.global-tabela { overflow-x: auto; }
+.conquista.raridade .progresso-final { margin-top: 4px; }
 .conquistas-rodape { font-size: 13px; color: #7a6a4c; margin-top: 12px; }
 /* graduação Singularidade (conquista final): medalha furta-cor, com aro claro e brilho */
 .medalha.especial {
@@ -3498,12 +3510,17 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       maos: { jogadas: 0, vencidas: 0 },
       trucos: { pedidos: 0 },
       online: { salasCriadas: 0, salasEntradas: 0, partidas: 0 },
+      /* tempo acumulado em partidas (ms), ações por tipo e recordes (issue #154) */
+      tempoDePartida: 0,
+      acoes: {},
+      recordes: { maiorRede: 0, maiorSequencia: 0, sequenciaAtual: 0 },
       porOponente: {},
       porBaralho: {},
       porTerreno: {}
     };
   }
-  var GRUPOS = ["partidas", "maos", "trucos", "online"];
+  var GRUPOS = ["partidas", "maos", "trucos", "online", "acoes", "recordes"];
+  var LIMITE_DE_PARTIDA_MS = 6 * 60 * 60 * 1e3;
   var TABELAS = ["porOponente", "porBaralho", "porTerreno"];
   function estatisticasDe(progresso) {
     const base = estatisticasIniciais(), e = progresso.estatisticas || {};
@@ -3537,6 +3554,16 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     linha2.jogadas += 1;
     if (venceu) linha2.vencidas += 1;
   };
+  function somarTempo(e, duracaoMs) {
+    const ms = Number(duracaoMs);
+    if (Number.isFinite(ms) && ms > 0 && ms <= LIMITE_DE_PARTIDA_MS) e.tempoDePartida += Math.round(ms);
+  }
+  function registrarRecordes(r, dados) {
+    const soma2 = Math.round(Number(dados.soma) || 0);
+    if (soma2 > r.maiorRede) r.maiorRede = soma2;
+    r.sequenciaAtual = dados.venceu ? r.sequenciaAtual + 1 : 0;
+    if (r.sequenciaAtual > r.maiorSequencia) r.maiorSequencia = r.sequenciaAtual;
+  }
   function contarEvento(progresso, nome, dados = {}) {
     const e = estatisticasDe(progresso);
     switch (nome) {
@@ -3545,22 +3572,29 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         if (dados.online) e.online.partidas += 1;
         return true;
       case "jogo_finalizado":
+        somarTempo(e, dados.duracaoMs);
         e.partidas.terminadas += 1;
         if (dados.venceu) e.partidas.vencidas += 1;
         if (!dados.online) somarNaTabela(e.porOponente, dados.oponente, !!dados.venceu);
         return true;
       case "jogo_abandonado":
+        somarTempo(e, dados.duracaoMs);
         e.partidas.abandonadas += 1;
         return true;
       case "fim_mao":
         e.maos.jogadas += 1;
         if (dados.venceu) e.maos.vencidas += 1;
+        registrarRecordes(e.recordes, dados);
         somarNaTabela(e.porBaralho, dados.baralho, !!dados.venceu);
         somarNaTabela(e.porTerreno, dados.terreno, !!dados.venceu);
         return true;
       case "truco":
         if (!dados.meu) return false;
         e.trucos.pedidos += 1;
+        return true;
+      case "acao_jogada":
+        if (!dados.acao) return false;
+        e.acoes[dados.acao] = (e.acoes[dados.acao] || 0) + 1;
         return true;
       case "sala_online":
         if (dados.acao === "criar") e.online.salasCriadas += 1;
@@ -3577,6 +3611,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     const b = estatisticasDe({ estatisticas: JSON.parse(JSON.stringify(conta2)) });
     const m = estatisticasIniciais();
     m.acessos = Math.max(a.acessos, b.acessos);
+    m.tempoDePartida = Math.max(a.tempoDePartida || 0, b.tempoDePartida || 0);
     m.primeiroAcesso = Math.min(a.primeiroAcesso || Infinity, b.primeiroAcesso || Infinity);
     if (!Number.isFinite(m.primeiroAcesso)) m.primeiroAcesso = 0;
     const recente = b.ultimoAcesso > a.ultimoAcesso ? b : a;
@@ -3606,7 +3641,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.21.0";
+  var VERSAO = "2.22.0";
   var DATA_DA_VERSAO = "2026-11-20";
 
   // src/aplicacao.js
@@ -5112,10 +5147,10 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     ctx.fillText(naipeInfo.simbolo, 209, 305.5);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    let numero = NAIPES.indexOf(carta.naipe) * 13 + VALORES.indexOf(carta.valor) + 1;
+    let numero3 = NAIPES.indexOf(carta.naipe) * 13 + VALORES.indexOf(carta.valor) + 1;
     ctx.font = "700 7px Spectral, Georgia, serif";
     ctx.fillStyle = "rgba(255,255,255,.82)";
-    ctx.fillText(String(numero).padStart(3, "0") + "/052 \xB7 " + info.raridade.charAt(0).toUpperCase() + " \xB7 TdT \xB7 PT-BR", 17, 316);
+    ctx.fillText(String(numero3).padStart(3, "0") + "/052 \xB7 " + info.raridade.charAt(0).toUpperCase() + " \xB7 TdT \xB7 PT-BR", 17, 316);
     ctx.font = "500 7px Spectral, Georgia, serif";
     ctx.fillText("Ilus. arte procedural \xB7 FPO 2026/2", 17, 325);
     return o.c;
@@ -8712,6 +8747,613 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return painel;
   }
 
+  // src/online/placar.js
+  var CAMPOS_DO_PLACAR = [
+    { chave: "conquistas", rotulo: "Conquistas" },
+    { chave: "maosVencidas", rotulo: "M\xE3os vencidas" },
+    { chave: "maos", rotulo: "M\xE3os jogadas" },
+    { chave: "partidasVencidas", rotulo: "Partidas vencidas" },
+    { chave: "pontos", rotulo: "Pontos de rede (todas as m\xE3os)" },
+    { chave: "maiorRede", rotulo: "Maior rede numa m\xE3o" },
+    { chave: "maiorSequencia", rotulo: "Maior sequ\xEAncia de m\xE3os vencidas" },
+    { chave: "dropouts", rotulo: "Dropouts" },
+    { chave: "vitoriasZen", rotulo: "Vit\xF3rias sem usar a\xE7\xF5es" },
+    { chave: "trucos", rotulo: "Trucos pedidos" },
+    { chave: "verbetes", rotulo: "Verbetes lidos" },
+    { chave: "tempo", rotulo: "Tempo em partida", formato: "tempo" }
+  ];
+  var MAXIMO_DE_IDS = 200;
+  var inteiro = (n) => Math.max(0, Math.round(Number(n) || 0));
+  function placarDoJogador(progresso, agora = Date.now()) {
+    const e = estatisticasDe(progresso), ids = Object.keys(progresso.desbloqueadas || {}).slice(0, MAXIMO_DE_IDS);
+    return {
+      conquistas: ids.length,
+      maosVencidas: inteiro(progresso.vitorias),
+      maos: inteiro(progresso.maos),
+      partidasVencidas: inteiro(e.partidas.vencidas),
+      pontos: inteiro(progresso.pontos),
+      maiorRede: inteiro(e.recordes.maiorRede),
+      maiorSequencia: inteiro(e.recordes.maiorSequencia),
+      dropouts: inteiro(progresso.dropouts),
+      vitoriasZen: inteiro(progresso.vitoriasZen),
+      trucos: inteiro(e.trucos.pedidos),
+      verbetes: inteiro(progresso.verbetesLidos),
+      tempo: Math.round(inteiro(e.tempoDePartida) / 1e3),
+      ids,
+      atualizado: inteiro(agora)
+    };
+  }
+  function formatarCampo(campo, valor) {
+    if (campo.formato === "tempo") return formatarTempo(valor * 1e3);
+    return Number(valor || 0).toLocaleString("pt-BR");
+  }
+  function formatarTempo(ms) {
+    const s = Math.max(0, Math.round((Number(ms) || 0) / 1e3));
+    if (s < 60) return s + " s";
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + " min " + String(s % 60).padStart(2, "0") + " s";
+    return Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0") + " min";
+  }
+  var mediana = (valores) => {
+    const v = [...valores].sort((a, b) => a - b), n = v.length;
+    if (!n) return 0;
+    return n % 2 ? v[(n - 1) / 2] : Math.round((v[n / 2 - 1] + v[n / 2]) / 2);
+  };
+  function analisarPlacar(docs, uid) {
+    const jogadores = docs.length, meu2 = docs.find((d) => d.uid === uid) || null;
+    const contagem = /* @__PURE__ */ new Map();
+    for (const d of docs) for (const id of new Set(Array.isArray(d.ids) ? d.ids : [])) contagem.set(id, (contagem.get(id) || 0) + 1);
+    const raridade = CONQUISTAS.map((c) => {
+      const quantos = contagem.get(c.id) || 0;
+      return { id: c.id, quantos, porcento: jogadores ? Math.round(1e3 * quantos / jogadores) / 10 : 0, minha: !!(meu2 && Array.isArray(meu2.ids) && meu2.ids.includes(c.id)) };
+    }).sort((a, b) => a.quantos - b.quantos || CONQUISTAS.findIndex((c) => c.id === a.id) - CONQUISTAS.findIndex((c) => c.id === b.id));
+    const posicoes = !meu2 ? [] : CAMPOS_DO_PLACAR.map((campo) => {
+      const valores = docs.map((d) => inteiro(d[campo.chave])), valor = inteiro(meu2[campo.chave]);
+      const maiores = valores.filter((v) => v > valor).length, menores = valores.filter((v) => v < valor).length;
+      return {
+        ...campo,
+        valor,
+        posicao: maiores + 1,
+        de: jogadores,
+        melhorQue: jogadores > 1 ? Math.round(100 * menores / (jogadores - 1)) : 0,
+        lider: Math.max(...valores),
+        mediana: mediana(valores)
+      };
+    });
+    return { jogadores, meu: meu2, raridade, posicoes };
+  }
+
+  // src/online/configuracao.js
+  var FIREBASE = {
+    /* projeto "truco-e26e8" no console, de ID truco-e26e8-703bc; app da Web "truco-de-turing" */
+    apiKey: "AIzaSyCH3yfsmf0KJQ0hJ7aU4DhCBcBVOqwRSHs",
+    authDomain: "truco-e26e8-703bc.firebaseapp.com",
+    projectId: "truco-e26e8-703bc",
+    storageBucket: "truco-e26e8-703bc.firebasestorage.app",
+    messagingSenderId: "832619971345",
+    appId: "1:832619971345:web:b50cd62330112e05b942b0"
+    /* sem measurementId: o Google Analytics é carregado à parte, com consentimento (interface/analise.js) */
+  };
+  var VERSAO_FIREBASE = "10.12.2";
+
+  // src/online/firebase.js
+  var VALIDADE_DAS_MENSAGENS = 6 * 60 * 60 * 1e3;
+  var LIMPEZA_POR_VEZ = 200;
+  var sdk = null;
+  function firebaseConfigurado() {
+    return !!FIREBASE;
+  }
+  async function carregar2() {
+    if (sdk) return sdk;
+    if (!FIREBASE) throw new Error("O projeto Firebase ainda n\xE3o foi configurado (src/online/configuracao.js).");
+    const base = "https://www.gstatic.com/firebasejs/" + VERSAO_FIREBASE + "/";
+    const [app, auth, fs] = await Promise.all(["firebase-app.js", "firebase-auth.js", "firebase-firestore.js"].map((arquivo) => import(
+      /* @vite-ignore */
+      base + arquivo
+    )));
+    const aplicativo = app.initializeApp(FIREBASE);
+    sdk = { auth, fs, autenticacao: auth.getAuth(aplicativo), banco: fs.getFirestore(aplicativo) };
+    return sdk;
+  }
+  async function entrarComGoogle() {
+    const { auth, autenticacao } = await carregar2();
+    const { user } = await auth.signInWithPopup(autenticacao, new auth.GoogleAuthProvider());
+    return conta(user);
+  }
+  async function entrarComEmail(email, senha, criar = false) {
+    const { auth, autenticacao } = await carregar2();
+    const fazer = criar ? auth.createUserWithEmailAndPassword : auth.signInWithEmailAndPassword;
+    const { user } = await fazer(autenticacao, email, senha);
+    return conta(user);
+  }
+  async function sairDaConta() {
+    const { auth, autenticacao } = await carregar2();
+    await auth.signOut(autenticacao);
+  }
+  async function contaGuardada() {
+    const { auth, autenticacao } = await carregar2();
+    return new Promise((resolver) => {
+      let parar = null, lida = false;
+      parar = auth.onAuthStateChanged(autenticacao, (user) => {
+        if (lida) return;
+        lida = true;
+        if (parar) parar();
+        resolver(user ? conta(user) : null);
+      });
+      if (lida) parar();
+    });
+  }
+  var conta = (user) => ({ uid: user.uid, nome: user.displayName || (user.email || "").split("@")[0] || "Jogador", email: user.email || "" });
+  async function carregarProgressoDaConta(uid) {
+    const { fs, banco } = await carregar2();
+    const doc = await fs.getDoc(fs.doc(banco, "contas", uid));
+    return doc.exists() ? doc.data() : null;
+  }
+  async function salvarProgressoNaConta(uid, progresso) {
+    const { fs, banco } = await carregar2();
+    await fs.setDoc(fs.doc(banco, "contas", uid), JSON.parse(JSON.stringify(progresso)));
+  }
+  async function juntarNaConta(uid, montar2) {
+    const { fs, banco } = await carregar2();
+    const ref = fs.doc(banco, "contas", uid);
+    return fs.runTransaction(banco, async (transacao) => {
+      const atual3 = await transacao.get(ref);
+      const dados = JSON.parse(JSON.stringify(montar2(atual3.exists() ? atual3.data() : null)));
+      transacao.set(ref, dados);
+      return dados;
+    });
+  }
+  async function ehAdministrador(uid) {
+    try {
+      const { fs, banco } = await carregar2();
+      return (await fs.getDoc(fs.doc(banco, "admins", uid))).exists();
+    } catch (e) {
+      return false;
+    }
+  }
+  async function listarContas() {
+    const { fs, banco } = await carregar2();
+    const resultado = await fs.getDocs(fs.collection(banco, "contas"));
+    return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
+  }
+  async function salvarPlacar(uid, placar2) {
+    const { fs, banco } = await carregar2();
+    await fs.setDoc(fs.doc(banco, "placar", uid), JSON.parse(JSON.stringify(placar2)));
+  }
+  async function listarPlacar() {
+    const { fs, banco } = await carregar2();
+    const resultado = await fs.getDocs(fs.collection(banco, "placar"));
+    return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
+  }
+  async function transporteFirebase(codigo) {
+    const { fs, banco, autenticacao } = await carregar2();
+    const usuario = autenticacao.currentUser;
+    if (!usuario) throw new Error("Entre numa conta para jogar pela internet.");
+    const uid = usuario.uid;
+    const colecao = fs.collection(banco, "salas", codigo, "mensagens");
+    const ouvintes2 = /* @__PURE__ */ new Set();
+    const vistos = /* @__PURE__ */ new Set();
+    const falhas = /* @__PURE__ */ new Set();
+    const falhou = (erro) => {
+      for (const cb of falhas) cb(erro);
+    };
+    const parar = fs.onSnapshot(fs.query(colecao, fs.orderBy("em")), (instantaneo) => {
+      for (const mudanca of instantaneo.docChanges()) {
+        if (mudanca.type !== "added" || vistos.has(mudanca.doc.id)) continue;
+        vistos.add(mudanca.doc.id);
+        const { em, expira, ...msg } = mudanca.doc.data();
+        for (const cb of ouvintes2) cb(msg);
+      }
+    }, falhou);
+    return {
+      /* JSON tira os `undefined`, que o Firestore recusa */
+      enviar: (msg) => {
+        const doc = { ...JSON.parse(JSON.stringify(msg)), uid, em: fs.serverTimestamp(), expira: fs.Timestamp.fromMillis(Date.now() + VALIDADE_DAS_MENSAGENS) };
+        Promise.resolve(fs.addDoc(colecao, doc)).catch(falhou);
+      },
+      aoReceber: (cb) => {
+        ouvintes2.add(cb);
+        return () => ouvintes2.delete(cb);
+      },
+      aoFalhar: (cb) => {
+        falhas.add(cb);
+        return () => falhas.delete(cb);
+      },
+      fechar: () => {
+        ouvintes2.clear();
+        falhas.clear();
+        parar();
+      }
+    };
+  }
+  async function limparMensagensVencidas(limite = LIMPEZA_POR_VEZ) {
+    const { fs, banco } = await carregar2();
+    const antes = fs.Timestamp.fromMillis(Date.now() - 10 * 60 * 1e3);
+    const consulta = fs.query(fs.collectionGroup(banco, "mensagens"), fs.where("expira", "<", antes), fs.limit(limite));
+    const { docs } = await fs.getDocs(consulta);
+    if (!docs.length) return 0;
+    const lote = fs.writeBatch(banco);
+    for (const d of docs) lote.delete(d.ref);
+    await lote.commit();
+    return docs.length;
+  }
+
+  // src/online/contas.js
+  var TEXTO_DA_CONTA = "Quem entra numa conta tem guardados nela, no Firebase do jogo: nome, e-mail, conquistas, verbetes lidos, avatar e as estat\xEDsticas de jogo (acessos, partidas, m\xE3os e vit\xF3rias). Os respons\xE1veis pelo jogo conseguem ver esses dados. Para o painel de conquistas globais, a conta tamb\xE9m publica um resumo an\xF4nimo (s\xF3 n\xFAmeros e quais conquistas voc\xEA tem, sem nome nem e-mail), que os outros jogadores conectados veem misturado ao de todo mundo. Sem conta, tudo isso fica s\xF3 neste aparelho.";
+  var CONTADORES = ["vitorias", "maos", "dropouts", "vitoriasZen", "pontos"];
+  var CONJUNTOS = ["lidos", "terrenos", "baralhos", "arquiteturas"];
+  function mesclarProgresso(local, conta2) {
+    if (!conta2) return { ...local };
+    const m = { ...local };
+    for (const k of CONTADORES) m[k] = Math.max(local[k] || 0, conta2[k] || 0);
+    for (const k of CONJUNTOS) m[k] = { ...local[k] || {}, ...conta2[k] || {} };
+    m.desbloqueadas = { ...local.desbloqueadas || {} };
+    for (const [id, quando] of Object.entries(conta2.desbloqueadas || {})) {
+      m.desbloqueadas[id] = m.desbloqueadas[id] ? Math.min(m.desbloqueadas[id], quando) : quando;
+    }
+    m.verbetesLidos = Object.keys(m.lidos).length;
+    if (conta2.avatar) m.avatar = conta2.avatar;
+    m.estatisticas = mesclarEstatisticas(local.estatisticas, conta2.estatisticas);
+    return m;
+  }
+  function juntarParaGravar(local, conta2) {
+    const m = mesclarProgresso(local, conta2);
+    if (local.avatar) m.avatar = local.avatar;
+    return m;
+  }
+  function progressoDaConta(progresso) {
+    const p = {};
+    for (const k of [...CONTADORES, ...CONJUNTOS, "desbloqueadas", "verbetesLidos", "avatar", "estatisticas"]) if (progresso[k] !== void 0) p[k] = progresso[k];
+    return p;
+  }
+  function documentoDaConta(progresso, conta2, metodo) {
+    const doc = progressoDaConta(progresso);
+    if (conta2) doc.perfil = { nome: conta2.nome || "", email: conta2.email || "", metodo: metodo && metodo.startsWith("email") ? "email" : metodo || "conta" };
+    doc.resumo = resumoDoJogador(progresso);
+    return doc;
+  }
+
+  // src/online/errosFirebase.js
+  var MENSAGENS = {
+    /* configuração do projeto no console (docs/FIREBASE.md) */
+    "auth/operation-not-allowed": "Esse jeito de entrar ainda n\xE3o est\xE1 ativado no projeto Firebase (Authentication > M\xE9todo de login).",
+    "auth/unauthorized-domain": "Este endere\xE7o ainda n\xE3o est\xE1 autorizado no projeto Firebase (Authentication > Configura\xE7\xF5es > Dom\xEDnios autorizados).",
+    "auth/configuration-not-found": "O Authentication ainda n\xE3o foi ativado no projeto Firebase.",
+    "auth/invalid-api-key": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
+    "permission-denied": "O Firestore recusou o pedido: confira se as regras de firestore.rules foram publicadas e se a conta est\xE1 conectada.",
+    "not-found": "O banco Firestore do projeto ainda n\xE3o foi criado (Firestore Database > Criar banco de dados).",
+    "failed-precondition": "O banco Firestore do projeto ainda n\xE3o foi criado ou n\xE3o est\xE1 pronto.",
+    /* o que acontece com qualquer pessoa */
+    "auth/popup-blocked": "O navegador bloqueou a janela do Google. Libere as janelas deste site e tente de novo.",
+    "auth/operation-not-supported-in-environment": "Este navegador n\xE3o abre a janela do Google aqui. Entre com e-mail e senha.",
+    "auth/network-request-failed": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
+    "unavailable": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
+    "auth/too-many-requests": "Muitas tentativas seguidas. Espere um pouco e tente de novo.",
+    "auth/invalid-email": "Esse e-mail n\xE3o parece v\xE1lido.",
+    "auth/missing-email": "Escreva o e-mail.",
+    "auth/missing-password": "Escreva a senha.",
+    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+    "auth/email-already-in-use": 'J\xE1 existe uma conta com esse e-mail. Use "Entrar com e-mail".',
+    "auth/invalid-credential": "E-mail ou senha n\xE3o conferem.",
+    "auth/invalid-login-credentials": "E-mail ou senha n\xE3o conferem.",
+    "auth/wrong-password": "E-mail ou senha n\xE3o conferem.",
+    "auth/user-not-found": 'N\xE3o h\xE1 conta com esse e-mail. Use "Criar conta".',
+    "auth/user-disabled": "Esta conta foi desativada.",
+    "auth/account-exists-with-different-credential": "Esse e-mail j\xE1 entra de outro jeito (Google ou e-mail e senha). Use o mesmo de antes."
+  };
+  var DESISTIU = /* @__PURE__ */ new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request", "auth/user-cancelled"]);
+  function explicarErroFirebase(erro) {
+    const noTexto = /\(([a-z-]+\/[a-z0-9.-]+)\)/i.exec(String(erro && erro.message || ""));
+    const codigo = String(erro && erro.code || noTexto && noTexto[1] || "").toLowerCase();
+    if (DESISTIU.has(codigo)) return null;
+    if (MENSAGENS[codigo]) return MENSAGENS[codigo];
+    const texto = String(erro && erro.message || erro || "").replace(/^Firebase:\s*/, "").trim();
+    return texto || "Algo deu errado com o Firebase.";
+  }
+
+  // src/interface/conta.js
+  var MARCA_DE_CONTA = "truco-de-turing:conta";
+  var atual2 = null;
+  var metodoAtual = "";
+  var acessoContadoNaConta = false;
+  var ouvintes = /* @__PURE__ */ new Set();
+  var avisouFalhaAoSalvar = false;
+  var gravacao = null;
+  var gravarDeNovo = false;
+  var pendente = false;
+  var placarPublicado = /* @__PURE__ */ new Map();
+  async function publicarPlacar(app, conta2, forcar = false) {
+    const placar2 = placarDoJogador(app.progresso);
+    const { atualizado, ...numeros } = placar2, chave = JSON.stringify(numeros);
+    if (!forcar && placarPublicado.get(conta2.uid) === chave) return placar2;
+    await salvarPlacar(conta2.uid, placar2);
+    placarPublicado.set(conta2.uid, chave);
+    return placar2;
+  }
+  var semConexao = (e) => !!e && (["unavailable", "deadline-exceeded"].includes(e.code) || /offline/i.test(e.message || ""));
+  var navegadorSemConexao = () => !!globalThis.navigator && globalThis.navigator.onLine === false;
+  function sincronizar(app) {
+    if (!atual2) return Promise.resolve();
+    if (gravacao) {
+      gravarDeNovo = true;
+      return gravacao;
+    }
+    gravacao = gravarNaConta(app, atual2).finally(() => {
+      gravacao = null;
+      if (gravarDeNovo) {
+        gravarDeNovo = false;
+        sincronizar(app);
+      }
+    });
+    return gravacao;
+  }
+  async function gravarNaConta(app, conta2) {
+    try {
+      if (navegadorSemConexao()) throw Object.assign(new Error("offline"), { code: "unavailable" });
+      const gravado = await juntarNaConta(conta2.uid, (naConta) => documentoDaConta(juntarParaGravar(app.progresso, naConta), conta2, metodoAtual));
+      if (atual2 !== conta2) return;
+      app.progresso = juntarParaGravar(app.progresso, gravado);
+      app.salvarSoLocal();
+      publicarPlacar(app, conta2).catch(() => {
+      });
+      app.conferirConquistaFinal?.();
+      if (pendente) mostrarAviso("Conta", "A conex\xE3o voltou: o progresso deste aparelho subiu para a conta.", null, 5e3);
+      pendente = false;
+      avisouFalhaAoSalvar = false;
+    } catch (e) {
+      const offline = navegadorSemConexao() || semConexao(e);
+      if (offline) pendente = true;
+      if (avisouFalhaAoSalvar) return;
+      avisouFalhaAoSalvar = true;
+      mostrarAviso("Conta", offline ? "Sem conex\xE3o: o progresso fica neste aparelho e sobe para a conta quando a conex\xE3o voltar." : "O progresso ficou s\xF3 neste aparelho. " + (explicarErroFirebase(e) || ""), null, 7e3);
+    }
+  }
+  function contaAtual() {
+    return atual2;
+  }
+  function aoMudarDeConta(cb) {
+    ouvintes.add(cb);
+    return () => ouvintes.delete(cb);
+  }
+  function mudar(conta2) {
+    atual2 = conta2;
+    for (const cb of [...ouvintes]) cb(conta2);
+  }
+  function haMarcaDeConta() {
+    return !!lerMarca();
+  }
+  var lerMarca = () => {
+    try {
+      return globalThis.localStorage?.getItem(MARCA_DE_CONTA) || null;
+    } catch (e) {
+      return null;
+    }
+  };
+  var gravarMarca = (metodo) => {
+    try {
+      globalThis.localStorage?.setItem(MARCA_DE_CONTA, metodo || "conta");
+    } catch (e) {
+    }
+  };
+  var apagarMarca = () => {
+    try {
+      globalThis.localStorage?.removeItem(MARCA_DE_CONTA);
+    } catch (e) {
+    }
+  };
+  async function usarConta(app, conta2, metodo, { retomada = false } = {}) {
+    const naConta = await carregarProgressoDaConta(conta2.uid);
+    const mesclado = mesclarProgresso(app.progresso, naConta);
+    mesclado.nomeOnline = mesclado.nomeOnline || conta2.nome;
+    const jaNaConta = naConta && naConta.estatisticas ? naConta.estatisticas.acessos || 0 : 0;
+    const estatisticas = estatisticasDe(mesclado);
+    if (!acessoContadoNaConta) estatisticas.acessos = Math.max(estatisticas.acessos, jaNaConta + 1);
+    await salvarProgressoNaConta(conta2.uid, documentoDaConta(mesclado, conta2, metodo));
+    acessoContadoNaConta = true;
+    metodoAtual = metodo;
+    app.progresso = mesclado;
+    avisouFalhaAoSalvar = false;
+    gravarMarca(metodo);
+    definirConta(conta2.uid, metodo, { retomada });
+    mudar(conta2);
+    if (!app.salvarSoLocal) {
+      app.salvarSoLocal = app.salvar;
+      app.salvar = function() {
+        this.salvarSoLocal();
+        sincronizar(this);
+      };
+      globalThis.addEventListener?.("online", () => {
+        if (pendente && atual2) sincronizar(app);
+      });
+    }
+    if (!app.conferirConquistaFinal || !app.conferirConquistaFinal().length) app.salvar();
+  }
+  async function sairDaContaAtual() {
+    await sairDaConta();
+    apagarMarca();
+    definirConta(null);
+    mudar(null);
+  }
+  async function retomarConta(app) {
+    if (!firebaseConfigurado()) return null;
+    const metodo = lerMarca();
+    if (!metodo) return null;
+    let conta2;
+    try {
+      conta2 = await contaGuardada();
+    } catch (e) {
+      return null;
+    }
+    if (!conta2) {
+      apagarMarca();
+      return null;
+    }
+    if (atual2) return atual2;
+    try {
+      await usarConta(app, conta2, metodo, { retomada: true });
+      return conta2;
+    } catch (e) {
+      mostrarAviso("Conta", "N\xE3o deu para retomar a conta de " + conta2.nome + "; o progresso fica neste aparelho at\xE9 voc\xEA entrar de novo. " + (explicarErroFirebase(e) || ""), null, 8e3);
+      return null;
+    }
+  }
+
+  // src/interface/telas/estatisticas.js
+  var NOMES_DAS_ACOES = {
+    ativar: "Neur\xF4nios ativados",
+    empilhar: "Pilhas sem efeito especial",
+    tunagem: "Tunagens",
+    overfit: "Overfits",
+    earlystop: "Early stops",
+    stackoverflow: "Stack overflows",
+    dropout: "Dropouts",
+    transfer: "Transfer\xEAncias",
+    passar: "Passadas de vez"
+  };
+  var numero = (n) => Number(n || 0).toLocaleString("pt-BR");
+  var porcentagem = (parte, todo) => todo > 0 ? Math.round(100 * parte / todo) + "%" : "\u2014";
+  var data = (ms) => ms ? new Date(ms).toLocaleDateString("pt-BR") : "\u2014";
+  function favorito(tabela, nomes) {
+    const [chave, linha2] = Object.entries(tabela || {}).sort((a, b) => b[1].jogadas - a[1].jogadas)[0] || [];
+    if (!chave) return "\u2014";
+    const nome = nomes[chave] ? nomes[chave].nome : chave;
+    return nome + " \xB7 " + numero(linha2.jogadas) + (linha2.jogadas === 1 ? " vez" : " vezes") + " \xB7 " + porcentagem(linha2.vencidas, linha2.jogadas) + " de vit\xF3rias";
+  }
+  function secoesDeEstatisticas(progresso) {
+    const e = estatisticasDe(progresso), p = progresso, partidas = e.partidas, maos = e.maos;
+    const perdidas = Math.max(0, partidas.terminadas - partidas.vencidas);
+    const feitas = CONQUISTAS.filter((c) => (p.desbloqueadas || {})[c.id]);
+    const porGraduacao = Object.keys(GRADUACOES).map((g) => {
+      const todas = CONQUISTAS.filter((c) => c.graduacao === g);
+      return [GRADUACOES[g].nome, feitas.filter((c) => c.graduacao === g).length + " de " + todas.length];
+    }).filter(([, valor]) => !valor.endsWith(" de 0"));
+    const acoes = Object.keys(NOMES_DAS_ACOES).map((k) => [NOMES_DAS_ACOES[k], numero(e.acoes[k])]);
+    for (const k of Object.keys(e.acoes)) if (!NOMES_DAS_ACOES[k]) acoes.push([k, numero(e.acoes[k])]);
+    return [
+      { titulo: "Tempo", linhas: [
+        ["Tempo acumulado em partida", formatarTempo(e.tempoDePartida)],
+        ["Tempo m\xE9dio por partida", partidas.terminadas + partidas.abandonadas ? formatarTempo(e.tempoDePartida / (partidas.terminadas + partidas.abandonadas)) : "\u2014"],
+        ["Vezes que abriu o jogo", numero(e.acessos)],
+        ["Primeiro acesso", data(e.primeiroAcesso)],
+        ["\xDAltimo acesso", data(e.ultimoAcesso)]
+      ] },
+      { titulo: "Partidas", linhas: [
+        ["Iniciadas", numero(partidas.iniciadas)],
+        ["Terminadas", numero(partidas.terminadas)],
+        ["Vencidas", numero(partidas.vencidas)],
+        ["Perdidas", numero(perdidas)],
+        ["Abandonadas", numero(partidas.abandonadas)],
+        ["Aproveitamento", porcentagem(partidas.vencidas, partidas.terminadas)]
+      ] },
+      { titulo: "M\xE3os", linhas: [
+        ["Jogadas", numero(Math.max(maos.jogadas, p.maos || 0))],
+        ["Vencidas", numero(Math.max(maos.vencidas, p.vitorias || 0))],
+        ["Aproveitamento", porcentagem(Math.max(maos.vencidas, p.vitorias || 0), Math.max(maos.jogadas, p.maos || 0))],
+        ["Pontos de rede somados (todas as m\xE3os)", numero(p.pontos)],
+        ["Maior rede numa m\xE3o", numero(e.recordes.maiorRede)],
+        ["Maior sequ\xEAncia de m\xE3os vencidas", numero(e.recordes.maiorSequencia)],
+        ["Vit\xF3rias sem usar a\xE7\xF5es", numero(p.vitoriasZen)]
+      ] },
+      { titulo: "A\xE7\xF5es na rede", linhas: [...acoes, ["Dropouts (contados nas m\xE3os)", numero(p.dropouts)]] },
+      { titulo: "Truco e partidas online", linhas: [
+        ["Trucos pedidos", numero(e.trucos.pedidos)],
+        ["Salas criadas", numero(e.online.salasCriadas)],
+        ["Salas em que entrou", numero(e.online.salasEntradas)],
+        ["Partidas online", numero(e.online.partidas)]
+      ] },
+      { titulo: "Favoritos", linhas: [
+        ["Oponente mais enfrentado", favorito(e.porOponente, OPONENTES)],
+        ["Baralho mais usado", favorito(e.porBaralho, BARALHOS)],
+        ["Terreno mais usado", favorito(e.porTerreno, TERRENOS)]
+      ] },
+      { titulo: "Conquistas e biblioteca", linhas: [
+        ["Conquistas desbloqueadas", feitas.length + " de " + CONQUISTAS.length],
+        ...porGraduacao,
+        ["Verbetes lidos", (p.verbetesLidos || 0) + " de " + VERBETES.length],
+        ["Terrenos vencidos", Object.keys(p.terrenos || {}).length + " de " + Object.keys(TERRENOS).length],
+        ["Baralhos vencidos", Object.keys(p.baralhos || {}).length + " de " + Object.keys(BARALHOS).length]
+      ] }
+    ];
+  }
+  function secaoHtml(secao) {
+    return '<section class="estatisticas-secao"><h3>' + escaparHtml(secao.titulo) + "</h3><dl>" + secao.linhas.map(([rotulo, valor]) => "<div><dt>" + escaparHtml(rotulo) + "</dt><dd>" + escaparHtml(valor) + "</dd></div>").join("") + "</dl></section>";
+  }
+  function origemDasEstatisticas() {
+    const conta2 = contaAtual();
+    if (conta2) return "Estat\xEDsticas da conta de <b>" + escaparHtml(conta2.nome) + "</b>: valem em qualquer aparelho em que voc\xEA entrar.";
+    if (haMarcaDeConta()) return "Carregando as estat\xEDsticas da sua conta\u2026";
+    if (!firebaseConfigurado()) return "Estat\xEDsticas deste aparelho.";
+    return "Estat\xEDsticas s\xF3 deste aparelho. Para guard\xE1-las e comparar com outros jogadores, entre numa conta em <b>Jogar online</b>.";
+  }
+  function abrirEstatisticas(app) {
+    const html = '<div class="folha larga estatisticas"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Estat\xEDsticas</h2><p class="conquistas-origem">' + origemDasEstatisticas() + '</p><div class="estatisticas-grade">' + secoesDeEstatisticas(app.progresso).map(secaoHtml).join("") + '</div><div class="linha fim"><button class="botao" data-fechar>Fechar</button></div></div>';
+    return abrirPainel(html, { fechaAoClicarFora: true });
+  }
+
+  // src/interface/telas/conquistasGlobais.js
+  var numero2 = (n) => Number(n || 0).toLocaleString("pt-BR");
+  var plural = (n, um, varios) => numero2(n) + " " + (n === 1 ? um : varios);
+  function estatisticasGlobaisHtml(analise) {
+    const { jogadores, posicoes } = analise;
+    const conquistas = posicoes.find((p) => p.chave === "conquistas");
+    const resumo = jogadores > 1 ? "Voc\xEA est\xE1 entre <b>" + plural(jogadores, "jogador", "jogadores") + "</b>" + (conquistas ? " e \xE9 o <b>" + conquistas.posicao + "\xBA em conquistas</b>, \xE0 frente de " + conquistas.melhorQue + "% deles." : ".") : "Por enquanto voc\xEA \xE9 o <b>\xFAnico jogador</b> no placar. Convide algu\xE9m para a mesa!";
+    const linhas = posicoes.map((p) => "<tr><td>" + escaparHtml(p.rotulo) + "</td><td><b>" + escaparHtml(formatarCampo(p, p.valor)) + "</b></td><td>" + p.posicao + "\xBA de " + numero2(p.de) + "</td><td>" + (jogadores > 1 ? p.melhorQue + "%" : "\u2014") + "</td><td>" + escaparHtml(formatarCampo(p, p.lider)) + "</td><td>" + escaparHtml(formatarCampo(p, p.mediana)) + "</td></tr>").join("");
+    return '<section class="global-secao" id="g-estatisticas"><h3>Estat\xEDsticas globais</h3><p class="global-resumo">' + resumo + '</p><div class="global-tabela"><table class="tabela-partida"><thead><tr><th>N\xFAmero</th><th>Voc\xEA</th><th>Posi\xE7\xE3o</th><th>Melhor que</th><th>L\xEDder</th><th>Mediana</th></tr></thead><tbody>' + linhas + '</tbody></table></div><p class="nota">Empates dividem a posi\xE7\xE3o. Os outros jogadores s\xE3o an\xF4nimos: o placar guarda s\xF3 n\xFAmeros e as conquistas de cada conta, nunca nome ou e-mail.</p></section>';
+  }
+  function raridadeHtml(analise) {
+    const { jogadores, raridade } = analise;
+    const itens = raridade.map((r) => {
+      const c = CONQUISTAS.find((x) => x.id === r.id);
+      return '<div class="conquista raridade' + (r.minha ? "" : " bloqueada") + '" data-conquista="' + escaparHtml(r.id) + '">' + medalhaHtml(c, r.minha) + '<div><span class="graduacao">' + GRADUACOES[c.graduacao].nome + (r.minha ? " \xB7 voc\xEA tem" : "") + "</span><b>" + escaparHtml(c.nome) + '</b><span class="progresso-final"><span class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + r.porcento + '" aria-label="Jogadores com a conquista ' + escaparHtml(c.nome) + '"><i style="width:' + r.porcento + '%"></i></span>' + r.porcento.toLocaleString("pt-BR") + "%</span><small>" + plural(r.quantos, "jogador", "jogadores") + " de " + numero2(jogadores) + "</small></div></div>";
+    }).join("");
+    return '<section class="global-secao" id="g-raridade"><h3>Raridade das conquistas</h3><p class="nota">Da mais rara para a mais comum.</p><div class="conquistas-lista">' + itens + "</div></section>";
+  }
+  function convite() {
+    if (!firebaseConfigurado()) return "O placar global precisa do projeto online do jogo, que n\xE3o est\xE1 configurado nesta vers\xE3o.";
+    if (haMarcaDeConta() && !contaAtual()) return "Carregando a sua conta\u2026";
+    return "As conquistas globais comparam voc\xEA com os outros jogadores, e para isso \xE9 preciso estar numa conta. Entre em <b>Jogar online</b> (conta Google ou e-mail e senha) e volte aqui.";
+  }
+  function abrirConquistasGlobais(app) {
+    const painel = abrirPainel('<div class="folha larga conquistas-globais"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Conquistas globais</h2><div class="global-conteudo" aria-live="polite"></div><div class="linha fim"><button class="botao" data-fechar>Fechar</button></div></div>', { fechaAoClicarFora: true, aoFechar: () => pararDeOuvir() });
+    let pararDeOuvir = () => {
+    }, rodada = 0;
+    const conteudo = () => painel.elemento.querySelector(".global-conteudo");
+    async function carregar3() {
+      const minha = ++rodada, alvo = conteudo(), conta2 = contaAtual();
+      if (!alvo) return;
+      if (!conta2) {
+        alvo.innerHTML = '<p class="nota" role="status">' + convite() + "</p>";
+        return;
+      }
+      alvo.innerHTML = '<p class="nota" role="status">Buscando o placar dos jogadores\u2026</p>';
+      try {
+        let meu2 = placarDoJogador(app.progresso);
+        try {
+          meu2 = await publicarPlacar(app, conta2, true);
+        } catch (e) {
+        }
+        const docs = (await listarPlacar()).filter((d) => d.uid !== conta2.uid);
+        docs.push({ ...meu2, uid: conta2.uid });
+        if (minha !== rodada || !alvo.isConnected) return;
+        const analise = analisarPlacar(docs, conta2.uid);
+        alvo.innerHTML = estatisticasGlobaisHtml(analise) + raridadeHtml(analise);
+      } catch (e) {
+        if (minha !== rodada || !alvo.isConnected) return;
+        alvo.innerHTML = '<p class="nota" role="status">N\xE3o deu para ler o placar. ' + escaparHtml(explicarErroFirebase(e) || "") + "</p>";
+      }
+    }
+    pararDeOuvir = aoMudarDeConta(() => {
+      if (!conteudo() || !conteudo().isConnected) {
+        pararDeOuvir();
+        return;
+      }
+      carregar3();
+    });
+    carregar3();
+    return painel;
+  }
+
   // src/arte/retrato.js
   function caminhoArredondado2(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -8898,362 +9540,6 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   // src/recursos/retratoProfessor.js
   var FOTO_PROFESSOR = "data:image/jpeg;base64,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";
 
-  // src/online/configuracao.js
-  var FIREBASE = {
-    /* projeto "truco-e26e8" no console, de ID truco-e26e8-703bc; app da Web "truco-de-turing" */
-    apiKey: "AIzaSyCH3yfsmf0KJQ0hJ7aU4DhCBcBVOqwRSHs",
-    authDomain: "truco-e26e8-703bc.firebaseapp.com",
-    projectId: "truco-e26e8-703bc",
-    storageBucket: "truco-e26e8-703bc.firebasestorage.app",
-    messagingSenderId: "832619971345",
-    appId: "1:832619971345:web:b50cd62330112e05b942b0"
-    /* sem measurementId: o Google Analytics é carregado à parte, com consentimento (interface/analise.js) */
-  };
-  var VERSAO_FIREBASE = "10.12.2";
-
-  // src/online/firebase.js
-  var VALIDADE_DAS_MENSAGENS = 6 * 60 * 60 * 1e3;
-  var LIMPEZA_POR_VEZ = 200;
-  var sdk = null;
-  function firebaseConfigurado() {
-    return !!FIREBASE;
-  }
-  async function carregar2() {
-    if (sdk) return sdk;
-    if (!FIREBASE) throw new Error("O projeto Firebase ainda n\xE3o foi configurado (src/online/configuracao.js).");
-    const base = "https://www.gstatic.com/firebasejs/" + VERSAO_FIREBASE + "/";
-    const [app, auth, fs] = await Promise.all(["firebase-app.js", "firebase-auth.js", "firebase-firestore.js"].map((arquivo) => import(
-      /* @vite-ignore */
-      base + arquivo
-    )));
-    const aplicativo = app.initializeApp(FIREBASE);
-    sdk = { auth, fs, autenticacao: auth.getAuth(aplicativo), banco: fs.getFirestore(aplicativo) };
-    return sdk;
-  }
-  async function entrarComGoogle() {
-    const { auth, autenticacao } = await carregar2();
-    const { user } = await auth.signInWithPopup(autenticacao, new auth.GoogleAuthProvider());
-    return conta(user);
-  }
-  async function entrarComEmail(email, senha, criar = false) {
-    const { auth, autenticacao } = await carregar2();
-    const fazer = criar ? auth.createUserWithEmailAndPassword : auth.signInWithEmailAndPassword;
-    const { user } = await fazer(autenticacao, email, senha);
-    return conta(user);
-  }
-  async function sairDaConta() {
-    const { auth, autenticacao } = await carregar2();
-    await auth.signOut(autenticacao);
-  }
-  async function contaGuardada() {
-    const { auth, autenticacao } = await carregar2();
-    return new Promise((resolver) => {
-      let parar = null, lida = false;
-      parar = auth.onAuthStateChanged(autenticacao, (user) => {
-        if (lida) return;
-        lida = true;
-        if (parar) parar();
-        resolver(user ? conta(user) : null);
-      });
-      if (lida) parar();
-    });
-  }
-  var conta = (user) => ({ uid: user.uid, nome: user.displayName || (user.email || "").split("@")[0] || "Jogador", email: user.email || "" });
-  async function carregarProgressoDaConta(uid) {
-    const { fs, banco } = await carregar2();
-    const doc = await fs.getDoc(fs.doc(banco, "contas", uid));
-    return doc.exists() ? doc.data() : null;
-  }
-  async function salvarProgressoNaConta(uid, progresso) {
-    const { fs, banco } = await carregar2();
-    await fs.setDoc(fs.doc(banco, "contas", uid), JSON.parse(JSON.stringify(progresso)));
-  }
-  async function juntarNaConta(uid, montar2) {
-    const { fs, banco } = await carregar2();
-    const ref = fs.doc(banco, "contas", uid);
-    return fs.runTransaction(banco, async (transacao) => {
-      const atual3 = await transacao.get(ref);
-      const dados = JSON.parse(JSON.stringify(montar2(atual3.exists() ? atual3.data() : null)));
-      transacao.set(ref, dados);
-      return dados;
-    });
-  }
-  async function ehAdministrador(uid) {
-    try {
-      const { fs, banco } = await carregar2();
-      return (await fs.getDoc(fs.doc(banco, "admins", uid))).exists();
-    } catch (e) {
-      return false;
-    }
-  }
-  async function listarContas() {
-    const { fs, banco } = await carregar2();
-    const resultado = await fs.getDocs(fs.collection(banco, "contas"));
-    return resultado.docs.map((d) => ({ ...d.data(), uid: d.id }));
-  }
-  async function transporteFirebase(codigo) {
-    const { fs, banco, autenticacao } = await carregar2();
-    const usuario = autenticacao.currentUser;
-    if (!usuario) throw new Error("Entre numa conta para jogar pela internet.");
-    const uid = usuario.uid;
-    const colecao = fs.collection(banco, "salas", codigo, "mensagens");
-    const ouvintes2 = /* @__PURE__ */ new Set();
-    const vistos = /* @__PURE__ */ new Set();
-    const falhas = /* @__PURE__ */ new Set();
-    const falhou = (erro) => {
-      for (const cb of falhas) cb(erro);
-    };
-    const parar = fs.onSnapshot(fs.query(colecao, fs.orderBy("em")), (instantaneo) => {
-      for (const mudanca of instantaneo.docChanges()) {
-        if (mudanca.type !== "added" || vistos.has(mudanca.doc.id)) continue;
-        vistos.add(mudanca.doc.id);
-        const { em, expira, ...msg } = mudanca.doc.data();
-        for (const cb of ouvintes2) cb(msg);
-      }
-    }, falhou);
-    return {
-      /* JSON tira os `undefined`, que o Firestore recusa */
-      enviar: (msg) => {
-        const doc = { ...JSON.parse(JSON.stringify(msg)), uid, em: fs.serverTimestamp(), expira: fs.Timestamp.fromMillis(Date.now() + VALIDADE_DAS_MENSAGENS) };
-        Promise.resolve(fs.addDoc(colecao, doc)).catch(falhou);
-      },
-      aoReceber: (cb) => {
-        ouvintes2.add(cb);
-        return () => ouvintes2.delete(cb);
-      },
-      aoFalhar: (cb) => {
-        falhas.add(cb);
-        return () => falhas.delete(cb);
-      },
-      fechar: () => {
-        ouvintes2.clear();
-        falhas.clear();
-        parar();
-      }
-    };
-  }
-  async function limparMensagensVencidas(limite = LIMPEZA_POR_VEZ) {
-    const { fs, banco } = await carregar2();
-    const antes = fs.Timestamp.fromMillis(Date.now() - 10 * 60 * 1e3);
-    const consulta = fs.query(fs.collectionGroup(banco, "mensagens"), fs.where("expira", "<", antes), fs.limit(limite));
-    const { docs } = await fs.getDocs(consulta);
-    if (!docs.length) return 0;
-    const lote = fs.writeBatch(banco);
-    for (const d of docs) lote.delete(d.ref);
-    await lote.commit();
-    return docs.length;
-  }
-
-  // src/online/contas.js
-  var TEXTO_DA_CONTA = "Quem entra numa conta tem guardados nela, no Firebase do jogo: nome, e-mail, conquistas, verbetes lidos, avatar e as estat\xEDsticas de jogo (acessos, partidas, m\xE3os e vit\xF3rias). Os respons\xE1veis pelo jogo conseguem ver esses dados. Sem conta, tudo isso fica s\xF3 neste aparelho.";
-  var CONTADORES = ["vitorias", "maos", "dropouts", "vitoriasZen", "pontos"];
-  var CONJUNTOS = ["lidos", "terrenos", "baralhos", "arquiteturas"];
-  function mesclarProgresso(local, conta2) {
-    if (!conta2) return { ...local };
-    const m = { ...local };
-    for (const k of CONTADORES) m[k] = Math.max(local[k] || 0, conta2[k] || 0);
-    for (const k of CONJUNTOS) m[k] = { ...local[k] || {}, ...conta2[k] || {} };
-    m.desbloqueadas = { ...local.desbloqueadas || {} };
-    for (const [id, quando] of Object.entries(conta2.desbloqueadas || {})) {
-      m.desbloqueadas[id] = m.desbloqueadas[id] ? Math.min(m.desbloqueadas[id], quando) : quando;
-    }
-    m.verbetesLidos = Object.keys(m.lidos).length;
-    if (conta2.avatar) m.avatar = conta2.avatar;
-    m.estatisticas = mesclarEstatisticas(local.estatisticas, conta2.estatisticas);
-    return m;
-  }
-  function juntarParaGravar(local, conta2) {
-    const m = mesclarProgresso(local, conta2);
-    if (local.avatar) m.avatar = local.avatar;
-    return m;
-  }
-  function progressoDaConta(progresso) {
-    const p = {};
-    for (const k of [...CONTADORES, ...CONJUNTOS, "desbloqueadas", "verbetesLidos", "avatar", "estatisticas"]) if (progresso[k] !== void 0) p[k] = progresso[k];
-    return p;
-  }
-  function documentoDaConta(progresso, conta2, metodo) {
-    const doc = progressoDaConta(progresso);
-    if (conta2) doc.perfil = { nome: conta2.nome || "", email: conta2.email || "", metodo: metodo && metodo.startsWith("email") ? "email" : metodo || "conta" };
-    doc.resumo = resumoDoJogador(progresso);
-    return doc;
-  }
-
-  // src/online/errosFirebase.js
-  var MENSAGENS = {
-    /* configuração do projeto no console (docs/FIREBASE.md) */
-    "auth/operation-not-allowed": "Esse jeito de entrar ainda n\xE3o est\xE1 ativado no projeto Firebase (Authentication > M\xE9todo de login).",
-    "auth/unauthorized-domain": "Este endere\xE7o ainda n\xE3o est\xE1 autorizado no projeto Firebase (Authentication > Configura\xE7\xF5es > Dom\xEDnios autorizados).",
-    "auth/configuration-not-found": "O Authentication ainda n\xE3o foi ativado no projeto Firebase.",
-    "auth/invalid-api-key": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
-    "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "A chave do app da Web em src/online/configuracao.js n\xE3o confere com o projeto Firebase.",
-    "permission-denied": "O Firestore recusou o pedido: confira se as regras de firestore.rules foram publicadas e se a conta est\xE1 conectada.",
-    "not-found": "O banco Firestore do projeto ainda n\xE3o foi criado (Firestore Database > Criar banco de dados).",
-    "failed-precondition": "O banco Firestore do projeto ainda n\xE3o foi criado ou n\xE3o est\xE1 pronto.",
-    /* o que acontece com qualquer pessoa */
-    "auth/popup-blocked": "O navegador bloqueou a janela do Google. Libere as janelas deste site e tente de novo.",
-    "auth/operation-not-supported-in-environment": "Este navegador n\xE3o abre a janela do Google aqui. Entre com e-mail e senha.",
-    "auth/network-request-failed": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
-    "unavailable": "Sem conex\xE3o com o Firebase. Confira a internet e tente de novo.",
-    "auth/too-many-requests": "Muitas tentativas seguidas. Espere um pouco e tente de novo.",
-    "auth/invalid-email": "Esse e-mail n\xE3o parece v\xE1lido.",
-    "auth/missing-email": "Escreva o e-mail.",
-    "auth/missing-password": "Escreva a senha.",
-    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
-    "auth/email-already-in-use": 'J\xE1 existe uma conta com esse e-mail. Use "Entrar com e-mail".',
-    "auth/invalid-credential": "E-mail ou senha n\xE3o conferem.",
-    "auth/invalid-login-credentials": "E-mail ou senha n\xE3o conferem.",
-    "auth/wrong-password": "E-mail ou senha n\xE3o conferem.",
-    "auth/user-not-found": 'N\xE3o h\xE1 conta com esse e-mail. Use "Criar conta".',
-    "auth/user-disabled": "Esta conta foi desativada.",
-    "auth/account-exists-with-different-credential": "Esse e-mail j\xE1 entra de outro jeito (Google ou e-mail e senha). Use o mesmo de antes."
-  };
-  var DESISTIU = /* @__PURE__ */ new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request", "auth/user-cancelled"]);
-  function explicarErroFirebase(erro) {
-    const noTexto = /\(([a-z-]+\/[a-z0-9.-]+)\)/i.exec(String(erro && erro.message || ""));
-    const codigo = String(erro && erro.code || noTexto && noTexto[1] || "").toLowerCase();
-    if (DESISTIU.has(codigo)) return null;
-    if (MENSAGENS[codigo]) return MENSAGENS[codigo];
-    const texto = String(erro && erro.message || erro || "").replace(/^Firebase:\s*/, "").trim();
-    return texto || "Algo deu errado com o Firebase.";
-  }
-
-  // src/interface/conta.js
-  var MARCA_DE_CONTA = "truco-de-turing:conta";
-  var atual2 = null;
-  var metodoAtual = "";
-  var acessoContadoNaConta = false;
-  var ouvintes = /* @__PURE__ */ new Set();
-  var avisouFalhaAoSalvar = false;
-  var gravacao = null;
-  var gravarDeNovo = false;
-  var pendente = false;
-  var semConexao = (e) => !!e && (["unavailable", "deadline-exceeded"].includes(e.code) || /offline/i.test(e.message || ""));
-  var navegadorSemConexao = () => !!globalThis.navigator && globalThis.navigator.onLine === false;
-  function sincronizar(app) {
-    if (!atual2) return Promise.resolve();
-    if (gravacao) {
-      gravarDeNovo = true;
-      return gravacao;
-    }
-    gravacao = gravarNaConta(app, atual2).finally(() => {
-      gravacao = null;
-      if (gravarDeNovo) {
-        gravarDeNovo = false;
-        sincronizar(app);
-      }
-    });
-    return gravacao;
-  }
-  async function gravarNaConta(app, conta2) {
-    try {
-      if (navegadorSemConexao()) throw Object.assign(new Error("offline"), { code: "unavailable" });
-      const gravado = await juntarNaConta(conta2.uid, (naConta) => documentoDaConta(juntarParaGravar(app.progresso, naConta), conta2, metodoAtual));
-      if (atual2 !== conta2) return;
-      app.progresso = juntarParaGravar(app.progresso, gravado);
-      app.salvarSoLocal();
-      app.conferirConquistaFinal?.();
-      if (pendente) mostrarAviso("Conta", "A conex\xE3o voltou: o progresso deste aparelho subiu para a conta.", null, 5e3);
-      pendente = false;
-      avisouFalhaAoSalvar = false;
-    } catch (e) {
-      const offline = navegadorSemConexao() || semConexao(e);
-      if (offline) pendente = true;
-      if (avisouFalhaAoSalvar) return;
-      avisouFalhaAoSalvar = true;
-      mostrarAviso("Conta", offline ? "Sem conex\xE3o: o progresso fica neste aparelho e sobe para a conta quando a conex\xE3o voltar." : "O progresso ficou s\xF3 neste aparelho. " + (explicarErroFirebase(e) || ""), null, 7e3);
-    }
-  }
-  function contaAtual() {
-    return atual2;
-  }
-  function aoMudarDeConta(cb) {
-    ouvintes.add(cb);
-    return () => ouvintes.delete(cb);
-  }
-  function mudar(conta2) {
-    atual2 = conta2;
-    for (const cb of [...ouvintes]) cb(conta2);
-  }
-  function haMarcaDeConta() {
-    return !!lerMarca();
-  }
-  var lerMarca = () => {
-    try {
-      return globalThis.localStorage?.getItem(MARCA_DE_CONTA) || null;
-    } catch (e) {
-      return null;
-    }
-  };
-  var gravarMarca = (metodo) => {
-    try {
-      globalThis.localStorage?.setItem(MARCA_DE_CONTA, metodo || "conta");
-    } catch (e) {
-    }
-  };
-  var apagarMarca = () => {
-    try {
-      globalThis.localStorage?.removeItem(MARCA_DE_CONTA);
-    } catch (e) {
-    }
-  };
-  async function usarConta(app, conta2, metodo, { retomada = false } = {}) {
-    const naConta = await carregarProgressoDaConta(conta2.uid);
-    const mesclado = mesclarProgresso(app.progresso, naConta);
-    mesclado.nomeOnline = mesclado.nomeOnline || conta2.nome;
-    const jaNaConta = naConta && naConta.estatisticas ? naConta.estatisticas.acessos || 0 : 0;
-    const estatisticas = estatisticasDe(mesclado);
-    if (!acessoContadoNaConta) estatisticas.acessos = Math.max(estatisticas.acessos, jaNaConta + 1);
-    await salvarProgressoNaConta(conta2.uid, documentoDaConta(mesclado, conta2, metodo));
-    acessoContadoNaConta = true;
-    metodoAtual = metodo;
-    app.progresso = mesclado;
-    avisouFalhaAoSalvar = false;
-    gravarMarca(metodo);
-    definirConta(conta2.uid, metodo, { retomada });
-    mudar(conta2);
-    if (!app.salvarSoLocal) {
-      app.salvarSoLocal = app.salvar;
-      app.salvar = function() {
-        this.salvarSoLocal();
-        sincronizar(this);
-      };
-      globalThis.addEventListener?.("online", () => {
-        if (pendente && atual2) sincronizar(app);
-      });
-    }
-    if (!app.conferirConquistaFinal || !app.conferirConquistaFinal().length) app.salvar();
-  }
-  async function sairDaContaAtual() {
-    await sairDaConta();
-    apagarMarca();
-    definirConta(null);
-    mudar(null);
-  }
-  async function retomarConta(app) {
-    if (!firebaseConfigurado()) return null;
-    const metodo = lerMarca();
-    if (!metodo) return null;
-    let conta2;
-    try {
-      conta2 = await contaGuardada();
-    } catch (e) {
-      return null;
-    }
-    if (!conta2) {
-      apagarMarca();
-      return null;
-    }
-    if (atual2) return atual2;
-    try {
-      await usarConta(app, conta2, metodo, { retomada: true });
-      return conta2;
-    } catch (e) {
-      mostrarAviso("Conta", "N\xE3o deu para retomar a conta de " + conta2.nome + "; o progresso fica neste aparelho at\xE9 voc\xEA entrar de novo. " + (explicarErroFirebase(e) || ""), null, 8e3);
-      return null;
-    }
-  }
-
   // src/interface/telas/conquistas.js
   function itemHtml(conquista, desbloqueada) {
     return '<div class="conquista' + (desbloqueada ? "" : " bloqueada") + '">' + medalhaHtml(conquista, desbloqueada) + '<div><span class="graduacao">' + GRADUACOES[conquista.graduacao].nome + "</span><b>" + escaparHtml(conquista.nome) + "</b><small>" + escaparHtml(conquista.descricao) + "</small></div></div>";
@@ -9276,11 +9562,13 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return '<p class="conquistas-origem">' + origemDasConquistas() + '</p><p class="conquistas-resumo"><b>' + total + "</b> de " + CONQUISTAS.length + " desbloqueadas \xB7 " + p.vitorias + " m\xE3os vencidas \xB7 " + p.dropouts + " dropouts</p>" + CONQUISTAS.filter((c) => c.id === CONQUISTA_FINAL).map((c) => finalHtml(c, p)).join("") + '<div class="conquistas-lista">' + CONQUISTAS.filter((c) => c.id !== CONQUISTA_FINAL).map((c) => itemHtml(c, !!p.desbloqueadas[c.id])).join("") + "</div>";
   }
   function abrirConquistas(app) {
-    const html = '<div class="folha larga"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="conquistas-salao"><aside class="guilda"><div class="retrato" id="c-retrato" role="img" aria-label="Retrato do prof. Peng Yaohao em moldura medieval"></div><p class="guilda-nota">Guardi\xE3o do sal\xE3o das conquistas. Cada medalha aqui foi conquistada contra os oponentes da mesa.</p></aside><div class="conquistas-principal"><h2>Conquistas</h2><div class="conquistas-conteudo">' + conteudoHtml(app.progresso) + '</div><p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
+    const html = '<div class="folha larga"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="conquistas-salao"><aside class="guilda"><div class="retrato" id="c-retrato" role="img" aria-label="Retrato do prof. Peng Yaohao em moldura medieval"></div><p class="guilda-nota">Guardi\xE3o do sal\xE3o das conquistas. Cada medalha aqui foi conquistada contra os oponentes da mesa.</p></aside><div class="conquistas-principal"><h2>Conquistas</h2><div class="linha conquistas-atalhos"><button class="botao pequeno" id="c-estatisticas">Estat\xEDsticas</button><button class="botao pequeno" id="c-globais">Conquistas globais</button></div><div class="conquistas-conteudo">' + conteudoHtml(app.progresso) + '</div><p class="conquistas-rodape">Contam nas partidas contra os oponentes do computador. Algumas liberam avatares novos. <button class="link" id="c-avatares">Escolher avatar</button></p></div></div></div>';
     let pararDeOuvir = () => {
     };
     const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar: () => pararDeOuvir() });
     painel.elemento.querySelector("#c-avatares").addEventListener("click", () => abrirAvatares(app));
+    painel.elemento.querySelector("#c-estatisticas").addEventListener("click", () => abrirEstatisticas(app));
+    painel.elemento.querySelector("#c-globais").addEventListener("click", () => abrirConquistasGlobais(app));
     pararDeOuvir = aoMudarDeConta(() => {
       const conteudo = painel.elemento.querySelector(".conquistas-conteudo");
       if (!conteudo || !conteudo.isConnected) {
@@ -11348,7 +11636,8 @@ export default function (Motor) {
         oponente: this.opcoes ? this.opcoes.oponente : "",
         maos: this.partida ? this.partida.numeroMao + 1 : 0,
         tentos: this.partida ? this.partida.tentos[eu] || 0 : 0,
-        online: this.online ? 1 : 0
+        online: this.online ? 1 : 0,
+        duracaoMs: this.partidaIniciadaEm ? Math.max(0, Date.now() - this.partidaIniciadaEm) : 0
       });
     },
     perguntarSeVoltaAoMenu() {
@@ -12178,7 +12467,7 @@ export default function (Motor) {
     const linha2 = (j) => {
       const c = conta2[j] || {};
       const ataques = (c.overfit || 0) + (c.earlystop || 0) + (c.stackoverflow || 0);
-      const qtd = (n, singular, plural) => n + " " + (n === 1 ? singular : plural);
+      const qtd = (n, singular, plural2) => n + " " + (n === 1 ? singular : plural2);
       return '<li style="--cor:' + COR[j] + '"><b>' + escaparHtml(nomes[j]) + "</b>: " + qtd(c.ativacao || 0, "ativa\xE7\xE3o", "ativa\xE7\xF5es") + ", " + qtd(c.tunagem || 0, "tunagem", "tunagens") + ", " + qtd(ataques, "ataque", "ataques") + ", " + qtd(c.dropout || 0, "dropout", "dropouts") + (c.truco ? ", " + qtd(c.truco, "lance de truco", "lances de truco") : "") + ". Soma final: <b>" + (passos.length ? passos[passos.length - 1].somas[j] : 0) + "</b>.</li>";
     };
     const momentos = momentosChave(passos, nomes);
@@ -12288,7 +12577,7 @@ export default function (Motor) {
         dicas: this.dicasNaMao ? 1 : 0
       });
       if (!partida.encerrada) return;
-      const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0 };
+      const final = { ...resumo, alvo: partida.alvo, maos: partida.numeroMao + 1, tentos: partida.tentos[eu] || 0, duracaoMs: this.partidaIniciadaEm ? Math.max(0, Date.now() - this.partidaIniciadaEm) : 0 };
       registrarEvento(EVENTOS.jogoFinalizado, { ...final, venceu: venceu ? 1 : 0 });
       registrarEvento(venceu ? EVENTOS.vitoria : EVENTOS.derrota, final);
     },
