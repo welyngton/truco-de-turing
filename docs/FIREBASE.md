@@ -118,7 +118,7 @@ Use o jogo publicado (`https://welyngton.github.io/truco-de-turing/`) depois do 
 **Conta com o mesmo progresso em dois navegadores**
 
 1. No computador, abra **Jogar online > Criar conta** com e-mail e senha, ou **Entrar com Google**.
-2. Abra um verbete do **Glossário** que ainda não foi lido. Ele passa a aparecer como "lido".
+2. Abra um verbete do **Livro de conceitos** que ainda não foi lido. Ele passa a aparecer como "lido".
 3. Em outro navegador ou no celular, entre com a mesma conta. O verbete deve aparecer como "lido"
    lá também, assim como as conquistas ganhas no primeiro aparelho.
 4. No console, em **Firestore Database > Dados**, deve existir `contas/<uid>`.
@@ -128,7 +128,7 @@ Use o jogo publicado (`https://welyngton.github.io/truco-de-turing/`) depois do 
 1. Entre numa conta e volte ao menu. Abaixo de **Jogar** aparece "Conectado como …".
 2. Recarregue a página (F5). Em um ou dois segundos a mesma linha volta, sem clicar em nada, e
    **Jogar online** abre já conectado.
-3. Leia outro verbete do Glossário e confira, em outro aparelho com a mesma conta, que ele aparece
+3. Leia outro verbete do Livro de conceitos e confira, em outro aparelho com a mesma conta, que ele aparece
    como "lido".
 4. Clique em **Sair da conta** e recarregue: o menu não mostra conta nenhuma.
 

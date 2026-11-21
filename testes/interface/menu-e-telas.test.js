@@ -15,7 +15,7 @@ before(async () => { servidor = await subirServidor(); });
 after(() => servidor.fechar());
 
 describe('menu e telas', () => {
-  it('carrega, mostra o menu com as escolhas e abre Regras (abas, ajuda das ações), Glossário, Conquistas, Mods e Sobre', async () => {
+  it('carrega, mostra o menu com as escolhas e abre Regras (abas, ajuda das ações), Livro de conceitos, Conquistas, Mods e Sobre', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
     try {
@@ -48,7 +48,7 @@ describe('menu e telas', () => {
       assert.equal(await musicaDoMenu(), true);
       await pagina.selectOption('#m-terreno', 'oceano');
       await pagina.waitForSelector('.miniatura img');
-      for (const [botao, texto] of [['#m-regras', 'Regras'], ['#m-grimorio', 'Glossário'], ['#m-conquistas', 'Conquistas'], ['#m-mods', 'Mods'], ['#m-sobre', 'Sobre']]) {
+      for (const [botao, texto] of [['#m-regras', 'Regras'], ['#m-grimorio', 'Livro de conceitos'], ['#m-conquistas', 'Conquistas'], ['#m-mods', 'Mods'], ['#m-sobre', 'Sobre']]) {
         await pagina.click(botao);
         await pagina.waitForSelector('.camada:not(.transparente) h2');
         assert.match(await pagina.locator('.camada:not(.transparente) h2').first().textContent(), new RegExp(texto));
@@ -67,7 +67,7 @@ describe('menu e telas', () => {
           /* a equação é desenhada (MathML com altura de verdade, não texto cru) */
           assert.ok(await pagina.locator('#g-verbete .equacao math').evaluate((m) => m.getBoundingClientRect().height > 20));
           await capturar(pagina, '28-biblioteca-dropout');
-          /* fecha o Glossário e a ajuda; as regras continuam abertas */
+          /* fecha o Livro de conceitos e a ajuda; as regras continuam abertas */
           await pagina.locator('.camada:not(.transparente) [data-fechar] >> nth=-1').click();
           await pagina.locator('.ajuda-acoes [data-fechar] >> nth=0').click();
         }

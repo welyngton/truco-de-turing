@@ -499,7 +499,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
   .camada, .folha, .aviso, .trofeu, .folha.vitoria, .aviso.aviso-conquista.especial { animation: none; }
 }
 
-/* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
+/* Livro de conceitos: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
 .grimorio-verbete .aprofundar { margin-top: 14px; border-top: 1px solid rgba(43, 22, 8, 0.2); padding-top: 4px; }
 .grimorio-verbete .aprofundar h3 { margin: 8px 0 4px; }
 .grimorio-verbete .aprofundar .formula { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }

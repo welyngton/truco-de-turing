@@ -42,7 +42,7 @@ export function abrirSobre() {
       '<li><b>Welyngton José Vinicius Dal Prá</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li>' +
       '<li><b>Diego Casagrande</b>: testes e validação das regras.</li>' +
       '<li><b>Vinícius Chiconato</b>: correções nas regras.</li>' +
-      '<li><b>Suzy Arcanjo</b>: verbetes das ações no Glossário.</li>' +
+      '<li><b>Suzy Arcanjo</b>: verbetes das ações no Livro de conceitos.</li>' +
       '</ul>' +
       '<p class="contribuicoes">Contribuições são bem-vindas: o código está aberto no repositório.</p>' +
       '<h3>Estatísticas de uso</h3>' +

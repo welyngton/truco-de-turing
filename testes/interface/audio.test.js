@@ -140,7 +140,7 @@ describe('botões de ícone de som na mesa', () => {
         }
         assert.ok(!retangulos(caixas.efeitos, caixas.musica), 'os dois botões não se sobrepõem');
         assert.ok(caixas.efeitos.x >= 0 && caixas.musica.x + caixas.musica.width <= 1280, 'dentro do mundo 1280x720');
-        await pagina.evaluate(() => { const avisos = document.querySelector('#avisos'); if (avisos) avisos.innerHTML = ''; }); /* o aviso de Glossário cobre o alto da mesa na captura */
+        await pagina.evaluate(() => { const avisos = document.querySelector('#avisos'); if (avisos) avisos.innerHTML = ''; }); /* o aviso de Livro de conceitos cobre o alto da mesa na captura */
         await capturar(pagina, `41-mesa-som-${tela.width}x${tela.height}`);
       }
       assert.deepEqual(jogo.erros, []);

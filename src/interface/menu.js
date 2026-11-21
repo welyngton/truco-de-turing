@@ -15,6 +15,7 @@ import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
 import { abrirPainel, escaparHtml } from './paineis.js';
 import { Som } from './som.js';
+import { ajustarFontesDosBotoes } from './ajusteDeBotoes.js';
 import { htmlDosControlesDeSom, ligarControlesDeSom } from './controlesDeSom.js';
 import { registrarEvento, EVENTOS } from './analise.js';
 import { abrirRegras } from './telas/regras.js';
@@ -91,7 +92,7 @@ function htmlDoMenu(opcoes) {
     '<p class="menu-conta" id="m-conta" role="status" hidden></p>' +
     '<div class="menu-mais">' +
     '<button class="botao" id="m-regras">Como jogar</button>' +
-    '<button class="botao" id="m-grimorio">Glossário</button>' +
+    '<button class="botao" id="m-grimorio">Livro de conceitos</button>' +
     '<button class="botao" id="m-conquistas">Conquistas</button>' +
     '<button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button>' +
     '<button class="botao" id="m-mods">Mods</button>' +
@@ -130,6 +131,8 @@ export function abrirMenu(app) {
   const elemento = painel.elemento;
   const campo = (id) => elemento.querySelector('#' + id);
   ligarControlesDeSom(elemento, app, 'menu');
+  /* "Livro de conceitos" é o rótulo mais longo: em telas estreitas a fonte dos botões encolhe até o texto caber */
+  ajustarFontesDosBotoes(elemento, '.menu-acoes .botao');
 
   /** Atualiza descrições, listas dependentes e miniaturas conforme as escolhas. */
   function atualizarDicas() {

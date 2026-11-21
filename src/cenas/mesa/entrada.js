@@ -14,6 +14,7 @@ import { confirmar, abrirPainel } from '../../interface/paineis.js';
 import { abrirRegras } from '../../interface/telas/regras.js';
 import { abrirGrimorio } from '../../interface/telas/grimorio.js';
 import { abrirAjudaDasAcoes } from '../../interface/telas/ajudaDasAcoes.js';
+import { ajustarFontesDosBotoes } from '../../interface/ajusteDeBotoes.js';
 import { texturaDeInspecao } from '../recursos.js';
 import { registrarEvento, EVENTOS } from '../../interface/analise.js';
 import { colunaX, linhaY, NOME_DA_ACAO, cartaDaMesa } from './layout.js';
@@ -242,21 +243,22 @@ export const metodosDeEntrada = {
 
   /** Botão Menu: confirma antes de abandonar a partida. */
   /**
-   * Botão REGRAS da mesa: como jogar, Glossário e a chave das dicas, numa janela só.
+   * Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só.
    */
   abrirRegrasDaMesa() {
     const dicas = this.app.dicasLigadas;
     registrarEvento(EVENTOS.mesaClique, { botao: 'regras' });
     const painel = abrirPainel(
       '<div class="folha estreita janela-da-mesa"><h2>Regras</h2>' +
-      '<p>Consulte as regras, a ajuda de cada ação, os conceitos de redes neurais do Glossário ou ligue as dicas durante a partida.</p>' +
+      '<p>Consulte as regras, a ajuda de cada ação, os conceitos de redes neurais do Livro de conceitos ou ligue as dicas durante a partida.</p>' +
       '<div class="grade-de-botoes">' +
       '<button class="botao" data-opcao="regras">Como jogar</button>' +
       '<button class="botao" data-opcao="ajuda">Ajuda das ações</button>' +
-      '<button class="botao" data-opcao="grimorio">Glossário</button>' +
+      '<button class="botao" data-opcao="grimorio">Livro de conceitos</button>' +
       '<button class="botao ' + (dicas ? 'discreto' : 'vinho') + '" data-opcao="dicas" data-chave="dicas">' + (dicas ? 'Desligar dicas' : 'Ativar dicas') + '</button>' +
       '<button class="botao discreto" data-fechar>Voltar ao jogo</button>' +
       '</div></div>', { fechaAoClicarFora: true });
+    ajustarFontesDosBotoes(painel.elemento, '.grade-de-botoes .botao');
     const acoes = {
       regras: () => abrirRegras(this.app),
       ajuda: () => this.abrirAjudaDaMesa(),

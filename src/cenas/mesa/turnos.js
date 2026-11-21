@@ -103,7 +103,7 @@ export const metodosDeTurnos = {
     this.inicioDosBotsEnviado = new Set();
     this.criarNeuronios();
     this.painel.inspecao.setTexture('terreno-' + this.opcoes.terreno);
-    ajustarBloco(this.painel.notaInspecao, 'Passe o cursor ou toque numa carta para inspecioná-la.', 12, PAINEL_ESQ.l - 30, 40, 9.5);
+    ajustarBloco(this.painel.notaInspecao, 'Passe o cursor ou toque numa carta para ver o detalhe dela.', 12, PAINEL_ESQ.l - 30, 40, 9.5);
     this.mao.eventos.splice(0);
     this.redesenhar();
     if (this.opcoes.terreno !== 'neutro') this.avisarVerbete('terrenos');

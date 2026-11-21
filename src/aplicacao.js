@@ -50,7 +50,7 @@ export const Aplicacao = {
   progresso: carregarProgresso(),
   /** Escolhas do menu: oponente, baralho, terreno, inicio, alvo, jogadores, humanos, arquitetura, baralhos. */
   opcoes: null,
-  /** Verbetes do Glossário já mostrados como aviso nesta sessão. */
+  /** Verbetes do Livro de conceitos já mostrados como aviso nesta sessão. */
   verbetesAvisados: {},
   /** Instância do Phaser.Game (definida em principal.js). */
   jogo: null,

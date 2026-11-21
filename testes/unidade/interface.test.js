@@ -108,7 +108,7 @@ describe('paineis.js', () => {
     assert.equal(aviso.getAttribute('role'), 'status');
     assert.deepEqual([a.vezes, b.vezes], [1, 0], 'o som toca quando o aviso aparece');
     /* um aviso comum não apaga a medalha, e a medalha fica acima dele */
-    paineis.mostrarAviso('Glossário · Dropout', 'texto');
+    paineis.mostrarAviso('Livro de conceitos · Dropout', 'texto');
     paineis.mostrarDicaDeJogo('Corrida', 'Ataque agora.', '', '');
     assert.deepEqual(medalhasNaTela(), [a.titulo]);
     assert.equal($('#avisos').firstElementChild, $('#avisos .aviso-conquista'));
@@ -415,7 +415,7 @@ describe('telas', () => {
     assert.ok($$('#g-lista .lido').length >= 2);
     abrirGrimorio(app, 'nao-existe');
   });
-  it('Glossário: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
+  it('Livro de conceitos: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
     abrirGrimorio(appFalso(), 'overfit');
     const texto = $('#g-verbete').textContent;
     for (const trecho of ['A ideia', 'No jogo', 'Até onde vale a comparação', 'Para se aprofundar', 'Suzy Arcanjo']) assert.match(texto, new RegExp(trecho));
@@ -426,15 +426,15 @@ describe('telas', () => {
     const curto = htmlDoVerbete(VERBETES.find((v) => !v.ideia));
     assert.doesNotMatch(curto, /A ideia|Para se aprofundar|Colaboração/);
   });
-  it('Glossário: título novo, equação, figura e "até onde vale a comparação"', () => {
+  it('Livro de conceitos: título novo, equação, figura e "até onde vale a comparação"', () => {
     abrirGrimorio(appFalso(), 'dropout');
-    assert.match($('.camada h2').textContent, /Glossário/);
+    assert.match($('.camada h2').textContent, /Livro de conceitos/);
     assert.ok($('#g-verbete .equacao math'));
     assert.ok($('#g-verbete .figura svg'));
     assert.match($('#g-verbete .limite').textContent, /Até onde vale/);
     assert.match($('#g-verbete .fonte').textContent, /Srivastava/);
   });
-  it('regras em abas: troca de aba, ajuda das ações e "Ver o conceito" abrindo o verbete certo', () => {
+  it('regras em abas: troca de aba, ajuda das ações e "Aprender mais" abrindo o verbete certo', () => {
     const app = appFalso();
     abrirRegras(app);
     const abas = $$('.abas [data-aba]').map((b) => b.textContent);
