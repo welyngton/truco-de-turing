@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.23.0 — 2026-11-21
+
+- feat: áudio e trilhas sonoras: timbres, trilhas, ícones e botões de som (#157) ([#158](https://github.com/welyngton/truco-de-turing/pull/158), por [@welyngton](https://github.com/welyngton))
+
 ## 2.22.1 — 2026-11-20
 
 - fix: carta da Entrada transparente e "afundada" ao passar o cursor durante a distribuição ([#156](https://github.com/welyngton/truco-de-turing/pull/156), por [@welyngton](https://github.com/welyngton))

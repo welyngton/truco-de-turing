@@ -135,6 +135,19 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .botao.pequeno { font-size: 13px; padding: 7px 12px; }
 .botao:focus-visible, select:focus-visible, .grimorio-lista button:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
 .linha { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+/* botões de ícone de efeitos sonoros e música (menu principal; a mesa desenha os seus no canvas) */
+.controles-de-som { display: flex; gap: 10px; }
+.botao-icone { width: 46px; height: 46px; padding: 0; display: inline-grid; place-items: center; }
+.botao-icone .icone-som { display: block; width: 28px; height: 28px; }
+.botao-icone .icone-som svg { display: block; width: 100%; height: 100%; }
+.botao-icone[aria-pressed="false"] { filter: brightness(0.82) saturate(0.7); }
+.botao-icone[aria-pressed="false"]:hover { filter: brightness(0.92) saturate(0.8); }
+@media (max-height: 520px) and (min-width: 560px) {
+  .controles-de-som { gap: 8px; }
+  .botao-icone { width: 36px; height: 36px; border-radius: 8px; }
+  .botao-icone .icone-som { width: 22px; height: 22px; }
+}
+
 /* janelas REGRAS e MENU da mesa: botões grandes, quase quadrados, em grade 2×2 */
 .janela-da-mesa { width: min(440px, 100%); }
 .grade-de-botoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
@@ -1994,8 +2007,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       const carta = mao.indiceDeCartas.tt.get(item.card.id);
       const figura = ehFigura(carta), pilha = 1 + item.stack;
       const naSequencia = figura && !figurasValem;
-      const notas = item.notes.filter((nota2) => !/^(par|trio)\b/.test(nota2));
-      if (!naSequencia && pilha > 1) notas.unshift("tunado \xD7" + pilha);
+      const notas2 = item.notes.filter((nota2) => !/^(par|trio)\b/.test(nota2));
+      if (!naSequencia && pilha > 1) notas2.unshift("tunado \xD7" + pilha);
       return {
         neuronio: mao.neuronios[idDoNeuronio(item.slot.layer, item.slot.slotIndex)],
         camada: camada2,
@@ -2003,7 +2016,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         pilha,
         figura,
         pontos: naSequencia ? arredondar(item.subtotal - item.base - item.tune) : item.subtotal,
-        notas
+        notas: notas2
       };
     });
     const combos = [];
@@ -2027,9 +2040,9 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function pontuarForward(mao, resultado) {
     const neuronios = resultado.items.map((item, camada2) => {
       const carta = mao.indiceDeCartas.tt.get(item.card.id);
-      const notas = [(camada2 ? "w " + decimal(item.w) + " \xB7 " : "") + "b " + decimal(item.bias) + " \xB7 " + item.fn];
-      if (item.stack) notas.push("tunado \xD7" + (1 + item.stack));
-      notas.push(...item.notes);
+      const notas2 = [(camada2 ? "w " + decimal(item.w) + " \xB7 " : "") + "b " + decimal(item.bias) + " \xB7 " + item.fn];
+      if (item.stack) notas2.push("tunado \xD7" + (1 + item.stack));
+      notas2.push(...item.notes);
       return {
         neuronio: mao.neuronios[idDoNeuronio(item.slot.layer, item.slot.slotIndex)],
         camada: camada2,
@@ -2037,7 +2050,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         pilha: 1 + item.stack,
         figura: ehFigura(carta),
         pontos: arredondar(item.a),
-        notas
+        notas: notas2
       };
     });
     const saturada = !!resultado.vanishing && neuronios.length > 0;
@@ -2624,7 +2637,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   }
-  function voz(saida, tempo, midi, duracao, { forma = "triangle", volume = 0.1, ataque = 0.01, liberacao = 0.15, filtro = 0, vibrato = 0, desafinar = 0 } = {}) {
+  function voz(saida, tempo, midi, duracao, { forma = "triangle", volume = 0.1, ataque = 0.01, liberacao = 0.15, filtro = 0, vibrato = 0, desafinar = 0, vibratoHz = 5 } = {}) {
     const a = saida.context;
     const osc = a.createOscillator(), ganho = a.createGain();
     osc.type = forma;
@@ -2641,7 +2654,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     }
     if (vibrato) {
       const lfo = a.createOscillator(), profundidade = a.createGain();
-      lfo.frequency.value = 5;
+      lfo.frequency.value = vibratoHz;
       profundidade.gain.value = vibrato;
       lfo.connect(profundidade);
       profundidade.connect(osc.detune);
@@ -2722,26 +2735,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       osc.stop(tempo + dur + 0.05);
     }
   }
-  function harmonicaDeVidro(saida, tempo, midi, duracao, volume = 0.05) {
-    voz(saida, tempo, midi, duracao, { forma: "sine", volume, ataque: 0.05, liberacao: 0.45, vibrato: 7 });
-    voz(saida, tempo, midi + 12, duracao, { forma: "sine", volume: volume * 0.22, ataque: 0.08, liberacao: 0.35 });
-    voz(saida, tempo, midi + 19, duracao * 0.6, { forma: "sine", volume: volume * 0.07, ataque: 0.1, liberacao: 0.25 });
-  }
   function marimba(saida, tempo, midi, volume = 0.05) {
     voz(saida, tempo, midi, 0.02, { forma: "sine", volume, ataque: 3e-3, liberacao: 0.45 });
     voz(saida, tempo, midi + 24, 0.01, { forma: "sine", volume: volume * 0.25, ataque: 2e-3, liberacao: 0.1 });
   }
-  function pizzicato(saida, tempo, midi, volume = 0.08) {
-    voz(saida, tempo, midi, 0.03, { forma: "triangle", volume, ataque: 4e-3, liberacao: 0.22, filtro: 1e3 });
-  }
-  function triangulo(saida, tempo, aberto, volume = 0.02) {
+  function triangulo(saida, tempo, aberto, volume = 0.02, ataque = 2e-3) {
     const dur = aberto ? 0.35 : 0.06;
     for (const [freq, peso] of [[2637, 1], [6900, 0.45], [9100, 0.25]]) {
       const a = saida.context, osc = a.createOscillator(), ganho = a.createGain();
       osc.type = "sine";
       osc.frequency.value = freq;
       ganho.gain.setValueAtTime(1e-4, tempo);
-      ganho.gain.exponentialRampToValueAtTime(volume * peso * (aberto ? 1 : 0.6), tempo + 2e-3);
+      ganho.gain.exponentialRampToValueAtTime(volume * peso * (aberto ? 1 : 0.6), tempo + ataque);
       ganho.gain.exponentialRampToValueAtTime(1e-4, tempo + dur);
       osc.connect(ganho);
       ganho.connect(saida);
@@ -2749,27 +2754,71 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       osc.stop(tempo + dur + 0.05);
     }
   }
-  function palmas(saida, tempo, volume = 0.05) {
-    chiado(saida, tempo, 0.09, { volume, filtro: 1400, tipo: "bandpass" });
-    chiado(saida, tempo + 0.012, 0.07, { volume: volume * 0.6, filtro: 1800, tipo: "bandpass" });
+  function coro(saida, tempo, notas2, duracao, volume = 0.018) {
+    for (const n of notas2) voz(saida, tempo, n, duracao, { forma: "sine", volume, ataque: duracao * 0.3, liberacao: duracao * 0.35, vibrato: 3 });
   }
-  function sanfona(saida, tempo, midi, duracao, volume = 0.03) {
-    voz(saida, tempo, midi, duracao, { forma: "sawtooth", volume, ataque: 0.015, liberacao: 0.08, filtro: 2400, vibrato: 6, desafinar: -7 });
-    voz(saida, tempo, midi, duracao, { forma: "square", volume: volume * 0.55, ataque: 0.015, liberacao: 0.08, filtro: 1900, desafinar: 7 });
+  function naFaixa(midi, minimo, maximo) {
+    while (midi < minimo) midi += 12;
+    while (midi > maximo) midi -= 12;
+    return midi;
   }
-  function coro(saida, tempo, notas, duracao, volume = 0.018) {
-    for (const n of notas) voz(saida, tempo, n, duracao, { forma: "sine", volume, ataque: duracao * 0.3, liberacao: duracao * 0.35, vibrato: 3 });
+  function violino(saida, tempo, midi, duracao, volume = 0.04, ataque = 0.09) {
+    const nota2 = naFaixa(midi, 55, 100);
+    const base = { forma: "sawtooth", ataque, liberacao: 0.22, filtro: 3400, vibrato: 14, vibratoHz: 5.5 };
+    voz(saida, tempo, nota2, duracao, { ...base, volume, desafinar: -6 });
+    voz(saida, tempo + 0.012, nota2, duracao, { ...base, volume: volume * 0.7, desafinar: 7 });
+  }
+  function violoncelo(saida, tempo, midi, duracao, volume = 0.06, ataque = 0.13) {
+    const nota2 = naFaixa(midi, 36, 81);
+    voz(saida, tempo, nota2, duracao, { forma: "sawtooth", volume, ataque, liberacao: 0.3, filtro: 1500, vibrato: 10, vibratoHz: 4.8, desafinar: -4 });
+    voz(saida, tempo, nota2, duracao, { forma: "triangle", volume: volume * 0.6, ataque, liberacao: 0.3, desafinar: 4 });
+  }
+  function fagote(saida, tempo, midi, duracao, volume = 0.05) {
+    const nota2 = naFaixa(midi, 34, 75);
+    voz(saida, tempo, nota2, duracao, { forma: "sawtooth", volume, ataque: 0.06, liberacao: 0.18, filtro: 950 });
+    voz(saida, tempo, nota2, duracao, { forma: "square", volume: volume * 0.32, ataque: 0.07, liberacao: 0.18, filtro: 700, desafinar: 3 });
+  }
+  function xilofone(saida, tempo, midi, volume = 0.05) {
+    for (const [razao, peso, dur] of [[1, 1, 0.42], [3, 0.38, 0.2], [6, 0.12, 0.08]]) {
+      const a = saida.context, osc = a.createOscillator(), ganho = a.createGain();
+      osc.type = "sine";
+      osc.frequency.value = hz(midi) * razao;
+      ganho.gain.setValueAtTime(1e-4, tempo);
+      ganho.gain.exponentialRampToValueAtTime(volume * peso, tempo + 2e-3);
+      ganho.gain.exponentialRampToValueAtTime(1e-4, tempo + dur);
+      osc.connect(ganho);
+      ganho.connect(saida);
+      osc.start(tempo);
+      osc.stop(tempo + dur + 0.05);
+    }
+    chiado(saida, tempo, 0.015, { volume: volume * 0.35, filtro: 3200, tipo: "bandpass", ataque: 1e-3 });
+  }
+  function flautaDePa(saida, tempo, midi, duracao, volume = 0.06) {
+    const nota2 = naFaixa(midi, 60, 96);
+    voz(saida, tempo, nota2, duracao, { forma: "sine", volume, ataque: 0.07, liberacao: 0.4, vibrato: 9, vibratoHz: 4 });
+    voz(saida, tempo, nota2 + 12, duracao, { forma: "sine", volume: volume * 0.12, ataque: 0.09, liberacao: 0.3 });
+    chiado(saida, tempo, Math.min(0.22, duracao), { volume: volume * 0.28, filtro: hz(nota2) * 2, tipo: "bandpass", ataque: 0.04 });
+  }
+  function abaixoNaEscala(midi, escala, graus = 2) {
+    let nota2 = midi, restante = graus;
+    while (restante > 0) {
+      nota2--;
+      if (escala.includes((nota2 % 12 + 12) % 12)) restante--;
+    }
+    return nota2;
   }
   function melodia(tabela, compasso, passo, tocarNota, d) {
     for (const [p, midi, n] of tabela[compasso % tabela.length]) if (p === passo) tocarNota(midi, d * n);
   }
   var MUSICAS = {
-    /* Menu: baião em Sol (com o Fá natural do mixolídio na parte B), para chamar para a mesa.
-       A: G G C D G Em D G · B: C D G Em C D F D. Zabumba no 3+3+2 do baião, baixo junto, triângulo
-       em semicolcheias (aberto nos contratempos), palmas no 2 e no 4, acordes de sanfona curtinhos nos
-       contratempos e o refrão na sanfona, com síncopes que grudam no ouvido. */
+    /* Menu: baião épico em Sol (com o Fá natural do mixolídio na parte B), para chamar para a mesa.
+       A: G G C D G Em D G · B: C D G Em C D F D. A melodia é a mesma de sempre (agora nos violinos,
+       com o violoncelo dobrando uma oitava abaixo no refrão), em andamento menor (100 bpm). No lugar
+       da sanfona, um colchão de cordas que respira por compasso (acorde aberto nos violinos, baixo no
+       violoncelo, mais forte na parte B); tímpano suave nos tempos fortes, zabumba só no contratempo
+       do 3+3+2, triângulo discreto e sem palmas. */
     menu: {
-      bpm: 118,
+      bpm: 100,
       tempos: 4,
       subdivisao: 4,
       balanco: 0.08,
@@ -2814,36 +2863,52 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       tocar(s, t, compasso, passo, acorde, sortear2, d) {
         const [r, a, b, c] = acorde;
         const meio = passo % 8;
-        if (meio === 0) {
-          tambor(s, t, { volume: 0.3, de: 105, para: 45, duracao: 0.35 });
-          voz(s, t, r, d * 2.6, { forma: "triangle", volume: 0.15, ataque: 0.01, liberacao: 0.08 });
+        const refrao = compasso % 16 >= 8, forca = refrao ? 1.25 : 1;
+        if (passo === 0) {
+          for (const n of [a, b, c]) {
+            violino(s, t, n, d * 15.5, 0.016 * forca, 0.45);
+            violino(s, t, n + 12, d * 15.5, 7e-3 * forca, 0.6);
+          }
+          violoncelo(s, t, r, d * 15.5, 0.085 * forca, 0.2);
         }
+        if (meio === 0) tambor(s, t, passo === 0 && compasso % 8 === 0 ? { volume: 0.34, de: 80, para: 32, duracao: 1.1 } : { volume: passo === 0 ? 0.22 : 0.18, de: 85, para: 38, duracao: 0.8 });
         if (meio === 3) {
-          tambor(s, t, { volume: 0.18, de: 95, para: 45, duracao: 0.25 });
-          voz(s, t, r, d * 2.6, { forma: "triangle", volume: 0.12, ataque: 0.01, liberacao: 0.08 });
+          tambor(s, t, { volume: 0.1, de: 95, para: 45, duracao: 0.25 });
+          voz(s, t, r, d * 2.6, { forma: "triangle", volume: 0.07, ataque: 0.01, liberacao: 0.08 });
         }
-        if (meio === 6) voz(s, t, passo < 8 ? r + 7 : r + 12, d * 1.8, { forma: "triangle", volume: 0.12, ataque: 0.01, liberacao: 0.06 });
-        triangulo(s, t, passo % 4 === 2, passo % 4 === 0 ? 0.022 : 0.016);
-        if (passo === 4 || passo === 12) palmas(s, t, 0.05);
-        if (passo % 4 === 2) for (const n of [a, b, c]) voz(s, t, n, d * 0.8, { forma: "sawtooth", volume: 0.012, ataque: 5e-3, liberacao: 0.05, filtro: 1600 });
+        if (meio === 6) voz(s, t, passo < 8 ? r + 7 : r + 12, d * 1.8, { forma: "triangle", volume: 0.08, ataque: 0.01, liberacao: 0.06 });
+        if (passo % 4 === 0) triangulo(s, t, false, 8e-3, 0.012);
+        else if (passo % 4 === 2) triangulo(s, t, true, 9e-3, 0.012);
         if (compasso % 8 === 7 && passo >= 12) tambor(s, t, { volume: 0.12 + (passo - 12) * 0.04, de: 160 - (passo - 12) * 15, para: 70, duracao: 0.18 });
-        if (compasso % 8 === 0 && passo === 0) chiado(s, t, 1.4, { volume: 0.03, filtro: 6e3 });
-        melodia(this.tema, compasso, passo, (nota2, dur) => sanfona(s, t, nota2, dur * 0.9, 0.034), d);
+        if (compasso % 8 === 0 && passo === 0) chiado(s, t, 1.8, { volume: 0.03, filtro: 6e3 });
+        melodia(this.tema, compasso, passo, (nota2, dur) => {
+          violino(s, t, nota2, dur * 0.95, 0.05 * forca);
+          if (refrao) violoncelo(s, t, nota2 - 12, dur * 0.95, 0.03);
+        }, d);
       }
     },
-    /* Planície (mesa neutra): blues lento em Mi, 12 compassos; o tema é cantado, com notas longas e
-       passos curtos, sobre baixo em mínimas, acordes macios e escovinha */
+    /* Planície (id `neutro`): blues lento em Mi, 12 compassos, todo acústico e bucólico. O tema vai em
+       dois violinos (o 2º faz a terça abaixo, na escala de Mi mixolídio) sobre violoncelo em mínimas
+       e fagote de apoio nos contratempos; sem percussão e com a mesma textura do 1º ao último
+       compasso. A introdução (compassos 1 a 4, uns 13 s) foi reescrita (#147): começa calma no Sol#,
+       sobe em arco pelas notas do próprio tema e desce em escala até o Si, de onde o compasso 5 (que
+       o professor aprovou, e segue igual) sobe para o Dó#. O Si longo do compasso 12 também desce
+       em terça para o Sol# do início, sem tranco na volta do laço. Clima de bosque calmo com cordas
+       como referência geral, sem copiar nota, melodia, progressão ou ritmo de nenhuma obra. */
     neutro: {
       bpm: 72,
       tempos: 4,
       subdivisao: 2,
       balanco: 0.22,
+      /* mesmo balanço de antes: o ritmo da melodia aprovada não muda */
       acordes: [40, 40, 40, 40, 45, 45, 40, 40, 47, 45, 40, 47].map((r) => [r, r + 4, r + 7, r + 10]),
       tema: [
-        [[0, 68, 3], [3, 71, 1], [4, 73, 2], [6, 71, 2]],
-        [[0, 68, 4], [4, 66, 2], [6, 64, 2]],
-        [[0, 68, 3], [3, 71, 1], [4, 73, 2], [6, 76, 2]],
-        [[0, 74, 4], [4, 73, 2], [6, 71, 2]],
+        /* introdução (nova) */
+        [[0, 68, 6], [6, 71, 2]],
+        [[0, 73, 4], [4, 71, 2], [6, 68, 2]],
+        [[0, 66, 3], [3, 68, 1], [4, 71, 4]],
+        [[0, 76, 2], [2, 74, 2], [4, 73, 2], [6, 71, 2]],
+        /* do compasso 5 em diante: a melodia que o professor aprovou, sem mudanças */
         [[0, 73, 3], [3, 76, 1], [4, 73, 2], [6, 69, 2]],
         [[0, 69, 6], [6, 68, 2]],
         [[0, 68, 3], [3, 71, 1], [4, 68, 2], [6, 66, 2]],
@@ -2855,20 +2920,16 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       ],
       tocar(s, t, compasso, passo, acorde, sortear2, d) {
         const r = acorde[0];
-        if (passo === 0 || passo === 4) voz(s, t, passo ? r + 7 : r, d * 3.6, { forma: "triangle", volume: 0.12, ataque: 0.02, liberacao: 0.3 });
-        if (passo === 2 || passo === 6) {
-          for (const n of acorde.slice(1)) voz(s, t, n + 12, d * 1.6, { forma: "sine", volume: 0.016, ataque: 0.03, liberacao: 0.4, vibrato: 3 });
-        }
-        if (passo % 2 === 1) chiado(s, t, 0.08, { volume: 0.012, filtro: 6e3 });
-        if (passo === 0) tambor(s, t, { volume: 0.07, de: 80, para: 48, duracao: 0.3 });
+        if (passo === 0 || passo === 4) violoncelo(s, t, (passo ? r + 7 : r) + 12, d * 3.6, 0.1);
+        if (passo === 2 || passo === 6) fagote(s, t, acorde[passo === 2 ? 2 : 3], d * 1.8, 0.04);
         melodia(this.tema, compasso, passo, (nota2, dur) => {
-          voz(s, t, nota2, dur * 0.95, { forma: "sine", volume: 0.065, ataque: 0.03, liberacao: 0.35, vibrato: 5 });
-          voz(s, t, nota2, dur * 0.95, { forma: "triangle", volume: 0.02, ataque: 0.03, liberacao: 0.3, filtro: 1800 });
+          violino(s, t, nota2, dur * 0.97, 0.06);
+          violino(s, t + 0.015, abaixoNaEscala(nota2, [4, 6, 8, 9, 11, 1, 2]), dur * 0.97, 0.042);
         }, d);
       }
     },
     /* Valsa em Sol, 3/4: baixo e coro ligados de um compasso ao outro (os repousos ficam cheios),
-       marimba ao fundo, tema cantado e o mar */
+       marimba ao fundo, tema na flauta-de-pã (timbre suave, com sopro) e o mar */
     oceano: {
       bpm: 63,
       tempos: 3,
@@ -2892,12 +2953,13 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
           coro(s, t, [a, b, c], d * 6.8, 0.016);
           if (compasso % 2 === 0) chiado(s, t, d * 10, { volume: 0.022, filtro: 600, tipo: "lowpass", ataque: d * 4 });
         }
-        if (passo >= 2) marimba(s, t, [a, b, c, b][passo - 2] + 12, 0.032);
-        melodia(this.tema, compasso, passo, (nota2, dur) => voz(s, t, nota2, dur * 0.98, { forma: "sine", volume: 0.07, ataque: 0.05, liberacao: 0.7, vibrato: 7 }), d);
+        if (passo >= 2) marimba(s, t, [a, b, c, b][passo - 2] + 12, 0.042);
+        melodia(this.tema, compasso, passo, (nota2, dur) => flautaDePa(s, t, nota2, dur * 0.98, 0.07), d);
       }
     },
     /* Épica em Lá menor: tema na trompa (macia, sem o ataque espetado da flauta), harpa ao fundo,
-       cordas em ostinato, metais sustentados e tambores que marcam os repousos do tema */
+       cordas em ostinato, metais sustentados, xilofone na percussão-base (sempre em notas do acorde,
+       para ficar na tonalidade) e tambores mais baixos que marcam os repousos do tema */
     montanha: {
       bpm: 84,
       tempos: 4,
@@ -2921,12 +2983,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         if (passo === 0) {
           for (const n of acorde.slice(1)) voz(s, t, n, d * 7.5, { forma: "sawtooth", volume: 0.016, filtro: 1200, ataque: 0.3, liberacao: 0.4 });
           voz(s, t, r - 12, d * 7.5, { forma: "triangle", volume: 0.15, ataque: 0.05, liberacao: 0.3 });
-          tambor(s, t, { volume: 0.32, de: 120, para: 40, duracao: 0.6 });
+          xilofone(s, t, r + 24, 0.05);
         }
-        if (passo === 4) tambor(s, t, { volume: 0.2, de: 120, para: 40, duracao: 0.5 });
+        if (passo === 4) xilofone(s, t, a + 12, 0.034);
         if (compasso % 4 === 3 && passo >= 6) {
-          tambor(s, t, { volume: 0.3, de: 150, para: 60, duracao: 0.35 });
-          tambor(s, t + d / 2, { volume: 0.24, de: 170, para: 70, duracao: 0.25 });
+          tambor(s, t, { volume: 0.21, de: 150, para: 60, duracao: 0.35 });
+          tambor(s, t + d / 2, { volume: 0.17, de: 170, para: 70, duracao: 0.25 });
         }
         if (compasso % 8 === 0 && passo === 0) chiado(s, t, 2.2, { volume: 0.04, filtro: 5e3 });
         melodia(this.tema, compasso, passo, (nota2, dur) => {
@@ -2935,38 +2997,43 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
         }, d);
       }
     },
-    /* Ré menor, no espírito da "Dança da Fada Açucarada" (Tchaikovsky), mais lenta: tema curto e
-       saltitante na harmônica de vidro, glockenspiel dobrando, pizzicato no baixo, órgão bem baixo e
-       um sino a cada quatro compassos */
+    /* Pântano, reconstruído a partir da 1ª versão (órgão, zumbido grave, sino, lamento e tambor
+       distante; Ré menor harmônico) em vez da dança de fada da 2ª, que lembrava demais a peça de
+       Tchaikovsky citada pelo professor. Mais lenta que as duas (54 bpm; a 1ª tinha 56 e a 2ª, 60). A
+       linha principal é um lamento de notas longas, com vibrato fundo e o Dó# sensível que nunca
+       resolve sozinho (misterioso, não "invasivo"); o glockenspiel virou apoio: só pontua o acorde ao
+       fundo, bem baixo; o tambor grave aparece de longe em longe */
     pantano: {
-      bpm: 60,
+      bpm: 54,
       tempos: 4,
       subdivisao: 2,
       balanco: 0,
-      acordes: [[38, 50, 53, 57], [33, 49, 52, 55], [38, 50, 53, 57], [43, 50, 55, 58], [43, 50, 55, 58], [38, 50, 53, 57], [33, 49, 52, 55], [38, 50, 53, 57]],
+      acordes: [[38, 50, 53, 57], [34, 50, 53, 58], [31, 50, 55, 58], [33, 49, 52, 57], [38, 50, 53, 57], [34, 50, 53, 58], [36, 48, 52, 55], [33, 49, 52, 57]],
       tema: [
-        [[0, 69, 1], [2, 65, 1], [3, 69, 1], [4, 68, 1], [6, 64, 2]],
-        [[0, 65, 1], [2, 64, 1], [3, 62, 1], [4, 61, 2], [6, 62, 2]],
-        [[0, 69, 1], [2, 65, 1], [3, 69, 1], [4, 68, 1], [6, 64, 2]],
-        [[0, 70, 1], [2, 69, 1], [3, 67, 1], [4, 65, 2], [6, 64, 2]],
-        [[0, 74, 1], [2, 70, 1], [3, 74, 1], [4, 73, 1], [6, 69, 2]],
-        [[0, 70, 1], [2, 69, 1], [3, 67, 1], [4, 65, 2], [6, 67, 2]],
-        [[0, 69, 1], [2, 73, 1], [3, 76, 1], [4, 73, 2], [6, 69, 2]],
-        [[0, 74, 2], [2, 69, 1], [3, 65, 1], [4, 62, 4]]
+        [[0, 69, 4], [4, 67, 2], [6, 65, 2]],
+        [[0, 65, 3], [3, 67, 1], [4, 70, 4]],
+        [[0, 67, 4], [4, 65, 2], [6, 62, 2]],
+        [[0, 64, 2], [2, 67, 2], [4, 73, 4]],
+        [[0, 74, 6], [6, 73, 2]],
+        [[0, 70, 4], [4, 69, 2], [6, 67, 2]],
+        [[0, 64, 4], [4, 67, 2], [6, 72, 2]],
+        [[0, 69, 2], [2, 65, 2], [4, 64, 2], [6, 73, 2]]
       ],
       tocar(s, t, compasso, passo, acorde, sortear2, d) {
-        const [r, a, b] = acorde;
-        if (passo % 2 === 0) pizzicato(s, t, passo % 4 ? r + 7 : r, 0.13);
+        const [r, a, b, c] = acorde;
         if (passo === 0) {
-          for (const n of acorde.slice(1)) voz(s, t, n, d * 7.6, { forma: "sine", volume: 0.02, ataque: 0.5, liberacao: 0.8 });
-          if (compasso % 4 === 0) sino(s, t, 62, 0.035);
+          for (const n of [a, b, c]) {
+            for (const [oitava, vol] of [[0, 0.03], [12, 0.012], [19, 6e-3]]) voz(s, t, n + oitava, d * 7.6, { forma: "sine", volume: vol, ataque: 0.8, liberacao: 0.9, desafinar: oitava ? 4 : 0 });
+          }
+          voz(s, t, r, d * 7.8, { forma: "sawtooth", volume: 0.04, filtro: 300, ataque: 0.9, liberacao: 0.9 });
+          if (compasso % 2 === 0) sino(s, t, 62, 0.05);
         }
-        if (passo === 3 || passo === 7) pizzicato(s, t, a + 12, 0.05);
+        if (compasso % 4 === 3 && passo === 4) tambor(s, t, { volume: 0.16, de: 70, para: 35, duracao: 1.2 });
+        if ((passo === 3 || passo === 7) && sortear2() < 0.55) glockenspiel(s, t, [a, b, c][Math.floor(sortear2() * 3)] + 24, 0.022);
         melodia(this.tema, compasso, passo, (nota2, dur) => {
-          harmonicaDeVidro(s, t, nota2 + 12, Math.min(dur, d * 1.6) * 0.8, 0.1);
-          glockenspiel(s, t, nota2 + 24, passo % 4 === 0 ? 0.07 : 0.045);
+          voz(s, t, nota2, dur * 0.95, { forma: "triangle", volume: 0.065, ataque: 0.2, liberacao: 1, vibrato: 14 });
+          voz(s, t, nota2 - 12, dur * 0.95, { forma: "sine", volume: 0.018, ataque: 0.25, liberacao: 1, vibrato: 10 });
         }, d);
-        if (passo === 6 && compasso % 2 === 1) voz(s, t, b - 12, d * 1.8, { forma: "sawtooth", volume: 0.02, filtro: 500, ataque: 0.05, liberacao: 0.3 });
       }
     }
   };
@@ -3277,6 +3344,18 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     convergencia: svg('<path d="M4 12c5 0 7 14 12 14s6-9 10-9 6 22 12 22 5-17 6-19V44H4z" fill="#b48cff" opacity=".3"/><path d="M4 12c5 0 7 14 12 14s6-9 10-9 6 22 12 22 5-17 6-19" fill="none" stroke="' + I + '" stroke-width="2.4"/><circle cx="16" cy="22.4" r="2.4" fill="#c9bc9f" stroke="' + I + '" stroke-width="1.4"/><circle cx="38" cy="34.6" r="3.6" fill="#ff6fb1" stroke="' + I + '" stroke-width="1.6"/><path d="M38 15l1.7 4.3 4.3 1.7-4.3 1.7L38 27l-1.7-4.3-4.3-1.7 4.3-1.7z" fill="#fff6c8" stroke="' + I + '" stroke-width="1.2"/>')
   };
   var ICONE_CADEADO = svg('<rect x="12" y="21" width="24" height="19" rx="3" fill="#6b5a40" stroke="' + I + '" stroke-width="2"/><path d="M17 21v-5a7 7 0 0114 0v5" fill="none" stroke="' + I + '" stroke-width="3"/><circle cx="24" cy="30" r="2.6" fill="#24140a"/>');
+  var alto = '<path d="M7 19h8l11-9v28l-11-9H7z" fill="currentColor" stroke="currentColor" stroke-width="2"/>';
+  var notas = '<ellipse cx="14" cy="36" rx="6.5" ry="4.8" fill="currentColor" transform="rotate(-18 14 36)"/><ellipse cx="32" cy="32" rx="6.5" ry="4.8" fill="currentColor" transform="rotate(-18 32 32)"/><path d="M19.5 34V11M37.5 30V7" stroke="currentColor" stroke-width="3"/><path d="M19.5 11l18-4v7l-18 4z" fill="currentColor"/>';
+  var corte = '<path d="M6 6l36 36" stroke="currentColor" stroke-width="4.5"/>';
+  var svgDeSom = function(corpo) {
+    return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">' + corpo + "</svg>";
+  };
+  var ICONES_DE_SOM = {
+    efeitosLigado: svgDeSom(alto + '<path d="M32 18c3 3.5 3 8.5 0 12M37 13c6 7 6 15 0 22" stroke="currentColor" stroke-width="3"/>'),
+    efeitosDesligado: svgDeSom(alto + '<path d="M32 19l10 10M42 19L32 29" stroke="currentColor" stroke-width="3"/>' + corte),
+    musicaLigada: svgDeSom(notas),
+    musicaDesligada: svgDeSom(notas + corte)
+  };
   var ICONES_DAS_ACOES = {
     /* seta da camada atual para o neurônio destacado da próxima camada */
     avancar: svg('<path d="M13 14L31 24M13 34L31 24" stroke="#f6dc8f" stroke-width="1.6" opacity=".6"/><circle cx="37" cy="24" r="10" fill="#f6dc8f" opacity=".4"/><g fill="#fff6dc" stroke="' + I + '" stroke-width="2"><circle cx="9" cy="14" r="4.5"/><circle cx="9" cy="34" r="4.5"/></g><circle cx="37" cy="24" r="6.5" fill="#ffb347" stroke="' + I + '" stroke-width="2"/><path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="' + I + '" stroke-width="6"/><path d="M14 24h12M21.5 18.5l5.5 5.5-5.5 5.5" fill="none" stroke="#fff6dc" stroke-width="3"/>'),
@@ -3641,8 +3720,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.22.1";
-  var DATA_DA_VERSAO = "2026-11-20";
+  var VERSAO = "2.23.0";
+  var DATA_DA_VERSAO = "2026-11-21";
 
   // src/aplicacao.js
   var OPCOES_PADRAO = {
@@ -3684,6 +3763,8 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     dicasLigadas: false,
     /** Partida online em andamento: `{ sala }` (ver src/online/sala.js), ou null. */
     online: null,
+    /** Quem quer saber quando efeitos ou música ligam e desligam (botões de ícone, janela MENU). */
+    ouvintesDeAudio: /* @__PURE__ */ new Set(),
     /** Carrega opções e preferência de som. */
     iniciar() {
       if (!this.progresso.musicaEscolhida) this.progresso.musica = true;
@@ -3722,12 +3803,31 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       this.progresso.opcoes = this.opcoes;
       this.salvar();
     },
+    /**
+     * Passa a ser avisado quando os efeitos sonoros ou a música ligam ou desligam, de onde vier a
+     * mudança (ícone do menu, ícone da mesa ou janela MENU). Devolve a função que cancela o aviso.
+     * @param {() => void} ouvinte
+     */
+    aoMudarAudio(ouvinte) {
+      this.ouvintesDeAudio.add(ouvinte);
+      return () => this.ouvintesDeAudio.delete(ouvinte);
+    },
+    /** Avisa os ouvintes de que o estado do áudio mudou (um que falhe não impede os outros). */
+    avisarMudancaDeAudio() {
+      for (const ouvinte of [...this.ouvintesDeAudio]) {
+        try {
+          ouvinte();
+        } catch (e) {
+        }
+      }
+    },
     /** Liga ou desliga o som e lembra a escolha. */
     alternarSom() {
       this.progresso.mudo = !Som.estaMudo();
       Som.definirMudo(this.progresso.mudo);
       this.salvar();
       registrarEvento(EVENTOS.audio, { tipo: "som", ligado: this.progresso.mudo ? 0 : 1 });
+      this.avisarMudancaDeAudio();
     },
     /**
      * Liga ou desliga a música de fundo e lembra a escolha.
@@ -3740,6 +3840,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       registrarEvento(EVENTOS.audio, { tipo: "musica", ligado: this.progresso.musica ? 1 : 0 });
       if (this.progresso.musica && terreno) Musica.tocar(terreno);
       else Musica.parar();
+      this.avisarMudancaDeAudio();
     },
     /** Sai do menu e abre a mesa. */
     jogar() {
@@ -6355,6 +6456,19 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       imagem.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg3.replace("<svg ", '<svg width="128" height="128" '));
     }
   }
+  function carregarIconesDeSom(cena, cor, aoCarregar) {
+    for (const [nome, svg3] of Object.entries(ICONES_DE_SOM)) {
+      const chave = "icone-som:" + nome;
+      if (cena.textures.exists(chave) || typeof Image === "undefined") continue;
+      const imagem = new Image(96, 96);
+      imagem.onload = () => {
+        if (!cena.sys || !cena.textures) return;
+        if (!cena.textures.exists(chave)) cena.textures.addImage(chave, imagem);
+        if (aoCarregar) aoCarregar(nome);
+      };
+      imagem.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg3.replace("<svg ", '<svg width="96" height="96" ').replaceAll("currentColor", cor));
+    }
+  }
 
   // src/arte/cartasDeTerreno.js
   function desenharCartaDeTerreno(terreno, S) {
@@ -8178,6 +8292,47 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     if (chance >= limiar) return "aceitar";
     if (Math.random() < 0.08) return "aceitar";
     return "correr";
+  }
+
+  // src/interface/controlesDeSom.js
+  var CONTROLES_DE_SOM = {
+    som: { rotulo: "Efeitos sonoros", ligar: "Ligar efeitos sonoros", desligar: "Desligar efeitos sonoros", ligado: "efeitosLigado", desligadoIcone: "efeitosDesligado" },
+    musica: { rotulo: "M\xFAsica", ligar: "Ligar m\xFAsica", desligar: "Desligar m\xFAsica", ligado: "musicaLigada", desligadoIcone: "musicaDesligada" }
+  };
+  function controleLigado(progresso, chave) {
+    return chave === "som" ? !progresso.mudo : !!progresso.musica;
+  }
+  function htmlDosControlesDeSom() {
+    const botao = (chave) => {
+      const c = CONTROLES_DE_SOM[chave];
+      return '<button type="button" class="botao botao-icone" data-controle="' + chave + '" aria-label="' + c.rotulo + '" aria-pressed="true" title="' + c.desligar + '"><span class="icone-som" aria-hidden="true">' + ICONES_DE_SOM[c.ligado] + "</span></button>";
+    };
+    return '<div class="controles-de-som" role="group" aria-label="Som">' + botao("som") + botao("musica") + "</div>";
+  }
+  function ligarControlesDeSom(raiz2, app, terrenoDaMusica) {
+    const botoes = [...raiz2.querySelectorAll("[data-controle]")];
+    const atualizar = () => {
+      for (const botao of botoes) {
+        const chave = botao.dataset.controle, c = CONTROLES_DE_SOM[chave], ligado = controleLigado(app.progresso, chave);
+        botao.setAttribute("aria-pressed", ligado ? "true" : "false");
+        botao.title = ligado ? c.desligar : c.ligar;
+        botao.querySelector(".icone-som").innerHTML = ICONES_DE_SOM[ligado ? c.ligado : c.desligadoIcone];
+      }
+    };
+    const parar = app.aoMudarAudio(() => {
+      if (!raiz2.isConnected) parar();
+      else atualizar();
+    });
+    for (const botao of botoes) {
+      botao.addEventListener("click", () => {
+        Som.desbloquear();
+        if (botao.dataset.controle === "som") app.alternarSom();
+        else app.alternarMusica(terrenoDaMusica);
+        atualizar();
+      });
+    }
+    atualizar();
+    return parar;
   }
 
   // src/nucleo/truco.js
@@ -10285,13 +10440,14 @@ export default function (Motor) {
     "m-sobre": "sobre"
   };
   function htmlDoMenu(opcoes) {
-    return '<div class="menu"><section class="menu-capa"><h1><span class="menu-emblema" aria-hidden="true">' + EMBLEMA_SVG + '</span>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><p class="menu-conta" id="m-conta" role="status" hidden></p><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div></div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
+    return '<div class="menu"><section class="menu-capa"><h1><span class="menu-emblema" aria-hidden="true">' + EMBLEMA_SVG + '</span>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><p class="menu-conta" id="m-conta" role="status" hidden></p><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div>' + htmlDosControlesDeSom() + '</div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
   }
   function abrirMenu(app) {
     app.opcoes = normalizarOpcoes(app.opcoes);
     const painel = abrirPainel(htmlDoMenu(app.opcoes), { transparente: true });
     const elemento = painel.elemento;
     const campo = (id) => elemento.querySelector("#" + id);
+    ligarControlesDeSom(elemento, app, "menu");
     function atualizarDicas() {
       const n = Number(campo("m-jogadores").value);
       const humanos = Math.min(n, Number(campo("m-humanos").value) || 1);
@@ -10567,10 +10723,10 @@ export default function (Motor) {
       texto.setFontSize(t);
     }
     if (texto.width > larguraMax) {
-      let corte = conteudo;
-      while (corte.length > 1 && texto.width > larguraMax) {
-        corte = corte.slice(0, -1);
-        texto.setText(corte.trimEnd() + "\u2026");
+      let corte2 = conteudo;
+      while (corte2.length > 1 && texto.width > larguraMax) {
+        corte2 = corte2.slice(0, -1);
+        texto.setText(corte2.trimEnd() + "\u2026");
       }
     }
     return texto;
@@ -10592,6 +10748,7 @@ export default function (Motor) {
 
   // src/cenas/mesa/cenario.js
   var COR_ROTULO = { ouro: "#2a1606", vinho: "#fff0e0", pedra: "#f6ecd6" };
+  var BOTAO_DE_SOM = { lado: 32, y: 26, margem: 12 };
   var TEMPO_DE_SEGURAR = 450;
   var metodosDoCenario = {
     /** Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. */
@@ -10779,6 +10936,7 @@ export default function (Motor) {
         this.inspecionar("terreno-" + this.opcoes.terreno, t.nome + ": " + t.resumo);
       });
       p.dica = this.criarTexto(PAINEL_ESQ.x + 14, ESQ.dica, "", { fontSize: "13.5px", color: "#efe3c6", wordWrap: { width: PAINEL_ESQ.l - 28 }, lineSpacing: 1 });
+      this.criarBotoesDeSom(p);
       const lb = (PAINEL_ESQ.l - 28 - 10) / 2, pedra = { tamanho: 17, variante: "pedra" };
       p.botaoRegras = this.criarBotao(PAINEL_ESQ.x + 14 + lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, "REGRAS", () => this.abrirRegrasDaMesa(), pedra);
       p.botaoMenu = this.criarBotao(PAINEL_ESQ.x + PAINEL_ESQ.l - 14 - lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, "MENU", () => this.abrirMenuDaMesa(), pedra);
@@ -10894,11 +11052,45 @@ export default function (Motor) {
       p.botaoPassar = p.acoes.passar;
     },
     /**
+     * Botões de ícone de efeitos sonoros e música (issue #133), nos cantos de cima do painel
+     * esquerdo, onde não cobrem o título, a carta de inspeção nem os botões de ação. Mostram o estado
+     * atual (ver `atualizarChaves`) e se atualizam também quando a janela MENU muda o áudio.
+     */
+    criarBotoesDeSom(p) {
+      const lado = BOTAO_DE_SOM.lado, y = BOTAO_DE_SOM.y;
+      const criar = (chave, x) => {
+        const c = CONTROLES_DE_SOM[chave];
+        const botao = this.criarBotao(x, y, lado, lado, "", () => chave === "som" ? this.app.alternarSom() : this.app.alternarMusica(this.opcoes.terreno), {
+          variante: "pedra",
+          explicar: () => (controleLigado(this.app.progresso, chave) ? c.desligar : c.ligar) + "."
+        });
+        botao.chaveDeSom = chave;
+        botao.icone = this.add.image(0, 0, "__DEFAULT").setDisplaySize(lado * 0.64, lado * 0.64).setVisible(false);
+        botao.add(botao.icone);
+        return botao;
+      };
+      p.botaoEfeitos = criar("som", PAINEL_ESQ.x + BOTAO_DE_SOM.margem + lado / 2);
+      p.botaoMusica = criar("musica", PAINEL_ESQ.x + PAINEL_ESQ.l - BOTAO_DE_SOM.margem - lado / 2);
+      carregarIconesDeSom(this, COR_ROTULO.pedra, () => this.atualizarIconesDeSom());
+      this.atualizarIconesDeSom();
+    },
+    /** Põe em cada botão de som o ícone do estado atual (se a textura já chegou). */
+    atualizarIconesDeSom() {
+      const p = this.painel;
+      if (!p || !p.botaoEfeitos) return;
+      for (const botao of [p.botaoEfeitos, p.botaoMusica]) {
+        const c = CONTROLES_DE_SOM[botao.chaveDeSom];
+        const chave = "icone-som:" + (controleLigado(this.app.progresso, botao.chaveDeSom) ? c.ligado : c.desligadoIcone);
+        if (this.textures.exists(chave)) botao.icone.setTexture(chave).setDisplaySize(BOTAO_DE_SOM.lado * 0.64, BOTAO_DE_SOM.lado * 0.64).setVisible(true);
+      }
+    },
+    /**
      * Atualiza os rótulos das chaves (som, música e dicas) nas janelas REGRAS e MENU, se abertas.
      * O botão REGRAS ganha uma estrela quando as dicas estão ligadas.
      */
     atualizarChaves() {
       this.painel.botaoRegras.definirRotulo(this.app.dicasLigadas ? "REGRAS \u2605" : "REGRAS");
+      this.atualizarIconesDeSom();
       const rotulos = {
         som: Som.estaMudo() ? "Som: n\xE3o" : "Som: sim",
         musica: this.app.progresso.musica ? "M\xFAsica: sim" : "M\xFAsica: n\xE3o",
@@ -12936,8 +13128,8 @@ export default function (Motor) {
         html += "<tr><td>" + escaparHtml(nomeCamada(c, total)) + "</td>" + pontuacoes.map((p) => {
           const x = p.neuronios.find((n) => n.camada === c);
           if (!x) return '<td class="vazio">\u2014</td>';
-          const notas = x.notas.length ? " <small>(" + escaparHtml(x.notas.join(", ")) + ")</small>" : "";
-          return "<td><b>" + escaparHtml(rotuloCarta(x.carta)) + "</b> " + x.pontos + notas + "</td>";
+          const notas2 = x.notas.length ? " <small>(" + escaparHtml(x.notas.join(", ")) + ")</small>" : "";
+          return "<td><b>" + escaparHtml(rotuloCarta(x.carta)) + "</b> " + x.pontos + notas2 + "</td>";
         }).join("") + "</tr>";
       }
       html += '<tr class="soma"><td>Combos</td>' + pontuacoes.map((p) => "<td>" + (p.combos.length ? p.combos.map((k) => escaparHtml(k.rotulo)).join("<br>") : "\u2014") + "</td>").join("") + "</tr>";
@@ -13594,8 +13786,12 @@ export default function (Motor) {
       this.camadaSelecao = this.add.graphics().setDepth(11);
       this.criarPaineis();
       this.input.keyboard?.on("keydown-ESC", () => this.cancelarSelecao());
+      const pararDeOuvirOAudio = this.app.aoMudarAudio(() => {
+        if (!this.encerrada) this.atualizarChaves();
+      });
       this.events.once("shutdown", () => {
         this.encerrada = true;
+        pararDeOuvirOAudio();
         esconderDicaFlutuante();
         Musica.parar();
       });
