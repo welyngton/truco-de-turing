@@ -58,6 +58,8 @@ export const Aplicacao = {
   dicasLigadas: false,
   /** Partida online em andamento: `{ sala }` (ver src/online/sala.js), ou null. */
   online: null,
+  /** Quem quer saber quando efeitos ou música ligam e desligam (botões de ícone, janela MENU). */
+  ouvintesDeAudio: new Set(),
 
   /** Carrega opções e preferência de som. */
   iniciar() {
@@ -96,12 +98,28 @@ export const Aplicacao = {
   /** Grava as escolhas do menu para a próxima visita. */
   salvarOpcoes() { this.progresso.opcoes = this.opcoes; this.salvar(); },
 
+  /**
+   * Passa a ser avisado quando os efeitos sonoros ou a música ligam ou desligam, de onde vier a
+   * mudança (ícone do menu, ícone da mesa ou janela MENU). Devolve a função que cancela o aviso.
+   * @param {() => void} ouvinte
+   */
+  aoMudarAudio(ouvinte) {
+    this.ouvintesDeAudio.add(ouvinte);
+    return () => this.ouvintesDeAudio.delete(ouvinte);
+  },
+
+  /** Avisa os ouvintes de que o estado do áudio mudou (um que falhe não impede os outros). */
+  avisarMudancaDeAudio() {
+    for (const ouvinte of [...this.ouvintesDeAudio]) { try { ouvinte(); } catch (e) { /* uma tela fechada não pode travar o som */ } }
+  },
+
   /** Liga ou desliga o som e lembra a escolha. */
   alternarSom() {
     this.progresso.mudo = !Som.estaMudo();
     Som.definirMudo(this.progresso.mudo);
     this.salvar();
     registrarEvento(EVENTOS.audio, { tipo: 'som', ligado: this.progresso.mudo ? 0 : 1 });
+    this.avisarMudancaDeAudio();
   },
 
   /**
@@ -114,6 +132,7 @@ export const Aplicacao = {
     this.salvar();
     registrarEvento(EVENTOS.audio, { tipo: 'musica', ligado: this.progresso.musica ? 1 : 0 });
     if (this.progresso.musica && terreno) Musica.tocar(terreno); else Musica.parar();
+    this.avisarMudancaDeAudio();
   },
 
   /** Sai do menu e abre a mesa. */

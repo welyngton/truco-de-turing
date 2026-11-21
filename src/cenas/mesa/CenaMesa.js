@@ -81,7 +81,9 @@ export class CenaMesa extends Phaser.Scene {
     this.criarPaineis();
 
     this.input.keyboard?.on('keydown-ESC', () => this.cancelarSelecao());
-    this.events.once('shutdown', () => { this.encerrada = true; esconderDicaFlutuante(); Musica.parar(); });
+    /* efeitos e música mudam também pela janela MENU: os ícones do painel acompanham */
+    const pararDeOuvirOAudio = this.app.aoMudarAudio(() => { if (!this.encerrada) this.atualizarChaves(); });
+    this.events.once('shutdown', () => { this.encerrada = true; pararDeOuvirOAudio(); esconderDicaFlutuante(); Musica.parar(); });
     this.historicoDaPartida = [];
     if (this.app.progresso.musica) Musica.tocar(this.opcoes.terreno);
     const comecar = () => this.iniciarMao();

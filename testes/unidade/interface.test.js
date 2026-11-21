@@ -13,6 +13,7 @@ const paineis = await import('../../src/interface/paineis.js');
 const { Som, contextoDeAudio } = await import('../../src/interface/som.js');
 const { Musica, MUSICAS, TRILHAS, gravarTrilha } = await import('../../src/interface/musica.js');
 const { abrirMenu } = await import('../../src/interface/menu.js');
+const { ICONES_DE_SOM } = await import('../../src/arte/icones.js');
 const { abrirAvatares } = await import('../../src/interface/telas/avatares.js');
 const { abrirRegras } = await import('../../src/interface/telas/regras.js');
 const { abrirGrimorio, htmlDoVerbete } = await import('../../src/interface/telas/grimorio.js');
@@ -33,6 +34,8 @@ const { pontuarRede } = await import('../../src/nucleo/pontuacao.js');
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const clicar = (el) => el.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+/** O SVG como o jsdom o devolve (a serialização dele difere da string original em detalhes como `<path/>`). */
+const comoNoDom = (svg) => { const caixa = document.createElement('div'); caixa.innerHTML = svg; return caixa.innerHTML; };
 
 beforeEach(() => { paineis.fecharTodos(); paineis.limparAvisosDeConquista(); $('#avisos').innerHTML = ''; paineis.esconderDicaFlutuante(); });
 
@@ -206,9 +209,9 @@ describe('som.js e musica.js', () => {
       }
     }
   });
-  it('trilha do menu: baião animado (andamento, percussão em todo tempo, refrão em duas partes)', () => {
+  it('trilha do menu: baião épico (andamento menor, cordas no lugar da sanfona, refrão em duas partes) (#145)', () => {
     const m = MUSICAS.menu, passos = m.tempos * m.subdivisao;
-    assert.ok(m.bpm >= 110, 'andamento animado');
+    assert.ok(m.bpm >= 90 && m.bpm <= 105, 'andamento mais lento que os 118 bpm de antes');
     assert.equal(m.acordes.length, 16, 'partes A e B de 8 compassos');
     assert.ok(m.acordes.some(([r]) => r % 12 === 5), 'o Fá natural do mixolídio na parte B');
     /* todo tempo do compasso tem percussão (zabumba, palmas ou triângulo) */
@@ -248,6 +251,11 @@ describe('telas', () => {
     salvo: 0, salvar() { this.salvo++; }, salvarOpcoes() { this.salvo++; },
     marcarVerbeteLido(id) { this.progresso.lidos[id] = true; },
     jogou: 0, jogar() { this.jogou++; },
+    /* áudio, como na Aplicacao: alterna o estado e avisa quem ouve */
+    ouvintesDeAudio: new Set(),
+    aoMudarAudio(f) { this.ouvintesDeAudio.add(f); return () => this.ouvintesDeAudio.delete(f); },
+    alternarSom() { this.progresso.mudo = !this.progresso.mudo; this.ouvintesDeAudio.forEach((f) => f()); },
+    alternarMusica(terreno) { this.progresso.musica = !this.progresso.musica; this.ultimaMusica = terreno; this.ouvintesDeAudio.forEach((f) => f()); },
   });
   it('menu: mostra as escolhas, lê as mudanças, atualiza as miniaturas e abre cada tela', () => {
     const app = appFalso();
@@ -268,6 +276,51 @@ describe('telas', () => {
     assert.equal(app.jogou, 1);
   });
 
+  it('menu: botões de ícone de efeitos e música mostram o estado, alternam com um clique e acompanham a aplicação (#133)', () => {
+    const app = appFalso();
+    app.progresso.mudo = false; app.progresso.musica = true;
+    abrirMenu(app);
+    const efeitos = $('.controles-de-som [data-controle="som"]'), musica = $('.controles-de-som [data-controle="musica"]');
+    assert.ok(efeitos && musica, 'os dois botões estão no menu');
+    assert.equal($$('.controles-de-som [data-controle]').length, 2);
+    /* estado inicial vem do progresso (efeitos: !mudo; música: musica), com ícone e texto da ação */
+    assert.equal(efeitos.getAttribute('aria-pressed'), 'true');
+    assert.equal(efeitos.title, 'Desligar efeitos sonoros');
+    assert.equal(musica.getAttribute('aria-pressed'), 'true');
+    assert.equal(musica.title, 'Desligar música');
+    assert.equal(efeitos.querySelector('.icone-som').innerHTML, comoNoDom(ICONES_DE_SOM.efeitosLigado));
+    assert.equal(musica.querySelector('.icone-som').innerHTML, comoNoDom(ICONES_DE_SOM.musicaLigada));
+    /* clicar alterna só o seu lado, e chama a música com a trilha do menu */
+    clicar(efeitos);
+    assert.equal(app.progresso.mudo, true);
+    assert.equal(efeitos.getAttribute('aria-pressed'), 'false');
+    assert.equal(efeitos.title, 'Ligar efeitos sonoros');
+    assert.equal(efeitos.querySelector('.icone-som').innerHTML, comoNoDom(ICONES_DE_SOM.efeitosDesligado));
+    assert.equal(musica.getAttribute('aria-pressed'), 'true', 'a música não mudou');
+    clicar(musica);
+    assert.equal(app.progresso.musica, false);
+    assert.equal(app.ultimaMusica, 'menu');
+    assert.equal(musica.title, 'Ligar música');
+    assert.equal(musica.querySelector('.icone-som').innerHTML, comoNoDom(ICONES_DE_SOM.musicaDesligada));
+    /* a mudança que vem de outro lugar (janela MENU da mesa, por exemplo) também atualiza os ícones */
+    app.alternarSom();
+    assert.equal(efeitos.getAttribute('aria-pressed'), 'true');
+    app.alternarMusica();
+    assert.equal(musica.getAttribute('aria-pressed'), 'true');
+    /* depois que o menu fecha, o ouvinte se solta sozinho */
+    paineis.fecharTodos();
+    assert.equal(app.ouvintesDeAudio.size, 1);
+    app.alternarSom();
+    assert.equal(app.ouvintesDeAudio.size, 0);
+  });
+  it('menu: com efeitos desligados e música desligada no progresso, os botões abrem no estado certo', () => {
+    const app = appFalso();
+    app.progresso.mudo = true; app.progresso.musica = false;
+    abrirMenu(app);
+    assert.equal($('[data-controle="som"]').getAttribute('aria-pressed'), 'false');
+    assert.equal($('[data-controle="musica"]').getAttribute('aria-pressed'), 'false');
+    assert.equal($('[data-controle="som"] svg').outerHTML.includes('M6 6l36 36'), true);
+  });
   it('menu: cada botão e cada escolha viram eventos das estatísticas (com a medição ligada)', async () => {
     const { JSDOM } = await import('jsdom');
     const analise = await import('../../src/interface/analise.js');
@@ -529,6 +582,23 @@ describe('aplicacao.js', () => {
     assert.ok(Som.estaMudo());
     Aplicacao.alternarSom();
     assert.ok(!Som.estaMudo());
+  });
+  it('aoMudarAudio avisa quando efeitos ou música mudam, de onde vier a mudança, e dá para parar de ouvir (#133)', () => {
+    const avisos = [];
+    const parar = Aplicacao.aoMudarAudio(() => avisos.push('x'));
+    const antes = Aplicacao.progresso.mudo;
+    Aplicacao.alternarSom();
+    assert.equal(avisos.length, 1);
+    Aplicacao.alternarMusica();
+    assert.equal(avisos.length, 2);
+    Aplicacao.aoMudarAudio(() => { throw new Error('tela fechada'); });
+    assert.doesNotThrow(() => Aplicacao.alternarSom(), 'um ouvinte que falha não trava o som');
+    assert.equal(avisos.length, 3, 'os outros ouvintes ainda recebem');
+    parar();
+    Aplicacao.alternarSom();
+    assert.equal(avisos.length, 3);
+    Aplicacao.ouvintesDeAudio.clear();
+    Aplicacao.progresso.mudo = antes; Som.definirMudo(!!antes);
   });
   it('salvarOpcoes, alternarMusica (liga com terreno, desliga sem)', () => {
     Aplicacao.opcoes.baralho = 'yinyang';
