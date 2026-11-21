@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.23.1 — 2026-11-21
+
+- Tutorial com o Percy e ajustes do menu (#118 a #121, #137 a #143) ([#159](https://github.com/welyngton/truco-de-turing/pull/159), por [@welyngton](https://github.com/welyngton))
+
 ## 2.23.0 — 2026-11-21
 
 - feat: áudio e trilhas sonoras: timbres, trilhas, ícones e botões de som (#157) ([#158](https://github.com/welyngton/truco-de-turing/pull/158), por [@welyngton](https://github.com/welyngton))

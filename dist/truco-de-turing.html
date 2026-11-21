@@ -512,7 +512,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
   .camada, .folha, .aviso, .trofeu, .folha.vitoria, .aviso.aviso-conquista.especial { animation: none; }
 }
 
-/* Glossário: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
+/* Livro de conceitos: verbetes de Ação (ideia, matemática para se aprofundar, autoria), com a matemática para se aprofundar */
 .grimorio-verbete .aprofundar { margin-top: 14px; border-top: 1px solid rgba(43, 22, 8, 0.2); padding-top: 4px; }
 .grimorio-verbete .aprofundar h3 { margin: 8px 0 4px; }
 .grimorio-verbete .aprofundar .formula { margin: 10px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
@@ -613,6 +613,48 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .faixa-estatisticas-botoes { display: flex; gap: 6px; flex: none; }
 @media (max-width: 560px) { .faixa-estatisticas { flex-direction: column; align-items: stretch; } }
 .estatisticas-situacao { font-weight: 600; }
+
+/* ---- Assistente Percy (tutorial) ---- */
+#assistente { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
+.assistente-escuro { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .2s; opacity: 0; }
+.assistente-aneis { position: absolute; inset: 0; pointer-events: none; }
+.assistente-anel { position: absolute; border: 3px solid #f6dc8f; border-radius: 10px; box-shadow: 0 0 14px 2px rgba(246, 220, 143, .75); animation: assistente-pulso 1.1s ease-in-out infinite; pointer-events: none; }
+@keyframes assistente-pulso { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.025); } }
+.assistente-balao {
+  position: absolute; box-sizing: border-box; pointer-events: auto; padding: 10px 12px 10px;
+  background: var(--pergaminho); color: var(--tinta); border: 2px solid var(--latao); border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .5); font-family: var(--fonte-texto); font-size: 14px; line-height: 1.3;
+}
+.assistente-balao[hidden] { display: none; }
+.assistente-topo { display: flex; align-items: center; gap: 8px; }
+.assistente-retrato { width: 44px; height: 44px; flex: none; border-radius: 50%; }
+.assistente-nome { font-family: var(--fonte-titulo); font-size: 15px; flex: 1; min-width: 0; }
+.assistente-pular { margin-right: auto; background: none; border: 0; padding: 4px 2px; font: inherit; font-size: 12px; color: #6e1420; text-decoration: underline; cursor: pointer; }
+.assistente-texto { margin: 6px 0 8px; }
+.assistente-botoes { display: flex; gap: 6px 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.assistente-botoes .botao { margin: 0; }
+.assistente-seta { position: absolute; width: 14px; height: 14px; background: var(--pergaminho); border: 2px solid var(--latao); transform: rotate(45deg); }
+.assistente-seta[hidden] { display: none; }
+.assistente-seta.para-cima { top: -9px; border-right: 0; border-bottom: 0; margin-left: -7px; }
+.assistente-seta.para-baixo { bottom: -9px; border-left: 0; border-top: 0; margin-left: -7px; }
+.assistente-seta.para-esquerda { left: -9px; border-top: 0; border-right: 0; margin-top: -7px; }
+.assistente-seta.para-direita { right: -9px; border-bottom: 0; border-left: 0; margin-top: -7px; }
+.assistente-balao.sacudindo { animation: assistente-sacode .35s; }
+@keyframes assistente-sacode { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+@media (max-height: 420px) {
+  .assistente-balao { padding: 6px 8px; font-size: 12px; line-height: 1.25; }
+  .assistente-retrato { width: 30px; height: 30px; }
+  .assistente-nome { font-size: 12px; }
+  .assistente-texto { margin: 4px 0 6px; }
+  .assistente-pular { font-size: 10.5px; }
+}
+
+/* Caixa do tutorial no topo de "Como jogar" (menu inicial) */
+.caixa-do-tutorial { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 10px 12px; border: 2px solid var(--latao-suave); border-radius: 10px; background: rgba(217, 178, 96, .18); }
+.caixa-do-tutorial > div { flex: 1; min-width: 0; }
+.caixa-do-tutorial p { margin: 2px 0 0; font-size: 14px; }
+.caixa-do-tutorial .botao { flex: none; margin: 0; }
+@media (max-width: 520px) { .caixa-do-tutorial { flex-wrap: wrap; } .caixa-do-tutorial .botao { width: 100%; } }
 
 </style>
 <!-- /empacotar:cabecalho -->
@@ -2060,14 +2102,14 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 
   // src/nucleo/terrenos.js
   var TERRENOS = {
-    neutro: { nome: "Mesa neutra", resumo: "Sem efeito. Feltro verde, caf\xE9 e truco." },
+    neutro: { nome: "Plan\xEDcie", resumo: "Sem efeito. Plan\xEDcie de feltro verde, caf\xE9 e truco." },
     montanha: { nome: "Montanha", resumo: "A trilha sobe: cada neur\xF4nio vale 1 ponto a mais por camada alcan\xE7ada (a oculta 1 ganha 1, a oculta 2 ganha 2\u2026)." },
     pantano: { nome: "P\xE2ntano", resumo: "A cada rodada, neur\xF4nios sem tunagem afundam e perdem 1 ponto. Tunar mant\xE9m o neur\xF4nio \xE0 tona." },
     oceano: { nome: "Oceano", resumo: "A cada rodada o vento escolhe um naipe. Neur\xF4nios desse naipe revelados na rodada valem o dobro para sempre." }
   };
 
   // src/conteudo/grimorio.js
-  var NOME_DA_BIBLIOTECA = "Gloss\xE1rio";
+  var NOME_DA_BIBLIOTECA = "Livro de conceitos";
   var bloco = (...partes) => '<math display="block">' + partes.join("") + "</math>";
   var na = (...partes) => "<math>" + partes.join("") + "</math>";
   var mi = (x) => "<mi>" + x + "</mi>";
@@ -2384,7 +2426,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       const carta = c.mao.neuronios[id].cartas[0];
       return carta.valor === "4" && carta.naipe === "P";
     }) },
-    { id: "biblio", nome: "Bibliotec\xE1rio", descricao: "Leia todos os verbetes do Gloss\xE1rio.", graduacao: "prata", teste: (c) => c.progresso.verbetesLidos >= VERBETES.length },
+    { id: "biblio", nome: "Bibliotec\xE1rio", descricao: "Leia todos os verbetes do Livro de conceitos.", graduacao: "prata", teste: (c) => c.progresso.verbetesLidos >= VERBETES.length },
     /* conquistas da fusão: baralhos, mesas e arquiteturas do motor */
     { id: "nobreza", nome: "Sangue azul", descricao: "Ven\xE7a uma m\xE3o do baralho Nobreza com figuras iguais vizinhas na sua rede.", graduacao: "prata", teste: (c) => c.venceu && c.mao.config.baralho === "nobreza" && pontuarRede(c.mao, c.eu).neuronios.some((n) => n.notas.includes("\xD72 figura")) },
     { id: "backprop", nome: "Forward pass de ouro", descricao: "Termine uma m\xE3o do baralho Backprop com a sa\xEDda da sua rede em 45 ou mais.", graduacao: "ouro", teste: (c) => c.mao.config.baralho === "backprop" && c.mao.resultado.somas[c.eu] >= 45 },
@@ -3720,7 +3762,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   }
 
   // src/versao.js
-  var VERSAO = "2.23.0";
+  var VERSAO = "2.23.1";
   var DATA_DA_VERSAO = "2026-11-21";
 
   // src/aplicacao.js
@@ -3755,7 +3797,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     progresso: carregarProgresso(),
     /** Escolhas do menu: oponente, baralho, terreno, inicio, alvo, jogadores, humanos, arquitetura, baralhos. */
     opcoes: null,
-    /** Verbetes do Glossário já mostrados como aviso nesta sessão. */
+    /** Verbetes do Livro de conceitos já mostrados como aviso nesta sessão. */
     verbetesAvisados: {},
     /** Instância do Phaser.Game (definida em principal.js). */
     jogo: null,
@@ -3860,7 +3902,19 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       this.modoImersivo();
       document.body.classList.add("em-partida");
       this.jogo.scene.stop("Menu");
-      this.jogo.scene.start("Mesa");
+      this.jogo.scene.start("Mesa", { tutorial: null });
+    },
+    /**
+     * Abre a mesa no modo tutorial (ver `src/cenas/mesa/tutorial.js`). Não conta como partida nas
+     * estatísticas. Ao terminar (ou pular), `origem` 'jogar' segue para a partida e 'regras' volta ao menu.
+     * @param {'jogar'|'regras'} origem
+     */
+    fazerTutorial(origem) {
+      fecharTodos();
+      this.modoImersivo();
+      document.body.classList.add("em-partida");
+      this.jogo.scene.stop("Menu");
+      this.jogo.scene.start("Mesa", { tutorial: { origem } });
     },
     /** Volta da mesa para o menu. */
     irParaMenu() {
@@ -7102,6 +7156,79 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     ctx.fill();
   }
   var RETRATOS_EXTRAS = {
+    /* Percy, o assistente do tutorial: perceptron redondo e verde-água, antena com um neurônio, óculos dourados e gravata-borboleta */
+    percy(ctx, D, cor) {
+      brilho(ctx, 56, 60, 50, cor, 0.3);
+      ctx.strokeStyle = TRACO;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(56, 26);
+      ctx.lineTo(56, 13);
+      ctx.stroke();
+      ctx.fillStyle = "#f6dc8f";
+      ctx.beginPath();
+      ctx.arc(56, 11, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = degradeLinear(ctx, 0, 24, 0, 100, [[0, "#7fe3d0"], [1, "#2a8f86"]]);
+      ctx.beginPath();
+      ctx.arc(56, 60, 36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = "#d6a43a";
+      ctx.lineWidth = 2.4;
+      ctx.fillStyle = "rgba(255,255,255,.88)";
+      for (const x of [43, 69]) {
+        ctx.beginPath();
+        ctx.arc(x, 56, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.moveTo(54, 56);
+      ctx.lineTo(58, 56);
+      ctx.stroke();
+      ctx.fillStyle = TRACO;
+      for (const x of [43, 69]) {
+        ctx.beginPath();
+        ctx.arc(x, 57, 4.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#fff";
+      for (const x of [44.5, 70.5]) {
+        ctx.beginPath();
+        ctx.arc(x, 55.2, 1.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = TRACO;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(46, 78);
+      ctx.quadraticCurveTo(56, 86, 66, 78);
+      ctx.stroke();
+      ctx.strokeStyle = TRACO;
+      ctx.lineWidth = 1.4;
+      ctx.fillStyle = "#c0283c";
+      ctx.beginPath();
+      ctx.moveTo(56, 95);
+      ctx.lineTo(42, 88);
+      ctx.lineTo(42, 102);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(56, 95);
+      ctx.lineTo(70, 88);
+      ctx.lineTo(70, 102);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(56, 95, 3.4, 0, Math.PI * 2);
+      ctx.fillStyle = "#f6dc8f";
+      ctx.fill();
+      ctx.stroke();
+    },
     /* o gato do GatoNet, com o crachá de dropout */
     gato(ctx, D, cor) {
       brilho(ctx, 56, 64, 50, cor, 0.35);
@@ -8294,6 +8421,37 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return "correr";
   }
 
+  // src/interface/ajusteDeBotoes.js
+  var FONTE_MINIMA_DO_BOTAO = 8;
+  function estoura(botao) {
+    return botao.scrollWidth > botao.clientWidth + 1;
+  }
+  function ajustarFonteDoBotao(botao, minimo = FONTE_MINIMA_DO_BOTAO) {
+    if (!botao || !botao.isConnected || !botao.clientWidth || typeof getComputedStyle !== "function") return 0;
+    botao.style.fontSize = "";
+    let tamanho = parseFloat(getComputedStyle(botao).fontSize) || 0;
+    while (tamanho > minimo && estoura(botao)) {
+      tamanho -= 0.5;
+      botao.style.fontSize = tamanho + "px";
+    }
+    return tamanho;
+  }
+  function ajustarFontesDosBotoes(raiz2, seletor = ".botao") {
+    if (!raiz2 || typeof addEventListener !== "function") return;
+    const refazer = () => {
+      if (!raiz2.isConnected) {
+        removeEventListener("resize", refazer);
+        return;
+      }
+      raiz2.querySelectorAll(seletor).forEach((botao) => ajustarFonteDoBotao(botao));
+    };
+    addEventListener("resize", refazer);
+    refazer();
+    if (globalThis.document && document.fonts && document.fonts.ready) document.fonts.ready.then(refazer).catch(() => {
+    });
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(refazer);
+  }
+
   // src/interface/controlesDeSom.js
   var CONTROLES_DE_SOM = {
     som: { rotulo: "Efeitos sonoros", ligar: "Ligar efeitos sonoros", desligar: "Desligar efeitos sonoros", ligado: "efeitosLigado", desligadoIcone: "efeitosDesligado" },
@@ -8784,11 +8942,12 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
   function abrirAjudaDasAcoes(app, idInicial) {
     const cartoes = ACOES_DA_AJUDA.map((a) => {
       const m = doMotor(a.motor);
-      return '<article class="cartao-acao" data-acao="' + a.id + '"' + (a.id === idInicial ? ' aria-current="true"' : "") + "><h3>" + (ICONES_DAS_ACOES[a.id] ? '<span class="icone-acao">' + ICONES_DAS_ACOES[a.id] + "</span>" : "") + escaparHtml(a.nome) + "</h3><p><b>Regra:</b> " + escaparHtml(m.rule || a.resumo) + '</p><p class="quando"><b>Quando acende:</b> ' + escaparHtml(a.quando) + "</p>" + (m.ml ? '<p class="em-ml"><b>Em machine learning:</b> ' + escaparHtml(m.ml) + "</p>" : "") + '<button class="botao discreto" data-verbete="' + a.verbete + '">Ver o conceito</button></article>';
+      return '<article class="cartao-acao" data-acao="' + a.id + '"' + (a.id === idInicial ? ' aria-current="true"' : "") + "><h3>" + (ICONES_DAS_ACOES[a.id] ? '<span class="icone-acao">' + ICONES_DAS_ACOES[a.id] + "</span>" : "") + escaparHtml(a.nome) + "</h3><p><b>Regra:</b> " + escaparHtml(m.rule || a.resumo) + '</p><p class="quando"><b>Quando acende:</b> ' + escaparHtml(a.quando) + "</p>" + (m.ml ? '<p class="em-ml"><b>Em machine learning:</b> ' + escaparHtml(m.ml) + "</p>" : "") + '<button class="botao discreto" data-verbete="' + a.verbete + '">Aprender mais</button></article>';
     }).join("");
     const html = '<div class="folha larga ajuda-acoes"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Ajuda das a\xE7\xF5es</h2><p>Selecione cartas da m\xE3o e acendem s\xF3 os bot\xF5es das jogadas poss\xEDveis. Cada cart\xE3o traz a regra, quando o bot\xE3o acende e o conceito de redes neurais por tr\xE1s da jogada.</p><div class="cartoes-acao">' + cartoes + '</div><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Voltar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
     painel.elemento.querySelectorAll("[data-verbete]").forEach((b) => b.addEventListener("click", () => abrirGrimorio(app, b.dataset.verbete)));
+    ajustarFontesDosBotoes(painel.elemento);
     const alvo = idInicial && painel.elemento.querySelector('[data-acao="' + idInicial + '"]');
     if (alvo && alvo.scrollIntoView) setTimeout(() => alvo.scrollIntoView({ block: "center" }), 30);
     return painel;
@@ -8840,13 +8999,10 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
       }
     });
   }
-  function abrirRegras(app, aoFechar, abaInicial = "jogar") {
-    const conteudo = { jogar: COMO_JOGAR, acoes: abaDeAcoes(), pontuacao: PONTUACAO, extensoes: abaDeExtensoes(), dicas: DICAS };
+  function abrirRegras(app, aoFechar, abaInicial = "jogar", opcoes = {}) {
+    const tutorial = opcoes.aoFazerTutorial ? '<div class="linha caixa-do-tutorial"><div><b>Tutorial com o Percy</b><p>Uma m\xE3o guiada, passo a passo, que ensina o objetivo, a pontua\xE7\xE3o e todas as jogadas. Dura poucos minutos.</p></div><button class="botao vinho" id="r-tutorial">Fazer o tutorial</button></div>' : "";
+    const conteudo = { jogar: tutorial + COMO_JOGAR, acoes: abaDeAcoes(), pontuacao: PONTUACAO, extensoes: abaDeExtensoes(), dicas: DICAS };
     const html = '<div class="folha regras"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><h2>Regras</h2><nav class="abas" role="tablist">' + ABAS_DAS_REGRAS.map(([id, nome]) => '<button role="tab" data-aba="' + id + '" aria-selected="' + (id === abaInicial) + '">' + nome + "</button>").join("") + "</nav>" + ABAS_DAS_REGRAS.map(([id]) => '<section class="aba" role="tabpanel" data-aba="' + id + '"' + (id === abaInicial ? "" : " hidden") + ">" + conteudo[id] + "</section>").join("") + '<p class="nota-regras">Os conceitos de redes neurais por tr\xE1s de cada jogada est\xE3o no ' + NOME_DA_BIBLIOTECA + '.</p><div class="linha fim" style="margin-top:14px"><button class="botao discreto" id="r-biblioteca">' + NOME_DA_BIBLIOTECA + '</button><button class="botao" data-fechar>Entendi</button></div></div>';
-    if (app) {
-      app.progresso.tutorialVisto = true;
-      app.salvar();
-    }
     const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar });
     const raiz2 = painel.elemento;
     const mostrarAba = (id) => {
@@ -8860,6 +9016,11 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     mostrarAba(abaInicial);
     const appDaBiblioteca = app || { progresso: { lidos: {} }, marcarVerbeteLido() {
     } };
+    const botaoDoTutorial = raiz2.querySelector("#r-tutorial");
+    if (botaoDoTutorial) botaoDoTutorial.addEventListener("click", () => {
+      painel.fechar();
+      opcoes.aoFazerTutorial();
+    });
     raiz2.querySelector("#r-ajuda-acoes").addEventListener("click", () => abrirAjudaDasAcoes(appDaBiblioteca));
     raiz2.querySelector("#r-biblioteca").addEventListener("click", () => abrirGrimorio(appDaBiblioteca));
     raiz2.querySelectorAll("[data-verbete]").forEach((b) => b.addEventListener("click", () => abrirGrimorio(appDaBiblioteca, b.dataset.verbete)));
@@ -9750,7 +9911,7 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
     return escolha === "sim" ? "Neste aparelho: ligadas." : escolha === "nao" ? "Neste aparelho: desligadas." : "Neste aparelho: ainda sem escolha.";
   }
   function abrirSobre() {
-    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="sobre-logo">' + LOGO_SVG + '</div><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><p class="homenagem"><b>Converg\xEAncia global</b>, a conquista final do jogo, \xE9 uma homenagem ao prof. Peng: ela vem para quem desbloqueia todas as outras. No treino de uma rede, convergir para o m\xEDnimo global \xE9 chegar ao melhor ponto da fun\xE7\xE3o de perda, em vez de parar num m\xEDnimo local. A medalha tem uma gradua\xE7\xE3o s\xF3 dela, a Singularidade, acima de Antimat\xE9ria.</p><h3>Autores</h3><ul class="autores"><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes e valida\xE7\xE3o das regras.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es nas regras.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Gloss\xE1rio.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Bugs e sugest\xF5es</h3><p>Encontrou um erro ou tem uma ideia? Conte pelas issues do projeto no GitHub (\xE9 preciso ter uma conta l\xE1). D\xE1 para ver antes o que j\xE1 foi relatado.</p><div class="linha"><a class="botao pequeno" id="s-reportar" href="https://github.com/welyngton/truco-de-turing/issues/new" target="_blank" rel="noopener">Reportar bug ou sugest\xE3o</a><a class="botao pequeno discreto" id="s-issues" href="https://github.com/welyngton/truco-de-turing/issues" target="_blank" rel="noopener">Ver issues abertas</a></div><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
+    const html = '<div class="folha sobre"><button class="fechar-x" data-fechar aria-label="Fechar">\xD7</button><div class="sobre-logo">' + LOGO_SVG + '</div><h2>Sobre o jogo</h2><p class="versao">Vers\xE3o ' + VERSAO + " \xB7 " + DATA_DA_VERSAO.split("-").reverse().join("/") + ' \xB7 <a href="https://github.com/welyngton/truco-de-turing/blob/main/CHANGELOG.md" target="_blank" rel="noopener">hist\xF3rico de vers\xF5es</a></p><p>Um jogo de cartas para navegador que ensina redes neurais jogando. Cada carta \xE9 um neur\xF4nio, cada m\xE3o \xE9 uma rede constru\xEDda da entrada \xE0 sa\xEDda, e cada a\xE7\xE3o com as cartas (tunagem, overfit, dropout, early stop, transfer learning) \xE9 um conceito do treino de modelos. Entre dois jogadores, o truco fica por cima de tudo: tentos, pedidos de TRUCO, SEIS, NOVE e DOZE, e blefe.</p><h3>A disciplina</h3><p>Trabalho do tema 4 da disciplina Fundamentos em Pesquisa Operacional (FPO), semestre 2026/2, no Programa de P\xF3s-Gradua\xE7\xE3o em Computa\xE7\xE3o Aplicada (PPCA) da Universidade de Bras\xEDlia, com o prof. Peng Yaohao. O tema pede um jogo indie para ensinar conceitos de machine learning e redes neurais, a partir de uma premissa: um jogo educativo precisa, antes de tudo, ser um jogo divertido. Se o jogo for divertido e o docente tiver compet\xEAncia suficiente, ele pode se tornar educativo.</p><h3>As regras originais</h3><ul><li>Mesa com um baralho de 52 cartas: 3 neur\xF4nios na entrada, 5 camadas ocultas de 5 neur\xF4nios e 4 na sa\xEDda. Cada jogador recebe 5 cartas; as 10 restantes v\xE3o para o limbo, como ru\xEDdo.</li><li>Os jogadores se alternam ativando neur\xF4nios para ligar a entrada \xE0 sa\xEDda. Vence a rede de maior soma: 2 a 10 pelo valor, \xC1s 11, figuras 0, com figuras iguais vizinhas valendo 10 cada (par 20, trio 30) e quadras zerando a rede (vanishing gradient).</li><li>A\xE7\xF5es com a m\xE3o: tunagem, overfit, early stop, stack overflow, dropout (o GatoNet) e transfer learning. Entrada e sa\xEDda s\xE3o imunes.</li><li>Desempates em cascata e tr\xEAs formas de decidir quem come\xE7a.</li><li>Extens\xF5es propostas: baralhos com efeitos (truco, fraternidade, yin-yang, Power BI), terrenos (montanha, p\xE2ntano, oceano), coringas e conquistas em gradua\xE7\xF5es de bronze a antimat\xE9ria.</li><li>Inspira\xE7\xF5es citadas: TensorFlow Playground, Balatro, Magic: The Gathering e Geometry Dash.</li></ul><h3>O professor</h3><p><b>Peng Yaohao</b> \xE9 professor da Universidade de Bras\xEDlia, mestre e doutor pela UnB na \xE1rea de Finan\xE7as e M\xE9todos Quantitativos. Pesquisa aprendizado de m\xE1quina, modelos n\xE3o lineares e econometria financeira, com trabalhos sobre previs\xE3o de volatilidade e de pre\xE7os de a\xE7\xF5es e um estudo emp\xEDrico sobre n\xE3o linearidade e overfitting em machine learning com dados da COVID-19.</p><p class="homenagem"><b>Converg\xEAncia global</b>, a conquista final do jogo, \xE9 uma homenagem ao prof. Peng: ela vem para quem desbloqueia todas as outras. No treino de uma rede, convergir para o m\xEDnimo global \xE9 chegar ao melhor ponto da fun\xE7\xE3o de perda, em vez de parar num m\xEDnimo local. A medalha tem uma gradua\xE7\xE3o s\xF3 dela, a Singularidade, acima de Antimat\xE9ria.</p><h3>Autores</h3><ul class="autores"><li><b>Welyngton Jos\xE9 Vinicius Dal Pr\xE1</b>: Truco de Turing (interface, arte, sons, conquistas e modo truco).</li><li><b>Diego Casagrande</b>: testes e valida\xE7\xE3o das regras.</li><li><b>Vin\xEDcius Chiconato</b>: corre\xE7\xF5es nas regras.</li><li><b>Suzy Arcanjo</b>: verbetes das a\xE7\xF5es no Livro de conceitos.</li></ul><p class="contribuicoes">Contribui\xE7\xF5es s\xE3o bem-vindas: o c\xF3digo est\xE1 aberto no reposit\xF3rio.</p><h3>Estat\xEDsticas de uso</h3><p>' + TEXTO_DAS_ESTATISTICAS + '</p><p class="estatisticas-situacao" id="s-estatisticas">' + situacaoDasEstatisticas() + "</p>" + (podeMedir() ? '<div class="linha"><button class="botao pequeno" id="s-estatisticas-sim">Ligar</button><button class="botao pequeno discreto" id="s-estatisticas-nao">Desligar</button></div>' : "") + '<h3>Dados da conta</h3><p id="s-conta">' + TEXTO_DA_CONTA + '</p><h3>Bugs e sugest\xF5es</h3><p>Encontrou um erro ou tem uma ideia? Conte pelas issues do projeto no GitHub (\xE9 preciso ter uma conta l\xE1). D\xE1 para ver antes o que j\xE1 foi relatado.</p><div class="linha"><a class="botao pequeno" id="s-reportar" href="https://github.com/welyngton/truco-de-turing/issues/new" target="_blank" rel="noopener">Reportar bug ou sugest\xE3o</a><a class="botao pequeno discreto" id="s-issues" href="https://github.com/welyngton/truco-de-turing/issues" target="_blank" rel="noopener">Ver issues abertas</a></div><h3>Cr\xE9ditos e licen\xE7a</h3><p>C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>, no reposit\xF3rio <a href="https://github.com/welyngton/truco-de-turing" target="_blank" rel="noopener">github.com/welyngton/truco-de-turing</a>. Feito com Phaser 3; toda a arte das cartas \xE9 gerada por c\xF3digo; fontes Cinzel e Spectral.</p><div class="linha fim" style="margin-top:14px"><button class="botao" data-fechar>Fechar</button></div></div>';
     const painel = abrirPainel(html, { fechaAoClicarFora: true });
     for (const escolha of ["sim", "nao"]) {
       const botao = painel.elemento.querySelector("#s-estatisticas-" + escolha);
@@ -10440,7 +10601,7 @@ export default function (Motor) {
     "m-sobre": "sobre"
   };
   function htmlDoMenu(opcoes) {
-    return '<div class="menu"><section class="menu-capa"><h1><span class="menu-emblema" aria-hidden="true">' + EMBLEMA_SVG + '</span>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><p class="menu-conta" id="m-conta" role="status" hidden></p><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Gloss\xE1rio</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div>' + htmlDosControlesDeSom() + '</div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
+    return '<div class="menu"><section class="menu-capa"><h1><span class="menu-emblema" aria-hidden="true">' + EMBLEMA_SVG + '</span>TRUCO DE TURING</h1><p>Monte uma rede neural carta por carta, da entrada \xE0 sa\xEDda. Tune seus neur\xF4nios, aplique overfit no advers\xE1rio, fuja do vanishing gradient e, quando sentir a m\xE3o boa, grite TRUCO.</p><div class="legenda"><span><i class="ponto" style="background:var(--azul)"></i><b>Azul</b> \xE9 a sua rede</span><span><i class="ponto" style="background:var(--laranja)"></i><b>Laranja</b>, verde, lil\xE1s e rosa, as dos advers\xE1rios</span></div><div class="menu-acoes"><div class="jogar-linha"><button class="botao vinho jogar" id="m-jogar" autofocus>Jogar</button><button class="botao jogar-online" id="m-online">Jogar online</button></div><p class="menu-conta" id="m-conta" role="status" hidden></p><div class="menu-mais"><button class="botao" id="m-regras">Como jogar</button><button class="botao" id="m-grimorio">Livro de conceitos</button><button class="botao" id="m-conquistas">Conquistas</button><button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button><button class="botao" id="m-mods">Mods</button><button class="botao" id="m-sobre">Sobre</button></div>' + htmlDosControlesDeSom() + '</div><div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Feito com Phaser. C\xF3digo aberto sob a licen\xE7a <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div></section><section class="folha menu-painel"><h3 style="margin-top:0">Configurar a mesa</h3><div class="campos-duplos"><div class="campo"><label for="m-jogadores">Jogadores</label><select id="m-jogadores">' + opcoesHtml(ESCOLHAS_JOGADORES, opcoes.jogadores) + '</select></div><div class="campo"><label for="m-humanos">Humanos no aparelho</label><select id="m-humanos">' + opcoesHtml(escolhasDeHumanos(opcoes.jogadores), opcoes.humanos) + '</select></div></div><div class="campo" id="m-campo-oponente"><label for="m-oponente" id="m-oponente-rotulo">Oponente</label><select id="m-oponente">' + opcoesHtml(ESCOLHAS_OPONENTE, opcoes.oponente) + '</select><div class="dica" id="m-oponente-dica"></div></div><div class="campos-duplos"><div class="campo"><label for="m-arquitetura">Arquitetura</label><select id="m-arquitetura">' + opcoesHtml(ARQUITETURAS, opcoes.arquitetura) + '</select></div><div class="campo"><label for="m-baralhos">Baralhos</label><select id="m-baralhos">' + opcoesHtml(ESCOLHAS_BARALHOS, opcoes.baralhos) + '</select></div></div><div class="dica dica-da-mesa" id="m-mesa-dica"></div><div class="campo"><label for="m-baralho">Baralho</label><div class="campo-linha"><select id="m-baralho">' + opcoesHtml(BARALHOS, opcoes.baralho) + '</select><span class="miniatura verso" id="m-baralho-img"></span></div><div class="dica" id="m-baralho-dica"></div></div><div class="campo"><label for="m-terreno">Terreno</label><div class="campo-linha"><select id="m-terreno">' + opcoesHtml(TERRENOS, opcoes.terreno) + '</select><span class="miniatura mesa" id="m-terreno-img"></span></div><div class="dica" id="m-terreno-dica"></div></div><div class="campos-duplos"><div class="campo" style="margin-bottom:0"><label for="m-inicio">Quem come\xE7a</label><select id="m-inicio">' + opcoesHtml(ESCOLHAS_INICIO, opcoes.inicio) + '</select></div><div class="campo" style="margin-bottom:0"><label for="m-partida">Partida</label><select id="m-partida">' + opcoesHtml(ESCOLHAS_PARTIDA, opcoes.alvo) + "</select></div></div></section></div>";
   }
   function abrirMenu(app) {
     app.opcoes = normalizarOpcoes(app.opcoes);
@@ -10448,6 +10609,7 @@ export default function (Motor) {
     const elemento = painel.elemento;
     const campo = (id) => elemento.querySelector("#" + id);
     ligarControlesDeSom(elemento, app, "menu");
+    ajustarFontesDosBotoes(elemento, ".menu-acoes .botao");
     function atualizarDicas() {
       const n = Number(campo("m-jogadores").value);
       const humanos = Math.min(n, Number(campo("m-humanos").value) || 1);
@@ -10493,12 +10655,30 @@ export default function (Motor) {
     campo("m-jogar").addEventListener("click", () => {
       Som.desbloquear();
       lerEscolhas();
-      painel.fechar();
-      app.jogar();
+      if (app.progresso.tutorialVisto) {
+        painel.fechar();
+        app.jogar();
+        return;
+      }
+      confirmar("Primeira vez por aqui?", "Quer fazer o tutorial? O Percy, seu assistente, guia uma m\xE3o de treino e ensina as regras em poucos minutos. Voc\xEA pode pular e faz\xEA-lo depois, em <b>Como jogar</b>.", [
+        { rotulo: "Fazer o tutorial", classe: "vinho", acao: () => {
+          painel.fechar();
+          app.fazerTutorial("jogar");
+        } },
+        { rotulo: "Pular tutorial", classe: "discreto", acao: () => {
+          app.progresso.tutorialVisto = true;
+          app.salvar();
+          painel.fechar();
+          app.jogar();
+        } }
+      ]);
     });
     campo("m-regras").addEventListener("click", () => {
       lerEscolhas();
-      abrirRegras(app);
+      abrirRegras(app, void 0, "jogar", { aoFazerTutorial: () => {
+        painel.fechar();
+        app.fazerTutorial("regras");
+      } });
     });
     campo("m-grimorio").addEventListener("click", () => {
       lerEscolhas();
@@ -10749,6 +10929,8 @@ export default function (Motor) {
   // src/cenas/mesa/cenario.js
   var COR_ROTULO = { ouro: "#2a1606", vinho: "#fff0e0", pedra: "#f6ecd6" };
   var BOTAO_DE_SOM = { lado: 32, y: 26, margem: 12 };
+  var TITULO_DO_DETALHE = "DETALHE DA CARTA";
+  var LARGURA_DO_TITULO_DO_DETALHE = PAINEL_ESQ.l - 2 * (BOTAO_DE_SOM.margem + BOTAO_DE_SOM.lado) - 12;
   var TEMPO_DE_SEGURAR = 450;
   var metodosDoCenario = {
     /** Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. */
@@ -10784,7 +10966,8 @@ export default function (Motor) {
           ajustarLinha(aviso, aviso.text, 11.5, coluna + 6, 8);
         }
       }
-      this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, "INSPE\xC7\xC3O", { fontFamily: FONTES.titulo, fontStyle: "700", fontSize: "12px", color: "#e8d6a8", letterSpacing: 2 }).setOrigin(0.5).setDepth(7);
+      const tituloDoDetalhe = this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, TITULO_DO_DETALHE, { fontFamily: FONTES.titulo, fontStyle: "700", fontSize: "12px", color: "#e8d6a8", letterSpacing: 1.5 }).setOrigin(0.5).setDepth(7);
+      ajustarLinha(tituloDoDetalhe, TITULO_DO_DETALHE, 12, LARGURA_DO_TITULO_DO_DETALHE, 8);
     },
     /**
      * Cria um botão com textura própria e rótulo que se ajusta à largura.
@@ -10892,7 +11075,7 @@ export default function (Motor) {
     criarTexto(x, y, s, estilo) {
       return this.add.text(x, y, s, { fontFamily: FONTES.texto, fontSize: "13px", color: "#efe3c6", ...estilo || {} }).setDepth(7);
     },
-    /** Painel esquerdo: inspeção, limbo e cemitério (como pilhas), terreno e dica do turno. */
+    /** Painel esquerdo: detalhe da carta, limbo e cemitério (como pilhas), terreno e dica do turno. */
     criarPainelEsquerdo(p) {
       const titulo = { fontFamily: FONTES.titulo, fontStyle: "700" };
       const cx = PAINEL_ESQ.x + PAINEL_ESQ.l / 2;
@@ -11155,6 +11338,7 @@ export default function (Motor) {
       }
       this.desenharMaos();
       this.atualizarPaineis();
+      if (this.assistente) this.assistente.atualizar();
     },
     /**
      * Garante que a carta da mesa está inteira e no lugar: opaca, na posição e na profundidade de
@@ -11648,6 +11832,7 @@ export default function (Motor) {
      * joga direto; com mais de um (vários rivais), destaca só os alvos dessa ação e espera o clique.
      */
     executarAcao(tipo) {
+      if (!this.tutorialPermite({ tipo: "acao", id: tipo })) return this.tutorialRecusa();
       if (!this.ehVezDoHumano()) return;
       const alvos = this.alvosDaAcao(tipo);
       if (!alvos.length) return;
@@ -11665,6 +11850,7 @@ export default function (Motor) {
      * seleção, entra no modo de escolher até onde desfazer no tabuleiro.
      */
     acionarDropout() {
+      if (!this.tutorialPermite({ tipo: "acao", id: "dropout" })) return this.tutorialRecusa();
       if (!this.ehVezDoHumano()) return;
       const n = this.selecao.length;
       if (n && this.modo === "livre" && n <= camadasDesfaziveis(this.mao, this.quemVe)) {
@@ -11719,6 +11905,7 @@ export default function (Motor) {
     },
     /** Clique num neurônio: ativa, empilha as cartas selecionadas ou escolhe o alcance do dropout. */
     aoClicarNoNeuronio(id) {
+      if (!this.tutorialPermite({ tipo: "neuronio", id })) return this.tutorialRecusa();
       if (!this.ehVezDoHumano()) return;
       const alvo = this.alvos[id];
       if (!alvo) {
@@ -11740,6 +11927,7 @@ export default function (Motor) {
     },
     /** Clique numa carta da mão: escolhe a carta de início, paga o dropout ou monta a seleção. */
     aoClicarNaCarta(idCarta) {
+      if (!this.tutorialPermite({ tipo: "carta", id: idCarta })) return this.tutorialRecusa();
       const mao = this.mao, eu = this.quemVe;
       if (mao.fase === "inicio" && this.modo === "inicio") {
         this.modo = "livre";
@@ -11787,6 +11975,7 @@ export default function (Motor) {
     },
     /** Botão Transfer: troca as quatro cartas iguais da mão. */
     fazerTransfer() {
+      if (!this.tutorialPermite({ tipo: "acao", id: "transfer" })) return this.tutorialRecusa();
       const eu = this.quemVe, valor = valorParaTransfer(this.mao, eu);
       if (!valor) return;
       const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
@@ -11794,19 +11983,22 @@ export default function (Motor) {
     },
     /** Botão Passar a vez. */
     passarAVez() {
+      if (!this.tutorialPermite({ tipo: "acao", id: "passar" })) return this.tutorialRecusa();
       if (this.ehVezDoHumano() && podePassar(this.mao, this.quemVe)) this.executarJogada({ tipo: "passar", jogador: this.quemVe });
     },
     /** Botão Menu: confirma antes de abandonar a partida. */
     /**
-     * Botão REGRAS da mesa: como jogar, Glossário e a chave das dicas, numa janela só.
+     * Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só.
      */
     abrirRegrasDaMesa() {
+      if (!this.tutorialPermite({ tipo: "regras" })) return this.tutorialRecusa();
       const dicas = this.app.dicasLigadas;
       registrarEvento(EVENTOS.mesaClique, { botao: "regras" });
       const painel = abrirPainel(
-        '<div class="folha estreita janela-da-mesa"><h2>Regras</h2><p>Consulte as regras, a ajuda de cada a\xE7\xE3o, os conceitos de redes neurais do Gloss\xE1rio ou ligue as dicas durante a partida.</p><div class="grade-de-botoes"><button class="botao" data-opcao="regras">Como jogar</button><button class="botao" data-opcao="ajuda">Ajuda das a\xE7\xF5es</button><button class="botao" data-opcao="grimorio">Gloss\xE1rio</button><button class="botao ' + (dicas ? "discreto" : "vinho") + '" data-opcao="dicas" data-chave="dicas">' + (dicas ? "Desligar dicas" : "Ativar dicas") + '</button><button class="botao discreto" data-fechar>Voltar ao jogo</button></div></div>',
+        '<div class="folha estreita janela-da-mesa"><h2>Regras</h2><p>Consulte as regras, a ajuda de cada a\xE7\xE3o, os conceitos de redes neurais do Livro de conceitos ou ligue as dicas durante a partida.</p><div class="grade-de-botoes"><button class="botao" data-opcao="regras">Como jogar</button><button class="botao" data-opcao="ajuda">Ajuda das a\xE7\xF5es</button><button class="botao" data-opcao="grimorio">Livro de conceitos</button><button class="botao ' + (dicas ? "discreto" : "vinho") + '" data-opcao="dicas" data-chave="dicas">' + (dicas ? "Desligar dicas" : "Ativar dicas") + '</button><button class="botao discreto" data-fechar>Voltar ao jogo</button></div></div>',
         { fechaAoClicarFora: true }
       );
+      ajustarFontesDosBotoes(painel.elemento, ".grade-de-botoes .botao");
       const acoes = {
         regras: () => abrirRegras(this.app),
         ajuda: () => this.abrirAjudaDaMesa(),
@@ -11822,6 +12014,7 @@ export default function (Motor) {
     },
     /** Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. */
     abrirAjudaDaMesa() {
+      if (!this.tutorialPermite({ tipo: "regras" })) return this.tutorialRecusa();
       return abrirAjudaDasAcoes(this.app, this.ultimaAcaoExplicada);
     },
     /**
@@ -11829,6 +12022,7 @@ export default function (Motor) {
      * ou abandonar a partida.
      */
     abrirMenuDaMesa() {
+      if (!this.tutorialPermite({ tipo: "regras" })) return this.tutorialRecusa();
       registrarEvento(EVENTOS.mesaClique, { botao: "menu" });
       const painel = abrirPainel(
         '<div class="folha estreita janela-da-mesa"><h2>Menu</h2><div class="grade-de-botoes"><button class="botao" data-chave="som"></button><button class="botao" data-chave="musica"></button><button class="botao discreto" data-fechar>Voltar ao jogo</button><button class="botao vinho" data-opcao="sair">Sair da partida</button></div></div>',
@@ -11935,7 +12129,7 @@ export default function (Motor) {
       this.trucoConsideradoNoTurno = -1;
       this.oponenteCorreu = false;
       this.dicaAtual = null;
-      this.dicasNaMao = this.app.dicasLigadas;
+      this.dicasNaMao = !this.tutorial && this.app.dicasLigadas;
       this.conquistasDaMao = [];
       this.linhaDoTempo = [];
       this.linhasRegistradas = 0;
@@ -11947,7 +12141,7 @@ export default function (Motor) {
       this.cartasDoAdversario = [];
       liberarCartasDaMao(this);
       const o = this.opcoes;
-      this.mao = novaMao({
+      this.mao = this.tutorial ? this.tutorial.mao : novaMao({
         baralho: o.baralho,
         terreno: o.terreno,
         inicio: o.inicio,
@@ -11961,7 +12155,7 @@ export default function (Motor) {
       this.inicioDosBotsEnviado = /* @__PURE__ */ new Set();
       this.criarNeuronios();
       this.painel.inspecao.setTexture("terreno-" + this.opcoes.terreno);
-      ajustarBloco(this.painel.notaInspecao, "Passe o cursor ou toque numa carta para inspecion\xE1-la.", 12, PAINEL_ESQ.l - 30, 40, 9.5);
+      ajustarBloco(this.painel.notaInspecao, "Passe o cursor ou toque numa carta para ver o detalhe dela.", 12, PAINEL_ESQ.l - 30, 40, 9.5);
       this.mao.eventos.splice(0);
       this.redesenhar();
       if (this.opcoes.terreno !== "neutro") this.avisarVerbete("terrenos");
@@ -12006,6 +12200,7 @@ export default function (Motor) {
     /* ------------------------------------------------------------------ jogadas */
     /** Aplica uma jogada (de qualquer jogador), anima os eventos e segue o fluxo. */
     executarJogada(jogada, daRede = false) {
+      if (this.tutorial) return this.executarJogadaDoTutorial(jogada);
       if (this.online && !daRede) return this.enviarOnline({ tipo: "jogada", cadeira: jogada.jogador, jogada });
       try {
         aplicarJogada(this.mao, jogada);
@@ -12048,6 +12243,7 @@ export default function (Motor) {
     /** Decide o próximo passo: fim da mão, escolha de quem começa, vez do humano ou do oponente. */
     avancar() {
       if (this.encerrada || !this.scene.isActive()) return;
+      if (this.tutorial) return this.avancarTutorial();
       const mao = this.mao;
       if (this.partida.pedido) return;
       if (mao.fase === "fim") return this.encerrarMao(null);
@@ -12170,6 +12366,7 @@ export default function (Motor) {
   var metodosDoTruco = {
     /** Botão TRUCO! do jogador humano. */
     pedirTrucoHumano() {
+      if (!this.tutorialPermite({ tipo: "truco" })) return this.tutorialRecusa();
       if (!this.ehVezDoHumano() || !podeTrucar(this.partida, this.quemVe)) return;
       this.anunciarTruco(this.quemVe);
     },
@@ -12566,8 +12763,9 @@ export default function (Motor) {
       camera.shake(600 + forca * 80, 0.016 + forca * 4e-3);
       camera.flash(180, 255, 210, 120);
     },
-    /** Mostra uma vez por sessão o resumo do verbete do Glossário ligado ao que aconteceu. */
+    /** Mostra uma vez por sessão o resumo do verbete do Livro de conceitos ligado ao que aconteceu. */
     avisarVerbete(id) {
+      if (this.tutorial) return;
       const avisados = this.app.verbetesAvisados;
       if (avisados[id]) return;
       avisados[id] = true;
@@ -13053,7 +13251,7 @@ export default function (Motor) {
       if (chave === "dropout") {
         const n = camadasDesfaziveis(mao, eu);
         return {
-          titulo: "Gloss\xE1rio \xB7 Dropout (GatoNet)",
+          titulo: "Livro de conceitos \xB7 Dropout (GatoNet)",
           corpo: "Desfaz os \xFAltimos neur\xF4nios ocultos da sua rede, at\xE9 a camada que voc\xEA escolher. Eles v\xE3o para o cemit\xE9rio e voc\xEA continua da camada anterior. Custa 1 carta da m\xE3o por camada e n\xE3o gasta o turno.",
           agora: !minhaVez ? naoEhAVez : n === 0 ? "Agora: indispon\xEDvel, n\xE3o h\xE1 neur\xF4nio oculto para desfazer." : "Agora: d\xE1 para desfazer at\xE9 " + Math.min(n, jogador.mao.length) + " camada(s). Vale a pena quando a rede pegou neur\xF4nios fracos ou est\xE1 perto de formar uma quadra de figuras. Cuidado: se n\xE3o sobrar neur\xF4nio livre na camada, a rede \xE9 finalizada.",
           conceito: conceitoCurto("dropout")
@@ -13065,7 +13263,7 @@ export default function (Motor) {
         for (const c of jogador.mao) conta2[c.valor] = (conta2[c.valor] || 0) + 1;
         const maior = Object.entries(conta2).sort((a, b) => b[1] - a[1])[0];
         return {
-          titulo: "Gloss\xE1rio \xB7 Transfer learning",
+          titulo: "Livro de conceitos \xB7 Transfer learning",
           corpo: "Troca quatro cartas de mesmo valor da m\xE3o por cartas do limbo. Uma vez por m\xE3o; n\xE3o gasta o turno.",
           agora: jogador.transferUsado ? "Agora: voc\xEA j\xE1 usou o transfer nesta m\xE3o." : valor ? "Agora: voc\xEA tem quatro " + valor + ". Troque se eles n\xE3o servem para tunar nem atacar." : "Agora: precisa de quatro cartas iguais; seu maior grupo \xE9 " + (maior ? maior[1] + "\xD7 " + maior[0] : "nenhum") + ".",
           conceito: conceitoCurto("transfer")
@@ -13090,7 +13288,7 @@ export default function (Motor) {
         agora = "Agora: sua chance estimada de vencer esta m\xE3o \xE9 " + chance + "% (" + SIMULACOES_DA_DICA + " simula\xE7\xF5es de Monte Carlo). " + (chance >= 65 ? "Bom momento para pedir " + GRITO_TRUCO[proximo] : chance >= 40 ? "Arriscado: s\xF3 como blefe." : "Melhor n\xE3o trucar agora.");
       }
       return {
-        titulo: "Gloss\xE1rio \xB7 Truco",
+        titulo: "Livro de conceitos \xB7 Truco",
         corpo: "Aumenta o valor da m\xE3o: 1 \u2192 3 \u2192 6 \u2192 9 \u2192 12 tentos. Quem recebe o pedido aceita, corre (e entrega o valor atual) ou pede mais.",
         agora,
         conceito: conceitoCurto("truco")
@@ -13118,6 +13316,7 @@ export default function (Motor) {
      * pontos de cada neurônio, os combos de figuras e a soma.
      */
     abrirPlacarPorCamada() {
+      if (!this.tutorialPermite({ tipo: "regras" })) return this.tutorialRecusa();
       const mao = this.mao;
       if (!mao) return null;
       const total = mao.camadas.length;
@@ -13139,6 +13338,7 @@ export default function (Motor) {
     },
     /** Registro completo da mão, da primeira jogada à última (o painel da mesa mostra só o fim). */
     abrirRegistroCompleto() {
+      if (!this.tutorialPermite({ tipo: "regras" })) return this.tutorialRecusa();
       const mao = this.mao;
       if (!mao) return null;
       const linhas = mao.registro.length ? '<ol class="registro-completo">' + mao.registro.map((l) => "<li>" + escaparHtml(l) + "</li>").join("") + "</ol>" : '<p class="nota">Nada aconteceu ainda nesta m\xE3o.</p>';
@@ -13146,6 +13346,7 @@ export default function (Motor) {
     },
     /** Cartas fora de jogo: o cemitério (abertas) e o limbo (só a quantidade, porque são ocultas). */
     abrirCemiterio() {
+      if (!this.tutorialPermite({ tipo: "regras" })) return this.tutorialRecusa();
       const mao = this.mao;
       if (!mao) return null;
       const html = cabecalho("Cemit\xE9rio e limbo") + "<h3>Cemit\xE9rio \xB7 " + mao.cemiterio.length + '</h3><p class="nota">Cartas que sa\xEDram da mesa por overfit, early stop, stack overflow, dropout ou descarte. N\xE3o voltam.</p>' + listaDeCartas(mao.cemiterio, "O cemit\xE9rio est\xE1 vazio.") + "<h3>Limbo \xB7 " + mao.limbo.length + '</h3><p class="nota">Cartas queimadas no in\xEDcio, como ru\xEDdo. Ficam viradas para baixo e s\xF3 voltam por transfer learning.</p>' + rodape;
@@ -13756,16 +13957,764 @@ export default function (Motor) {
     }
   };
 
+  // src/nucleo/tutorial.js
+  var BLOQUEIOS_PADRAO = ["cartas", "neuronios", "acoes", "truco", "regras"];
+  var CATEGORIA_DA_ENTRADA = { carta: "cartas", neuronio: "neuronios", acao: "acoes", truco: "truco", regras: "regras" };
+  function rotuloDoId(id) {
+    return String(id).split("#")[0];
+  }
+  function rotulosOrdenados(ids) {
+    return ids.map(rotuloDoId).sort();
+  }
+  function mesmasCartas(a, b) {
+    const x = rotulosOrdenados(a), y = rotulosOrdenados(b);
+    return x.length === y.length && x.every((r, i) => r === y[i]);
+  }
+  function formatarTexto(texto, estado2) {
+    return String(texto).replace(/\{(soma|antes|rival|carta)(?::([^}]+))?\}/g, (_, marca, arg) => {
+      if (marca === "rival") return estado2.nomes[1];
+      if (marca === "carta") return rotuloCarta({ valor: arg.slice(0, -1), naipe: arg.slice(-1) });
+      return String(Math.round((marca === "soma" ? estado2.somas : estado2.somasAntes)[Number(arg)]));
+    });
+  }
+  function criarTutorial(roteiro, opcoes = {}) {
+    const nomes = opcoes.nomes || ["Voc\xEA", "Rival"], textos = opcoes.textos || {};
+    const passos = roteiro.passos;
+    const mao = novaMao({
+      ...roteiro.config || {},
+      semente: roteiro.semente,
+      jogadores: [{ nome: nomes[0], tipo: "humano" }, { nome: nomes[1], tipo: "oponente", oponente: opcoes.oponente || "aleatorio" }]
+    });
+    const ouvintes2 = /* @__PURE__ */ new Set();
+    const somasAgora = () => mao.jogadores.map((_, j) => pontuarRede(mao, j).total);
+    const tutorial = {
+      mao,
+      passos,
+      nomes,
+      /** Posição do passo atual (igual a `passos.length` quando acabou). */
+      indice: 0,
+      /** Soma de cada rede antes da última jogada e agora (para mostrar o que mudou). */
+      somasAntes: somasAgora(),
+      somas: somasAgora(),
+      /** Passo atual, ou null quando o roteiro acabou. */
+      get passo() {
+        return passos[this.indice] || null;
+      },
+      /** O roteiro acabou? */
+      get terminou() {
+        return this.indice >= passos.length;
+      },
+      /** O passo é uma jogada (do jogador ou do rival), e não um diálogo? */
+      ehJogada(passo = this.passo) {
+        return !!(passo && passo.jogadaEsperada);
+      },
+      /** O passo é uma jogada guiada, que o jogador faz? */
+      ehDoJogador(passo = this.passo) {
+        return this.ehJogada(passo) && passo.jogador === 0;
+      },
+      /** O passo é uma jogada que o roteiro faz pelo rival? */
+      ehDoRival(passo = this.passo) {
+        return this.ehJogada(passo) && passo.jogador === 1;
+      },
+      /** O passo é só uma fala do assistente? */
+      ehDialogo(passo = this.passo) {
+        return !!passo && !passo.jogadaEsperada;
+      },
+      /** Fala do passo (com as marcas preenchidas), ou '' quando ele não tem fala. */
+      texto(passo = this.passo) {
+        const texto = passo && textos[passo.id];
+        return texto ? formatarTexto(texto, this) : "";
+      },
+      /** Avisa `ouvinte(evento)` a cada passo novo (`{tipo:'passo', indice, passo}`) e no fim (`{tipo:'fim'}`). Devolve quem cancela. */
+      aoMudar(ouvinte) {
+        ouvintes2.add(ouvinte);
+        return () => ouvintes2.delete(ouvinte);
+      },
+      /**
+       * A jogada concreta (com os ids das cartas na mão) do passo de jogada, pronta para a partida.
+       * @returns {object|null} null quando o passo é um diálogo.
+       */
+      jogadaDoPasso(passo = this.passo) {
+        if (!this.ehJogada(passo)) return null;
+        const e = passo.jogadaEsperada, j = passo.jogador;
+        const ids = (rotulos) => {
+          const usadas = /* @__PURE__ */ new Set();
+          return rotulos.map((rotulo) => {
+            const carta = mao.jogadores[j].mao.find((c) => rotuloDoId(c.id) === rotulo && !usadas.has(c.id));
+            if (!carta) throw new Error('Tutorial "' + passo.id + '": a carta ' + rotulo + " n\xE3o est\xE1 na m\xE3o de " + nomes[j]);
+            usadas.add(carta.id);
+            return carta.id;
+          });
+        };
+        switch (e.tipo) {
+          case "inicio":
+            return { tipo: "inicio", jogador: j, carta: ids([e.carta])[0] };
+          case "ativar":
+            return { tipo: "ativar", jogador: j, neuronio: e.neuronio };
+          case "empilhar":
+            return { tipo: "empilhar", jogador: j, neuronio: e.neuronio, cartas: ids(e.cartas) };
+          case "dropout":
+            return { tipo: "dropout", jogador: j, n: e.n, pagamento: ids(e.pagamento) };
+          case "passar":
+            return { tipo: "passar", jogador: j };
+          default:
+            throw new Error('Tutorial "' + passo.id + '": jogada desconhecida ' + e.tipo);
+        }
+      },
+      /** A jogada é a esperada no passo atual? Só vale para passos do jogador. */
+      aceita(jogada) {
+        const passo = this.passo;
+        if (!this.ehDoJogador(passo) || !jogada || jogada.jogador !== passo.jogador) return false;
+        const e = passo.jogadaEsperada;
+        if (jogada.tipo !== e.tipo) return false;
+        switch (e.tipo) {
+          case "inicio":
+            return rotuloDoId(jogada.carta) === e.carta;
+          case "ativar":
+            return jogada.neuronio === e.neuronio;
+          case "empilhar":
+            return jogada.neuronio === e.neuronio && mesmasCartas(jogada.cartas || [], e.cartas);
+          case "dropout":
+            return jogada.n === e.n && mesmasCartas(jogada.pagamento || [], e.pagamento);
+          case "passar":
+            return true;
+          default:
+            return false;
+        }
+      },
+      /**
+       * Ação (botão da barra) que leva à jogada esperada: 'tunagem', 'overfit', 'earlystop',
+       * 'stackoverflow', 'dropout' ou 'passar'. null quando o passo não é uma jogada do jogador
+       * ou a jogada não passa por um botão.
+       */
+      acaoEsperada(passo = this.passo) {
+        if (!this.ehDoJogador(passo)) return null;
+        const e = passo.jogadaEsperada;
+        if (e.tipo === "dropout" || e.tipo === "passar") return e.tipo;
+        if (e.tipo !== "empilhar") return null;
+        const efeito = efeitoDoEmpilhamento(mao, passo.jogador, mao.neuronios[e.neuronio], e.cartas.length);
+        return efeito ? efeito.tipo : null;
+      },
+      /**
+       * Esta entrada da mesa está liberada no passo atual? A mesa pergunta antes de agir.
+       * Entradas: `{tipo:'carta', id}`, `{tipo:'neuronio', id}`, `{tipo:'acao', id}` (botões da barra),
+       * `{tipo:'truco'}` e `{tipo:'regras'}` (REGRAS e MENU). Entrada de uma categoria que o passo não
+       * bloqueia está liberada; nas bloqueadas, só vale o que a jogada esperada pede. Limpar a seleção
+       * nunca é bloqueado.
+       */
+      permite(entrada) {
+        const passo = this.passo;
+        if (!passo) return false;
+        if (entrada.tipo === "acao" && entrada.id === "limpar") return true;
+        const bloqueios = passo.bloqueios || BLOQUEIOS_PADRAO;
+        if (!bloqueios.includes(CATEGORIA_DA_ENTRADA[entrada.tipo])) return true;
+        if (!this.ehDoJogador(passo)) return false;
+        const e = passo.jogadaEsperada;
+        switch (entrada.tipo) {
+          case "carta": {
+            const rotulo = rotuloDoId(entrada.id);
+            return e.tipo === "inicio" ? rotulo === e.carta : e.tipo === "empilhar" ? e.cartas.includes(rotulo) : e.tipo === "dropout" ? e.pagamento.includes(rotulo) : false;
+          }
+          case "neuronio":
+            return (e.tipo === "ativar" || e.tipo === "empilhar") && entrada.id === e.neuronio;
+          case "acao":
+            return entrada.id === this.acaoEsperada(passo);
+          default:
+            return false;
+        }
+      },
+      /**
+       * O que o balão do passo aponta agora. Nos diálogos, é o `destaque` do passo. Nas jogadas
+       * guiadas, primeiro as cartas que faltam selecionar; depois, o botão e o neurônio do alvo.
+       * @param {string[]} [selecionadas] Rótulos das cartas já selecionadas na mão.
+       * @returns {(string|object)[]} Itens como os do campo `destaque` do roteiro.
+       */
+      destaques(selecionadas = []) {
+        const passo = this.passo;
+        if (!passo) return [];
+        if (!this.ehDoJogador(passo)) return passo.destaque || [];
+        const e = passo.jogadaEsperada;
+        const faltam = (rotulos) => {
+          const feitas = selecionadas.map(rotuloDoId).slice();
+          return rotulos.filter((r) => {
+            const i = feitas.indexOf(r);
+            if (i >= 0) {
+              feitas.splice(i, 1);
+              return false;
+            }
+            return true;
+          });
+        };
+        switch (e.tipo) {
+          case "inicio":
+            return [{ carta: e.carta }];
+          case "ativar":
+            return [{ neuronio: e.neuronio }];
+          case "empilhar": {
+            const f = faltam(e.cartas);
+            return f.length ? f.map((carta) => ({ carta })) : [{ acao: this.acaoEsperada(passo) }, { neuronio: e.neuronio }];
+          }
+          case "dropout": {
+            const f = faltam(e.pagamento);
+            return f.length ? f.map((carta) => ({ carta })) : [{ acao: "dropout" }];
+          }
+          default:
+            return [{ acao: "passar" }];
+        }
+      },
+      /** Avança um passo e avisa os ouvintes. */
+      avancarPasso() {
+        this.indice++;
+        for (const ouvinte of [...ouvintes2]) ouvinte(this.terminou ? { tipo: "fim" } : { tipo: "passo", indice: this.indice, passo: this.passo });
+      },
+      /** Aplica na partida uma jogada que o roteiro autoriza, guardando as somas de antes e de depois. */
+      aplicar(jogada) {
+        this.somasAntes = somasAgora();
+        aplicarJogada(mao, jogada);
+        this.somas = somasAgora();
+      },
+      /**
+       * Jogada do jogador: só passa a esperada do passo atual; qualquer outra é recusada e nada muda.
+       * Aplica na partida e avança o roteiro.
+       * @returns {object} A mão, depois da jogada.
+       */
+      jogar(jogada) {
+        if (!this.aceita(jogada)) throw new Error("Fora do roteiro: " + (this.passo ? 'o passo "' + this.passo.id + '" n\xE3o espera essa jogada' : "o tutorial acabou"));
+        this.aplicar(jogada);
+        this.avancarPasso();
+        return mao;
+      },
+      /**
+       * Jogada do rival, a do passo atual do roteiro (sem passar pelo bot).
+       * @returns {object} A jogada aplicada.
+       */
+      jogarDoRival() {
+        if (!this.ehDoRival()) throw new Error("Fora do roteiro: o passo atual n\xE3o \xE9 uma jogada do rival");
+        const jogada = this.jogadaDoPasso();
+        this.aplicar(jogada);
+        this.avancarPasso();
+        return jogada;
+      },
+      /** Passa um diálogo (botão Próximo). Devolve false se o passo atual não for um diálogo. */
+      proximo() {
+        if (!this.ehDialogo()) return false;
+        this.avancarPasso();
+        return true;
+      },
+      /** Roda o roteiro inteiro por código, na ordem. Serve aos testes. Devolve os ids dos passos percorridos. */
+      rodarTudo() {
+        const percorridos = [];
+        while (!this.terminou) {
+          const passo = this.passo;
+          percorridos.push(passo.id);
+          if (this.ehDialogo(passo)) this.proximo();
+          else if (this.ehDoRival(passo)) this.jogarDoRival();
+          else this.jogar(this.jogadaDoPasso(passo));
+        }
+        return percorridos;
+      }
+    };
+    return tutorial;
+  }
+
+  // src/conteudo/roteiroDoTutorial.js
+  var SEMENTE_DO_TUTORIAL = 4703;
+  var CONFIG_DO_TUTORIAL = {
+    baralho: "classico",
+    terreno: "neutro",
+    inicio: "revela-descarta",
+    arquitetura: "padrao",
+    baralhos: 2
+  };
+  var NOME_DO_ASSISTENTE = "Percy";
+  var OPONENTE_DO_TUTORIAL = "aleatorio";
+  var PASSOS = [
+    /* ---- #139: objetivo, a rede, quem começa, pontuação e a primeira jogada */
+    { id: "boas-vindas" },
+    { id: "objetivo", destaque: ["tabuleiro"] },
+    { id: "rede", destaque: ["tabuleiro"] },
+    { id: "rede-caminho", destaque: ["tabuleiro"] },
+    { id: "mao", destaque: ["mao"] },
+    { id: "limbo-e-cemiterio", destaque: ["limbo", "cemiterio"] },
+    { id: "quem-comeca", destaque: ["mao"] },
+    { id: "revelar", jogador: 0, jogadaEsperada: { tipo: "inicio", carta: "5O" } },
+    { id: "rival-revela", jogador: 1, jogadaEsperada: { tipo: "inicio", carta: "3E" } },
+    { id: "pontos-valores", destaque: [{ carta: "10C" }, { carta: "QE" }] },
+    { id: "pontos-soma", destaque: ["placar-voce"] },
+    { id: "primeira-jogada", jogador: 0, jogadaEsperada: { tipo: "ativar", neuronio: "C0N1" } },
+    { id: "primeira-jogada-depois", destaque: ["placar-voce"] },
+    { id: "rival-entrada", jogador: 1, jogadaEsperada: { tipo: "ativar", neuronio: "C0N0" } },
+    { id: "camada-1", jogador: 0, jogadaEsperada: { tipo: "ativar", neuronio: "C1N0" } },
+    { id: "rival-camada-1", jogador: 1, jogadaEsperada: { tipo: "ativar", neuronio: "C1N2" } },
+    /* ---- #140: tunagem e overfit */
+    { id: "tunagem", jogador: 0, jogadaEsperada: { tipo: "empilhar", neuronio: "C1N0", cartas: ["10C"] }, verbete: "tunagem" },
+    { id: "tunagem-depois", destaque: ["placar-voce"] },
+    { id: "rival-camada-2", jogador: 1, jogadaEsperada: { tipo: "ativar", neuronio: "C2N1" } },
+    { id: "overfit", jogador: 0, jogadaEsperada: { tipo: "empilhar", neuronio: "C2N1", cartas: ["8C"] }, verbete: "overfit" },
+    { id: "overfit-depois", destaque: ["placar-rival"] },
+    { id: "rival-camada-2b", jogador: 1, jogadaEsperada: { tipo: "ativar", neuronio: "C2N3" } },
+    /* ---- #141: dropout, early stop (sofrido e aplicado) e passar a vez */
+    { id: "camada-2", jogador: 0, jogadaEsperada: { tipo: "ativar", neuronio: "C2N0" } },
+    { id: "rival-camada-3", jogador: 1, jogadaEsperada: { tipo: "ativar", neuronio: "C3N0" } },
+    { id: "dropout", jogador: 0, jogadaEsperada: { tipo: "dropout", n: 1, pagamento: ["JE"] }, verbete: "dropout" },
+    { id: "dropout-depois", jogador: 0, jogadaEsperada: { tipo: "ativar", neuronio: "C2N2" } },
+    { id: "rival-earlystop", jogador: 1, jogadaEsperada: { tipo: "empilhar", neuronio: "C2N2", cartas: ["5C", "5E"] }, verbete: "earlystop" },
+    { id: "passar", jogador: 0, jogadaEsperada: { tipo: "passar" } },
+    { id: "rival-camada-4", jogador: 1, jogadaEsperada: { tipo: "ativar", neuronio: "C4N2" } },
+    { id: "earlystop", jogador: 0, jogadaEsperada: { tipo: "empilhar", neuronio: "C4N2", cartas: ["4O", "4P"] }, verbete: "earlystop" },
+    /* ---- #142: fim da mão, transfer learning e stack overflow (só diálogo) e despedida */
+    { id: "fim-da-mao", destaque: ["placar"] },
+    { id: "transfer", destaque: ["limbo"], verbete: "transfer" },
+    { id: "stackoverflow", destaque: ["acoes"], verbete: "stackoverflow" },
+    { id: "truco", destaque: ["truco"], verbete: "truco" },
+    { id: "despedida", livro: true }
+  ];
+  var ROTEIRO = { semente: SEMENTE_DO_TUTORIAL, config: CONFIG_DO_TUTORIAL, passos: PASSOS };
+
+  // src/conteudo/textosDoTutorial.js
+  var TEXTOS = {
+    /* ---- #139 */
+    "boas-vindas": "Oi! Eu sou o Percy, o seu assistente. Em poucos minutos voc\xEA aprende a jogar e disputa uma m\xE3o de verdade contra o {rival}.",
+    "objetivo": "O objetivo \xE9 montar a rede neural de maior valor, da entrada \xE0 sa\xEDda. E voc\xEA pode sabotar a rede do advers\xE1rio pelo caminho.",
+    "rede": "Cada coluna \xE9 uma camada: a entrada tem 3 neur\xF4nios, s\xE3o 5 camadas ocultas e a sa\xEDda tem 4. Cada carta virada para baixo \xE9 um neur\xF4nio.",
+    "rede-caminho": "Voc\xEA liga a entrada \xE0 sa\xEDda com um neur\xF4nio por camada, e cada rede tem a sua cor: a sua \xE9 azul.",
+    "mao": "Estas s\xE3o as suas cartas. Normalmente s\xE3o 5 por baralho; no tutorial voc\xEA usa 2 baralhos, com 10 cartas, para treinar todas as jogadas.",
+    "limbo-e-cemiterio": "As cartas que sobram v\xE3o para o limbo, sem ningu\xE9m ver. Carta usada ou descartada vai para o cemit\xE9rio e n\xE3o volta.",
+    "quem-comeca": "Quem come\xE7a? O menu oferece tr\xEAs formas: revelar uma carta que vai para o cemit\xE9rio, revelar uma que volta para a m\xE3o, ou par ou \xEDmpar no sorteio.",
+    "revelar": "Vamos usar a primeira forma: revele o 5\u2666, que n\xE3o vai fazer falta. A carta mais forte come\xE7a.",
+    "rival-revela": "O {rival} revelou o 3\u2660. O seu 5\u2666 \xE9 mais forte, ent\xE3o voc\xEA come\xE7a!",
+    "pontos-valores": "Cada carta vale o n\xFAmero dela: o seu 10\u2665 vale 10, e o \xC1s vale 11. Valete, dama e rei sozinhos valem 0, como a sua dama de espadas.",
+    "pontos-soma": "Figuras iguais lado a lado valem 10 cada: um par de reis soma 20. A soma da sua rede aparece aqui, no placar.",
+    "primeira-jogada": "Sua vez! O movimento normal \xE9 avan\xE7ar: clique no neur\xF4nio destacado da camada de entrada. Eu espiei, e ele \xE9 um bom neur\xF4nio.",
+    "primeira-jogada-depois": "O 9\u2663 entrou na sua rede, e o placar j\xE1 mostra {soma:0} pontos. Agora \xE9 a vez do {rival}.",
+    "rival-entrada": null,
+    "camada-1": "Agora a camada 1: ative o neur\xF4nio destacado, um 10. Eu espiei, e voc\xEA tem outro 10 na m\xE3o.",
+    "rival-camada-1": null,
+    /* ---- #140 */
+    "tunagem": "Tunagem: empilhe uma carta da m\xE3o sobre um neur\xF4nio seu de mesmo valor e some o valor dela. Selecione o 10\u2665 e clique em Tunagem.",
+    "tunagem-depois": "O neur\xF4nio passou a valer 20, e a sua soma foi de {antes:0} para {soma:0}. \xC9 como ajustar um neur\xF4nio que j\xE1 funciona (fine-tuning).",
+    "rival-camada-2": null,
+    "overfit": "Overfit: o \xFAltimo neur\xF4nio do rival \xE9 um 8, igual ao 8\u2665 da sua m\xE3o. Selecione o 8\u2665 e clique em Overfit para tir\xE1-lo da rede dele.",
+    "overfit-depois": "O 8 foi para o cemit\xE9rio e a rede do {rival} recuou uma camada: a soma dele caiu de {antes:1} para {soma:1}.",
+    "rival-camada-2b": null,
+    /* ---- #141 */
+    "camada-2": "Camada 2: ative o neur\xF4nio destacado. No jogo de verdade voc\xEA escolhe \xE0s cegas e pode tirar uma figura, que sozinha vale 0.",
+    "rival-camada-3": null,
+    "dropout": "Dropout: pague uma carta da m\xE3o para desfazer o \xFAltimo neur\xF4nio oculto da sua rede, sem gastar a vez. Selecione o J\u2660 e clique em Dropout.",
+    "dropout-depois": "O valete foi para o cemit\xE9rio e a camada 2 ficou livre. O dropout n\xE3o gasta a vez: ative agora o neur\xF4nio destacado, um 5.",
+    "rival-earlystop": "Opa! O {rival} tinha dois 5 e usou Early stop: a sua rede foi interrompida e o neur\xF4nio atingido saiu dela.",
+    "passar": "Com a rede interrompida voc\xEA n\xE3o avan\xE7a mais, mas ainda pode atacar. Sem ataque poss\xEDvel agora, clique em Passar e espere o rival.",
+    "rival-camada-4": null,
+    "earlystop": "Sua vez de atacar: o \xFAltimo neur\xF4nio do rival \xE9 um 4, e voc\xEA tem dois 4. Selecione o 4\u2666 e o 4\u2663 e clique em Early stop.",
+    /* ---- #142 */
+    "fim-da-mao": "Fim da m\xE3o! As duas redes foram interrompidas e vence a maior soma: a sua tem {soma:0} pontos e a do {rival}, {soma:1}.",
+    "transfer": "Duas jogadas ficaram de fora do treino. Transfer learning troca 4 cartas iguais da sua m\xE3o por cartas do limbo, uma vez por m\xE3o e sem gastar a vez.",
+    "stackoverflow": "Stack overflow: com 3 cartas iguais sobre o neur\xF4nio de um rival, ele perde a rede e toda a m\xE3o. Na sua pr\xF3pria rede, \xE9 um desastre.",
+    "truco": "E o TRUCO? \xC9 o bot\xE3o que aumenta o valor da m\xE3o: o outro jogador aceita, corre ou aumenta. Fica desligado no tutorial.",
+    "despedida": "Pronto, voc\xEA j\xE1 sabe jogar! Quando quiser rever um conceito, abra o Livro de conceitos e toque em Aprender mais."
+  };
+
+  // src/interface/assistente.js
+  var FOLGA = 8;
+  function sobreposicao(r, s) {
+    const l = Math.min(r.x + r.l, s.x + s.l) - Math.max(r.x, s.x), a = Math.min(r.y + r.a, s.y + s.a) - Math.max(r.y, s.y);
+    return l > 0 && a > 0 ? l * a : 0;
+  }
+  function posicionarBalao(tela, tamanhos, alvos) {
+    const dentro = (x, y, t) => x >= FOLGA && y >= FOLGA && x + t.l <= tela.l - FOLGA && y + t.a <= tela.a - FOLGA;
+    const limitar = (x, y, t) => [Math.max(FOLGA, Math.min(x, tela.l - FOLGA - t.l)), Math.max(FOLGA, Math.min(y, tela.a - FOLGA - t.a))];
+    const uniao = alvos.length ? {
+      x: Math.min(...alvos.map((r) => r.x)),
+      y: Math.min(...alvos.map((r) => r.y)),
+      l: 0,
+      a: 0
+    } : null;
+    if (uniao) {
+      uniao.l = Math.max(...alvos.map((r) => r.x + r.l)) - uniao.x;
+      uniao.a = Math.max(...alvos.map((r) => r.y + r.a)) - uniao.y;
+    }
+    const centro = uniao ? { x: uniao.x + uniao.l / 2, y: uniao.y + uniao.a / 2 } : { x: tela.l / 2, y: tela.a / 2 };
+    let melhor = null;
+    tamanhos.forEach((t, indice) => {
+      const candidatos = [];
+      if (uniao) {
+        const cx = centro.x - t.l / 2, cy = centro.y - t.a / 2;
+        candidatos.push(
+          ["abaixo", cx, uniao.y + uniao.a + FOLGA],
+          ["acima", cx, uniao.y - t.a - FOLGA],
+          ["direita", uniao.x + uniao.l + FOLGA, cy],
+          ["esquerda", uniao.x - t.l - FOLGA, cy]
+        );
+      }
+      const meio = (tela.l - t.l) / 2, centroV = (tela.a - t.a) / 2, fim = tela.l - FOLGA - t.l, base = tela.a - FOLGA - t.a;
+      candidatos.push(
+        ["tela-baixo", meio, base],
+        ["tela-cima", meio, FOLGA],
+        ["tela-esquerda", FOLGA, centroV],
+        ["tela-direita", fim, centroV],
+        ["tela-canto-1", FOLGA, base],
+        ["tela-canto-2", fim, base],
+        ["tela-canto-3", FOLGA, FOLGA],
+        ["tela-canto-4", fim, FOLGA]
+      );
+      for (const [lado, px, py] of candidatos) {
+        const [x, y] = lado.startsWith("tela") ? [px, py] : limitar(px, py, t);
+        if (!dentro(x, y, t)) continue;
+        const caixa = { x: x - FOLGA / 2, y: y - FOLGA / 2, l: t.l + FOLGA, a: t.a + FOLGA };
+        const coberto = alvos.reduce((soma2, r) => soma2 + sobreposicao(caixa, r), 0);
+        const distancia = Math.hypot(x + t.l / 2 - centro.x, y + t.a / 2 - centro.y);
+        const nota2 = coberto * 1e3 + distancia + indice * 0.5;
+        if (!melhor || nota2 < melhor.nota) melhor = { nota: nota2, x, y, l: t.l, a: t.a, indice, livre: coberto === 0, lado };
+      }
+    });
+    if (!melhor) {
+      const t = tamanhos[tamanhos.length - 1];
+      const [x, y] = limitar(FOLGA, FOLGA, t);
+      melhor = { x, y, l: t.l, a: t.a, indice: tamanhos.length - 1, livre: false, lado: "tela-canto-3" };
+    }
+    delete melhor.nota;
+    return melhor;
+  }
+  var retratoDoPercy = null;
+  function retrato() {
+    if (retratoDoPercy === null) {
+      try {
+        retratoDoPercy = desenharAvatar("percy", CORES_CSS.j0, 1.5).toDataURL();
+      } catch (e) {
+        retratoDoPercy = "";
+      }
+    }
+    return retratoDoPercy;
+  }
+  function contornoDaCamada(tela, buracos) {
+    let d = "M0 0H" + tela.l + "V" + tela.a + "H0Z";
+    for (const r of buracos) {
+      const x = Math.round(r.x), y = Math.round(r.y), l = Math.round(r.l), a = Math.round(r.a);
+      d += "M" + x + " " + y + "h" + l + "v" + a + "h" + -l + "Z";
+    }
+    return d;
+  }
+  function criarAssistente({ nome, aoProximo, aoPular, aoAprender }) {
+    let raiz2 = document.getElementById("assistente");
+    if (!raiz2) {
+      raiz2 = document.createElement("div");
+      raiz2.id = "assistente";
+      document.body.appendChild(raiz2);
+    }
+    raiz2.innerHTML = '<svg class="assistente-escuro" width="100%" height="100%" aria-hidden="true"><path fill-rule="evenodd" fill="rgba(4,8,6,.62)" d=""></path></svg><div class="assistente-aneis"></div><div class="assistente-balao" role="dialog" aria-label="Assistente ' + escaparHtml(nome) + '" hidden><span class="assistente-seta"></span><div class="assistente-topo"><img class="assistente-retrato" alt="" width="44" height="44"><b class="assistente-nome">' + escaparHtml(nome) + '</b></div><p class="assistente-texto" aria-live="polite"></p><div class="assistente-botoes"><button type="button" class="assistente-pular">Pular tutorial</button><button type="button" class="botao discreto pequeno assistente-aprender" hidden>Aprender mais</button><button type="button" class="botao pequeno assistente-proximo">Pr\xF3ximo</button></div></div>';
+    const q = (s) => raiz2.querySelector(s);
+    const escuro = q(".assistente-escuro"), caminho = escuro.querySelector("path"), aneis = q(".assistente-aneis"), balao = q(".assistente-balao");
+    const texto = q(".assistente-texto"), proximo = q(".assistente-proximo"), aprender = q(".assistente-aprender"), seta = q(".assistente-seta");
+    const foto = q(".assistente-retrato");
+    const imagem = retrato();
+    if (imagem) foto.src = imagem;
+    else foto.hidden = true;
+    proximo.addEventListener("click", () => aoProximo());
+    aprender.addEventListener("click", () => aoAprender());
+    q(".assistente-pular").addEventListener("click", () => {
+      confirmar("Pular o tutorial?", "Voc\xEA pode faz\xEA-lo quando quiser em Como jogar, no menu inicial.", [
+        { rotulo: "Continuar o tutorial", classe: "discreto" },
+        { rotulo: "Pular tutorial", classe: "vinho", acao: () => aoPular() }
+      ]);
+    });
+    let estado2 = null, destruido = false;
+    const tela = () => ({ l: window.innerWidth, a: window.innerHeight });
+    function desenhar() {
+      if (destruido || !estado2) return;
+      const t = tela(), alvos = (estado2.alvos ? estado2.alvos() : []).filter((r) => r && r.l > 0 && r.a > 0);
+      const margem = 4, buracos = alvos.map((r) => ({ x: r.x - margem, y: r.y - margem, l: r.l + margem * 2, a: r.a + margem * 2 }));
+      caminho.setAttribute("d", contornoDaCamada(t, buracos));
+      escuro.style.opacity = estado2.escurecer === false ? "0" : "1";
+      aneis.innerHTML = "";
+      for (const r of buracos) {
+        const anel = document.createElement("div");
+        anel.className = "assistente-anel";
+        anel.style.cssText = "left:" + r.x + "px;top:" + r.y + "px;width:" + r.l + "px;height:" + r.a + "px";
+        aneis.appendChild(anel);
+      }
+      const larguras = [Math.min(340, t.l - 2 * FOLGA), 260, 210, 170, 140].filter((l, i, todas) => l <= t.l - 2 * FOLGA && todas.indexOf(l) === i);
+      const tamanhos = larguras.map((l) => {
+        balao.style.width = l + "px";
+        balao.style.left = "0";
+        balao.style.top = "0";
+        return { l, a: balao.offsetHeight };
+      });
+      const pos = posicionarBalao(t, tamanhos, buracos);
+      balao.style.width = pos.l + "px";
+      balao.style.left = Math.round(pos.x) + "px";
+      balao.style.top = Math.round(pos.y) + "px";
+      balao.dataset.lado = pos.lado;
+      balao.dataset.livre = pos.livre ? "1" : "0";
+      seta.hidden = !buracos.length || pos.lado.startsWith("tela");
+      if (!seta.hidden) {
+        const alvo = buracos[0], cx = Math.max(16, Math.min(pos.l - 16, alvo.x + alvo.l / 2 - pos.x));
+        const cy = Math.max(16, Math.min(pos.a - 16, alvo.y + alvo.a / 2 - pos.y));
+        seta.className = "assistente-seta " + ({ abaixo: "para-cima", acima: "para-baixo", direita: "para-esquerda", esquerda: "para-direita" }[pos.lado] || "");
+        seta.style.left = /esquerda|direita/.test(seta.className) ? "" : cx + "px";
+        seta.style.top = /esquerda|direita/.test(seta.className) ? cy + "px" : "";
+      }
+    }
+    const aoRedimensionar = () => desenhar();
+    window.addEventListener("resize", aoRedimensionar);
+    return {
+      elemento: raiz2,
+      /**
+       * Mostra uma fala.
+       * @param {object} d
+       * @param {string} d.texto
+       * @param {() => object[]} [d.alvos] Devolve os retângulos destacados (em pixels da tela); chamada a cada redesenho.
+       * @param {string|null} [d.botao] Texto do botão Próximo; null para esconder (jogada guiada: o jogador clica na mesa).
+       * @param {boolean} [d.verbete] Mostra o link Aprender mais.
+       * @param {boolean} [d.escurecer=true] Escurece o resto da tela.
+       */
+      mostrar(d) {
+        estado2 = d;
+        balao.hidden = false;
+        texto.textContent = d.texto;
+        proximo.hidden = !d.botao;
+        if (d.botao) proximo.textContent = d.botao;
+        aprender.hidden = !d.verbete;
+        ajustarFontesDosBotoes(balao, ".botao");
+        desenhar();
+        if (d.botao) proximo.focus({ preventScroll: true });
+      },
+      /** Redesenha com os mesmos dados (a mesa mudou: carta selecionada, tela girada). */
+      atualizar() {
+        desenhar();
+      },
+      /** Esconde o balão e os destaques (durante as jogadas do rival e as animações). */
+      esconder() {
+        estado2 = null;
+        balao.hidden = true;
+        aneis.innerHTML = "";
+        escuro.style.opacity = "0";
+      },
+      /** Toque fora do roteiro: o balão balança para chamar a atenção. */
+      sacudir() {
+        balao.classList.remove("sacudindo");
+        void balao.offsetWidth;
+        balao.classList.add("sacudindo");
+      },
+      destruir() {
+        destruido = true;
+        window.removeEventListener("resize", aoRedimensionar);
+        raiz2.remove();
+      }
+    };
+  }
+
+  // src/cenas/mesa/tutorial.js
+  var OPCOES_DO_TUTORIAL = { ...CONFIG_DO_TUTORIAL, jogadores: 2, humanos: 1, oponente: OPONENTE_DO_TUTORIAL };
+  var metodosDoTutorial = {
+    /** Dados com que a cena foi iniciada (`{ origem }`) quando é o tutorial; null no jogo normal. */
+    dadosDoTutorial() {
+      const dados = this.sys && this.sys.settings && this.sys.settings.data;
+      return dados && dados.tutorial || null;
+    },
+    /** Liga o modo tutorial: cria o roteiro e o assistente. Chamado no `create` da cena. */
+    prepararTutorial(dados) {
+      this.dadosDoTutorial_ = dados;
+      this.tutorial = criarTutorial(ROTEIRO, { textos: TEXTOS, nomes: ["Voc\xEA", OPONENTES[OPONENTE_DO_TUTORIAL].nome], oponente: OPONENTE_DO_TUTORIAL });
+      this.assistente = criarAssistente({
+        nome: NOME_DO_ASSISTENTE,
+        aoProximo: () => this.aoProximoDoTutorial && this.aoProximoDoTutorial(),
+        aoPular: () => this.terminarTutorial(true),
+        aoAprender: () => this.aprenderMaisDoTutorial()
+      });
+      this.events.once("shutdown", () => {
+        if (this.assistente) this.assistente.destruir();
+        this.assistente = null;
+      });
+    },
+    /* ------------------------------------------------------------------ bloqueio */
+    /** A entrada (ver `permite` em nucleo/tutorial.js) está liberada? Fora do tutorial, sempre. */
+    tutorialPermite(entrada) {
+      return !this.tutorial || this.tutorial.permite(entrada);
+    },
+    /** Entrada recusada: o balão balança e nada mais acontece. Devolve sempre `undefined`. */
+    tutorialRecusa() {
+      if (this.assistente) this.assistente.sacudir();
+    },
+    /* ------------------------------------------------------------------ fluxo */
+    /** Decide o que vem agora no roteiro: fim, jogada do rival, jogada guiada ou diálogo. */
+    avancarTutorial() {
+      if (this.encerrada || !this.scene.isActive()) return;
+      const t = this.tutorial;
+      if (t.terminou) return this.terminarTutorial(false);
+      const passo = t.passo;
+      this.quemVe = 0;
+      if (t.ehDoRival(passo)) return this.jogarRivalDoTutorial();
+      const doJogador = t.ehDoJogador(passo);
+      this.ocupada = !doJogador;
+      this.modo = doJogador && passo.jogadaEsperada.tipo === "inicio" ? "inicio" : "livre";
+      this.selecao = [];
+      this.acaoEscolhida = null;
+      this.redesenhar();
+      this.mostrarFalaDoTutorial(
+        passo,
+        doJogador ? null : t.passo === t.passos[t.passos.length - 1] ? "Concluir" : "Pr\xF3ximo",
+        () => {
+          t.proximo();
+          this.avancarTutorial();
+        }
+      );
+    },
+    /**
+     * Mostra a fala de um passo.
+     * @param {object} passo
+     * @param {string|null} botao Texto do botão do balão; null nas jogadas guiadas (o jogador clica na mesa).
+     * @param {() => void} aoProximo O que o botão faz.
+     */
+    mostrarFalaDoTutorial(passo, botao, aoProximo) {
+      const t = this.tutorial;
+      this.aoProximoDoTutorial = aoProximo;
+      this.passoDaFala = passo;
+      this.assistente.mostrar({
+        texto: t.texto(passo),
+        botao,
+        verbete: !!(passo.verbete || passo.livro),
+        alvos: () => this.retangulosDoTutorial(passo),
+        escurecer: !!(t.ehDoJogador(passo) || passo.destaque && passo.destaque.length)
+      });
+    },
+    /** Retângulos (em pixels da tela) do que o balão do passo aponta agora. */
+    retangulosDoTutorial(passo) {
+      const t = this.tutorial;
+      if (t.passo !== passo && !(passo.destaque && passo.destaque.length)) return [];
+      const marcadas = (this.selecao || []).map(rotuloDoId);
+      const itens = t.passo === passo ? t.destaques(marcadas) : passo.destaque;
+      return itens.map((item) => this.retanguloDoAlvo(item)).filter(Boolean);
+    },
+    /** Retângulo, em pixels da tela, de um destaque do roteiro (ver `destaque` em roteiroDoTutorial.js). */
+    retanguloDoAlvo(alvo) {
+      const p = this.painel, R = (cx, cy, l, a) => retanguloNaTela(this, cx, cy, l, a);
+      const dosLimites = (b) => R((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, b.x1 - b.x0, b.y1 - b.y0);
+      const doBotao = (botao) => {
+        if (!botao) return null;
+        const b = botao.getBounds();
+        return R(b.centerX, b.centerY, b.width, b.height);
+      };
+      if (typeof alvo === "string") {
+        switch (alvo) {
+          case "tabuleiro":
+            return dosLimites(TABULEIRO);
+          case "mao": {
+            const imgs = this.cartasDaMao || [];
+            if (!imgs.length) return null;
+            const x0 = Math.min(...imgs.map((i) => i.x - i.displayWidth / 2)), x1 = Math.max(...imgs.map((i) => i.x + i.displayWidth / 2));
+            const y0 = Math.min(...imgs.map((i) => i.y - i.displayHeight / 2)), y1 = Math.max(...imgs.map((i) => i.y + i.displayHeight / 2));
+            return dosLimites({ x0, x1, y0, y1 });
+          }
+          case "limbo":
+          case "cemiterio":
+            return R(p[alvo].x, p[alvo].y, ESQ.pilha.l + 10, ESQ.pilha.a + 10);
+          case "placar": {
+            const primeiro = p.blocos[0], ultimo = p.blocos[p.blocos.length - 1];
+            return dosLimites({ x0: PAINEL_DIR.x + 6, x1: PAINEL_DIR.x + PAINEL_DIR.l - 6, y0: primeiro.y, y1: ultimo.y + ultimo.a });
+          }
+          case "placar-voce":
+          case "placar-rival": {
+            const b = alvo === "placar-voce" ? p.blocos[p.blocos.length - 1] : p.blocos[0];
+            return dosLimites({ x0: b.x, x1: b.x + b.l, y0: b.y, y1: b.y + b.a });
+          }
+          case "truco":
+            return doBotao(p.truco);
+          case "acoes":
+            return dosLimites({ x0: PAINEL_DIR.x + 12, x1: PAINEL_DIR.x + PAINEL_DIR.l - 12, y0: DIR.acoes - DIR.alturaAcao / 2, y1: DIR.acoes2 + DIR.alturaAcao / 2 });
+          default:
+            return null;
+        }
+      }
+      if (alvo.neuronio) {
+        const n = this.mao.neuronios[alvo.neuronio], { l, a } = cartaDaMesa();
+        return n ? R(colunaX(n.camada), linhaY(n.camada, n.posicao), l + 6, a + 6) : null;
+      }
+      if (alvo.carta) {
+        const imgs = (this.cartasDaMao || []).filter((i) => rotuloDoId(i.idCarta) === alvo.carta);
+        const img = imgs.find((i) => !(this.selecao || []).includes(i.idCarta)) || imgs[0];
+        return img ? R(img.x, img.y, img.displayWidth || TAMANHO_CARTA.maoL, img.displayHeight || TAMANHO_CARTA.maoA) : null;
+      }
+      if (alvo.acao) return doBotao(p.acoes[alvo.acao]);
+      return null;
+    },
+    /** Jogada do jogador vinda da mesa: só a esperada passa; aplica, anima e segue o roteiro. */
+    executarJogadaDoTutorial(jogada) {
+      const t = this.tutorial;
+      if (!t.aceita(jogada)) {
+        this.selecao = [];
+        if (t.passo && t.ehDoJogador() && t.passo.jogadaEsperada.tipo === "inicio") this.modo = "inicio";
+        this.tutorialRecusa();
+        this.redesenhar();
+        return;
+      }
+      this.assistente.esconder();
+      t.jogar(jogada);
+      this.animarJogadaDoTutorial(jogada, () => this.avancarTutorial());
+    },
+    /** Anima os eventos da jogada que acabou de ser aplicada e chama `depois` quando terminam. */
+    animarJogadaDoTutorial(jogada, depois) {
+      this.selecao = [];
+      this.acaoEscolhida = null;
+      this.modo = "livre";
+      this.ocupada = true;
+      const eventos = this.mao.eventos.splice(0);
+      this.redesenhar();
+      const espera = this.animarEventos(eventos, jogada);
+      this.time.delayedCall(espera, depois);
+    },
+    /** O rival joga a jogada do roteiro; se o passo tem fala, o Percy comenta depois. */
+    jogarRivalDoTutorial() {
+      const t = this.tutorial, passo = t.passo;
+      this.ocupada = true;
+      this.assistente.esconder();
+      this.notaDoOponente = "pensando\u2026";
+      this.redesenhar();
+      this.time.delayedCall(700, () => {
+        if (this.encerrada) return;
+        this.notaDoOponente = null;
+        const jogada = t.jogarDoRival();
+        this.animarJogadaDoTutorial(jogada, () => {
+          if (!TEXTOS[passo.id]) return this.avancarTutorial();
+          this.mostrarFalaDoTutorial(passo, "Pr\xF3ximo", () => this.avancarTutorial());
+        });
+      });
+    },
+    /** "Aprender mais" do balão: abre o verbete do passo (ou o Livro inteiro) e volta para o roteiro. */
+    aprenderMaisDoTutorial() {
+      const passo = this.passoDaFala;
+      if (!passo) return;
+      abrirGrimorio(this.app, passo.verbete || void 0);
+    },
+    /**
+     * Fim do tutorial, concluído ou pulado: marca como visto (para não oferecer de novo) e segue para
+     * o jogo (quando veio do botão Jogar) ou volta ao menu (quando veio de Como jogar).
+     */
+    terminarTutorial(pulou) {
+      if (this.encerrada) return;
+      this.encerrada = true;
+      const origem = (this.dadosDoTutorial_ || {}).origem;
+      this.app.progresso.tutorialVisto = true;
+      this.app.salvar();
+      if (this.assistente) this.assistente.esconder();
+      if (origem === "jogar") this.app.jogar();
+      else this.app.irParaMenu();
+      return pulou;
+    }
+  };
+
   // src/cenas/mesa/CenaMesa.js
   var CenaMesa = class extends Phaser.Scene {
     constructor() {
       super("Mesa");
     }
-    /** Monta a mesa e começa a primeira mão (depois das regras, na primeira visita). */
+    /** Monta a mesa e começa a primeira mão (ou a partida do tutorial, quando a cena nasce com `{ tutorial }`). */
     create() {
       this.app = Aplicacao;
-      this.prepararOnline();
-      this.opcoes = normalizarOpcoes(this.online ? this.online.sala.config.opcoes : this.app.opcoes);
+      const tutorial = this.dadosDoTutorial();
+      this.tutorial = null;
+      if (tutorial) this.online = null;
+      else this.prepararOnline();
+      this.opcoes = normalizarOpcoes(tutorial ? OPCOES_DO_TUTORIAL : this.online ? this.online.sala.config.opcoes : this.app.opcoes);
       this.numJogadores = this.opcoes.jogadores;
       this.humanos = this.online ? 1 : this.opcoes.humanos;
       this.variosHumanos = !this.online && this.humanos > 1;
@@ -13797,9 +14746,8 @@ export default function (Motor) {
       });
       this.historicoDaPartida = [];
       if (this.app.progresso.musica) Musica.tocar(this.opcoes.terreno);
-      const comecar = () => this.iniciarMao();
-      if (!this.app.progresso.tutorialVisto) abrirRegras(this.app, comecar);
-      else comecar();
+      if (tutorial) this.prepararTutorial(tutorial);
+      this.iniciarMao();
     }
     /** A cada quadro: conexões animadas, contornos pulsantes e o destaque de quem está na vez. */
     update(tempo) {
@@ -13821,7 +14769,8 @@ export default function (Motor) {
     metodosDeDicas,
     metodosDosPaineis,
     metodosDoAmbiente,
-    metodosOnline
+    metodosOnline,
+    metodosDoTutorial
   );
 
   // src/principal.js
