@@ -19,7 +19,7 @@ const { desenharCartaDeTerreno } = await import('../../src/arte/cartasDeTerreno.
 const { desenharAvatar } = await import('../../src/arte/avatares.js');
 const { desenharFeltro, desenharMesa } = await import('../../src/arte/mesas.js');
 const { desenharFaisca, desenharBotao, MARGEM_BOTAO } = await import('../../src/arte/botoes.js');
-const { ICONES_CONQUISTAS, ICONE_CADEADO } = await import('../../src/arte/icones.js');
+const { ICONES_CONQUISTAS, ICONE_CADEADO, ICONES_DE_SOM } = await import('../../src/arte/icones.js');
 const { desenharRetratoEmMoldura } = await import('../../src/arte/retrato.js');
 const { FOTO_PROFESSOR } = await import('../../src/recursos/retratoProfessor.js');
 const { BARALHOS } = await import('../../src/nucleo/baralhos.js');
@@ -216,6 +216,27 @@ describe('icones.js e retrato.js', () => {
       assert.equal(leitor.parseFromString(svg, 'image/svg+xml').querySelector('parsererror'), null, conquista.id);
     }
     assert.equal(leitor.parseFromString(ICONE_CADEADO, 'image/svg+xml').querySelector('parsererror'), null);
+  });
+  it('ícones de som: efeitos e música, ligados e desligados, distinguíveis sem depender de cor (#132)', () => {
+    const leitor = new window.DOMParser();
+    const nomes = ['efeitosLigado', 'efeitosDesligado', 'musicaLigada', 'musicaDesligada'];
+    assert.deepEqual(Object.keys(ICONES_DE_SOM).sort(), [...nomes].sort());
+    for (const nome of nomes) {
+      const svg = ICONES_DE_SOM[nome];
+      const documento = leitor.parseFromString(svg, 'image/svg+xml');
+      assert.equal(documento.querySelector('parsererror'), null, nome);
+      assert.ok(documento.querySelectorAll('path, ellipse').length >= 2, nome + ' desenha formas');
+      assert.ok(svg.includes('currentColor') && !/#[0-9a-f]{3,6}/i.test(svg), nome + ' herda a cor do botão');
+    }
+    assert.equal(new Set(nomes.map((n) => ICONES_DE_SOM[n])).size, 4, 'os quatro são diferentes entre si');
+    /* o desligado traz o corte na diagonal; o ligado não */
+    for (const par of ['efeitos', 'musica']) {
+      const ligado = ICONES_DE_SOM[par + (par === 'efeitos' ? 'Ligado' : 'Ligada')], desligado = ICONES_DE_SOM[par + (par === 'efeitos' ? 'Desligado' : 'Desligada')];
+      assert.ok(!ligado.includes('M6 6l36 36') && desligado.includes('M6 6l36 36'), par);
+    }
+    /* efeitos (alto-falante) e música (notas) não se confundem: formas-base diferentes */
+    assert.ok(ICONES_DE_SOM.efeitosLigado.includes('M7 19h8') && !ICONES_DE_SOM.musicaLigada.includes('M7 19h8'));
+    assert.ok(ICONES_DE_SOM.musicaLigada.includes('<ellipse') && !ICONES_DE_SOM.efeitosLigado.includes('<ellipse'));
   });
   it('retrato do professor em moldura medieval', async () => {
     const canvas = await new Promise((resolve) => desenharRetratoEmMoldura(FOTO_PROFESSOR, 1, 'Prof. Peng', 'FPO · UnB', resolve));

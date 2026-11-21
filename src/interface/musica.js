@@ -41,7 +41,7 @@ function sorteador(semente) {
  * Toca uma nota com envelope (ataque, sustentação, liberação), filtro passa-baixa opcional e
  * vibrato opcional.
  */
-function voz(saida, tempo, midi, duracao, { forma = 'triangle', volume = 0.1, ataque = 0.01, liberacao = 0.15, filtro = 0, vibrato = 0, desafinar = 0 } = {}) {
+function voz(saida, tempo, midi, duracao, { forma = 'triangle', volume = 0.1, ataque = 0.01, liberacao = 0.15, filtro = 0, vibrato = 0, desafinar = 0, vibratoHz = 5 } = {}) {
   const a = saida.context;
   const osc = a.createOscillator(), ganho = a.createGain();
   osc.type = forma;
@@ -54,7 +54,7 @@ function voz(saida, tempo, midi, duracao, { forma = 'triangle', volume = 0.1, at
   }
   if (vibrato) {
     const lfo = a.createOscillator(), profundidade = a.createGain();
-    lfo.frequency.value = 5; profundidade.gain.value = vibrato;
+    lfo.frequency.value = vibratoHz; profundidade.gain.value = vibrato;
     lfo.connect(profundidade); profundidade.connect(osc.detune);
     lfo.start(tempo); lfo.stop(tempo + duracao + liberacao + 0.05);
   }
@@ -175,6 +175,75 @@ function sanfona(saida, tempo, midi, duracao, volume = 0.03) {
 function coro(saida, tempo, notas, duracao, volume = 0.018) {
   for (const n of notas) voz(saida, tempo, n, duracao, { forma: 'sine', volume, ataque: duracao * 0.3, liberacao: duracao * 0.35, vibrato: 3 });
 }
+
+/** Leva a nota para dentro da faixa do instrumento, subindo ou descendo oitavas inteiras. */
+function naFaixa(midi, minimo, maximo) {
+  while (midi < minimo) midi += 12;
+  while (midi > maximo) midi -= 12;
+  return midi;
+}
+
+/**
+ * Violino: arco sobre corda, dente de serra suavizado, ataque lento, vibrato leve e duas cordas
+ * levemente desafinadas (o "coro" de um naipe). Faixa de Sol3 a Mi7.
+ */
+function violino(saida, tempo, midi, duracao, volume = 0.04) {
+  const nota = naFaixa(midi, 55, 100);
+  const base = { forma: 'sawtooth', ataque: 0.09, liberacao: 0.22, filtro: 3400, vibrato: 14, vibratoHz: 5.5 };
+  voz(saida, tempo, nota, duracao, { ...base, volume, desafinar: -6 });
+  voz(saida, tempo + 0.012, nota, duracao, { ...base, volume: volume * 0.7, desafinar: 7 });
+}
+
+/**
+ * Violoncelo: arco largo, mais grave e escuro que o violino, ataque mais lento e vibrato fundo.
+ * Faixa de Dó2 a Lá5.
+ */
+function violoncelo(saida, tempo, midi, duracao, volume = 0.06) {
+  const nota = naFaixa(midi, 36, 81);
+  voz(saida, tempo, nota, duracao, { forma: 'sawtooth', volume, ataque: 0.13, liberacao: 0.3, filtro: 1500, vibrato: 10, vibratoHz: 4.8, desafinar: -4 });
+  voz(saida, tempo, nota, duracao, { forma: 'triangle', volume: volume * 0.6, ataque: 0.13, liberacao: 0.3, desafinar: 4 });
+}
+
+/**
+ * Fagote: palheta dupla, timbre de madeira "nasalado" e redondo, sem vibrato. Faixa de Sib1 a Mib5.
+ * Dente de serra bem filtrado mais um quadrado uma oitava abaixo, que dá o corpo oco.
+ */
+function fagote(saida, tempo, midi, duracao, volume = 0.05) {
+  const nota = naFaixa(midi, 34, 75);
+  voz(saida, tempo, nota, duracao, { forma: 'sawtooth', volume, ataque: 0.06, liberacao: 0.18, filtro: 950 });
+  voz(saida, tempo, nota, duracao, { forma: 'square', volume: volume * 0.32, ataque: 0.07, liberacao: 0.18, filtro: 700, desafinar: 3 });
+}
+
+/**
+ * Xilofone: barra de madeira dura, ataque seco, brilho médio e decaimento rápido. Mais agudo e
+ * seco que a marimba e sem o metal do glockenspiel: parciais em 1, 3 e 6 vezes a fundamental.
+ */
+function xilofone(saida, tempo, midi, volume = 0.05) {
+  for (const [razao, peso, dur] of [[1, 1, 0.42], [3, 0.38, 0.2], [6, 0.12, 0.08]]) {
+    const a = saida.context, osc = a.createOscillator(), ganho = a.createGain();
+    osc.type = 'sine'; osc.frequency.value = hz(midi) * razao;
+    ganho.gain.setValueAtTime(0.0001, tempo);
+    ganho.gain.exponentialRampToValueAtTime(volume * peso, tempo + 0.002);
+    ganho.gain.exponentialRampToValueAtTime(0.0001, tempo + dur);
+    osc.connect(ganho); ganho.connect(saida);
+    osc.start(tempo); osc.stop(tempo + dur + 0.05);
+  }
+  chiado(saida, tempo, 0.015, { volume: volume * 0.35, filtro: 3200, tipo: 'bandpass', ataque: 0.001 }); /* o "toc" da baqueta */
+}
+
+/**
+ * Flauta-de-pã: tubo fechado, tom suave e arredondado, sopro no ataque, vibrato lento e saída
+ * macia. Faixa de Dó4 a Dó7.
+ */
+function flautaDePa(saida, tempo, midi, duracao, volume = 0.06) {
+  const nota = naFaixa(midi, 60, 96);
+  voz(saida, tempo, nota, duracao, { forma: 'sine', volume, ataque: 0.07, liberacao: 0.4, vibrato: 9, vibratoHz: 4 });
+  voz(saida, tempo, nota + 12, duracao, { forma: 'sine', volume: volume * 0.12, ataque: 0.09, liberacao: 0.3 });
+  chiado(saida, tempo, Math.min(0.22, duracao), { volume: volume * 0.28, filtro: hz(nota) * 2, tipo: 'bandpass', ataque: 0.04 }); /* sopro */
+}
+
+/** Timbres de orquestra e de percussão de teclas, para as trilhas e para os testes. */
+export const VOZES = { violino, violoncelo, fagote, xilofone, flautaDePa };
 
 /** Toca a nota da melodia composta que começa neste passo, se houver. Tabela: [passo, midi, passos]. */
 function melodia(tabela, compasso, passo, tocarNota, d) {
