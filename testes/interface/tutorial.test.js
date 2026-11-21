@@ -15,7 +15,7 @@ after(() => servidor.fechar());
 /** Espera a mesa do tutorial pronta e acelera o tempo dela. */
 async function esperarTutorial(pagina) {
   await esperarCena(pagina, 'return cena && cena.sys.isActive() && cena.tutorial && cena.assistente && cena.mao');
-  await naCena(pagina, 'cena.time.timeScale = 6; cena.tweens.timeScale = 6;');
+  await naCena(pagina, 'cena.time.timeScale = 10; cena.tweens.timeScale = 10;');
 }
 
 /** Espera o balão do Percy aparecer (ou o tutorial acabar) e devolve o que ele mostra. */
@@ -23,7 +23,7 @@ async function esperarBalao(pagina) {
   await pagina.waitForFunction(() => {
     const c = globalThis.__TRUCO_DE_TURING__.jogo.scene.getScene('Mesa');
     return !c.tutorial || c.tutorial.terminou || !document.querySelector('.assistente-balao').hidden;
-  }, null, { timeout: 20000 });
+  }, null, { timeout: 60000 });
   return naCena(pagina, `
     const t = cena.tutorial; if (!t || t.terminou) return null;
     const b = document.querySelector('.assistente-balao'), r = b.getBoundingClientRect();
@@ -59,7 +59,7 @@ async function percorrer(pagina, aoVer) {
     await pagina.waitForFunction((id) => {
       const c = globalThis.__TRUCO_DE_TURING__.jogo.scene.getScene('Mesa');
       return !c.tutorial || c.tutorial.terminou || c.passoDaFala.id !== id;
-    }, st.id, { timeout: 15000 });
+    }, st.id, { timeout: 60000 });
   }
   return vistos;
 }

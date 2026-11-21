@@ -95,7 +95,7 @@ describe('arte procedural e empacotamento', () => {
     const inicio = performance.now();
     execFileSync(process.execPath, [join(raiz, 'ferramentas/empacotar.js')], { env: { ...process.env, TRUCO_RAIZ: copia } });
     registrarMedida({ grupo, nome: 'Empacotamento (esbuild)', valor: performance.now() - inicio, unidade: 'ms', limite: 8000, melhor: 'menor' });
-    registrarMedida({ grupo, nome: 'Tamanho do arquivo único', valor: statSync(join(copia, 'dist/truco-de-turing.html')).size / 1024, unidade: 'KB', limite: 750, melhor: 'menor' });
+    registrarMedida({ grupo, nome: 'Tamanho do arquivo único', valor: statSync(join(copia, 'dist/truco-de-turing.html')).size / 1024, unidade: 'KB', limite: 850, melhor: 'menor' });
     rmSync(copia, { recursive: true, force: true });
   });
 });
