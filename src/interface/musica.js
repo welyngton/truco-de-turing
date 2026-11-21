@@ -3,7 +3,7 @@
  *
  * | Trilha              | Estilo                                                        | Andamento    |
  * |---------------------|---------------------------------------------------------------|--------------|
- * | menu                | baião em Sol: sanfona, zabumba, triângulo e palmas; refrão que convida a jogar | 118 bpm |
+ * | menu                | baião épico em Sol: cordas, tímpano, zabumba e triângulo suaves; refrão que convida a jogar | 100 bpm |
  * | neutro (Planície)   | blues lento em Mi: dois violinos no tema, violoncelo e fagote no apoio | 72 bpm     |
  * | oceano              | valsa em Sol: flauta-de-pã no tema, marimba ao fundo, coro nos repousos | 63 bpm (3/4) |
  * | montanha            | épica em Lá menor: trompa, harpa ao fundo, xilofone na base e tambores nos repousos | 84 bpm |
@@ -153,12 +153,6 @@ function palmas(saida, tempo, volume = 0.05) {
   chiado(saida, tempo + 0.012, 0.07, { volume: volume * 0.6, filtro: 1800, tipo: 'bandpass' });
 }
 
-/** Sanfona: duas palhetas levemente desafinadas (o "batimento" da sanfona), fole com vibrato. */
-function sanfona(saida, tempo, midi, duracao, volume = 0.03) {
-  voz(saida, tempo, midi, duracao, { forma: 'sawtooth', volume, ataque: 0.015, liberacao: 0.08, filtro: 2400, vibrato: 6, desafinar: -7 });
-  voz(saida, tempo, midi, duracao, { forma: 'square', volume: volume * 0.55, ataque: 0.015, liberacao: 0.08, filtro: 1900, desafinar: 7 });
-}
-
 /** Coro (pad): acorde de senoides que entra e sai devagar e passa um pouco do compasso. */
 function coro(saida, tempo, notas, duracao, volume = 0.018) {
   for (const n of notas) voz(saida, tempo, n, duracao, { forma: 'sine', volume, ataque: duracao * 0.3, liberacao: duracao * 0.35, vibrato: 3 });
@@ -175,9 +169,9 @@ function naFaixa(midi, minimo, maximo) {
  * Violino: arco sobre corda, dente de serra suavizado, ataque lento, vibrato leve e duas cordas
  * levemente desafinadas (o "coro" de um naipe). Faixa de Sol3 a Mi7.
  */
-function violino(saida, tempo, midi, duracao, volume = 0.04) {
+function violino(saida, tempo, midi, duracao, volume = 0.04, ataque = 0.09) {
   const nota = naFaixa(midi, 55, 100);
-  const base = { forma: 'sawtooth', ataque: 0.09, liberacao: 0.22, filtro: 3400, vibrato: 14, vibratoHz: 5.5 };
+  const base = { forma: 'sawtooth', ataque, liberacao: 0.22, filtro: 3400, vibrato: 14, vibratoHz: 5.5 };
   voz(saida, tempo, nota, duracao, { ...base, volume, desafinar: -6 });
   voz(saida, tempo + 0.012, nota, duracao, { ...base, volume: volume * 0.7, desafinar: 7 });
 }
@@ -186,10 +180,10 @@ function violino(saida, tempo, midi, duracao, volume = 0.04) {
  * Violoncelo: arco largo, mais grave e escuro que o violino, ataque mais lento e vibrato fundo.
  * Faixa de Dó2 a Lá5.
  */
-function violoncelo(saida, tempo, midi, duracao, volume = 0.06) {
+function violoncelo(saida, tempo, midi, duracao, volume = 0.06, ataque = 0.13) {
   const nota = naFaixa(midi, 36, 81);
-  voz(saida, tempo, nota, duracao, { forma: 'sawtooth', volume, ataque: 0.13, liberacao: 0.3, filtro: 1500, vibrato: 10, vibratoHz: 4.8, desafinar: -4 });
-  voz(saida, tempo, nota, duracao, { forma: 'triangle', volume: volume * 0.6, ataque: 0.13, liberacao: 0.3, desafinar: 4 });
+  voz(saida, tempo, nota, duracao, { forma: 'sawtooth', volume, ataque, liberacao: 0.3, filtro: 1500, vibrato: 10, vibratoHz: 4.8, desafinar: -4 });
+  voz(saida, tempo, nota, duracao, { forma: 'triangle', volume: volume * 0.6, ataque, liberacao: 0.3, desafinar: 4 });
 }
 
 /**
@@ -257,12 +251,14 @@ function melodia(tabela, compasso, passo, tocarNota, d) {
  * chamada a cada passo.
  */
 export const MUSICAS = {
-  /* Menu: baião em Sol (com o Fá natural do mixolídio na parte B), para chamar para a mesa.
-     A: G G C D G Em D G · B: C D G Em C D F D. Zabumba no 3+3+2 do baião, baixo junto, triângulo
-     em semicolcheias (aberto nos contratempos), palmas no 2 e no 4, acordes de sanfona curtinhos nos
-     contratempos e o refrão na sanfona, com síncopes que grudam no ouvido. */
+  /* Menu: baião épico em Sol (com o Fá natural do mixolídio na parte B), para chamar para a mesa.
+     A: G G C D G Em D G · B: C D G Em C D F D. A melodia é a mesma de sempre (agora nos violinos,
+     com o violoncelo dobrando uma oitava abaixo no refrão), em andamento menor (100 bpm). No lugar
+     da sanfona, um colchão de cordas que respira por compasso (acorde aberto nos violinos, baixo no
+     violoncelo, mais forte na parte B); tímpano suave nos tempos fortes, zabumba só no contratempo
+     do 3+3+2, triângulo discreto e sem palmas. */
   menu: {
-    bpm: 118, tempos: 4, subdivisao: 4, balanco: 0.08,
+    bpm: 100, tempos: 4, subdivisao: 4, balanco: 0.08,
     acordes: [
       [43, 59, 62, 67], [43, 59, 62, 67], [48, 60, 64, 67], [50, 57, 62, 66],
       [43, 59, 62, 67], [40, 59, 64, 67], [50, 57, 62, 66], [43, 59, 62, 67],
@@ -292,20 +288,27 @@ export const MUSICAS = {
     tocar(s, t, compasso, passo, acorde, sortear, d) {
       const [r, a, b, c] = acorde;
       const meio = passo % 8;
-      /* zabumba e baixo no 3+3+2 do baião: tum (0), tum (3), tá (6) em cada metade do compasso */
-      if (meio === 0) { tambor(s, t, { volume: 0.3, de: 105, para: 45, duracao: 0.35 }); voz(s, t, r, d * 2.6, { forma: 'triangle', volume: 0.15, ataque: 0.01, liberacao: 0.08 }); }
-      if (meio === 3) { tambor(s, t, { volume: 0.18, de: 95, para: 45, duracao: 0.25 }); voz(s, t, r, d * 2.6, { forma: 'triangle', volume: 0.12, ataque: 0.01, liberacao: 0.08 }); }
-      if (meio === 6) voz(s, t, passo < 8 ? r + 7 : r + 12, d * 1.8, { forma: 'triangle', volume: 0.12, ataque: 0.01, liberacao: 0.06 });
-      /* triângulo em semicolcheias: fechado, aberto nos contratempos */
-      triangulo(s, t, passo % 4 === 2, passo % 4 === 0 ? 0.022 : 0.016);
-      /* palmas no 2 e no 4 */
-      if (passo === 4 || passo === 12) palmas(s, t, 0.05);
-      /* acordes de sanfona curtinhos nos contratempos */
-      if (passo % 4 === 2) for (const n of [a, b, c]) voz(s, t, n, d * 0.8, { forma: 'sawtooth', volume: 0.012, ataque: 0.005, liberacao: 0.05, filtro: 1600 });
+      /* dinâmica: o refrão (parte B) entra com mais corpo */
+      const refrao = compasso % 16 >= 8, forca = refrao ? 1.25 : 1;
+      /* colchão de cordas: acorde aberto nos violinos (com a oitava acima, mais fraca) e a fundamental no violoncelo */
+      if (passo === 0) {
+        for (const n of [a, b, c]) { violino(s, t, n, d * 15.5, 0.016 * forca, 0.45); violino(s, t, n + 12, d * 15.5, 0.007 * forca, 0.6); }
+        violoncelo(s, t, r, d * 15.5, 0.085 * forca, 0.2);
+      }
+      /* tímpano suave nos tempos fortes (1º e 3º), mais forte na volta de cada parte, no lugar do tum da zabumba */
+      if (meio === 0) tambor(s, t, passo === 0 && compasso % 8 === 0 ? { volume: 0.34, de: 80, para: 32, duracao: 1.1 } : { volume: passo === 0 ? 0.22 : 0.18, de: 85, para: 38, duracao: 0.8 });
+      /* zabumba só no contratempo do 3+3+2 (tum no passo 3), com o baixo no tá (passo 6) */
+      if (meio === 3) { tambor(s, t, { volume: 0.1, de: 95, para: 45, duracao: 0.25 }); voz(s, t, r, d * 2.6, { forma: 'triangle', volume: 0.07, ataque: 0.01, liberacao: 0.08 }); }
+      if (meio === 6) voz(s, t, passo < 8 ? r + 7 : r + 12, d * 1.8, { forma: 'triangle', volume: 0.08, ataque: 0.01, liberacao: 0.06 });
+      /* triângulo discreto (menos da metade do volume de antes, ataque mais lento): marca tempos e contratempos */
+      if (passo % 4 === 0) triangulo(s, t, false, 0.008, 0.012); else if (passo % 4 === 2) triangulo(s, t, true, 0.009, 0.012);
       /* virada da zabumba antes de recomeçar cada parte */
       if (compasso % 8 === 7 && passo >= 12) tambor(s, t, { volume: 0.12 + (passo - 12) * 0.04, de: 160 - (passo - 12) * 15, para: 70, duracao: 0.18 });
-      if (compasso % 8 === 0 && passo === 0) chiado(s, t, 1.4, { volume: 0.03, filtro: 6000 }); /* prato na volta */
-      melodia(this.tema, compasso, passo, (nota, dur) => sanfona(s, t, nota, dur * 0.9, 0.034), d);
+      if (compasso % 8 === 0 && passo === 0) chiado(s, t, 1.8, { volume: 0.03, filtro: 6000 }); /* prato na volta */
+      melodia(this.tema, compasso, passo, (nota, dur) => {
+        violino(s, t, nota, dur * 0.95, 0.05 * forca);
+        if (refrao) violoncelo(s, t, nota - 12, dur * 0.95, 0.03);
+      }, d);
     },
   },
 

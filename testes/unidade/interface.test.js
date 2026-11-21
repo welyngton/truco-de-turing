@@ -206,9 +206,9 @@ describe('som.js e musica.js', () => {
       }
     }
   });
-  it('trilha do menu: baião animado (andamento, percussão em todo tempo, refrão em duas partes)', () => {
+  it('trilha do menu: baião épico (andamento menor, cordas no lugar da sanfona, refrão em duas partes) (#145)', () => {
     const m = MUSICAS.menu, passos = m.tempos * m.subdivisao;
-    assert.ok(m.bpm >= 110, 'andamento animado');
+    assert.ok(m.bpm >= 90 && m.bpm <= 105, 'andamento mais lento que os 118 bpm de antes');
     assert.equal(m.acordes.length, 16, 'partes A e B de 8 compassos');
     assert.ok(m.acordes.some(([r]) => r % 12 === 5), 'o Fá natural do mixolídio na parte B');
     /* todo tempo do compasso tem percussão (zabumba, palmas ou triângulo) */
