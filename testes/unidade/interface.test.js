@@ -251,6 +251,7 @@ describe('telas', () => {
     salvo: 0, salvar() { this.salvo++; }, salvarOpcoes() { this.salvo++; },
     marcarVerbeteLido(id) { this.progresso.lidos[id] = true; },
     jogou: 0, jogar() { this.jogou++; },
+    tutoriais: [], fazerTutorial(origem) { this.tutoriais.push(origem); },
     /* áudio, como na Aplicacao: alterna o estado e avisa quem ouve */
     ouvintesDeAudio: new Set(),
     aoMudarAudio(f) { this.ouvintesDeAudio.add(f); return () => this.ouvintesDeAudio.delete(f); },
@@ -272,8 +273,47 @@ describe('telas', () => {
       clicar($('#' + id));
       assert.equal(app.opcoes.terreno, 'montanha');
     }
+    app.progresso.tutorialVisto = true;
     clicar($('#m-jogar'));
     assert.equal(app.jogou, 1);
+    assert.deepEqual(app.tutoriais, []);
+  });
+
+  it('menu: na primeira vez, Jogar oferece o tutorial; pular marca como visto e começa a partida (#143)', () => {
+    const app = appFalso();
+    abrirMenu(app);
+    clicar($('#m-jogar'));
+    assert.equal(app.jogou, 0, 'a partida espera a resposta');
+    assert.match($$('.camada').at(-1).textContent, /tutorial/i);
+    clicar([...$$('.camada .botao')].find((b) => /Pular tutorial/.test(b.textContent)));
+    assert.equal(app.progresso.tutorialVisto, true);
+    assert.equal(app.jogou, 1);
+    assert.deepEqual(app.tutoriais, []);
+    /* da segunda vez em diante, nada é oferecido */
+    abrirMenu(app);
+    clicar($('#m-jogar'));
+    assert.equal(app.jogou, 2);
+  });
+
+  it('menu: na primeira vez, aceitar a oferta abre o tutorial com origem jogar e não começa a partida (#143)', () => {
+    const app = appFalso();
+    abrirMenu(app);
+    clicar($('#m-jogar'));
+    clicar([...$$('.camada .botao')].find((b) => /Fazer o tutorial/.test(b.textContent)));
+    assert.deepEqual(app.tutoriais, ['jogar']);
+    assert.equal(app.jogou, 0);
+    assert.equal(app.progresso.tutorialVisto, false, 'só conta como visto ao terminar ou pular');
+  });
+
+  it('Como jogar, aberto pelo menu, traz o botão Fazer o tutorial (#143)', () => {
+    const app = appFalso();
+    app.progresso.tutorialVisto = true;
+    abrirMenu(app);
+    clicar($('#m-regras'));
+    const botao = $('#r-tutorial');
+    assert.ok(botao, 'o botão está em Como jogar mesmo com o tutorial já visto');
+    clicar(botao);
+    assert.deepEqual(app.tutoriais, ['regras']);
   });
 
   it('menu: botões de ícone de efeitos e música mostram o estado, alternam com um clique e acompanham a aplicação (#133)', () => {
@@ -395,11 +435,12 @@ describe('telas', () => {
     /* todo arquivo citado existe no repositório */
     for (const { caminho } of ARQUIVOS_DE_MODS) assert.ok(existsSync(new URL('../../' + caminho, import.meta.url)), caminho);
   });
-  it('regras: marca o tutorial como visto e chama aoFechar', () => {
+  it('regras: chama aoFechar, não marca o tutorial como visto e só tem o botão do tutorial quando pedido (#143)', () => {
     const app = appFalso();
     let fechou = false;
     abrirRegras(app, () => { fechou = true; });
-    assert.ok(app.progresso.tutorialVisto);
+    assert.equal(app.progresso.tutorialVisto, false, 'ler as regras não substitui o tutorial');
+    assert.equal($('#r-tutorial'), null, 'na mesa, sem o botão');
     assert.match($('.camada').textContent, /41/);
     clicar($('.camada [data-fechar]'));
     assert.ok(fechou);

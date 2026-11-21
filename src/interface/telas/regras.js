@@ -108,13 +108,19 @@ function desenharArte(raiz) {
 }
 
 /**
- * Abre a tela de regras. Na primeira partida ela abre sozinha; ao fechar, chama `aoFechar`.
- * @param {object|null} app Aplicação (marca o tutorial como visto e guarda os verbetes lidos), ou null.
+ * Abre a tela de regras; ao fechar, chama `aoFechar`.
+ * @param {object|null} app Aplicação (guarda os verbetes lidos), ou null.
  * @param {() => void} [aoFechar]
  * @param {string} [abaInicial] Uma das chaves de ABAS_DAS_REGRAS.
+ * @param {{aoFazerTutorial?: () => void}} [opcoes] Com `aoFazerTutorial`, a aba Como jogar traz o
+ *   botão "Fazer o tutorial" (o menu inicial passa; a mesa não, para não largar a partida no meio).
  */
-export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
-  const conteudo = { jogar: COMO_JOGAR, acoes: abaDeAcoes(), pontuacao: PONTUACAO, extensoes: abaDeExtensoes(), dicas: DICAS };
+export function abrirRegras(app, aoFechar, abaInicial = 'jogar', opcoes = {}) {
+  const tutorial = opcoes.aoFazerTutorial
+    ? '<div class="linha caixa-do-tutorial"><div><b>Tutorial com o Percy</b><p>Uma mão guiada, passo a passo, que ensina o objetivo, a pontuação e todas as jogadas. Dura poucos minutos.</p></div>' +
+      '<button class="botao vinho" id="r-tutorial">Fazer o tutorial</button></div>'
+    : '';
+  const conteudo = { jogar: tutorial + COMO_JOGAR, acoes: abaDeAcoes(), pontuacao: PONTUACAO, extensoes: abaDeExtensoes(), dicas: DICAS };
   const html = '<div class="folha regras"><button class="fechar-x" data-fechar aria-label="Fechar">×</button>' +
       '<h2>Regras</h2>' +
       '<nav class="abas" role="tablist">' + ABAS_DAS_REGRAS.map(([id, nome]) =>
@@ -122,7 +128,6 @@ export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
       ABAS_DAS_REGRAS.map(([id]) => '<section class="aba" role="tabpanel" data-aba="' + id + '"' + (id === abaInicial ? '' : ' hidden') + '>' + conteudo[id] + '</section>').join('') +
       '<p class="nota-regras">Os conceitos de redes neurais por trás de cada jogada estão no ' + NOME_DA_BIBLIOTECA + '.</p>' +
       '<div class="linha fim" style="margin-top:14px"><button class="botao discreto" id="r-biblioteca">' + NOME_DA_BIBLIOTECA + '</button><button class="botao" data-fechar>Entendi</button></div></div>';
-  if (app) { app.progresso.tutorialVisto = true; app.salvar(); }
   const painel = abrirPainel(html, { fechaAoClicarFora: true, aoFechar });
   const raiz = painel.elemento;
   const mostrarAba = (id) => {
@@ -134,6 +139,8 @@ export function abrirRegras(app, aoFechar, abaInicial = 'jogar') {
   mostrarAba(abaInicial);
   /* o Livro de conceitos e a ajuda abrem por cima; as regras continuam abertas embaixo */
   const appDaBiblioteca = app || { progresso: { lidos: {} }, marcarVerbeteLido() {} };
+  const botaoDoTutorial = raiz.querySelector('#r-tutorial');
+  if (botaoDoTutorial) botaoDoTutorial.addEventListener('click', () => { painel.fechar(); opcoes.aoFazerTutorial(); });
   raiz.querySelector('#r-ajuda-acoes').addEventListener('click', () => abrirAjudaDasAcoes(appDaBiblioteca));
   raiz.querySelector('#r-biblioteca').addEventListener('click', () => abrirGrimorio(appDaBiblioteca));
   raiz.querySelectorAll('[data-verbete]').forEach((b) => b.addEventListener('click', () => abrirGrimorio(appDaBiblioteca, b.dataset.verbete)));

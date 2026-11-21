@@ -146,7 +146,21 @@ export const Aplicacao = {
     this.modoImersivo();
     document.body.classList.add('em-partida');
     this.jogo.scene.stop('Menu');
-    this.jogo.scene.start('Mesa');
+    /* o Phaser guarda os dados da última partida da cena: sem `tutorial: null`, depois do tutorial a mesa nasceria de novo como tutorial */
+    this.jogo.scene.start('Mesa', { tutorial: null });
+  },
+
+  /**
+   * Abre a mesa no modo tutorial (ver `src/cenas/mesa/tutorial.js`). Não conta como partida nas
+   * estatísticas. Ao terminar (ou pular), `origem` 'jogar' segue para a partida e 'regras' volta ao menu.
+   * @param {'jogar'|'regras'} origem
+   */
+  fazerTutorial(origem) {
+    fecharTodos();
+    this.modoImersivo();
+    document.body.classList.add('em-partida');
+    this.jogo.scene.stop('Menu');
+    this.jogo.scene.start('Mesa', { tutorial: { origem } });
   },
 
   /** Volta da mesa para o menu. */

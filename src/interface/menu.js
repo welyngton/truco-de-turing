@@ -13,7 +13,7 @@ import { ARQUITETURAS, tamanhosDaMesa } from '../nucleo/rede.js';
 import { normalizarOpcoes } from '../aplicacao.js';
 import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
-import { abrirPainel, escaparHtml } from './paineis.js';
+import { abrirPainel, escaparHtml, confirmar } from './paineis.js';
 import { Som } from './som.js';
 import { ajustarFontesDosBotoes } from './ajusteDeBotoes.js';
 import { htmlDosControlesDeSom, ligarControlesDeSom } from './controlesDeSom.js';
@@ -182,8 +182,16 @@ export function abrirMenu(app) {
     campo(id).addEventListener('click', () => registrarEvento(EVENTOS.menuClique, { botao }), { capture: true });
   }
   atualizarDicas();
-  campo('m-jogar').addEventListener('click', () => { Som.desbloquear(); lerEscolhas(); painel.fechar(); app.jogar(); });
-  campo('m-regras').addEventListener('click', () => { lerEscolhas(); abrirRegras(app); });
+  campo('m-jogar').addEventListener('click', () => {
+    Som.desbloquear(); lerEscolhas();
+    if (app.progresso.tutorialVisto) { painel.fechar(); app.jogar(); return; }
+    /* primeira vez: oferece o tutorial (pular conta como visto e começa a partida) */
+    confirmar('Primeira vez por aqui?', 'Quer fazer o tutorial? O Percy, seu assistente, guia uma mão de treino e ensina as regras em poucos minutos. Você pode pular e fazê-lo depois, em <b>Como jogar</b>.', [
+      { rotulo: 'Fazer o tutorial', classe: 'vinho', acao: () => { painel.fechar(); app.fazerTutorial('jogar'); } },
+      { rotulo: 'Pular tutorial', classe: 'discreto', acao: () => { app.progresso.tutorialVisto = true; app.salvar(); painel.fechar(); app.jogar(); } },
+    ]);
+  });
+  campo('m-regras').addEventListener('click', () => { lerEscolhas(); abrirRegras(app, undefined, 'jogar', { aoFazerTutorial: () => { painel.fechar(); app.fazerTutorial('regras'); } }); });
   campo('m-grimorio').addEventListener('click', () => { lerEscolhas(); abrirGrimorio(app); });
   campo('m-conquistas').addEventListener('click', () => { lerEscolhas(); abrirConquistas(app); });
   campo('m-mods').addEventListener('click', () => { lerEscolhas(); abrirMods(); });

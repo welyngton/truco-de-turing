@@ -262,6 +262,7 @@ copiados para o protótipo com `Object.assign` no fim de `CenaMesa.js`. Dentro d
 | `efeitos.js` | animação de cada evento, faíscas, faixas, balão de fala e avisos do Livro de conceitos |
 | `resultado.js` | conquistas na hora da jogada e no fim da mão, tentos, comemoração da vitória e tela de resultado |
 | `dicas.js` | modo dicas: sugestão de jogada (busca gulosa) e dicas flutuantes dos botões |
+| `tutorial.js` | modo tutorial: partida do roteiro, bloqueio de jogadas fora dele, rival roteirizado e o assistente Percy (ver 5.2) |
 
 O ciclo de uma jogada:
 
@@ -310,6 +311,29 @@ cliques durante animações) e `this.encerrada`.
 - **Música** (`interface/musica.js`): cada terreno tem uma música definida por andamento, acordes por
   compasso e uma função `tocar` chamada a cada passo. Um agendador marca as notas 0,4 s à frente no
   relógio do WebAudio. A música começa ligada até a pessoa escolher (`progresso.musicaEscolhida`). Para uma música nova, acrescente uma entrada em `MUSICAS` com a chave do terreno.
+
+### 5.2 Tutorial (`nucleo/tutorial.js`, `cenas/mesa/tutorial.js`, `interface/assistente.js`)
+
+O tutorial é uma mão de verdade, mas **determinística**: `conteudo/roteiroDoTutorial.js` fixa a semente
+(4703), a configuração (Planície, baralho clássico, 2 baralhos para a mão ter 10 cartas) e a lista de
+passos. Cada passo é um diálogo (o Percy fala e o jogador toca em Próximo), uma jogada guiada do jogador
+(`jogadaEsperada`, com as cartas pelo rótulo `valor+naipe` e os neurônios pelo id `C<camada>N<posição>`)
+ou uma jogada do rival, que o roteiro executa sem passar pelo bot. As falas ficam em
+`conteudo/textosDoTutorial.js` (até 2 frases por balão).
+
+- `nucleo/tutorial.js` é lógica pura, sem Phaser: `criarTutorial(ROTEIRO)` cria a mão e responde `aceita(jogada)`,
+  `permite(entrada)` (o que a mesa pode tocar no passo), `destaques()` (o que o balão aponta), `jogar` e
+  `jogarDoRival`. `rodarTudo()` percorre o roteiro por código: o teste `testes/unidade/tutorial.test.js` o usa
+  para garantir que, se o motor mudar, o roteiro acusa em vez de quebrar na frente do jogador.
+- `cenas/mesa/tutorial.js` liga isso à cena: a cena nasce com `scene.start('Mesa', { tutorial: { origem } })`;
+  `entrada.js`, `truco.js` e `paineis.js` perguntam a `tutorialPermite` antes de agir; `executarJogada` e
+  `avancar` desviam para o roteiro; nada é gravado (sem estatísticas, conquistas, analytics nem `encerrarMao`).
+- `interface/assistente.js` desenha o balão, o escurecimento com buracos (SVG `evenodd`) e os anéis pulsantes;
+  `posicionarBalao` (função pura, testada em 640x360, 844x390 e 1280x800) escolhe um lugar que não cubra nenhum destaque.
+- Para acrescentar um passo, inclua-o em `PASSOS` e a fala em `TEXTOS` (o teste confere que todo passo tem fala);
+  se a jogada depender de cartas novas, troque a semente e confira com o teste do roteiro.
+- `progresso.tutorialVisto` é por aparelho: não vai para a conta, porque as regras do Firestore (`firestore.rules`)
+  só aceitam os campos conhecidos do progresso.
 
 ## 6. Arte e nitidez
 
