@@ -142,7 +142,7 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
 - **Modo dicas**: dicas de estratégia a cada vez, sempre com o conceito de redes neurais por trás, e explicações nos botões (mouse ou segurar no celular); só usam o que está à vista e nunca dizem qual carta virada escolher. Mãos com dicas não valem conquistas.
 - **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Glossário e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
 - **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Glossário.
-- **Trilha sonora** (ligada por padrão): baião animado no menu (sanfona, zabumba, triângulo e palmas), blues lento na Planície (mesa neutra), valsa com marimba no oceano, épica com trompa, harpa e tambores na montanha e uma dança de fada com harmônica de vidro e glockenspiel no pântano; fanfarra e confete na vitória.
+- **Trilha sonora** (ligada por padrão): baião épico e mais lento no menu (cordas, tímpano suave e triângulo discreto), blues lento na Planície (mesa neutra) com dois violinos, violoncelo e fagote, valsa com flauta-de-pã e marimba no oceano, épica com trompa, harpa e xilofone na montanha e um lamento sombrio com órgão, sino e glockenspiel de apoio no pântano; fanfarra e confete na vitória. Dois botões de ícone ligam e desligam os efeitos sonoros e a música, no menu e na mesa.
 - **Feedback visual**: conexões com espessura proporcional ao valor (como no Playground), curva de treino, explosões, banners, músicas e sons.
 
 ## Conteúdo educativo

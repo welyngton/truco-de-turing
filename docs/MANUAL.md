@@ -284,6 +284,10 @@ cliques durante animações) e `this.encerrada`.
 
 ### 5.1 Dicas, revisão e música
 
+- **Botões de som** (`controlesDeSom.js` no menu e `criarBotoesDeSom` em `cenario.js` na mesa): dois botões de
+  ícone, um para os efeitos sonoros e outro para a música, no menu principal e no alto do painel esquerdo da
+  mesa. Leem `progresso.mudo` e `progresso.musica` e, como a janela MENU, chamam `alternarSom` e `alternarMusica`;
+  a `Aplicacao` avisa quem se registrou com `aoMudarAudio`, então os três lugares ficam sempre em acordo.
 - **Botões da mesa** (`cenario.js` e `entrada.js`): o painel esquerdo tem só **REGRAS** (janela com
   Regras, Ajuda das ações, Glossário e a chave das dicas) e **MENU** (janela com som, música, voltar ao jogo e sair
   da partida); o direito tem TRUCO e a linha Dropout · Transfer · Passar. Os botões são grandes e

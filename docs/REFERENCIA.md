@@ -15,6 +15,8 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 | `atualizarJogadorNasEstatisticas()` | método | Passa às estatísticas de uso a experiência, as conquistas, o avatar, os verbetes lidos, os acessos e as partidas. |
 | `salvar()` | método | Grava o progresso. |
 | `salvarOpcoes()` | método | Grava as escolhas do menu para a próxima visita. |
+| `aoMudarAudio(ouvinte)` | método | Passa a ser avisado quando os efeitos sonoros ou a música ligam ou desligam, de onde vier a mudança (ícone do menu, ícone da mesa ou janela MENU). Devolve a função que cancela o aviso. |
+| `avisarMudancaDeAudio()` | método | Avisa os ouvintes de que o estado do áudio mudou (um que falhe não impede os outros). |
 | `alternarSom()` | método | Liga ou desliga o som e lembra a escolha. |
 | `alternarMusica(terreno)` | método | Liga ou desliga a música de fundo e lembra a escolha. |
 | `jogar()` | método | Sai do menu e abre a mesa. |
@@ -112,6 +114,11 @@ Retratos das figuras (Rei, Dama e Valete) no estilo do baralho espanhol. Conven�
 | `gato` | constante | Gato do GatoNet (dropout), base de duas conquistas. |
 | `ICONES_CONQUISTAS` | constante (exportada) | Ícone SVG de cada conquista, pelo id. |
 | `ICONE_CADEADO` | constante (exportada) | Cadeado das conquistas bloqueadas. |
+| `alto` | constante | Alto-falante, base dos ícones de efeitos sonoros. |
+| `notas` | constante | Colcheias ligadas, base dos ícones de música. |
+| `corte` | constante | Corte na diagonal que marca o ícone como desligado. |
+| `svgDeSom` | constante | Envolve o desenho num SVG 48x48 sem cor própria (herda `currentColor`). |
+| `ICONES_DE_SOM` | constante (exportada) | Ícones de som da barra de controles (issues #132 e #133): efeitos sonoros (alto-falante com ondas) e música (colcheias ligadas), cada um ligado e desligado. Usam `currentColor` para herdar a cor do botão e, sem depender de cor, o desligado traz um corte na diagonal e perde as ondas (efeitos) ou ganha um "x" (alto-falante). Legíveis de 24 px a 44 px. |
 | `ICONES_DAS_ACOES` | constante (exportada) | Ícone SVG de cada ação da mesa, pelo id da barra de ações (mais `avancar` e `vanishing`). |
 
 ## `src/arte/mesas.js`
@@ -266,6 +273,7 @@ Parte da CenaMesa: elementos fixos da tela (molduras dos painéis, colunas das c
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `COR_ROTULO` | constante | Cor do rótulo de cada variante de botão. |
+| `BOTAO_DE_SOM` | constante | Botões de ícone de efeitos e música: lado, centro vertical e margem à borda do painel esquerdo (mundo 1280x720). |
 | `TEMPO_DE_SEGURAR` | constante | Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. |
 | `desenharCenarioFixo()` | método | Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. |
 | `criarBotao(x, y, l, a, rotulo, acao, opcoes = {})` | método | Cria um botão com textura própria e rótulo que se ajusta à largura. O objeto devolvido ganha `definirRotulo(texto)` e `habilitar(sim)`. Com `opcoes.dica`, o botão mostra uma dica flutuante (modo "dicas" ligado): ao passar o mouse, ou, no celular, ao segurar o botão apertado. Soltar depois de segurar não executa a ação, para que dê para ler a dica sem jogar sem querer. A ação roda ao soltar o toque/clique. `explicar`, quando dado, devolve o texto que aparece no quadro de instruções (painel esquerdo) enquanto o cursor está sobre o botão: o que a ação faria agora, antes de confirmar. |
@@ -275,6 +283,8 @@ Parte da CenaMesa: elementos fixos da tela (molduras dos painéis, colunas das c
 | `criarPlacar(p)` | método | Placar (painel direito): título da mão e um bloco por jogador com avatar, nome, nível, situação, detalhes, tentos e soma da rede. Os blocos de cima são os adversários de quem está vendo; o dele fica por último. Com mais de 2 jogadores os blocos são compactos (ver `blocosDoPlacar` em layout.js). |
 | `criarBlocoCompacto(rx, y, rl, a)` | método | Bloco compacto do placar (mesas com 3 a 5 jogadores): avatar pequeno, nome, uma linha com a situação e a mão, e a soma à direita. Tem os mesmos campos do bloco grande, para que `atualizarBlocoDoJogador` sirva aos dois. |
 | `criarBotoesDeAcao(p)` | método | Botão de truco e a barra de ações: selecione cartas da mão e acendem só os botões das jogadas possíveis com elas; passar o cursor num botão explica o efeito no quadro de instruções antes de confirmar. Os botões ficam em `p.acoes[id]`; dropout, transfer e passar também em `p.botaoDropout`, `p.botaoTransfer` e `p.botaoPassar`. |
+| `criarBotoesDeSom(p)` | método | Botões de ícone de efeitos sonoros e música (issue #133), nos cantos de cima do painel esquerdo, onde não cobrem o título, a carta de inspeção nem os botões de ação. Mostram o estado atual (ver `atualizarChaves`) e se atualizam também quando a janela MENU muda o áudio. |
+| `atualizarIconesDeSom()` | método | Põe em cada botão de som o ícone do estado atual (se a textura já chegou). |
 | `atualizarChaves()` | método | Atualiza os rótulos das chaves (som, música e dicas) nas janelas REGRAS e MENU, se abertas. O botão REGRAS ganha uma estrela quando as dicas estão ligadas. |
 
 ## `src/cenas/mesa/desenho.js`
@@ -511,6 +521,7 @@ Recursos compartilhados pelas cenas do Phaser: texto nítido, câmera ajustada �
 | `liberarCartasDaMao(cena)` | função (exportada) | Libera as cartas da mão da mão anterior (memória de vídeo é limitada em celulares). |
 | `retanguloNaTela(cena, x, y, l, a)` | função (exportada) | Converte um retângulo do mundo do jogo (centro x, y e tamanho l × a) em pixels da página, para posicionar elementos HTML (como as dicas flutuantes) sobre o canvas. |
 | `carregarIconesDasAcoes(cena)` | função (exportada) | Carrega os ícones das ações (SVG) como texturas `icone-acao:<id>`, em 128 px. O carregamento é assíncrono; quem usa confere `textures.exists` e segue sem o ícone se ele ainda não chegou. |
+| `carregarIconesDeSom(cena, cor, aoCarregar)` | função (exportada) | Carrega os ícones de som (SVG) como texturas `icone-som:<nome>`, em 96 px, pintados com `cor` (os SVG usam `currentColor`, que dentro de uma imagem não herda a cor da página). Assíncrono: `aoCarregar` roda a cada textura que chega, para quem desenha trocar o ícone na hora certa. |
 
 ## `src/configuracao.js`
 
@@ -691,6 +702,17 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 | `sairDaContaAtual()` | função (exportada) | Sai da conta: o progresso continua no aparelho, e a próxima visita não tenta retomar a conta. |
 | `retomarConta(app)` | função (exportada) | Ao abrir o jogo, retoma a conta de quem já entrou neste navegador. Sem a marca do login (ou sem o Firebase configurado), não faz nada e não baixa o SDK. Com a marca, espera a sessão que o Firebase guardou: - sessão encerrada (saiu em outro lugar, expirou): apaga a marca e segue sem conta; - sessão válida: junta o progresso como no login e volta a salvar na conta; - falha ao ler ou gravar a conta: avisa, segue com o progresso do aparelho e mantém a marca, para tentar de novo na próxima visita. |
 
+## `src/interface/controlesDeSom.js`
+
+Botões de ícone para ligar e desligar os efeitos sonoros e a música no menu principal (issue #133). A mesa tem os seus, desenhados no canvas (ver `criarBotoesDeSom` em cenas/mesa/cenario.js); os dois lados leem o mesmo estado (`progresso.mudo` e `progresso.musica`) e se atualizam quando qualquer lugar muda o áudio (`Aplicacao.aoMudarAudio`).
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `CONTROLES_DE_SOM` | constante (exportada) | Os dois controles: chave, rótulo fixo, texto da ação para cada estado e ícones. |
+| `controleLigado(progresso, chave)` | função (exportada) | O controle `chave` está ligado? Efeitos: `progresso.mudo` falso. Música: `progresso.musica` verdadeiro. |
+| `htmlDosControlesDeSom()` | função (exportada) | HTML dos dois botões (no estado inicial "ligado"; `ligarControlesDeSom` acerta o estado de verdade). |
+| `ligarControlesDeSom(raiz, app, terrenoDaMusica)` | função (exportada) | Liga os botões do HTML dentro de `raiz` à aplicação: mostram o estado de `app.progresso`, alternam efeitos e música ao clicar e se atualizam sozinhos quando o áudio muda em outro lugar. |
+
 ## `src/interface/logo.js`
 
 A logo do Truco de Turing: uma carta com uma rede neural (três entradas, quatro neurônios no meio e duas saídas, uma azul e outra laranja, como no teste de Turing). Os textos já estão em curvas, então a logo não depende da fonte. Os mesmos desenhos estão em `docs/logo/` (SVG e PNG) para o README, redes sociais e impressão.
@@ -729,7 +751,7 @@ Menu principal: apresentação do jogo, botões das telas e configuração da me
 
 ## `src/interface/musica.js`
 
-Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cada terreno. | Trilha | Estilo | Andamento | |---------------------|---------------------------------------------------------------|--------------| | menu | baião em Sol: sanfona, zabumba, triângulo e palmas; refrão que convida a jogar | 118 bpm | | neutro (Planície) | blues lento em Mi, tema cantado com notas longas e poucos saltos | 72 bpm | | oceano | valsa em Sol: marimba ao fundo, coro que preenche os repousos | 63 bpm (3/4) | | montanha | épica em Lá menor: trompa, harpa ao fundo e tambores nos repousos | 84 bpm | | pantano | dança de fada em Ré menor: harmônica de vidro, glockenspiel e pizzicato | 60 bpm | Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As melodias são compostas (uma tabela de notas por compasso), então o laço sempre se repete igual e o tema fica na cabeça. Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio.
+Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cada terreno. | Trilha | Estilo | Andamento | |---------------------|---------------------------------------------------------------|--------------| | menu | baião épico em Sol: cordas, tímpano, zabumba e triângulo suaves; refrão que convida a jogar | 100 bpm | | neutro (Planície) | blues lento em Mi: dois violinos no tema, violoncelo e fagote no apoio | 72 bpm | | oceano | valsa em Sol: flauta-de-pã no tema, marimba ao fundo, coro nos repousos | 63 bpm (3/4) | | montanha | épica em Lá menor: trompa, harpa ao fundo, xilofone na base e tambores nos repousos | 84 bpm | | pantano | lamento sombrio em Ré menor: órgão, zumbido grave, sino e glockenspiel de apoio | 54 bpm | Cada trilha é um laço de compassos com acordes, baixo, acompanhamento, melodia e percussão. As melodias são compostas (uma tabela de notas por compasso), então o laço sempre se repete igual e o tema fica na cabeça. Um agendador olha 0,4 s à frente e marca as notas no relógio do WebAudio.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -737,19 +759,24 @@ Música de fundo sintetizada com WebAudio: uma trilha para o menu e uma para cad
 | `ANTECEDENCIA` | constante | Quanto tempo à frente as notas são agendadas, em segundos. |
 | `hz` | constante | Frequência de uma nota MIDI (69 = Lá 440 Hz). |
 | `sorteador(semente)` | função | Gerador reprodutível (mesmo compasso, mesma melodia). |
-| `voz(saida, tempo, midi, duracao, { forma = 'triangle', volume = 0.1, ataque = 0.01, liberacao = 0.15, filtro = 0, vibrato = 0, desafinar = 0 } = {})` | função | Toca uma nota com envelope (ataque, sustentação, liberação), filtro passa-baixa opcional e vibrato opcional. |
+| `voz(saida, tempo, midi, duracao, { forma = 'triangle', volume = 0.1, ataque = 0.01, liberacao = 0.15, filtro = 0, vibrato = 0, desafinar = 0, vibratoHz = 5 } = {})` | função | Toca uma nota com envelope (ataque, sustentação, liberação), filtro passa-baixa opcional e vibrato opcional. |
 | `chiado(saida, tempo, duracao, { volume = 0.05, filtro = 8000, tipo = 'highpass', ataque = 0.002 } = {})` | função | Ruído filtrado: chimbal, prato, ondas do mar. |
 | `tambor(saida, tempo, { volume = 0.35, de = 110, para = 42, duracao = 0.45 } = {})` | função | Tambor grave (bumbo, taiko): seno que despenca de frequência. |
 | `sino(saida, tempo, midi, volume = 0.06)` | função | Sino: parciais inarmônicas que somem devagar. |
 | `harpa(saida, tempo, midi, volume = 0.04)` | função | Harpa: corda dedilhada que soa e some devagar. |
 | `glockenspiel(saida, tempo, midi, volume = 0.05)` | função | Glockenspiel e caixinha de música: barra de metal, ataque seco e brilho agudo. |
-| `harmonicaDeVidro(saida, tempo, midi, duracao, volume = 0.05)` | função | Harmônica de vidro: senoides puras com entrada macia e um leve tremor. |
 | `marimba(saida, tempo, midi, volume = 0.05)` | função | Marimba: tecla de madeira, grave arredondado e um harmônico que some rápido. |
-| `pizzicato(saida, tempo, midi, volume = 0.08)` | função | Pizzicato: corda beliscada, curta e abafada. |
-| `triangulo(saida, tempo, aberto, volume = 0.02)` | função | Triângulo do forró: barra de metal aguda; fechado é um toque curto, aberto soa mais. |
+| `triangulo(saida, tempo, aberto, volume = 0.02, ataque = 0.002)` | função | Triângulo do forró: barra de metal aguda; fechado é um toque curto, aberto soa mais. |
 | `palmas(saida, tempo, volume = 0.05)` | função | Palmas: estalo de ruído em banda média, com um eco curtinho. |
-| `sanfona(saida, tempo, midi, duracao, volume = 0.03)` | função | Sanfona: duas palhetas levemente desafinadas (o "batimento" da sanfona), fole com vibrato. |
 | `coro(saida, tempo, notas, duracao, volume = 0.018)` | função | Coro (pad): acorde de senoides que entra e sai devagar e passa um pouco do compasso. |
+| `naFaixa(midi, minimo, maximo)` | função | Leva a nota para dentro da faixa do instrumento, subindo ou descendo oitavas inteiras. |
+| `violino(saida, tempo, midi, duracao, volume = 0.04, ataque = 0.09)` | função | Violino: arco sobre corda, dente de serra suavizado, ataque lento, vibrato leve e duas cordas levemente desafinadas (o "coro" de um naipe). Faixa de Sol3 a Mi7. |
+| `violoncelo(saida, tempo, midi, duracao, volume = 0.06, ataque = 0.13)` | função | Violoncelo: arco largo, mais grave e escuro que o violino, ataque mais lento e vibrato fundo. Faixa de Dó2 a Lá5. |
+| `fagote(saida, tempo, midi, duracao, volume = 0.05)` | função | Fagote: palheta dupla, timbre de madeira "nasalado" e redondo, sem vibrato. Faixa de Sib1 a Mib5. Dente de serra bem filtrado mais um quadrado uma oitava abaixo, que dá o corpo oco. |
+| `xilofone(saida, tempo, midi, volume = 0.05)` | função | Xilofone: barra de madeira dura, ataque seco, brilho médio e decaimento rápido. Mais agudo e seco que a marimba e sem o metal do glockenspiel: parciais em 1, 3 e 6 vezes a fundamental. |
+| `flautaDePa(saida, tempo, midi, duracao, volume = 0.06)` | função | Flauta-de-pã: tubo fechado, tom suave e arredondado, sopro no ataque, vibrato lento e saída macia. Faixa de Dó4 a Dó7. |
+| `VOZES` | constante (exportada) | Timbres de orquestra e de percussão de teclas, para as trilhas e para os testes. |
+| `abaixoNaEscala(midi, escala, graus = 2)` | função | A nota `graus` degraus abaixo de `midi` dentro da escala dada (classes de altura 0 a 11). Usada para o segundo violino da Planície, que faz a terça abaixo da melodia sem sair da tonalidade. |
 | `melodia(tabela, compasso, passo, tocarNota, d)` | função | Toca a nota da melodia composta que começa neste passo, se houver. Tabela: [passo, midi, passos]. |
 | `gravarTrilha(saida, nome, segundos)` | função (exportada) | Toca `segundos` da trilha `nome` numa saída qualquer (por exemplo, um OfflineAudioContext) a partir do tempo 0. Usado para gravar amostras das trilhas e nos testes. |
 | `TRILHAS` | constante (exportada) | Nomes das trilhas: menu e terrenos. |

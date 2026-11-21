@@ -106,21 +106,25 @@ export const ICONES_CONQUISTAS = {
 /** Cadeado das conquistas bloqueadas. */
 export const ICONE_CADEADO = svg('<rect x="12" y="21" width="24" height="19" rx="3" fill="#6b5a40" stroke="' + I + '" stroke-width="2"/><path d="M17 21v-5a7 7 0 0114 0v5" fill="none" stroke="' + I + '" stroke-width="3"/><circle cx="24" cy="30" r="2.6" fill="#24140a"/>');
 
+/** Alto-falante, base dos ícones de efeitos sonoros. */
+const alto = '<path d="M7 19h8l11-9v28l-11-9H7z" fill="currentColor" stroke="currentColor" stroke-width="2"/>';
+/** Colcheias ligadas, base dos ícones de música. */
+const notas = '<ellipse cx="14" cy="36" rx="6.5" ry="4.8" fill="currentColor" transform="rotate(-18 14 36)"/>' +
+  '<ellipse cx="32" cy="32" rx="6.5" ry="4.8" fill="currentColor" transform="rotate(-18 32 32)"/>' +
+  '<path d="M19.5 34V11M37.5 30V7" stroke="currentColor" stroke-width="3"/>' +
+  '<path d="M19.5 11l18-4v7l-18 4z" fill="currentColor"/>';
+/** Corte na diagonal que marca o ícone como desligado. */
+const corte = '<path d="M6 6l36 36" stroke="currentColor" stroke-width="4.5"/>';
+/** Envolve o desenho num SVG 48x48 sem cor própria (herda `currentColor`). */
+const svgDeSom = function (corpo) {
+  return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">' + corpo + '</svg>';
+};
 /**
  * Ícones de som da barra de controles (issues #132 e #133): efeitos sonoros (alto-falante com
  * ondas) e música (colcheias ligadas), cada um ligado e desligado. Usam `currentColor` para
  * herdar a cor do botão e, sem depender de cor, o desligado traz um corte na diagonal e perde as
  * ondas (efeitos) ou ganha um "x" (alto-falante). Legíveis de 24 px a 44 px.
  */
-const alto = '<path d="M7 19h8l11-9v28l-11-9H7z" fill="currentColor" stroke="currentColor" stroke-width="2"/>';
-const notas = '<ellipse cx="14" cy="36" rx="6.5" ry="4.8" fill="currentColor" transform="rotate(-18 14 36)"/>' +
-  '<ellipse cx="32" cy="32" rx="6.5" ry="4.8" fill="currentColor" transform="rotate(-18 32 32)"/>' +
-  '<path d="M19.5 34V11M37.5 30V7" stroke="currentColor" stroke-width="3"/>' +
-  '<path d="M19.5 11l18-4v7l-18 4z" fill="currentColor"/>';
-const corte = '<path d="M6 6l36 36" stroke="currentColor" stroke-width="4.5"/>';
-const svgDeSom = function (corpo) {
-  return '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">' + corpo + '</svg>';
-};
 export const ICONES_DE_SOM = {
   efeitosLigado: svgDeSom(alto + '<path d="M32 18c3 3.5 3 8.5 0 12M37 13c6 7 6 15 0 22" stroke="currentColor" stroke-width="3"/>'),
   efeitosDesligado: svgDeSom(alto + '<path d="M32 19l10 10M42 19L32 29" stroke="currentColor" stroke-width="3"/>' + corte),
