@@ -39,11 +39,10 @@ const esperarCartasParadas = (pagina) => esperarCena(pagina,
 async function abrirMesa(jogo, antesDeDistribuir) {
   const { pagina } = jogo;
   await esperarMenu(pagina);
+  await pagina.evaluate(() => { globalThis.__TRUCO_DE_TURING__.progresso.tutorialVisto = true; }); /* sem a oferta do tutorial */
   await pagina.click('#m-jogar');
   await esperarCena(pagina, 'return cena && cena.sys.isActive() && cena.painel');
   if (antesDeDistribuir) await naCena(pagina, antesDeDistribuir.codigo, antesDeDistribuir.arg);
-  const regras = await pagina.$('text=Entendi');
-  if (regras) await regras.click();
   await esperarCena(pagina, 'return cena.mao && cena.visuais && Object.keys(cena.visuais).length');
 }
 

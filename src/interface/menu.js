@@ -13,8 +13,9 @@ import { ARQUITETURAS, tamanhosDaMesa } from '../nucleo/rede.js';
 import { normalizarOpcoes } from '../aplicacao.js';
 import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
-import { abrirPainel, escaparHtml } from './paineis.js';
+import { abrirPainel, escaparHtml, confirmar } from './paineis.js';
 import { Som } from './som.js';
+import { ajustarFontesDosBotoes } from './ajusteDeBotoes.js';
 import { htmlDosControlesDeSom, ligarControlesDeSom } from './controlesDeSom.js';
 import { registrarEvento, EVENTOS } from './analise.js';
 import { abrirRegras } from './telas/regras.js';
@@ -91,7 +92,7 @@ function htmlDoMenu(opcoes) {
     '<p class="menu-conta" id="m-conta" role="status" hidden></p>' +
     '<div class="menu-mais">' +
     '<button class="botao" id="m-regras">Como jogar</button>' +
-    '<button class="botao" id="m-grimorio">Glossário</button>' +
+    '<button class="botao" id="m-grimorio">Livro de conceitos</button>' +
     '<button class="botao" id="m-conquistas">Conquistas</button>' +
     '<button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button>' +
     '<button class="botao" id="m-mods">Mods</button>' +
@@ -130,6 +131,8 @@ export function abrirMenu(app) {
   const elemento = painel.elemento;
   const campo = (id) => elemento.querySelector('#' + id);
   ligarControlesDeSom(elemento, app, 'menu');
+  /* "Livro de conceitos" é o rótulo mais longo: em telas estreitas a fonte dos botões encolhe até o texto caber */
+  ajustarFontesDosBotoes(elemento, '.menu-acoes .botao');
 
   /** Atualiza descrições, listas dependentes e miniaturas conforme as escolhas. */
   function atualizarDicas() {
@@ -179,8 +182,16 @@ export function abrirMenu(app) {
     campo(id).addEventListener('click', () => registrarEvento(EVENTOS.menuClique, { botao }), { capture: true });
   }
   atualizarDicas();
-  campo('m-jogar').addEventListener('click', () => { Som.desbloquear(); lerEscolhas(); painel.fechar(); app.jogar(); });
-  campo('m-regras').addEventListener('click', () => { lerEscolhas(); abrirRegras(app); });
+  campo('m-jogar').addEventListener('click', () => {
+    Som.desbloquear(); lerEscolhas();
+    if (app.progresso.tutorialVisto) { painel.fechar(); app.jogar(); return; }
+    /* primeira vez: oferece o tutorial (pular conta como visto e começa a partida) */
+    confirmar('Primeira vez por aqui?', 'Quer fazer o tutorial? O Percy, seu assistente, guia uma mão de treino e ensina as regras em poucos minutos. Você pode pular e fazê-lo depois, em <b>Como jogar</b>.', [
+      { rotulo: 'Fazer o tutorial', classe: 'vinho', acao: () => { painel.fechar(); app.fazerTutorial('jogar'); } },
+      { rotulo: 'Pular tutorial', classe: 'discreto', acao: () => { app.progresso.tutorialVisto = true; app.salvar(); painel.fechar(); app.jogar(); } },
+    ]);
+  });
+  campo('m-regras').addEventListener('click', () => { lerEscolhas(); abrirRegras(app, undefined, 'jogar', { aoFazerTutorial: () => { painel.fechar(); app.fazerTutorial('regras'); } }); });
   campo('m-grimorio').addEventListener('click', () => { lerEscolhas(); abrirGrimorio(app); });
   campo('m-conquistas').addEventListener('click', () => { lerEscolhas(); abrirConquistas(app); });
   campo('m-mods').addEventListener('click', () => { lerEscolhas(); abrirMods(); });

@@ -108,7 +108,7 @@ describe('paineis.js', () => {
     assert.equal(aviso.getAttribute('role'), 'status');
     assert.deepEqual([a.vezes, b.vezes], [1, 0], 'o som toca quando o aviso aparece');
     /* um aviso comum não apaga a medalha, e a medalha fica acima dele */
-    paineis.mostrarAviso('Glossário · Dropout', 'texto');
+    paineis.mostrarAviso('Livro de conceitos · Dropout', 'texto');
     paineis.mostrarDicaDeJogo('Corrida', 'Ataque agora.', '', '');
     assert.deepEqual(medalhasNaTela(), [a.titulo]);
     assert.equal($('#avisos').firstElementChild, $('#avisos .aviso-conquista'));
@@ -251,6 +251,7 @@ describe('telas', () => {
     salvo: 0, salvar() { this.salvo++; }, salvarOpcoes() { this.salvo++; },
     marcarVerbeteLido(id) { this.progresso.lidos[id] = true; },
     jogou: 0, jogar() { this.jogou++; },
+    tutoriais: [], fazerTutorial(origem) { this.tutoriais.push(origem); },
     /* áudio, como na Aplicacao: alterna o estado e avisa quem ouve */
     ouvintesDeAudio: new Set(),
     aoMudarAudio(f) { this.ouvintesDeAudio.add(f); return () => this.ouvintesDeAudio.delete(f); },
@@ -272,8 +273,47 @@ describe('telas', () => {
       clicar($('#' + id));
       assert.equal(app.opcoes.terreno, 'montanha');
     }
+    app.progresso.tutorialVisto = true;
     clicar($('#m-jogar'));
     assert.equal(app.jogou, 1);
+    assert.deepEqual(app.tutoriais, []);
+  });
+
+  it('menu: na primeira vez, Jogar oferece o tutorial; pular marca como visto e começa a partida (#143)', () => {
+    const app = appFalso();
+    abrirMenu(app);
+    clicar($('#m-jogar'));
+    assert.equal(app.jogou, 0, 'a partida espera a resposta');
+    assert.match($$('.camada').at(-1).textContent, /tutorial/i);
+    clicar([...$$('.camada .botao')].find((b) => /Pular tutorial/.test(b.textContent)));
+    assert.equal(app.progresso.tutorialVisto, true);
+    assert.equal(app.jogou, 1);
+    assert.deepEqual(app.tutoriais, []);
+    /* da segunda vez em diante, nada é oferecido */
+    abrirMenu(app);
+    clicar($('#m-jogar'));
+    assert.equal(app.jogou, 2);
+  });
+
+  it('menu: na primeira vez, aceitar a oferta abre o tutorial com origem jogar e não começa a partida (#143)', () => {
+    const app = appFalso();
+    abrirMenu(app);
+    clicar($('#m-jogar'));
+    clicar([...$$('.camada .botao')].find((b) => /Fazer o tutorial/.test(b.textContent)));
+    assert.deepEqual(app.tutoriais, ['jogar']);
+    assert.equal(app.jogou, 0);
+    assert.equal(app.progresso.tutorialVisto, false, 'só conta como visto ao terminar ou pular');
+  });
+
+  it('Como jogar, aberto pelo menu, traz o botão Fazer o tutorial (#143)', () => {
+    const app = appFalso();
+    app.progresso.tutorialVisto = true;
+    abrirMenu(app);
+    clicar($('#m-regras'));
+    const botao = $('#r-tutorial');
+    assert.ok(botao, 'o botão está em Como jogar mesmo com o tutorial já visto');
+    clicar(botao);
+    assert.deepEqual(app.tutoriais, ['regras']);
   });
 
   it('menu: botões de ícone de efeitos e música mostram o estado, alternam com um clique e acompanham a aplicação (#133)', () => {
@@ -395,11 +435,12 @@ describe('telas', () => {
     /* todo arquivo citado existe no repositório */
     for (const { caminho } of ARQUIVOS_DE_MODS) assert.ok(existsSync(new URL('../../' + caminho, import.meta.url)), caminho);
   });
-  it('regras: marca o tutorial como visto e chama aoFechar', () => {
+  it('regras: chama aoFechar, não marca o tutorial como visto e só tem o botão do tutorial quando pedido (#143)', () => {
     const app = appFalso();
     let fechou = false;
     abrirRegras(app, () => { fechou = true; });
-    assert.ok(app.progresso.tutorialVisto);
+    assert.equal(app.progresso.tutorialVisto, false, 'ler as regras não substitui o tutorial');
+    assert.equal($('#r-tutorial'), null, 'na mesa, sem o botão');
     assert.match($('.camada').textContent, /41/);
     clicar($('.camada [data-fechar]'));
     assert.ok(fechou);
@@ -415,7 +456,7 @@ describe('telas', () => {
     assert.ok($$('#g-lista .lido').length >= 2);
     abrirGrimorio(app, 'nao-existe');
   });
-  it('Glossário: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
+  it('Livro de conceitos: verbete de Ação mostra a ideia, a matemática para se aprofundar e a autoria', () => {
     abrirGrimorio(appFalso(), 'overfit');
     const texto = $('#g-verbete').textContent;
     for (const trecho of ['A ideia', 'No jogo', 'Até onde vale a comparação', 'Para se aprofundar', 'Suzy Arcanjo']) assert.match(texto, new RegExp(trecho));
@@ -426,15 +467,15 @@ describe('telas', () => {
     const curto = htmlDoVerbete(VERBETES.find((v) => !v.ideia));
     assert.doesNotMatch(curto, /A ideia|Para se aprofundar|Colaboração/);
   });
-  it('Glossário: título novo, equação, figura e "até onde vale a comparação"', () => {
+  it('Livro de conceitos: título novo, equação, figura e "até onde vale a comparação"', () => {
     abrirGrimorio(appFalso(), 'dropout');
-    assert.match($('.camada h2').textContent, /Glossário/);
+    assert.match($('.camada h2').textContent, /Livro de conceitos/);
     assert.ok($('#g-verbete .equacao math'));
     assert.ok($('#g-verbete .figura svg'));
     assert.match($('#g-verbete .limite').textContent, /Até onde vale/);
     assert.match($('#g-verbete .fonte').textContent, /Srivastava/);
   });
-  it('regras em abas: troca de aba, ajuda das ações e "Ver o conceito" abrindo o verbete certo', () => {
+  it('regras em abas: troca de aba, ajuda das ações e "Aprender mais" abrindo o verbete certo', () => {
     const app = appFalso();
     abrirRegras(app);
     const abas = $$('.abas [data-aba]').map((b) => b.textContent);

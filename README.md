@@ -86,7 +86,7 @@ src/motor/                 motor de regras: estado, ações, baralhos, terrenos,
 src/nucleo/                camada de tradução (sem Phaser): entrega às telas a mão, as jogadas,
                            a pontuação e os oponentes no formato da interface, sobre o motor;
                            e o modo truco
-src/conteudo/              Glossário, conquistas, textos e progresso salvo
+src/conteudo/              Livro de conceitos, conquistas, textos e progresso salvo
 src/arte/                  arte procedural em canvas: cartas, versos, mesas, avatares, ícones
 src/interface/             menu, telas HTML, avisos e som (WebAudio)
 src/cenas/                 cenas do Phaser: carregamento, menu e mesa
@@ -135,25 +135,26 @@ Pontos em que o enunciado deixa margem e o que ficou decidido (professor e grupo
   - *Zé do Ruído* (fácil): sorteia uma jogada válida; bom para aprender as regras.
   - *Gradiente Guloso* (médio): como a descida de gradiente, escolhe o lance que mais melhora o placar agora, sem olhar adiante.
   - *Mestre Monte Carlo* (difícil): sorteia as cartas ocultas, simula dezenas de partidas para cada lance e escolhe o que mais venceu; mostra a própria chance de vitória e truca com base nas simulações.
-- **7 baralhos e 4 terrenos**: Clássico, Truco com manilhas, Nobreza, Backprop (o naipe é o peso, as figuras são ativações e a rede vale a saída do forward pass), Fraternidade, Yin-yang e Power BI; mesa neutra, Montanha, Pântano e Oceano, cada terreno com ambiente animado (sombras de nuvens e sementes ao vento na Planície; neve, névoa e rajadas na Montanha; neblina, vaga-lumes, bolhas e fogo-fátuo no Pântano; cáusticas, brilhos e vento no Oceano). As cartas da mesa são sempre opacas: por cima delas passam só partículas pequenas (flocos, sementes, bolhas, brilhos, riscos de vento); neblina, cáusticas, sombras e halos ficam por trás.
+- **7 baralhos e 4 terrenos**: Clássico, Truco com manilhas, Nobreza, Backprop (o naipe é o peso, as figuras são ativações e a rede vale a saída do forward pass), Fraternidade, Yin-yang e Power BI; Planície, Montanha, Pântano e Oceano, cada terreno com ambiente animado (sombras de nuvens e sementes ao vento na Planície; neve, névoa e rajadas na Montanha; neblina, vaga-lumes, bolhas e fogo-fátuo no Pântano; cáusticas, brilhos e vento no Oceano). As cartas da mesa são sempre opacas: por cima delas passam só partículas pequenas (flocos, sementes, bolhas, brilhos, riscos de vento); neblina, cáusticas, sombras e halos ficam por trás.
 - **56 conquistas** em graduações de bronze a antimatéria, incluindo as do enunciado (Desk rejection, Marcha dos patos, Contra tudo e contra todos, Artilheiro dos gols inúteis, 100 dropouts…), as da fusão (baralhos Nobreza e Backprop, mesas de 4 e 5 jogadores, 3 baralhos, arquiteturas), as 20 sugeridas pelo prof. Peng (de Por um fio a Rede da virada, rede do amor), e a conquista final, **Convergência global** (graduação Singularidade), para quem desbloqueia todas as outras, em homenagem ao prof. Peng Yaohao. Cada conquista sobe num aviso no alto da tela, com a medalha, na hora em que acontece.
 - **Estatísticas e conquistas globais** (botões na tela de Conquistas): a página de **Estatísticas** mostra tudo o que o jogo contou sobre você, no estilo das páginas de estatísticas dos jogos de mundo aberto (tempo acumulado em partida, partidas, mãos, ações na rede, recordes, favoritos e conquistas por graduação). **Conquistas globais** compara você com os outros jogadores da conta online: a raridade de cada conquista (quantos % dos jogadores a têm) e a sua posição em cada número. O placar é anônimo: cada conta publica só números e quais conquistas tem (`placar/` no Firestore), sem nome nem e-mail.
 - **9 avatares** para o jogador, 6 deles liberados por conquistas (Menu > Avatar).
 - **Modo dicas**: dicas de estratégia a cada vez, sempre com o conceito de redes neurais por trás, e explicações nos botões (mouse ou segurar no celular); só usam o que está à vista e nunca dizem qual carta virada escolher. Mãos com dicas não valem conquistas.
-- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Glossário e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
-- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Glossário.
-- **Trilha sonora** (ligada por padrão): baião épico e mais lento no menu (cordas, tímpano suave e triângulo discreto), blues lento na Planície (mesa neutra) com dois violinos, violoncelo e fagote, valsa com flauta-de-pã e marimba no oceano, épica com trompa, harpa e xilofone na montanha e um lamento sombrio com órgão, sino e glockenspiel de apoio no pântano; fanfarra e confete na vitória. Dois botões de ícone ligam e desligam os efeitos sonoros e a música, no menu e na mesa.
+- **Tutorial com o Percy** (issues #137 a #143): uma mão guiada, com semente e jogadas fixas, que ensina o objetivo, a pontuação, tunagem, overfit, dropout, early stop e passar a vez; transfer learning, stack overflow e truco aparecem em diálogo. O assistente Percy fala num balão, destaca o que clicar (a mesa só aceita a jogada do roteiro) e leva ao Livro de conceitos pelo botão "Aprender mais". É oferecido na primeira vez que o jogador clica em Jogar (dá para pular) e fica sempre em **Como jogar** > Fazer o tutorial. Nada do tutorial vai para as estatísticas, conquistas ou analytics. Para ter cartas para todas as jogadas, a mão do tutorial usa 2 baralhos (10 cartas), e o texto avisa isso.
+- **Mesa pensada para o toque**: no painel esquerdo, só REGRAS (regras, ajuda das ações, Livro de conceitos e dicas) e MENU (som, música e sair); botões de ação grandes e quase quadrados.
+- **Revisão da mão**: curva de treino passo a passo, momentos-chave e linha do tempo comentada com os conceitos do Livro de conceitos.
+- **Trilha sonora** (ligada por padrão): baião épico e mais lento no menu (cordas, tímpano suave e triângulo discreto), blues lento na Planície com dois violinos, violoncelo e fagote, valsa com flauta-de-pã e marimba no oceano, épica com trompa, harpa e xilofone na montanha e um lamento sombrio com órgão, sino e glockenspiel de apoio no pântano; fanfarra e confete na vitória. Dois botões de ícone ligam e desligam os efeitos sonoros e a música, no menu e na mesa.
 - **Feedback visual**: conexões com espessura proporcional ao valor (como no Playground), curva de treino, explosões, banners, músicas e sons.
 
 ## Conteúdo educativo
 
-Cada mecânica corresponde a um verbete do **Glossário** (antes Biblioteca de conceitos e, no começo, Grimório), que aparece como aviso na
+Cada mecânica corresponde a um verbete do **Livro de conceitos** (antes Biblioteca de conceitos e, no começo, Grimório), que aparece como aviso na
 primeira vez em que acontece: neurônio, função de ativação, saturação da ativação (o aviso "Saída saturada" do baralho
 Backprop), camadas e arquiteturas, propagação direta, pesos, curva de treino, retropropagação (e por que o baralho
 Backprop, que só faz o forward pass, tem esse nome), fine-tuning, overfitting, dropout, early stopping, stack overflow, vanishing gradient, transfer
 learning, ruído, Monte Carlo, mudança de distribuição (terrenos como weight decay e concept drift) e decisão sob
 incerteza (truco). Cada verbete traz a equação, uma figura quando ajuda, como aparece no jogo e até onde a comparação
-vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Ver o conceito".
+vale. O botão "?" da mesa abre a ajuda das ações, com a regra de cada jogada e um botão "Aprender mais".
 
 ## Estatísticas de uso
 
@@ -248,7 +249,7 @@ Autores:
 - Peng Yaohao: especificação inicial, gerência do projeto, validação e feedbacks
 - Welyngton José Vinicius Dal Prá ([@welyngton](https://github.com/welyngton)): Truco de Turing (interface, arte, sons, conquistas e modo truco)
 - Diego Casagrande ([@diegocasagrande](https://github.com/diegocasagrande)): testes e validação das regras
-- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações no Glossário
+- Suzy Arcanjo ([@SuzyArcanjo](https://github.com/SuzyArcanjo)): verbetes das ações no Livro de conceitos
 - Vinícius Chiconato ([@chiconatovini](https://github.com/chiconatovini)): correções nas regras
 - 
 <!-- /autores -->

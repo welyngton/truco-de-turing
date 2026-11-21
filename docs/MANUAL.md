@@ -1,7 +1,7 @@
 # Manual do código — Truco de Turing
 
 Este manual explica como o código do jogo está organizado, como rodar, testar e publicar, e como
-estender o jogo (novo baralho, terreno, oponente, conquista ou verbete do Glossário).
+estender o jogo (novo baralho, terreno, oponente, conquista ou verbete do Livro de conceitos).
 
 A lista completa de módulos e funções, com a descrição de cada uma, fica em
 [`docs/REFERENCIA.md`](REFERENCIA.md). Ela é gerada a partir dos comentários do código com
@@ -24,7 +24,7 @@ A regra mais importante da arquitetura é a separação em camadas, em que cada 
 │ interface/          HTML sobreposto: menu, telas, avisos, som │
 ├───────────────────────────────────────────────────────────────┤
 │ arte/               desenho procedural em canvas (sem Phaser) │
-│ conteudo/           textos, Glossário, conquistas, progresso │
+│ conteudo/           textos, Livro de conceitos, conquistas, progresso │
 ├───────────────────────────────────────────────────────────────┤
 │ nucleo/             camada de tradução e modo truco           │
 ├───────────────────────────────────────────────────────────────┤
@@ -259,9 +259,10 @@ copiados para o protótipo com `Object.assign` no fim de `CenaMesa.js`. Dentro d
 | `entrada.js` | cliques e toques: neurônios, cartas da mão, botões de ação |
 | `turnos.js` | fluxo da mão: `iniciarMao`, `executarJogada`, `avancar`, vez do oponente, troca de aparelho |
 | `truco.js` | pedir, anunciar e responder truco |
-| `efeitos.js` | animação de cada evento, faíscas, faixas, balão de fala e avisos do Glossário |
+| `efeitos.js` | animação de cada evento, faíscas, faixas, balão de fala e avisos do Livro de conceitos |
 | `resultado.js` | conquistas na hora da jogada e no fim da mão, tentos, comemoração da vitória e tela de resultado |
 | `dicas.js` | modo dicas: sugestão de jogada (busca gulosa) e dicas flutuantes dos botões |
+| `tutorial.js` | modo tutorial: partida do roteiro, bloqueio de jogadas fora dele, rival roteirizado e o assistente Percy (ver 5.2) |
 
 O ciclo de uma jogada:
 
@@ -289,7 +290,7 @@ cliques durante animações) e `this.encerrada`.
   mesa. Leem `progresso.mudo` e `progresso.musica` e, como a janela MENU, chamam `alternarSom` e `alternarMusica`;
   a `Aplicacao` avisa quem se registrou com `aoMudarAudio`, então os três lugares ficam sempre em acordo.
 - **Botões da mesa** (`cenario.js` e `entrada.js`): o painel esquerdo tem só **REGRAS** (janela com
-  Regras, Ajuda das ações, Glossário e a chave das dicas) e **MENU** (janela com som, música, voltar ao jogo e sair
+  Regras, Ajuda das ações, Livro de conceitos e a chave das dicas) e **MENU** (janela com som, música, voltar ao jogo e sair
   da partida); o direito tem TRUCO e a linha Dropout · Transfer · Passar. Os botões são grandes e
   quase quadrados, ficam longe da borda de baixo (gestos do celular) e a área de toque passa
   `FOLGA_DE_TOQUE` da borda desenhada. O Phaser acompanha vários dedos (`TOQUES_SIMULTANEOS`), para
@@ -297,7 +298,7 @@ cliques durante animações) e `this.encerrada`.
 - **Dicas** (`dicas.js` e `conteudo/dicasDeJogo.js`): a chave "Ativar dicas" (na janela REGRAS) fica em
   `Aplicacao.dicasLigadas` (só na sessão). Ligada, a cada vez do humano `escolherDicaDeJogo` escolhe
   uma dica de jogo (oportunidade de ataque ou tunagem, risco, terreno, placar ou estratégia geral) e a
-  mostra com o conceito do Glossário ligado a ela. As dicas usam **só informação pública** e nunca
+  mostra com o conceito do Livro de conceitos ligado a ela. As dicas usam **só informação pública** e nunca
   apontam qual neurônio oculto ativar; um teste em `testes/unidade/conteudo.test.js` sorteia de novo tudo o que
   está escondido e confere que a dica não muda. Os botões que recebem `opcoes.dica` em `criarBotao`
   ganham dicas flutuantes (mouse: ao passar; toque: segurar 0,45 s, e soltar depois de segurar não
@@ -306,10 +307,33 @@ cliques durante animações) e `this.encerrada`.
 - **Revisão** (`interface/telas/revisao.js`): cada jogada e cada lance de truco viram um passo em
   `this.linhaDoTempo` (`anotarNaLinhaDoTempo`, em `turnos.js`), com as somas depois do passo. A revisão
   desenha a curva em SVG, aponta maior salto, golpe mais duro e virada, e liga cada tipo de passo ao
-  verbete do Glossário. `this.historicoDaPartida` guarda o placar mão a mão.
+  verbete do Livro de conceitos. `this.historicoDaPartida` guarda o placar mão a mão.
 - **Música** (`interface/musica.js`): cada terreno tem uma música definida por andamento, acordes por
   compasso e uma função `tocar` chamada a cada passo. Um agendador marca as notas 0,4 s à frente no
   relógio do WebAudio. A música começa ligada até a pessoa escolher (`progresso.musicaEscolhida`). Para uma música nova, acrescente uma entrada em `MUSICAS` com a chave do terreno.
+
+### 5.2 Tutorial (`nucleo/tutorial.js`, `cenas/mesa/tutorial.js`, `interface/assistente.js`)
+
+O tutorial é uma mão de verdade, mas **determinística**: `conteudo/roteiroDoTutorial.js` fixa a semente
+(4703), a configuração (Planície, baralho clássico, 2 baralhos para a mão ter 10 cartas) e a lista de
+passos. Cada passo é um diálogo (o Percy fala e o jogador toca em Próximo), uma jogada guiada do jogador
+(`jogadaEsperada`, com as cartas pelo rótulo `valor+naipe` e os neurônios pelo id `C<camada>N<posição>`)
+ou uma jogada do rival, que o roteiro executa sem passar pelo bot. As falas ficam em
+`conteudo/textosDoTutorial.js` (até 2 frases por balão).
+
+- `nucleo/tutorial.js` é lógica pura, sem Phaser: `criarTutorial(ROTEIRO)` cria a mão e responde `aceita(jogada)`,
+  `permite(entrada)` (o que a mesa pode tocar no passo), `destaques()` (o que o balão aponta), `jogar` e
+  `jogarDoRival`. `rodarTudo()` percorre o roteiro por código: o teste `testes/unidade/tutorial.test.js` o usa
+  para garantir que, se o motor mudar, o roteiro acusa em vez de quebrar na frente do jogador.
+- `cenas/mesa/tutorial.js` liga isso à cena: a cena nasce com `scene.start('Mesa', { tutorial: { origem } })`;
+  `entrada.js`, `truco.js` e `paineis.js` perguntam a `tutorialPermite` antes de agir; `executarJogada` e
+  `avancar` desviam para o roteiro; nada é gravado (sem estatísticas, conquistas, analytics nem `encerrarMao`).
+- `interface/assistente.js` desenha o balão, o escurecimento com buracos (SVG `evenodd`) e os anéis pulsantes;
+  `posicionarBalao` (função pura, testada em 640x360, 844x390 e 1280x800) escolhe um lugar que não cubra nenhum destaque.
+- Para acrescentar um passo, inclua-o em `PASSOS` e a fala em `TEXTOS` (o teste confere que todo passo tem fala);
+  se a jogada depender de cartas novas, troque a semente e confira com o teste do roteiro.
+- `progresso.tutorialVisto` é por aparelho: não vai para a conta, porque as regras do Firestore (`firestore.rules`)
+  só aceitam os campos conhecidos do progresso.
 
 ## 6. Arte e nitidez
 
@@ -418,7 +442,7 @@ Contadores que atravessam as mãos ficam no progresso (`pontos`, para "Diga meu 
 em `partidaIniciadaEm` (guardada na cena da mesa e passada no contexto; para "Adeus, Namekusei"). Os testes com jogadas reais estão em
 `testes/unidade/conquistas-lances.test.js`; os casos de cada conquista, em `conteudo.test.js`.
 
-### Novo verbete do Glossário
+### Novo verbete do Livro de conceitos
 Acrescente em `VERBETES` (`conteudo/grimorio.js`) `{ id, titulo, categoria, conceito, equacao, noJogo, limite }`
 (e, se quiser, `figura`, com o nome de uma figura de `conteudo/figurasDaBiblioteca.js`, e `fonte`). A equação é
 MathML montada com os auxiliares do topo do arquivo. Para

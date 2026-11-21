@@ -17,6 +17,9 @@ import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colun
 const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
 /** Botões de ícone de efeitos e música: lado, centro vertical e margem à borda do painel esquerdo (mundo 1280x720). */
 const BOTAO_DE_SOM = { lado: 32, y: 26, margem: 12 };
+/** Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar entre os botões de som. */
+export const TITULO_DO_DETALHE = 'DETALHE DA CARTA';
+const LARGURA_DO_TITULO_DO_DETALHE = PAINEL_ESQ.l - 2 * (BOTAO_DE_SOM.margem + BOTAO_DE_SOM.lado) - 12;
 /** Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. */
 const TEMPO_DE_SEGURAR = 450;
 
@@ -49,7 +52,9 @@ export const metodosDoCenario = {
         ajustarLinha(aviso, aviso.text, 11.5, coluna + 6, 8);
       }
     }
-    this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, 'INSPEÇÃO', { fontFamily: FONTES.titulo, fontStyle: '700', fontSize: '12px', color: '#e8d6a8', letterSpacing: 2 }).setOrigin(0.5).setDepth(7);
+    /* título da carta ampliada (issue #119): fica entre os dois botões de som, então encolhe até caber nesse vão */
+    const tituloDoDetalhe = this.add.text(PAINEL_ESQ.x + PAINEL_ESQ.l / 2, ESQ.titulo, TITULO_DO_DETALHE, { fontFamily: FONTES.titulo, fontStyle: '700', fontSize: '12px', color: '#e8d6a8', letterSpacing: 1.5 }).setOrigin(0.5).setDepth(7);
+    ajustarLinha(tituloDoDetalhe, TITULO_DO_DETALHE, 12, LARGURA_DO_TITULO_DO_DETALHE, 8);
   },
 
   /**
@@ -148,7 +153,7 @@ export const metodosDoCenario = {
     return this.add.text(x, y, s, { fontFamily: FONTES.texto, fontSize: '13px', color: '#efe3c6', ...(estilo || {}) }).setDepth(7);
   },
 
-  /** Painel esquerdo: inspeção, limbo e cemitério (como pilhas), terreno e dica do turno. */
+  /** Painel esquerdo: detalhe da carta, limbo e cemitério (como pilhas), terreno e dica do turno. */
   criarPainelEsquerdo(p) {
     const titulo = { fontFamily: FONTES.titulo, fontStyle: '700' };
     const cx = PAINEL_ESQ.x + PAINEL_ESQ.l / 2;
@@ -191,7 +196,7 @@ export const metodosDoCenario = {
     /* dois botões de ícone no alto do painel, ao lado do título: efeitos sonoros e música, sem abrir a janela MENU */
     this.criarBotoesDeSom(p);
 
-    /* só dois botões no rodapé: REGRAS (como jogar, Glossário e dicas) e MENU (som, música, sair) */
+    /* só dois botões no rodapé: REGRAS (como jogar, Livro de conceitos e dicas) e MENU (som, música, sair) */
     const lb = (PAINEL_ESQ.l - 28 - 10) / 2, pedra = { tamanho: 17, variante: 'pedra' };
     p.botaoRegras = this.criarBotao(PAINEL_ESQ.x + 14 + lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, 'REGRAS', () => this.abrirRegrasDaMesa(), pedra);
     p.botaoMenu = this.criarBotao(PAINEL_ESQ.x + PAINEL_ESQ.l - 14 - lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, 'MENU', () => this.abrirMenuDaMesa(), pedra);

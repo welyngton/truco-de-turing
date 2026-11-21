@@ -20,6 +20,7 @@ Estado da aplicação fora da partida: opções do menu, progresso salvo, conqui
 | `alternarSom()` | método | Liga ou desliga o som e lembra a escolha. |
 | `alternarMusica(terreno)` | método | Liga ou desliga a música de fundo e lembra a escolha. |
 | `jogar()` | método | Sai do menu e abre a mesa. |
+| `fazerTutorial(origem)` | método | Abre a mesa no modo tutorial (ver `src/cenas/mesa/tutorial.js`). Não conta como partida nas estatísticas. Ao terminar (ou pular), `origem` 'jogar' segue para a partida e 'regras' volta ao menu. |
 | `irParaMenu()` | método | Volta da mesa para o menu. |
 | `modoImersivo()` | método | Em celulares e tablets: tela cheia e trava na horizontal, onde o navegador permite (Chrome no Android). No iPhone isso não existe; ali vale o aviso para girar o aparelho. |
 | `registrarMao(ctx)` | método | Registra o fim de uma mão contra o computador e devolve as conquistas novas. |
@@ -127,7 +128,7 @@ Fundos da mesa: feltro verde (neutro) e um fundo por terreno (montanha, pântano
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `desenharFeltro(W, H, S)` | função (exportada) | Feltro verde da mesa neutra, com fibras e vinheta. |
+| `desenharFeltro(W, H, S)` | função (exportada) | Feltro verde da Planície, com fibras e vinheta. |
 | `fibras(ctx, W, H, aleatorio, n, clara, escura)` | função | Fibras do tecido: `n` riscos curtos alternando a cor clara e a escura. |
 | `mesaMontanha(ctx, W, H, aleatorio)` | função | Fundo da mesa no terreno montanha: céu de entardecer, cordilheira e trilha subindo. |
 | `vitoriaRegia(ctx, x, y, r, rot, aleatorio)` | função | Desenha uma vitória-régia (folha flutuante) no pântano. |
@@ -234,11 +235,11 @@ Cena do menu: fundo animado (uma rede neural pulsando e cartas flutuando) atrás
 
 ## `src/cenas/mesa/CenaMesa.js`
 
-Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os métodos ficam em arquivos separados por assunto e são copiados para o protótipo no fim deste arquivo: | Arquivo | Assunto | |---------------|--------------------------------------------------------------------| | cenario.js | molduras fixas, botões e criação dos textos dos painéis | | desenho.js | desenhar o estado: neurônios, mãos, placar, curva, dica, alvos | | entrada.js | cliques e toques do jogador | | turnos.js | fluxo da mão: iniciar, executar jogada, vez de cada jogador | | truco.js | pedir, anunciar e responder truco | | efeitos.js | animações dos eventos, faíscas, faixas, balão e avisos do Glossário | | ambiente.js | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento) | | paineis.js | painéis de leitura: placar por camada, registro completo, cemitério | | online.js | partida online: ações pela sala, fila, vez dos outros aparelhos | | resultado.js | fim da mão, tentos, conquistas, comemoração e tela de resultado | | dicas.js | modo dicas: sugestão de jogada e dicas flutuantes dos botões | Estado principal da cena: - `this.partida`: placar de tentos e truco (nucleo/truco.js); - `this.mao`: estado da mão atual (nucleo/partida.js); - `this.quemVe`: índice do jogador que está olhando a tela (-1 enquanto o aparelho troca de mãos); - `this.numJogadores`, `this.humanos`, `this.variosHumanos`: quem está na mesa (os humanos são os primeiros índices; os demais são oponentes do computador); - `this.modo`, `this.selecao`, `this.alvos`: o que o jogador está escolhendo; - `this.ocupada`: verdadeiro durante animações e a vez do oponente (bloqueia cliques); - `this.encerrada`: a mão acabou.
+Cena da mesa: onde a partida acontece. A classe é pequena de propósito. Os métodos ficam em arquivos separados por assunto e são copiados para o protótipo no fim deste arquivo: | Arquivo | Assunto | |---------------|--------------------------------------------------------------------| | cenario.js | molduras fixas, botões e criação dos textos dos painéis | | desenho.js | desenhar o estado: neurônios, mãos, placar, curva, dica, alvos | | entrada.js | cliques e toques do jogador | | turnos.js | fluxo da mão: iniciar, executar jogada, vez de cada jogador | | truco.js | pedir, anunciar e responder truco | | efeitos.js | animações dos eventos, faíscas, faixas, balão e avisos do Livro de conceitos | | ambiente.js | ambiente animado do terreno (neve, neblina, vaga-lumes, ondas, vento) | | paineis.js | painéis de leitura: placar por camada, registro completo, cemitério | | online.js | partida online: ações pela sala, fila, vez dos outros aparelhos | | resultado.js | fim da mão, tentos, conquistas, comemoração e tela de resultado | | dicas.js | modo dicas: sugestão de jogada e dicas flutuantes dos botões | | tutorial.js | modo tutorial: partida do roteiro, bloqueios e o assistente Percy | Estado principal da cena: - `this.partida`: placar de tentos e truco (nucleo/truco.js); - `this.mao`: estado da mão atual (nucleo/partida.js); - `this.quemVe`: índice do jogador que está olhando a tela (-1 enquanto o aparelho troca de mãos); - `this.numJogadores`, `this.humanos`, `this.variosHumanos`: quem está na mesa (os humanos são os primeiros índices; os demais são oponentes do computador); - `this.modo`, `this.selecao`, `this.alvos`: o que o jogador está escolhendo; - `this.ocupada`: verdadeiro durante animações e a vez do oponente (bloqueia cliques); - `this.encerrada`: a mão acabou.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `create()` | método | Monta a mesa e começa a primeira mão (depois das regras, na primeira visita). |
+| `create()` | método | Monta a mesa e começa a primeira mão (ou a partida do tutorial, quando a cena nasce com `{ tutorial }`). |
 | `update(tempo)` | método | A cada quadro: conexões animadas, contornos pulsantes e o destaque de quem está na vez. |
 
 ## `src/cenas/mesa/ambiente.js`
@@ -274,12 +275,13 @@ Parte da CenaMesa: elementos fixos da tela (molduras dos painéis, colunas das c
 |---|---|---|
 | `COR_ROTULO` | constante | Cor do rótulo de cada variante de botão. |
 | `BOTAO_DE_SOM` | constante | Botões de ícone de efeitos e música: lado, centro vertical e margem à borda do painel esquerdo (mundo 1280x720). |
+| `TITULO_DO_DETALHE` | constante (exportada) | Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar entre os botões de som. |
 | `TEMPO_DE_SEGURAR` | constante | Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. |
 | `desenharCenarioFixo()` | método | Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. |
 | `criarBotao(x, y, l, a, rotulo, acao, opcoes = {})` | método | Cria um botão com textura própria e rótulo que se ajusta à largura. O objeto devolvido ganha `definirRotulo(texto)` e `habilitar(sim)`. Com `opcoes.dica`, o botão mostra uma dica flutuante (modo "dicas" ligado): ao passar o mouse, ou, no celular, ao segurar o botão apertado. Soltar depois de segurar não executa a ação, para que dê para ler a dica sem jogar sem querer. A ação roda ao soltar o toque/clique. `explicar`, quando dado, devolve o texto que aparece no quadro de instruções (painel esquerdo) enquanto o cursor está sobre o botão: o que a ação faria agora, antes de confirmar. |
 | `criarPaineis()` | método | Cria os textos, imagens e botões dos painéis. Ficam em `this.painel`. |
 | `criarTexto(x, y, s, estilo)` | método | Atalho para criar texto na fonte do corpo, já na profundidade dos painéis. |
-| `criarPainelEsquerdo(p)` | método | Painel esquerdo: inspeção, limbo e cemitério (como pilhas), terreno e dica do turno. |
+| `criarPainelEsquerdo(p)` | método | Painel esquerdo: detalhe da carta, limbo e cemitério (como pilhas), terreno e dica do turno. |
 | `criarPlacar(p)` | método | Placar (painel direito): título da mão e um bloco por jogador com avatar, nome, nível, situação, detalhes, tentos e soma da rede. Os blocos de cima são os adversários de quem está vendo; o dele fica por último. Com mais de 2 jogadores os blocos são compactos (ver `blocosDoPlacar` em layout.js). |
 | `criarBlocoCompacto(rx, y, rl, a)` | método | Bloco compacto do placar (mesas com 3 a 5 jogadores): avatar pequeno, nome, uma linha com a situação e a mão, e a soma à direita. Tem os mesmos campos do bloco grande, para que `atualizarBlocoDoJogador` sirva aos dois. |
 | `criarBotoesDeAcao(p)` | método | Botão de truco e a barra de ações: selecione cartas da mão e acendem só os botões das jogadas possíveis com elas; passar o cursor num botão explica o efeito no quadro de instruções antes de confirmar. Os botões ficam em `p.acoes[id]`; dropout, transfer e passar também em `p.botaoDropout`, `p.botaoTransfer` e `p.botaoPassar`. |
@@ -321,7 +323,7 @@ Parte da CenaMesa: desenhar o estado da mão na tela. Neurônios, mãos, placar,
 
 ## `src/cenas/mesa/dicas.js`
 
-Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo do Glossário: uma oportunidade, um risco ou uma estratégia geral, sempre com o conceito de redes neurais por trás. As dicas usam só informação pública e nunca apontam qual neurônio oculto ativar; - **dicas flutuantes** nos botões de ação (Dropout, Transfer, Passar e TRUCO): ao passar o mouse ou, no celular, ao segurar o botão. Explicam a ação, o que vale fazer agora (no truco, a chance estimada por simulação) e o conceito do Glossário; - a chance estimada de vitória também na caixa de resposta ao truco. Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas estatísticas. O aviso aparece ao ligar.
+Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a cada vez, uma **dica de jogo** (conteudo/dicasDeJogo.js) no estilo do Livro de conceitos: uma oportunidade, um risco ou uma estratégia geral, sempre com o conceito de redes neurais por trás. As dicas usam só informação pública e nunca apontam qual neurônio oculto ativar; - **dicas flutuantes** nos botões de ação (Dropout, Transfer, Passar e TRUCO): ao passar o mouse ou, no celular, ao segurar o botão. Explicam a ação, o que vale fazer agora (no truco, a chance estimada por simulação) e o conceito do Livro de conceitos; - a chance estimada de vitória também na caixa de resposta ao truco. Em troca, a mão jogada com dicas (ligadas em algum momento) não vale conquistas nem conta nas estatísticas. O aviso aparece ao ligar.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -338,7 +340,7 @@ Parte da CenaMesa: o modo "dicas". Com as dicas ligadas, o jogador recebe: - a c
 
 ## `src/cenas/mesa/efeitos.js`
 
-Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js) em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do oponente e avisos do Glossário.
+Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo/partida.js) em giros de carta, cartas voando, faíscas, faixas de texto, tremidas de câmera, balão de fala do oponente e avisos do Livro de conceitos.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -365,7 +367,7 @@ Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo
 | `faixa(texto, cor = '#f6dc8f', tamanho = 48, icone = null)` | método | Faixa grande no centro do tabuleiro (gritos de truco, ataques). |
 | `falar(texto, quem)` | método | Balão de fala de um oponente. Fica à esquerda do placar, na altura do bloco dele, com a ponta virada para o avatar. |
 | `impactoDoTruco(valor)` | método | Impacto do grito de truco: tapa na mesa, flash e tremor de tela mais fortes que o do stack overflow, crescendo a cada degrau (TRUCO 3, SEIS 6, NOVE 9, DOZE 12). |
-| `avisarVerbete(id)` | método | Mostra uma vez por sessão o resumo do verbete do Glossário ligado ao que aconteceu. |
+| `avisarVerbete(id)` | método | Mostra uma vez por sessão o resumo do verbete do Livro de conceitos ligado ao que aconteceu. |
 
 ## `src/cenas/mesa/entrada.js`
 
@@ -385,7 +387,7 @@ Parte da CenaMesa: respostas a toques e cliques do jogador. Passar o cursor nos 
 | `alternarDropout()` | método | Botão Dropout: entra ou sai do modo de escolher o alcance. |
 | `fazerTransfer()` | método | Botão Transfer: troca as quatro cartas iguais da mão. |
 | `passarAVez()` | método | Botão Passar a vez. |
-| `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Glossário e a chave das dicas, numa janela só. |
+| `abrirRegrasDaMesa()` | método | Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só. |
 | `abrirAjudaDaMesa()` | método | Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. |
 | `abrirMenuDaMesa()` | método | Botão MENU da mesa: som e música (a janela fica aberta para ligar e desligar), voltar ao jogo ou abandonar a partida. |
 | `registrarAbandono()` | método | Estatísticas de uso: saiu da partida antes do fim (`jogo_abandonado`). |
@@ -501,6 +503,27 @@ Parte da CenaMesa: o fluxo da mão. Começar a mão, executar jogadas, decidir q
 | `passarAparelho(j, continuar)` | método | Modo de dois jogadores: esconde a mão e pede para passar o aparelho. |
 | `vezDoOponente()` | método | Vez do oponente do computador: talvez pede truco, depois escolhe e executa a jogada. `this.notaDoOponente` substitui a linha de nível no painel ("pensando…", resultado da simulação). |
 
+## `src/cenas/mesa/tutorial.js`
+
+Parte da CenaMesa: o modo tutorial (issues #137 a #143). Com `this.tutorial` ligado, a mesa joga a partida do roteiro (`src/conteudo/roteiroDoTutorial.js`) em vez de uma mão sorteada: - só a jogada esperada do passo é aceita (`tutorialPermite`, perguntado por cada entrada em entrada.js); o resto balança o balão do Percy (`tutorialRecusa`); - o rival joga o que o roteiro manda, sem passar pelo bot; - nada é registrado: nem estatísticas, nem conquistas, nem analytics, nem fim de mão (a cena não chama `encerrarMao`) e os avisos do Livro de conceitos ficam para o botão "Aprender mais"; - no fim (ou ao pular), marca `progresso.tutorialVisto` e vai para o jogo ou para o menu, conforme a `origem` ('jogar' ou 'regras'). A cena entra neste modo por `scene.start('Mesa', { tutorial: { origem } })`.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `OPCOES_DO_TUTORIAL` | constante (exportada) | Opções da mesa do tutorial (as do roteiro, com um humano e o rival mais simples). |
+| `dadosDoTutorial()` | método | Dados com que a cena foi iniciada (`{ origem }`) quando é o tutorial; null no jogo normal. |
+| `prepararTutorial(dados)` | método | Liga o modo tutorial: cria o roteiro e o assistente. Chamado no `create` da cena. |
+| `tutorialPermite(entrada)` | método | A entrada (ver `permite` em nucleo/tutorial.js) está liberada? Fora do tutorial, sempre. |
+| `tutorialRecusa()` | método | Entrada recusada: o balão balança e nada mais acontece. Devolve sempre `undefined`. |
+| `avancarTutorial()` | método | Decide o que vem agora no roteiro: fim, jogada do rival, jogada guiada ou diálogo. |
+| `mostrarFalaDoTutorial(passo, botao, aoProximo)` | método | Mostra a fala de um passo. |
+| `retangulosDoTutorial(passo)` | método | Retângulos (em pixels da tela) do que o balão do passo aponta agora. |
+| `retanguloDoAlvo(alvo)` | método | Retângulo, em pixels da tela, de um destaque do roteiro (ver `destaque` em roteiroDoTutorial.js). |
+| `executarJogadaDoTutorial(jogada)` | método | Jogada do jogador vinda da mesa: só a esperada passa; aplica, anima e segue o roteiro. |
+| `animarJogadaDoTutorial(jogada, depois)` | método | Anima os eventos da jogada que acabou de ser aplicada e chama `depois` quando terminam. |
+| `jogarRivalDoTutorial()` | método | O rival joga a jogada do roteiro; se o passo tem fala, o Percy comenta depois. |
+| `aprenderMaisDoTutorial()` | método | "Aprender mais" do balão: abre o verbete do passo (ou o Livro inteiro) e volta para o roteiro. |
+| `terminarTutorial(pulou)` | método | Fim do tutorial, concluído ou pulado: marca como visto (para não oferecer de novo) e segue para o jogo (quando veio do botão Jogar) ou volta ao menu (quando veio de Como jogar). |
+
 ## `src/cenas/recursos.js`
 
 Recursos compartilhados pelas cenas do Phaser: texto nítido, câmera ajustada à tela, fundo da mesa e texturas das cartas geradas sob demanda. As texturas são geradas pela arte (pasta arte/) na densidade certa para cada uso e guardadas no gerenciador de texturas do Phaser com chaves descritivas ('carta-mesa:truco:4P', 'verso-mao@yinyang').
@@ -574,17 +597,17 @@ Conquistas e suas graduações (bronze a antimatéria, como sugere a especifica�
 
 ## `src/conteudo/dicasDeJogo.js`
 
-Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por trás. Regra de ouro: as dicas usam **só informação pública** — as cartas da mão de quem pede a dica, os neurônios já revelados na mesa, as somas e o placar. Nunca apontam qual neurônio oculto ativar nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica. `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos primeiro), ou uma dica geral de estratégia ligada a um verbete do Glossário. Não depende do Phaser: roda também no Node (testes).
+Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por trás. Regra de ouro: as dicas usam **só informação pública** — as cartas da mão de quem pede a dica, os neurônios já revelados na mesa, as somas e o placar. Nunca apontam qual neurônio oculto ativar nem dizem o que há embaixo de uma carta virada; isso seria trapaça, não dica. `escolherDicaDeJogo` olha a situação e devolve a dica mais útil agora (oportunidades e riscos primeiro), ou uma dica geral de estratégia ligada a um verbete do Livro de conceitos. Não depende do Phaser: roda também no Node (testes).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `DICAS_GERAIS` | constante (exportada) | Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma boa prática do jogo a um verbete do Glossário (`verbete`). |
+| `DICAS_GERAIS` | constante (exportada) | Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma boa prática do jogo a um verbete do Livro de conceitos (`verbete`). |
 | `contarValores(mao)` | função | Contagem de cartas da mão por valor. |
 | `escolherDicaDeJogo(mao, j, partida, recentes = [])` | função (exportada) | Escolhe a dica de jogo para o jogador `j` agora. |
 
 ## `src/conteudo/figurasDaBiblioteca.js`
 
-Figuras do Glossário: diagramas em SVG, desenhados à mão e embutidos no verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e escalam com a largura do verbete.
+Figuras do Livro de conceitos: diagramas em SVG, desenhados à mão e embutidos no verbete. Usam as cores do papel das telas (tinta marrom, vinho, azul e laranja das redes) e escalam com a largura do verbete.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -604,7 +627,7 @@ Figuras do Glossário: diagramas em SVG, desenhados à mão e embutidos no verbe
 
 ## `src/conteudo/grimorio.js`
 
-Glossário (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com fórmulas MathML na linha, montadas com `na`) e `formula` (MathML em bloco), redigidos por Suzy Arcanjo (issue #23 do repositório original). Toda a matemática é MathML nativo, desenhado pelo próprio navegador: funciona sem rede e no arquivo único.
+Livro de conceitos (antes "Biblioteca de conceitos" e, antes ainda, "Grimório"): cada mecânica do jogo explicada como conceito de aprendizado de máquina. O arquivo e os ids continuam com o nome antigo para não perder os verbetes já lidos (conquista "Bibliotecário") salvos no navegador. Cada verbete tem `id`, `titulo`, `categoria`, `conceito` (o que é em ML), `equacao` (MathML, em bloco), `figura` (nome em figurasDaBiblioteca.js, opcional), `noJogo` (como aparece na mesa), `limite` (até onde a comparação vale) e `fonte` (referência, opcional). A mesa mostra o verbete como aviso na primeira vez que a mecânica acontece; a ajuda de cada ação leva ao verbete dela. Os verbetes de Ação têm ainda `ideia` (comparação do dia a dia) e `autoria`; alguns trazem `aprofundar` (texto com fórmulas MathML na linha, montadas com `na`) e `formula` (MathML em bloco), redigidos por Suzy Arcanjo (issue #23 do repositório original). Toda a matemática é MathML nativo, desenhado pelo próprio navegador: funciona sem rede e no arquivo único.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -632,6 +655,20 @@ Progresso do jogador guardado no navegador (localStorage): contadores, conquista
 | `carregarProgresso()` | função (exportada) | Lê o progresso salvo (ou o inicial). |
 | `salvarProgresso(progresso)` | função (exportada) | Salva o progresso. Falhas são ignoradas. |
 
+## `src/conteudo/roteiroDoTutorial.js`
+
+Roteiro do tutorial (issues #137 a #142): a partida de treino com semente, cartas e jogadas fixas, e a lista de passos que o assistente Percy conduz. ## Partida `SEMENTE_DO_TUTORIAL` e `CONFIG_DO_TUTORIAL` valem para todo mundo: a mesa, as mãos e a ordem do baralho são sempre as mesmas (Planície, baralho clássico, mesa padrão). O tutorial usa **dois baralhos** (10 cartas na mão) para sobrar carta para treinar todas as jogadas guiadas: tunagem, overfit, dropout, early stop e passar a vez. Os 4 neurônios e as cartas citados abaixo foram achados por busca de semente e conferidos pelo teste `testes/unidade/tutorial.test.js`, que roda o roteiro inteiro por código: se o motor mudar e uma jogada deixar de valer, o teste acusa. ## Passos Cada passo é `{ id, jogador?, jogadaEsperada?, destaque?, bloqueios?, verbete?, botao? }`: - sem `jogadaEsperada`, é um **diálogo**: o assistente fala (texto em `textosDoTutorial.js`, pelo `id`) e o jogador toca em Próximo. `destaque` diz o que o balão aponta; - com `jogador: 0`, é uma **jogada guiada**: a mesa só aceita essa jogada (e as cartas e botões que levam a ela); o balão destaca o que clicar; - com `jogador: 1`, é a **jogada do rival**, executada pelo roteiro (sem passar pelo bot). Se o texto do passo existir, o assistente comenta depois da jogada. `jogadaEsperada` usa o mesmo formato das jogadas da partida (ver `src/nucleo/partida.js`), com as cartas pelo rótulo `valor + naipe` ('10C' é o dez de copas; o naipe vale na tela, o id interno da carta não importa) e os neurônios pelo id 'C<camada>N<posição>': `{ tipo: 'inicio', carta }`, `{ tipo: 'ativar', neuronio }`, `{ tipo: 'empilhar', neuronio, cartas }`, `{ tipo: 'dropout', n, pagamento }` e `{ tipo: 'passar' }`. `destaque` (só nos diálogos) lista o que o balão aponta e deixa claro: 'tabuleiro', 'mao', 'limbo', 'cemiterio', 'placar', 'placar-voce', 'placar-rival', 'truco', 'acoes', ou um objeto `{ neuronio }`, `{ carta }`, `{ acao }`. Nas jogadas guiadas o destaque sai da própria jogada. `bloqueios` lista o que fica desabilitado no passo, entre 'cartas', 'neuronios', 'acoes', 'truco' e 'regras'. Sem o campo, tudo fica bloqueado, menos o que a jogada esperada pede. `verbete` liga o passo a um verbete do Livro de conceitos (botão "Aprender mais" do balão); `livro: true` liga ao Livro inteiro.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `SEMENTE_DO_TUTORIAL` | constante (exportada) | Semente fixa da partida do tutorial: define a mesa, as mãos e o baralho. |
+| `CONFIG_DO_TUTORIAL` | constante (exportada) | Configuração da mão do tutorial (2 baralhos, para as mãos terem 10 cartas). |
+| `NOME_DO_ASSISTENTE` | constante (exportada) | Nome do assistente (decisão do grupo, proposta da issue #138). |
+| `OPONENTE_DO_TUTORIAL` | constante (exportada) | Perfil do computador que joga contra o jogador no tutorial: o mais simples. |
+| `TODOS_OS_BLOQUEIOS` | constante (exportada) | O que todo passo bloqueia quando o campo `bloqueios` não existe. |
+| `PASSOS` | constante (exportada) | Passos do tutorial, na ordem. |
+| `ROTEIRO` | constante (exportada) | O roteiro completo, no formato que `criarTutorial` (src/nucleo/tutorial.js) recebe. |
+
 ## `src/conteudo/textos.js`
 
 Textos de ambientação das cartas e falas dos oponentes.
@@ -641,6 +678,25 @@ Textos de ambientação das cartas e falas dos oponentes.
 | `AMBIENTACAO` | constante (exportada) | Frase em itálico na caixa de texto de cada carta (por valor, ou pelo nome da manilha). |
 | `PROVOCACOES` | constante (exportada) | Falas dos oponentes por situação. |
 | `provocar(situacao)` | função (exportada) | Sorteia uma fala da situação. |
+
+## `src/conteudo/textosDoTutorial.js`
+
+Falas do assistente Percy no tutorial (issues #139 a #142): uma por passo de `roteiroDoTutorial.js`, pelo `id`. Cada fala tem no máximo 2 frases (o balão é pequeno no celular) e usa o vocabulário final do jogo: Planície, Livro de conceitos, Transfer learning e Aprender mais. As regras citadas são as de `src/interface/telas/regras.js` e do professor Peng. Os textos podem trazer marcas que a mesa preenche na hora (ver `formatarTexto` em `src/nucleo/tutorial.js`): `{soma:0}` e `{soma:1}` são a soma atual da rede de cada jogador, `{antes:0}` e `{antes:1}` a soma antes da última jogada, `{rival}` o nome do adversário.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `TEXTOS` | constante (exportada) | Fala de cada passo, pelo id do passo. |
+
+## `src/interface/ajusteDeBotoes.js`
+
+Ajuste da fonte dos botões HTML: o texto que não cabe na largura do botão (como "Livro de conceitos" no menu de um celular) tem a fonte reduzida aos poucos até caber, em vez de passar das margens do botão ou ser cortado com reticências (issue #121). Só mexe em botões cujo texto estoura na horizontal; texto que quebra de linha e botões que já cabem ficam como estão. Fora do navegador (testes no Node, sem layout) não faz nada.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `FONTE_MINIMA_DO_BOTAO` | constante (exportada) | Menor fonte, em pixels, a que um botão pode chegar. |
+| `estoura(botao)` | função | Texto do botão passa da área útil dele? (a diferença de 1 px é arredondamento) |
+| `ajustarFonteDoBotao(botao, minimo = FONTE_MINIMA_DO_BOTAO)` | função (exportada) | Reduz a fonte de um botão, meio pixel de cada vez, até o texto caber ou chegar a `minimo`. |
+| `ajustarFontesDosBotoes(raiz, seletor = '.botao')` | função (exportada) | Ajusta todos os botões de uma tela e refaz o ajuste quando a janela muda de tamanho ou as fontes terminam de carregar (que muda a largura do texto). Para sozinho quando a tela sai da página. |
 
 ## `src/interface/analise.js`
 
@@ -674,6 +730,24 @@ Estatísticas de uso com o Google Analytics 4 (propriedade "truco-e26e8-703bc", 
 | `iniciarAnalise(janela = globalThis)` | função (exportada) | Liga a medição se a pessoa já aceitou; na primeira visita, pergunta. Fora do site publicado, não faz nada. |
 | `registrarEvento(nome, dados = {})` | função (exportada) | Registra um evento do jogo: avisa quem ouve dentro do jogo (`aoRegistrarEvento`) e envia ao Google Analytics se a medição estiver ligada. |
 | `reiniciarAnalise()` | função (exportada) | Volta ao estado inicial (para os testes). |
+
+## `src/interface/assistente.js`
+
+Assistente Percy do tutorial (issue #138): o balão de fala, o escurecimento (SVG com buracos nos elementos destacados), os anéis pulsantes e o botão Pular tutorial. Vive em `#assistente` (fora de `#paineis`, que as janelas do jogo esvaziam). A camada escura e os anéis não recebem toque (`pointer-events: none`); quem impede jogadas fora do roteiro é a própria mesa (ver `src/cenas/mesa/tutorial.js`). Só o balão recebe toque. `posicionarBalao` é uma função pura: dados o tamanho da tela, os tamanhos possíveis do balão e os retângulos destacados, escolhe onde pôr o balão sem cobrir nenhum destaque e sem sair da tela.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `FOLGA` | constante | Distância mínima entre o balão e um destaque, e entre o balão e a borda da tela. |
+| `sobreposicao(r, s)` | função | Área da interseção entre dois retângulos `{x, y, l, a}`. |
+| `posicionarBalao(tela, tamanhos, alvos)` | função (exportada) | Escolhe onde pôr o balão. `livre` é falso quando nenhuma posição evita todos os destaques (devolve a que cobre menos). |
+| `retratoDoPercy` | constante | Retrato do Percy como data URL (vazio onde não há canvas, como nos testes de unidade). |
+| `contornoDaCamada(tela, buracos)` | função (exportada) | Contorno `evenodd` de uma camada que cobre a tela inteira, com um buraco para cada retângulo. |
+| `criarAssistente({ nome, aoProximo, aoPular, aoAprender })` | função (exportada) | Cria o assistente. |
+| `desenhar()` | função | Redesenha escurecimento, anéis e balão com o estado atual (também ao girar ou redimensionar a tela). |
+| `mostrar(d)` | método | Mostra uma fala. |
+| `atualizar()` | método | Redesenha com os mesmos dados (a mesa mudou: carta selecionada, tela girada). |
+| `esconder()` | método | Esconde o balão e os destaques (durante as jogadas do rival e as animações). |
+| `sacudir()` | método | Toque fora do roteiro: o balão balança para chamar a atenção. |
 
 ## `src/interface/conta.js`
 
@@ -797,7 +871,7 @@ Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápi
 | `fecharTodos()` | função (exportada) | Fecha todas as telas abertas. |
 | `trocarAviso(aviso)` | função | Troca o aviso comum do topo pelo novo. As medalhas de conquista ficam, porque têm fila própria. |
 | `mostrarAviso(titulo, texto, tipo, duracaoMs = 5200)` | função (exportada) | Mostra um aviso rápido no topo da tela (um aviso comum por vez, abaixo da medalha de conquista, se houver). |
-| `mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito)` | função (exportada) | Dica de jogo do modo "dicas", no estilo do Glossário: título, conselho e o conceito de redes neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha). |
+| `mostrarDicaDeJogo(titulo, texto, tituloDoConceito, conceito)` | função (exportada) | Dica de jogo do modo "dicas", no estilo do Livro de conceitos: título, conselho e o conceito de redes neurais relacionado. Usa a mesma área dos avisos e fica 9 segundos (um toque fecha). |
 | `DURACAO_DO_AVISO_DE_CONQUISTA` | constante (exportada) | Tempo de cada aviso de conquista na tela, em milissegundos (um toque fecha antes). |
 | `ESPERA_DEPOIS_DE_FECHAR` | constante | Espera depois de fechar uma tela, antes de voltar a mostrar medalhas (a resposta do truco pode abrir outro pedido). |
 | `filaDeConquistas` | constante | Avisos de conquista esperando a vez, na ordem em que foram ganhos. |
@@ -810,7 +884,7 @@ Base dos painéis HTML sobrepostos ao canvas: abrir e fechar telas, avisos rápi
 | `retomarConquistas()` | função | Uma tela fechou: se a fila estava esperando, ela volta a andar daqui a pouco. |
 | `limparAvisosDeConquista()` | função (exportada) | Esvazia a fila e tira da tela o aviso de conquista atual. |
 | `confirmar(titulo, texto, botoes, opcoes = {})` | função (exportada) | Caixa de confirmação com botões. |
-| `mostrarDicaFlutuante(titulo, html, alvo)` | função (exportada) | Mostra uma dica no estilo do Glossário ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
+| `mostrarDicaFlutuante(titulo, html, alvo)` | função (exportada) | Mostra uma dica no estilo do Livro de conceitos ao lado de um elemento da mesa (botão, carta). Fica à esquerda do retângulo quando há espaço; senão, acima ou abaixo. |
 | `esconderDicaFlutuante()` | função (exportada) | Esconde a dica flutuante, se houver. |
 
 ## `src/interface/som.js`
@@ -831,11 +905,11 @@ Efeitos sonoros sintetizados com WebAudio (nenhum arquivo de áudio). O navegado
 
 ## `src/interface/telas/ajudaDasAcoes.js`
 
-Ajuda das ações, como o botão botão "?": um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Ver o conceito" que abre o verbete certo do Glossário.
+Ajuda das ações, como o botão botão "?": um cartão por jogada com a regra (texto do próprio motor), quando o botão acende e, no verso, o conceito de machine learning, com um botão "Aprender mais" que abre o verbete certo do Livro de conceitos.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
-| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no motor (de onde vêm a regra e o conceito); `verbete` é o verbete do Glossário. |
+| `ACOES_DA_AJUDA` | constante (exportada) | Ações da ajuda, na ordem da barra da mesa. `motor` é o id da ação no motor (de onde vêm a regra e o conceito); `verbete` é o verbete do Livro de conceitos. |
 | `doMotor(id)` | função | Ação do motor, ou um objeto vazio se o motor não tiver aquele id. |
 | `abrirAjudaDasAcoes(app, idInicial)` | função (exportada) | Abre a ajuda das ações. |
 
@@ -887,12 +961,12 @@ Página de estatísticas pessoais (issue #154), no estilo das páginas de estat�
 
 ## `src/interface/telas/grimorio.js`
 
-Tela do Glossário (antes "Biblioteca de conceitos" e "Grimório"): lista de verbetes à esquerda e o verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
+Tela do Livro de conceitos (antes "Biblioteca de conceitos" e "Grimório"): lista de verbetes à esquerda e o verbete escolhido à direita, com o conceito, a equação, a figura, como aparece no jogo e até onde a comparação vale. Ler um verbete conta para a conquista "Bibliotecário".
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `htmlDoVerbete(v)` | função (exportada) | Corpo do verbete: a ideia do dia a dia (verbetes de Ação), o conceito, a equação, a figura, como aparece no jogo, até onde a comparação vale, a matemática para se aprofundar, a fonte e a autoria. Equação, "aprofundar" e fórmula (MathML) e figura (SVG) são conteúdo do próprio jogo, não texto do jogador. |
-| `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre o Glossário. |
+| `abrirGrimorio(app, idInicial, aoFechar)` | função (exportada) | Abre o Livro de conceitos. |
 | `desenharLista(ativo)` | função | Desenha a lista com o verbete ativo destacado. |
 | `mostrar(id)` | função | Mostra um verbete e o marca como lido. |
 
@@ -951,11 +1025,11 @@ Tela de regras, com o conteúdo do manual de regras e as decisões da fusão, em
 | `abaDeAcoes()` | função | Linha "nome: resumo" de cada ação, com o botão da ajuda. |
 | `abaDeExtensoes()` | função | Baralhos e terrenos com a arte do jogo (verso, carta de amostra e carta de terreno). |
 | `desenharArte(raiz)` | função | Desenha a arte de uma aba de extensões uma vez (fica guardada como imagem). |
-| `abrirRegras(app, aoFechar, abaInicial = 'jogar')` | função (exportada) | Abre a tela de regras. Na primeira partida ela abre sozinha; ao fechar, chama `aoFechar`. |
+| `abrirRegras(app, aoFechar, abaInicial = 'jogar', opcoes = {})` | função (exportada) | Abre a tela de regras; ao fechar, chama `aoFechar`. botão "Fazer o tutorial" (o menu inicial passa; a mesa não, para não largar a partida no meio). |
 
 ## `src/interface/telas/revisao.js`
 
-Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da linha do tempo guardada pela mesa (cenas/mesa/turnos.js): - um resumo com os momentos-chave (maior salto, golpe mais duro, a virada) e o que cada um fez; - a curva de treino das duas redes, passo a passo, com marcas nas ações importantes; - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais do Glossário; - na partida com várias mãos, o placar mão a mão.
+Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da linha do tempo guardada pela mesa (cenas/mesa/turnos.js): - um resumo com os momentos-chave (maior salto, golpe mais duro, a virada) e o que cada um fez; - a curva de treino das duas redes, passo a passo, com marcas nas ações importantes; - a linha do tempo comentada, ligando cada ação ao conceito de redes neurais do Livro de conceitos; - na partida com várias mãos, o placar mão a mão.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -963,7 +1037,7 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 | `placar` | constante | Junta números com ' × ' (placar de 2 a 5 jogadores). |
 | `MARCAS` | constante | Cor e rótulo de cada tipo de acontecimento marcado na curva. |
 | `tipoDoPasso(passo)` | função | Tipo principal de um passo: o evento mais marcante, ou o tipo da jogada. |
-| `VERBETE_DO_TIPO` | constante | Verbete do Glossário ligado a cada tipo de passo. |
+| `VERBETE_DO_TIPO` | constante | Verbete do Livro de conceitos ligado a cada tipo de passo. |
 | `variacoes(passos)` | função | Diferença das somas em relação ao passo anterior. |
 | `momentosChave(passos, nomes)` | função | Momentos-chave da mão, em frases curtas. |
 | `contagens(passos)` | função | Quantas vezes cada jogador fez cada tipo de ação. |
@@ -1168,7 +1242,7 @@ Arquitetura da rede neural montada na mesa. Na arquitetura padrão, a camada 0 �
 
 ## `src/nucleo/terrenos.js`
 
-Terrenos (seção "Extensões" da especificação). O efeito de cada um é aplicado pelo motor do motor (`src/motor/engine/terrains.js`); aqui ficam só nome e descrição.
+Terrenos (seção "Extensões" da especificação). O efeito de cada um é aplicado pelo motor do motor (`src/motor/engine/terrains.js`); aqui ficam só nome e descrição. O id `neutro` (partidas salvas, salas online e mods dependem dele) continua o mesmo; o nome mostrado é Planície.
 
 ## `src/nucleo/traducao.js`
 
@@ -1211,6 +1285,37 @@ Camada de truco: a partida vale tentos e cada mão pode ser trucada. TRUCO! (3) 
 | `responderTruco(partida, j, resposta)` | função (exportada) | Responde ao pedido pendente. |
 | `marcarTentos(partida, vencedor, pontos)` | função (exportada) | Soma os tentos da mão ao vencedor e encerra a partida se ele chegou ao alvo. Devolve os tentos ganhos. |
 | `proximaMao(partida)` | função (exportada) | Prepara a próxima mão da partida. |
+
+## `src/nucleo/tutorial.js`
+
+Modo guiado do tutorial (issue #137): uma partida **determinística** conduzida por um roteiro, sem Phaser e sem interface. Quem desenha a mesa e o assistente (a cena da mesa e o balão do Percy) só pergunta a este módulo o que vem agora, o que o jogador pode tocar e se a jogada dele é a esperada. ## O que ele garante - a partida nasce da semente fixa do roteiro: mesa, mãos e baralho são sempre os mesmos; - a mesa **só aceita a jogada esperada** do passo atual (`aceita`, `jogar`); qualquer outra é recusada e nada muda; - a jogada do adversário também vem do roteiro (`jogarDoRival`), sem passar pelo bot (`src/motor/bot.js`); - cada passo concluído avança o roteiro e avisa quem ouve (`aoMudar`), para a interface trocar a fala e o destaque; - nada é gravado: o módulo não importa estatísticas, conquistas, analytics nem a sala online. A cena da mesa também pula esses registros enquanto o tutorial está ativo. ## Uso ```js const tutorial = criarTutorial(ROTEIRO, { textos: TEXTOS }); tutorial.passo; // passo atual tutorial.jogar(jogada); // jogada do jogador (lança erro se não for a esperada) tutorial.jogarDoRival(); // jogada do passo do rival, aplicada na partida tutorial.proximo(); // passa um diálogo ``` O formato do roteiro está em `src/conteudo/roteiroDoTutorial.js`.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `BLOQUEIOS_PADRAO` | constante | Tudo o que um passo bloqueia quando o roteiro não diz o contrário. |
+| `CATEGORIA_DA_ENTRADA` | constante | Categoria de bloqueio de cada tipo de entrada da mesa. |
+| `rotuloDoId(id)` | função (exportada) | Rótulo `valor + naipe` de uma carta pelo id ('10C#42' vira '10C'). |
+| `rotulosOrdenados(ids)` | função | Os mesmos rótulos, em ordem, para comparar listas de cartas sem se importar com a ordem. |
+| `mesmasCartas(a, b)` | função | Cartas `a` e `b` (listas de rótulos) são as mesmas, em qualquer ordem? |
+| `formatarTexto(texto, estado)` | função (exportada) | Preenche as marcas de uma fala: `{soma:0}` (soma atual da rede), `{antes:0}` (soma antes da última jogada), `{rival}` (nome do adversário) e `{carta:10C}` (rótulo da carta, '10♣'). |
+| `criarTutorial(roteiro, opcoes = {})` | função (exportada) | Cria um tutorial. |
+| `ehJogada(passo = this.passo)` | método | O passo é uma jogada (do jogador ou do rival), e não um diálogo? |
+| `ehDoJogador(passo = this.passo)` | método | O passo é uma jogada guiada, que o jogador faz? |
+| `ehDoRival(passo = this.passo)` | método | O passo é uma jogada que o roteiro faz pelo rival? |
+| `ehDialogo(passo = this.passo)` | método | O passo é só uma fala do assistente? |
+| `texto(passo = this.passo)` | método | Fala do passo (com as marcas preenchidas), ou '' quando ele não tem fala. |
+| `aoMudar(ouvinte)` | método | Avisa `ouvinte(evento)` a cada passo novo (`{tipo:'passo', indice, passo}`) e no fim (`{tipo:'fim'}`). Devolve quem cancela. |
+| `jogadaDoPasso(passo = this.passo)` | método | A jogada concreta (com os ids das cartas na mão) do passo de jogada, pronta para a partida. |
+| `aceita(jogada)` | método | A jogada é a esperada no passo atual? Só vale para passos do jogador. |
+| `acaoEsperada(passo = this.passo)` | método | Ação (botão da barra) que leva à jogada esperada: 'tunagem', 'overfit', 'earlystop', 'stackoverflow', 'dropout' ou 'passar'. null quando o passo não é uma jogada do jogador ou a jogada não passa por um botão. |
+| `permite(entrada)` | método | Esta entrada da mesa está liberada no passo atual? A mesa pergunta antes de agir. Entradas: `{tipo:'carta', id}`, `{tipo:'neuronio', id}`, `{tipo:'acao', id}` (botões da barra), `{tipo:'truco'}` e `{tipo:'regras'}` (REGRAS e MENU). Entrada de uma categoria que o passo não bloqueia está liberada; nas bloqueadas, só vale o que a jogada esperada pede. Limpar a seleção nunca é bloqueado. |
+| `destaques(selecionadas = [])` | método | O que o balão do passo aponta agora. Nos diálogos, é o `destaque` do passo. Nas jogadas guiadas, primeiro as cartas que faltam selecionar; depois, o botão e o neurônio do alvo. |
+| `avancarPasso()` | método | Avança um passo e avisa os ouvintes. |
+| `aplicar(jogada)` | método | Aplica na partida uma jogada que o roteiro autoriza, guardando as somas de antes e de depois. |
+| `jogar(jogada)` | método | Jogada do jogador: só passa a esperada do passo atual; qualquer outra é recusada e nada muda. Aplica na partida e avança o roteiro. |
+| `jogarDoRival()` | método | Jogada do rival, a do passo atual do roteiro (sem passar pelo bot). |
+| `proximo()` | método | Passa um diálogo (botão Próximo). Devolve false se o passo atual não for um diálogo. |
+| `rodarTudo()` | método | Roda o roteiro inteiro por código, na ordem. Serve aos testes. Devolve os ids dos passos percorridos. |
 
 ## `src/online/configuracao.js`
 
