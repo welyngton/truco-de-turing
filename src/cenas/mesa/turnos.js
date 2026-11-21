@@ -80,7 +80,7 @@ export const metodosDeTurnos = {
     this.trucoConsideradoNoTurno = -1;
     this.oponenteCorreu = false;
     this.dicaAtual = null;
-    this.dicasNaMao = this.app.dicasLigadas;
+    this.dicasNaMao = !this.tutorial && this.app.dicasLigadas;
     this.conquistasDaMao = [];
     this.linhaDoTempo = [];
     this.linhasRegistradas = 0;
@@ -93,7 +93,7 @@ export const metodosDeTurnos = {
     liberarCartasDaMao(this);
 
     const o = this.opcoes;
-    this.mao = novaMao({
+    this.mao = this.tutorial ? this.tutorial.mao : novaMao({
       baralho: o.baralho, terreno: o.terreno, inicio: o.inicio, arquitetura: o.arquitetura, baralhos: o.baralhos,
       jogadores: this.montarJogadores(),
       /* online: a mesma semente em todos os aparelhos (ver online.js) */
@@ -146,6 +146,7 @@ export const metodosDeTurnos = {
 
   /** Aplica uma jogada (de qualquer jogador), anima os eventos e segue o fluxo. */
   executarJogada(jogada, daRede = false) {
+    if (this.tutorial) return this.executarJogadaDoTutorial(jogada);
     /* online: a jogada vai para a sala e volta numerada (online.js) */
     if (this.online && !daRede) return this.enviarOnline({ tipo: 'jogada', cadeira: jogada.jogador, jogada });
     try {
@@ -189,6 +190,7 @@ export const metodosDeTurnos = {
   /** Decide o próximo passo: fim da mão, escolha de quem começa, vez do humano ou do oponente. */
   avancar() {
     if (this.encerrada || !this.scene.isActive()) return;
+    if (this.tutorial) return this.avancarTutorial();
     const mao = this.mao;
     if (this.partida.pedido) return;
     if (mao.fase === 'fim') return this.encerrarMao(null);

@@ -17,6 +17,7 @@
  * | online.js     | partida online: ações pela sala, fila, vez dos outros aparelhos      |
  * | resultado.js  | fim da mão, tentos, conquistas, comemoração e tela de resultado     |
  * | dicas.js      | modo dicas: sugestão de jogada e dicas flutuantes dos botões        |
+ * | tutorial.js   | modo tutorial: partida do roteiro, bloqueios e o assistente Percy   |
  *
  * Estado principal da cena:
  * - `this.partida`: placar de tentos e truco (nucleo/truco.js);
@@ -32,7 +33,6 @@ import { Aplicacao, normalizarOpcoes } from '../../aplicacao.js';
 import { novaPartida } from '../../nucleo/truco.js';
 import { tamanhosDaMesa } from '../../nucleo/rede.js';
 import { definirMesa } from './layout.js';
-import { abrirRegras } from '../../interface/telas/regras.js';
 import { ajustarCamera, colocarFundo, carregarIconesDasAcoes } from '../recursos.js';
 import { metodosDoCenario } from './cenario.js';
 import { metodosDeDesenho } from './desenho.js';
@@ -45,18 +45,21 @@ import { metodosDeDicas } from './dicas.js';
 import { metodosDosPaineis } from './paineis.js';
 import { metodosDoAmbiente } from './ambiente.js';
 import { metodosOnline } from './online.js';
+import { metodosDoTutorial, OPCOES_DO_TUTORIAL } from './tutorial.js';
 import { Musica } from '../../interface/musica.js';
 import { esconderDicaFlutuante } from '../../interface/paineis.js';
 
 export class CenaMesa extends Phaser.Scene {
   constructor() { super('Mesa'); }
 
-  /** Monta a mesa e começa a primeira mão (depois das regras, na primeira visita). */
+  /** Monta a mesa e começa a primeira mão (ou a partida do tutorial, quando a cena nasce com `{ tutorial }`). */
   create() {
     this.app = Aplicacao;
-    this.prepararOnline();
+    const tutorial = this.dadosDoTutorial();
+    this.tutorial = null;
+    if (tutorial) this.online = null; else this.prepararOnline();
     /* online: as opções são as da sala, iguais em todos os aparelhos; cada um vê só a própria mão */
-    this.opcoes = normalizarOpcoes(this.online ? this.online.sala.config.opcoes : this.app.opcoes);
+    this.opcoes = normalizarOpcoes(tutorial ? OPCOES_DO_TUTORIAL : this.online ? this.online.sala.config.opcoes : this.app.opcoes);
     this.numJogadores = this.opcoes.jogadores;
     this.humanos = this.online ? 1 : this.opcoes.humanos;
     this.variosHumanos = !this.online && this.humanos > 1;
@@ -86,9 +89,8 @@ export class CenaMesa extends Phaser.Scene {
     this.events.once('shutdown', () => { this.encerrada = true; pararDeOuvirOAudio(); esconderDicaFlutuante(); Musica.parar(); });
     this.historicoDaPartida = [];
     if (this.app.progresso.musica) Musica.tocar(this.opcoes.terreno);
-    const comecar = () => this.iniciarMao();
-    if (!this.app.progresso.tutorialVisto) abrirRegras(this.app, comecar);
-    else comecar();
+    if (tutorial) this.prepararTutorial(tutorial);
+    this.iniciarMao();
   }
 
   /** A cada quadro: conexões animadas, contornos pulsantes e o destaque de quem está na vez. */
@@ -102,4 +104,4 @@ export class CenaMesa extends Phaser.Scene {
 
 Object.assign(CenaMesa.prototype,
   metodosDoCenario, metodosDeDesenho, metodosDeEntrada, metodosDeTurnos,
-  metodosDoTruco, metodosDeEfeitos, metodosDoResultado, metodosDeDicas, metodosDosPaineis, metodosDoAmbiente, metodosOnline);
+  metodosDoTruco, metodosDeEfeitos, metodosDoResultado, metodosDeDicas, metodosDosPaineis, metodosDoAmbiente, metodosOnline, metodosDoTutorial);

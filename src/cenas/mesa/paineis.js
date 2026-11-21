@@ -24,6 +24,7 @@ export const metodosDosPaineis = {
    * pontos de cada neurônio, os combos de figuras e a soma.
    */
   abrirPlacarPorCamada() {
+    if (!this.tutorialPermite({ tipo: 'regras' })) return this.tutorialRecusa();
     const mao = this.mao;
     if (!mao) return null;
     const total = mao.camadas.length;
@@ -50,6 +51,7 @@ export const metodosDosPaineis = {
 
   /** Registro completo da mão, da primeira jogada à última (o painel da mesa mostra só o fim). */
   abrirRegistroCompleto() {
+    if (!this.tutorialPermite({ tipo: 'regras' })) return this.tutorialRecusa();
     const mao = this.mao;
     if (!mao) return null;
     const linhas = mao.registro.length
@@ -60,6 +62,7 @@ export const metodosDosPaineis = {
 
   /** Cartas fora de jogo: o cemitério (abertas) e o limbo (só a quantidade, porque são ocultas). */
   abrirCemiterio() {
+    if (!this.tutorialPermite({ tipo: 'regras' })) return this.tutorialRecusa();
     const mao = this.mao;
     if (!mao) return null;
     const html = cabecalho('Cemitério e limbo') +

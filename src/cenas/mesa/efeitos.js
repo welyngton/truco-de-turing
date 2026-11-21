@@ -320,6 +320,7 @@ export const metodosDeEfeitos = {
 
   /** Mostra uma vez por sessão o resumo do verbete do Livro de conceitos ligado ao que aconteceu. */
   avisarVerbete(id) {
+    if (this.tutorial) return; /* no tutorial, o conceito vem pelo botão Aprender mais do balão */
     const avisados = this.app.verbetesAvisados;
     if (avisados[id]) return;
     avisados[id] = true;

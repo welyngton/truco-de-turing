@@ -83,6 +83,7 @@ export const metodosDeEntrada = {
    * joga direto; com mais de um (vários rivais), destaca só os alvos dessa ação e espera o clique.
    */
   executarAcao(tipo) {
+    if (!this.tutorialPermite({ tipo: 'acao', id: tipo })) return this.tutorialRecusa();
     if (!this.ehVezDoHumano()) return;
     const alvos = this.alvosDaAcao(tipo);
     if (!alvos.length) return;
@@ -99,6 +100,7 @@ export const metodosDeEntrada = {
    * seleção, entra no modo de escolher até onde desfazer no tabuleiro.
    */
   acionarDropout() {
+    if (!this.tutorialPermite({ tipo: 'acao', id: 'dropout' })) return this.tutorialRecusa();
     if (!this.ehVezDoHumano()) return;
     const n = this.selecao.length;
     if (n && this.modo === 'livre' && n <= camadasDesfaziveis(this.mao, this.quemVe)) {
@@ -157,6 +159,7 @@ export const metodosDeEntrada = {
 
   /** Clique num neurônio: ativa, empilha as cartas selecionadas ou escolhe o alcance do dropout. */
   aoClicarNoNeuronio(id) {
+    if (!this.tutorialPermite({ tipo: 'neuronio', id })) return this.tutorialRecusa();
     if (!this.ehVezDoHumano()) return;
     const alvo = this.alvos[id];
     if (!alvo) {
@@ -179,6 +182,7 @@ export const metodosDeEntrada = {
 
   /** Clique numa carta da mão: escolhe a carta de início, paga o dropout ou monta a seleção. */
   aoClicarNaCarta(idCarta) {
+    if (!this.tutorialPermite({ tipo: 'carta', id: idCarta })) return this.tutorialRecusa();
     const mao = this.mao, eu = this.quemVe;
     if (mao.fase === 'inicio' && this.modo === 'inicio') {
       this.modo = 'livre';
@@ -230,6 +234,7 @@ export const metodosDeEntrada = {
 
   /** Botão Transfer: troca as quatro cartas iguais da mão. */
   fazerTransfer() {
+    if (!this.tutorialPermite({ tipo: 'acao', id: 'transfer' })) return this.tutorialRecusa();
     const eu = this.quemVe, valor = valorParaTransfer(this.mao, eu);
     if (!valor) return;
     const cartas = this.mao.jogadores[eu].mao.filter((c) => c.valor === valor).slice(0, 4).map((c) => c.id);
@@ -238,6 +243,7 @@ export const metodosDeEntrada = {
 
   /** Botão Passar a vez. */
   passarAVez() {
+    if (!this.tutorialPermite({ tipo: 'acao', id: 'passar' })) return this.tutorialRecusa();
     if (this.ehVezDoHumano() && podePassar(this.mao, this.quemVe)) this.executarJogada({ tipo: 'passar', jogador: this.quemVe });
   },
 
@@ -246,6 +252,7 @@ export const metodosDeEntrada = {
    * Botão REGRAS da mesa: como jogar, Livro de conceitos e a chave das dicas, numa janela só.
    */
   abrirRegrasDaMesa() {
+    if (!this.tutorialPermite({ tipo: 'regras' })) return this.tutorialRecusa();
     const dicas = this.app.dicasLigadas;
     registrarEvento(EVENTOS.mesaClique, { botao: 'regras' });
     const painel = abrirPainel(
@@ -275,6 +282,7 @@ export const metodosDeEntrada = {
 
   /** Botão "?" da mesa: ajuda das ações, aberta na última ação explicada no quadro. */
   abrirAjudaDaMesa() {
+    if (!this.tutorialPermite({ tipo: 'regras' })) return this.tutorialRecusa();
     return abrirAjudaDasAcoes(this.app, this.ultimaAcaoExplicada);
   },
 
@@ -283,6 +291,7 @@ export const metodosDeEntrada = {
    * ou abandonar a partida.
    */
   abrirMenuDaMesa() {
+    if (!this.tutorialPermite({ tipo: 'regras' })) return this.tutorialRecusa();
     registrarEvento(EVENTOS.mesaClique, { botao: 'menu' });
     const painel = abrirPainel(
       '<div class="folha estreita janela-da-mesa"><h2>Menu</h2>' +

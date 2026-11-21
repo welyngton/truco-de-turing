@@ -74,6 +74,7 @@ export const metodosDeDesenho = {
     }
     this.desenharMaos();
     this.atualizarPaineis();
+    if (this.assistente) this.assistente.atualizar();
   },
 
   /**
