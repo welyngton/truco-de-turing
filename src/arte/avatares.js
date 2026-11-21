@@ -174,6 +174,25 @@ function olho(ctx, x, y, r, iris) {
 
 /** Retratos extras, pelo tipo. Cada um desenha dentro do círculo já recortado (112x112). */
 export const RETRATOS_EXTRAS = {
+  /* Percy, o assistente do tutorial: perceptron redondo e verde-água, antena com um neurônio, óculos dourados e gravata-borboleta */
+  percy(ctx, D, cor) {
+    brilho(ctx, 56, 60, 50, cor, 0.3);
+    ctx.strokeStyle = TRACO; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(56, 26); ctx.lineTo(56, 13); ctx.stroke();
+    ctx.fillStyle = '#f6dc8f'; ctx.beginPath(); ctx.arc(56, 11, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = degradeLinear(ctx, 0, 24, 0, 100, [[0, '#7fe3d0'], [1, '#2a8f86']]);
+    ctx.beginPath(); ctx.arc(56, 60, 36, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#d6a43a'; ctx.lineWidth = 2.4; ctx.fillStyle = 'rgba(255,255,255,.88)';
+    for (const x of [43, 69]) { ctx.beginPath(); ctx.arc(x, 56, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(54, 56); ctx.lineTo(58, 56); ctx.stroke();
+    ctx.fillStyle = TRACO; for (const x of [43, 69]) { ctx.beginPath(); ctx.arc(x, 57, 4.2, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#fff'; for (const x of [44.5, 70.5]) { ctx.beginPath(); ctx.arc(x, 55.2, 1.3, 0, Math.PI * 2); ctx.fill(); }
+    ctx.strokeStyle = TRACO; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(46, 78); ctx.quadraticCurveTo(56, 86, 66, 78); ctx.stroke();
+    ctx.strokeStyle = TRACO; ctx.lineWidth = 1.4; ctx.fillStyle = '#c0283c';
+    ctx.beginPath(); ctx.moveTo(56, 95); ctx.lineTo(42, 88); ctx.lineTo(42, 102); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(56, 95); ctx.lineTo(70, 88); ctx.lineTo(70, 102); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(56, 95, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#f6dc8f'; ctx.fill(); ctx.stroke();
+  },
   /* o gato do GatoNet, com o crachá de dropout */
   gato(ctx, D, cor) {
     brilho(ctx, 56, 64, 50, cor, 0.35);
