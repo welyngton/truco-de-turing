@@ -10,7 +10,7 @@ import { CARTA_L, CARTA_A } from '../arte/paleta.js';
 import { desenharCartaCompleta, desenharCartaDaMesa } from '../arte/cartas.js';
 import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
-import { ICONES_DAS_ACOES } from '../arte/icones.js';
+import { ICONES_DAS_ACOES, ICONES_DE_SOM } from '../arte/icones.js';
 
 /**
  * Todo texto do Phaser nasce na resolução interna, para não borrar com o zoom da câmera.
@@ -168,5 +168,24 @@ export function carregarIconesDasAcoes(cena) {
     const imagem = new Image(128, 128);
     imagem.onload = () => { if (!cena.textures.exists(chave)) cena.textures.addImage(chave, imagem); };
     imagem.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg width="128" height="128" '));
+  }
+}
+
+/**
+ * Carrega os ícones de som (SVG) como texturas `icone-som:<nome>`, em 96 px, pintados com `cor`
+ * (os SVG usam `currentColor`, que dentro de uma imagem não herda a cor da página). Assíncrono:
+ * `aoCarregar` roda a cada textura que chega, para quem desenha trocar o ícone na hora certa.
+ */
+export function carregarIconesDeSom(cena, cor, aoCarregar) {
+  for (const [nome, svg] of Object.entries(ICONES_DE_SOM)) {
+    const chave = 'icone-som:' + nome;
+    if (cena.textures.exists(chave) || typeof Image === 'undefined') continue;
+    const imagem = new Image(96, 96);
+    imagem.onload = () => {
+      if (!cena.sys || !cena.textures) return; /* a cena já fechou */
+      if (!cena.textures.exists(chave)) cena.textures.addImage(chave, imagem);
+      if (aoCarregar) aoCarregar(nome);
+    };
+    imagem.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg width="96" height="96" ').replaceAll('currentColor', cor));
   }
 }

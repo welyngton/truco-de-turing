@@ -15,6 +15,7 @@ import { desenharVerso } from '../arte/versos.js';
 import { desenharMesa } from '../arte/mesas.js';
 import { abrirPainel, escaparHtml } from './paineis.js';
 import { Som } from './som.js';
+import { htmlDosControlesDeSom, ligarControlesDeSom } from './controlesDeSom.js';
 import { registrarEvento, EVENTOS } from './analise.js';
 import { abrirRegras } from './telas/regras.js';
 import { abrirGrimorio } from './telas/grimorio.js';
@@ -95,7 +96,7 @@ function htmlDoMenu(opcoes) {
     '<button class="botao botao-avatar" id="m-avatar"><img alt="" id="m-avatar-img">Avatar</button>' +
     '<button class="botao" id="m-mods">Mods</button>' +
     '<button class="botao" id="m-sobre">Sobre</button>' +
-    '</div></div>' +
+    '</div>' + htmlDosControlesDeSom() + '</div>' +
     '<div class="creditos">Regras originais: prof. Peng Yaohao (FPO 2026/2, PPCA/UnB). Feito com Phaser. Código aberto sob a licença <a href="https://github.com/welyngton/truco-de-turing#GPL-3.0-1-ov-file" target="_blank" rel="noopener">GPL-3.0</a>.</div>' +
     '</section>' +
     '<section class="folha menu-painel">' +
@@ -128,6 +129,7 @@ export function abrirMenu(app) {
   const painel = abrirPainel(htmlDoMenu(app.opcoes), { transparente: true });
   const elemento = painel.elemento;
   const campo = (id) => elemento.querySelector('#' + id);
+  ligarControlesDeSom(elemento, app, 'menu');
 
   /** Atualiza descrições, listas dependentes e miniaturas conforme as escolhas. */
   function atualizarDicas() {

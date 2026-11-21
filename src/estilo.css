@@ -122,6 +122,19 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .botao.pequeno { font-size: 13px; padding: 7px 12px; }
 .botao:focus-visible, select:focus-visible, .grimorio-lista button:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
 .linha { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+/* botões de ícone de efeitos sonoros e música (menu principal; a mesa desenha os seus no canvas) */
+.controles-de-som { display: flex; gap: 10px; }
+.botao-icone { width: 46px; height: 46px; padding: 0; display: inline-grid; place-items: center; }
+.botao-icone .icone-som { display: block; width: 28px; height: 28px; }
+.botao-icone .icone-som svg { display: block; width: 100%; height: 100%; }
+.botao-icone[aria-pressed="false"] { filter: brightness(0.82) saturate(0.7); }
+.botao-icone[aria-pressed="false"]:hover { filter: brightness(0.92) saturate(0.8); }
+@media (max-height: 520px) and (min-width: 560px) {
+  .controles-de-som { gap: 8px; }
+  .botao-icone { width: 36px; height: 36px; border-radius: 8px; }
+  .botao-icone .icone-som { width: 22px; height: 22px; }
+}
+
 /* janelas REGRAS e MENU da mesa: botões grandes, quase quadrados, em grade 2×2 */
 .janela-da-mesa { width: min(440px, 100%); }
 .grade-de-botoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
