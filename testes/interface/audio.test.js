@@ -79,69 +79,46 @@ describe('botões de ícone de som no menu principal', () => {
   });
 });
 
-describe('botões de ícone de som na mesa', () => {
-  it('ligam e desligam efeitos e música, acompanham a janela MENU e o estado persiste ao recarregar', async () => {
+describe('som e música na mesa: só dentro da janela MENU', () => {
+  it('o painel da carta não tem botões de som; a janela MENU liga e desliga efeitos e música e o estado persiste ao recarregar', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
     try {
       await comecarPartida(pagina, { oponente: 'aleatorio', terreno: 'montanha', partida: '12', inicio: 'sorteio' });
-      await esperarCena(pagina, "return cena.textures.exists('icone-som:efeitosLigado') && cena.textures.exists('icone-som:musicaDesligada')");
-      const icones = () => naCena(pagina, 'return [cena.painel.botaoEfeitos.icone.texture.key, cena.painel.botaoMusica.icone.texture.key];');
-      assert.deepEqual(await icones(), ['icone-som:efeitosLigado', 'icone-som:musicaLigada']);
+      assert.equal(await naCena(pagina, 'return cena.painel.botaoEfeitos === undefined && cena.painel.botaoMusica === undefined'), true, 'sem botões de ícone no alto do painel');
       assert.equal(await musicaTocando(pagina), true, 'a trilha do terreno toca ao começar');
-      /* ícone da mesa: música desliga, a trilha para */
-      await apertar(pagina, 'botaoMusica');
-      assert.deepEqual(await icones(), ['icone-som:efeitosLigado', 'icone-som:musicaDesligada']);
-      assert.equal(await musicaTocando(pagina), false);
-      /* ícone da mesa: efeitos desligam, sem mexer na música */
-      await apertar(pagina, 'botaoEfeitos');
-      assert.deepEqual(await icones(), ['icone-som:efeitosDesligado', 'icone-som:musicaDesligada']);
-      assert.deepEqual(await estado(pagina), { mudo: true, musica: false });
-      /* janela MENU: mostra o mesmo estado e, ao mudar nela, os ícones do painel acompanham */
       await apertar(pagina, 'botaoMenu');
       const som = pagina.locator('.janela-da-mesa [data-chave="som"]'), musica = pagina.locator('.janela-da-mesa [data-chave="musica"]');
+      assert.match(await som.textContent(), /Som: sim/);
+      assert.match(await musica.textContent(), /Música: sim/);
+      await musica.dispatchEvent('click');
+      assert.equal(await musicaTocando(pagina), false);
+      await som.dispatchEvent('click');
+      assert.deepEqual(await estado(pagina), { mudo: true, musica: false });
       assert.match(await som.textContent(), /Som: não/);
-      assert.match(await musica.textContent(), /Música: não/);
       await som.dispatchEvent('click');
       await musica.dispatchEvent('click');
-      assert.match(await som.textContent(), /Som: sim/);
-      assert.deepEqual(await icones(), ['icone-som:efeitosLigado', 'icone-som:musicaLigada']);
+      assert.deepEqual(await estado(pagina), { mudo: false, musica: true });
       assert.equal(await musicaTocando(pagina), true);
+      await som.dispatchEvent('click');
       await pagina.locator('.janela-da-mesa [data-fechar]').dispatchEvent('click');
-      /* efeitos desligados pelo ícone, e recarrega: a mesa seguinte abre com os ícones no estado salvo */
-      await apertar(pagina, 'botaoEfeitos');
-      assert.deepEqual(await estado(pagina), { mudo: true, musica: true });
       await pagina.reload();
       await comecarPartida(pagina, { oponente: 'aleatorio', terreno: 'oceano', partida: '12', inicio: 'sorteio' });
-      await esperarCena(pagina, "return cena.textures.exists('icone-som:efeitosDesligado') && cena.painel.botaoEfeitos.icone.visible");
-      assert.deepEqual(await icones(), ['icone-som:efeitosDesligado', 'icone-som:musicaLigada']);
+      assert.deepEqual(await estado(pagina), { mudo: true, musica: true }, 'o estado salvo vale na mesa seguinte');
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });
 
-  it('não cobrem a carta de inspeção, os botões REGRAS e MENU nem o placar, em 640x360, 844x390 e 1280x800', async () => {
+  it('o título DETALHE DA CARTA ocupa o alto do painel, sem botões ao lado, em 640x360, 844x390 e 1280x800', async () => {
     const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
     const { pagina } = jogo;
     try {
       await comecarPartida(pagina, { oponente: 'aleatorio', terreno: 'neutro', partida: '12', inicio: 'sorteio' });
-      await esperarCena(pagina, "return cena.textures.exists('icone-som:efeitosLigado') && cena.painel.botaoEfeitos.icone.visible");
       for (const tela of TELAS) {
         await pagina.setViewportSize(tela);
         await pagina.waitForTimeout(250);
-        const caixas = await naCena(pagina, `
-          /* botões: a área visível (largura x altura do botão), sem a margem transparente da sombra */
-          const b = (o) => ({ x: o.x - o.width / 2, y: o.y - o.height / 2, width: o.width, height: o.height });
-          const imagem = (o) => { const r = o.getBounds(); return { x: r.x, y: r.y, width: r.width, height: r.height }; };
-          const p = cena.painel;
-          return { efeitos: b(p.botaoEfeitos), musica: b(p.botaoMusica), inspecao: imagem(p.inspecao), regras: b(p.botaoRegras), menu: b(p.botaoMenu), truco: b(p.truco), acoes: Object.values(p.acoes).map(b) };`);
-        for (const nome of ['efeitos', 'musica']) {
-          for (const outro of ['inspecao', 'regras', 'menu', 'truco']) assert.ok(!retangulos(caixas[nome], caixas[outro]), `${tela.width}x${tela.height}: ${nome} cobre ${outro}`);
-          for (const a of caixas.acoes) assert.ok(!retangulos(caixas[nome], a), `${tela.width}x${tela.height}: ${nome} cobre um botão de ação`);
-        }
-        assert.ok(!retangulos(caixas.efeitos, caixas.musica), 'os dois botões não se sobrepõem');
-        assert.ok(caixas.efeitos.x >= 0 && caixas.musica.x + caixas.musica.width <= 1280, 'dentro do mundo 1280x720');
-        await pagina.evaluate(() => { const avisos = document.querySelector('#avisos'); if (avisos) avisos.innerHTML = ''; }); /* o aviso de Livro de conceitos cobre o alto da mesa na captura */
-        await capturar(pagina, `41-mesa-som-${tela.width}x${tela.height}`);
+        await pagina.evaluate(() => { const avisos = document.querySelector('#avisos'); if (avisos) avisos.innerHTML = ''; });
+        await capturar(pagina, `41-mesa-sem-botoes-de-som-${tela.width}x${tela.height}`);
       }
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }

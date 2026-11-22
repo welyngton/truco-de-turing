@@ -9,17 +9,14 @@ import { nomeCamada } from '../../nucleo/rede.js';
 import { TERRENOS } from '../../nucleo/terrenos.js';
 import { desenharBotao, MARGEM_BOTAO } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
-import { texturaDeInspecao, carregarIconesDeSom } from '../recursos.js';
-import { CONTROLES_DE_SOM, controleLigado } from '../../interface/controlesDeSom.js';
+import { texturaDeInspecao } from '../recursos.js';
 import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
 
 /** Cor do rótulo de cada variante de botão. */
 const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
-/** Botões de ícone de efeitos e música: lado, centro vertical e margem à borda do painel esquerdo (mundo 1280x720). */
-const BOTAO_DE_SOM = { lado: 32, y: 26, margem: 12 };
-/** Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar entre os botões de som. */
+/** Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar. */
 export const TITULO_DO_DETALHE = 'DETALHE DA CARTA';
-const LARGURA_DO_TITULO_DO_DETALHE = PAINEL_ESQ.l - 2 * (BOTAO_DE_SOM.margem + BOTAO_DE_SOM.lado) - 12;
+const LARGURA_DO_TITULO_DO_DETALHE = PAINEL_ESQ.l - 24;
 /** Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. */
 const TEMPO_DE_SEGURAR = 450;
 
@@ -193,9 +190,6 @@ export const metodosDoCenario = {
     });
     p.dica = this.criarTexto(PAINEL_ESQ.x + 14, ESQ.dica, '', { fontSize: '13.5px', color: '#efe3c6', wordWrap: { width: PAINEL_ESQ.l - 28 }, lineSpacing: 1 });
 
-    /* dois botões de ícone no alto do painel, ao lado do título: efeitos sonoros e música, sem abrir a janela MENU */
-    this.criarBotoesDeSom(p);
-
     /* só dois botões no rodapé: REGRAS (como jogar, Livro de conceitos e dicas) e MENU (som, música, sair) */
     const lb = (PAINEL_ESQ.l - 28 - 10) / 2, pedra = { tamanho: 17, variante: 'pedra' };
     p.botaoRegras = this.criarBotao(PAINEL_ESQ.x + 14 + lb / 2, ESQ.botoes, lb, ESQ.alturaBotao, 'REGRAS', () => this.abrirRegrasDaMesa(), pedra);
@@ -313,47 +307,11 @@ export const metodosDoCenario = {
   },
 
   /**
-   * Botões de ícone de efeitos sonoros e música (issue #133), nos cantos de cima do painel
-   * esquerdo, onde não cobrem o título, a carta de inspeção nem os botões de ação. Mostram o estado
-   * atual (ver `atualizarChaves`) e se atualizam também quando a janela MENU muda o áudio.
-   */
-  criarBotoesDeSom(p) {
-    const lado = BOTAO_DE_SOM.lado, y = BOTAO_DE_SOM.y;
-    const criar = (chave, x) => {
-      const c = CONTROLES_DE_SOM[chave];
-      const botao = this.criarBotao(x, y, lado, lado, '', () => (chave === 'som' ? this.app.alternarSom() : this.app.alternarMusica(this.opcoes.terreno)), {
-        variante: 'pedra',
-        explicar: () => (controleLigado(this.app.progresso, chave) ? c.desligar : c.ligar) + '.',
-      });
-      botao.chaveDeSom = chave;
-      botao.icone = this.add.image(0, 0, '__DEFAULT').setDisplaySize(lado * 0.64, lado * 0.64).setVisible(false);
-      botao.add(botao.icone);
-      return botao;
-    };
-    p.botaoEfeitos = criar('som', PAINEL_ESQ.x + BOTAO_DE_SOM.margem + lado / 2);
-    p.botaoMusica = criar('musica', PAINEL_ESQ.x + PAINEL_ESQ.l - BOTAO_DE_SOM.margem - lado / 2);
-    carregarIconesDeSom(this, COR_ROTULO.pedra, () => this.atualizarIconesDeSom());
-    this.atualizarIconesDeSom();
-  },
-
-  /** Põe em cada botão de som o ícone do estado atual (se a textura já chegou). */
-  atualizarIconesDeSom() {
-    const p = this.painel;
-    if (!p || !p.botaoEfeitos) return;
-    for (const botao of [p.botaoEfeitos, p.botaoMusica]) {
-      const c = CONTROLES_DE_SOM[botao.chaveDeSom];
-      const chave = 'icone-som:' + (controleLigado(this.app.progresso, botao.chaveDeSom) ? c.ligado : c.desligadoIcone);
-      if (this.textures.exists(chave)) botao.icone.setTexture(chave).setDisplaySize(BOTAO_DE_SOM.lado * 0.64, BOTAO_DE_SOM.lado * 0.64).setVisible(true);
-    }
-  },
-
-  /**
    * Atualiza os rótulos das chaves (som, música e dicas) nas janelas REGRAS e MENU, se abertas.
    * O botão REGRAS ganha uma estrela quando as dicas estão ligadas.
    */
   atualizarChaves() {
     this.painel.botaoRegras.definirRotulo(this.app.dicasLigadas ? 'REGRAS \u2605' : 'REGRAS');
-    this.atualizarIconesDeSom();
     const rotulos = {
       som: Som.estaMudo() ? 'Som: não' : 'Som: sim',
       musica: this.app.progresso.musica ? 'Música: sim' : 'Música: não',
