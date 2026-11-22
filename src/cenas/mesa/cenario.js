@@ -10,7 +10,7 @@ import { TERRENOS } from '../../nucleo/terrenos.js';
 import { desenharBotao, MARGEM_BOTAO } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
 import { texturaDeInspecao } from '../recursos.js';
-import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
+import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, MAO_NA_MESA, ORDEM_DA_MAO, BOTOES_DE_ORDEM, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
 
 /** Cor do rótulo de cada variante de botão. */
 const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
@@ -79,7 +79,7 @@ export const metodosDoCenario = {
     botao.add([fundo, texto]);
     botao.setSize(l, a);
     /* área de toque um pouco maior que o desenho (o dedo cobre mais do que o cursor) */
-    const folga = FOLGA_DE_TOQUE;
+    const folga = opcoes.folga ?? FOLGA_DE_TOQUE;
     botao.setInteractive({
       hitArea: new Phaser.Geom.Rectangle(-folga, -folga, l + folga * 2, a + folga * 2),
       hitAreaCallback: Phaser.Geom.Rectangle.Contains,
@@ -304,6 +304,45 @@ export const metodosDoCenario = {
     p.botaoDropout = p.acoes.dropout;
     p.botaoTransfer = p.acoes.transfer;
     p.botaoPassar = p.acoes.passar;
+    this.criarBotoesDeOrdem(p);
+  },
+
+  /**
+   * Botões "Tamanho" e "Naipe" à esquerda da mão (issue #127). Só mudam a ordem em que as cartas
+   * aparecem (`this.ordemDaMao`, ver `cartasNaOrdemDaMao`); a mão do jogo não é tocada.
+   */
+  criarBotoesDeOrdem(p) {
+    const o = ORDEM_DA_MAO, pedra = { variante: 'pedra', tamanho: 12, folga: o.folga };
+    this.ordemDaMao = null;
+    p.ordem = {};
+    BOTOES_DE_ORDEM.forEach(([criterio, rotulo], i) => {
+      p.ordem[criterio] = this.criarBotao(o.x, o.ys[i], o.l, o.a, rotulo, () => this.ordenarMinhaMao(criterio), pedra);
+    });
+    p.destaqueDaOrdem = this.add.graphics().setDepth(9);
+    p.botaoTamanho = p.ordem.tamanho;
+    p.botaoNaipe = p.ordem.naipe;
+  },
+
+  /** Clique num botão de ordem: escolhe o critério (crescente) ou, se já era o ativo, inverte a direção. */
+  ordenarMinhaMao(criterio) {
+    const atual = this.ordemDaMao;
+    this.ordemDaMao = atual && atual.criterio === criterio ? { criterio, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' } : { criterio, direcao: 'asc' };
+    this.desenharMaos();
+  },
+
+  /** Seta e destaque do critério ativo; os botões somem quando a mão não está à mostra. */
+  atualizarBotoesDeOrdem() {
+    const p = this.painel, o = ORDEM_DA_MAO, ordem = this.ordemDaMao, visivel = this.quemVe >= 0;
+    p.destaqueDaOrdem.clear();
+    BOTOES_DE_ORDEM.forEach(([criterio, rotulo], i) => {
+      const botao = p.ordem[criterio], ativo = visivel && ordem && ordem.criterio === criterio;
+      botao.setVisible(visivel);
+      botao.definirRotulo(ativo ? rotulo + (ordem.direcao === 'asc' ? ' \u25B2' : ' \u25BC') : rotulo);
+      if (ativo) {
+        p.destaqueDaOrdem.lineStyle(3, 0xf6dc8f, 1);
+        p.destaqueDaOrdem.strokeRoundedRect(o.x - o.l / 2 - 2, o.ys[i] - o.a / 2 - 2, o.l + 4, o.a + 4, 8);
+      }
+    });
   },
 
   /**

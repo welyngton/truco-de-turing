@@ -45,6 +45,16 @@ export const DIR = {
   acoes: 594, acoes2: 648, alturaAcao: 46,
 };
 
+/**
+ * Mão do jogador de baixo e os botões "Tamanho" e "Naipe" que a ordenam (issue #127). Os botões
+ * ficam empilhados à esquerda da mão, numa coluna que a mão não ocupa: ela é centrada em `centro`
+ * e nunca passa de `larguraMax` de espaçamento entre a primeira e a última carta.
+ */
+export const MAO_NA_MESA = { centro: 650, larguraMax: 560 };
+export const ORDEM_DA_MAO = { x: 300, l: 74, a: 44, ys: [610, 662], folga: 8 };
+/** Os dois botões de ordem: [critério, rótulo]. */
+export const BOTOES_DE_ORDEM = [['tamanho', 'Tamanho'], ['naipe', 'Naipe']];
+
 /** Nome de cada ação da barra, para dicas e explicações. */
 export const NOME_DA_ACAO = {
   tunagem: 'Tunagem', overfit: 'Overfit', earlystop: 'Early stop', stackoverflow: 'Stack overflow',
