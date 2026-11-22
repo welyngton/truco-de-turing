@@ -257,7 +257,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 .conquista small { display: block; font-family: var(--fonte-interface); font-size: 13px; color: #5a4630; line-height: 1.3; }
 .conquista .graduacao { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6b1a22; font-weight: 700; }
 .conquistas-atalhos { margin: 8px 0 4px; flex-wrap: wrap; }
-.estatisticas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 4px 28px; max-height: 62vh; overflow: auto; padding-right: 4px; }
+.estatisticas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 4px 28px; max-height: 62vh; overflow: auto; padding-right: 18px; }
 .estatisticas-secao h3 { margin-top: 14px; border-bottom: 2px solid rgba(107, 26, 34, 0.25); padding-bottom: 3px; }
 .estatisticas-secao dl { margin: 6px 0 0; }
 .estatisticas-secao dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px dotted rgba(60, 40, 20, 0.25); font-size: 14.5px; }

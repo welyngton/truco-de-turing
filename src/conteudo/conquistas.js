@@ -171,7 +171,7 @@ export const CONQUISTAS = [
   { id: 'doismais', nome: '2 + 2 = ?', descricao: 'Perca uma mão em que ambos os jogadores sofreram early stop ou stack overflow.', graduacao: 'antimateria', teste: (c) => c.completa && !c.venceu && c.mao.estadoMotor.nets.every((rede) => PARADAS.includes(rede.reason)) },
   { id: 'virada', nome: 'Rede da virada, rede do amor', descricao: 'Vença uma mão revertendo uma desvantagem de 60 pontos ou mais no placar.', graduacao: 'antimateria', teste: (c) => c.venceu && maiorDesvantagem(c) >= 60 },
   /* conquista final (CONQUISTA_FINAL), sempre a última da lista: a Aplicacao a concede logo depois da última que faltava */
-  { id: 'convergencia', nome: 'Convergência global', descricao: 'Desbloqueie todas as outras conquistas. Em homenagem ao prof. Peng Yaohao.', graduacao: 'singularidade', teste: (c) => { const { feitas, total } = progressoDaFinal(c.progresso.desbloqueadas); return feitas === total; } },
+  { id: 'convergencia', nome: 'Convergência global', descricao: 'Desbloqueie todas as outras conquistas e dê orgulho para o professor Peng!', graduacao: 'singularidade', teste: (c) => { const { feitas, total } = progressoDaFinal(c.progresso.desbloqueadas); return feitas === total; } },
 ];
 
 /** Conquistas que podem ser ganhas mesmo quando a mão termina porque alguém correu do truco. */

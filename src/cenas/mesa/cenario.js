@@ -319,6 +319,7 @@ export const metodosDoCenario = {
       p.ordem[criterio] = this.criarBotao(o.x, o.ys[i], o.l, o.a, rotulo, () => this.ordenarMinhaMao(criterio), pedra);
     });
     p.destaqueDaOrdem = this.add.graphics().setDepth(9);
+    p.legendaDaOrdem = this.criarTexto(o.x, o.ys[0] - o.a / 2 - 10, 'ORDENAR', { fontFamily: FONTES.titulo, fontStyle: '700', fontSize: '10px', color: '#e8d6a8', letterSpacing: 1 }).setOrigin(0.5);
     p.botaoTamanho = p.ordem.tamanho;
     p.botaoNaipe = p.ordem.naipe;
   },
@@ -334,10 +335,12 @@ export const metodosDoCenario = {
   atualizarBotoesDeOrdem() {
     const p = this.painel, o = ORDEM_DA_MAO, ordem = this.ordemDaMao, visivel = this.quemVe >= 0;
     p.destaqueDaOrdem.clear();
+    p.legendaDaOrdem.setVisible(visivel);
     BOTOES_DE_ORDEM.forEach(([criterio, rotulo], i) => {
       const botao = p.ordem[criterio], ativo = visivel && ordem && ordem.criterio === criterio;
       botao.setVisible(visivel);
-      botao.definirRotulo(ativo ? rotulo + (ordem.direcao === 'asc' ? ' \u25B2' : ' \u25BC') : rotulo);
+      /* setas ▲▼ juntas enquanto o critério não está em uso; ▲ crescente e ▼ decrescente quando está */
+      botao.definirRotulo(rotulo + ' ' + (ativo ? (ordem.direcao === 'asc' ? '\u25B2' : '\u25BC') : '\u25B2\u25BC'));
       if (ativo) {
         p.destaqueDaOrdem.lineStyle(3, 0xf6dc8f, 1);
         p.destaqueDaOrdem.strokeRoundedRect(o.x - o.l / 2 - 2, o.ys[i] - o.a / 2 - 2, o.l + 4, o.a + 4, 8);

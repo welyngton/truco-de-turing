@@ -38,7 +38,7 @@ describe('botões de ordem da mão', () => {
       assert.match(await naCena(pagina, 'return cena.painel.botaoTamanho.texto.text'), /Tamanho ▼/);
       await apertar(pagina, 'botaoNaipe');
       assert.deepEqual(await naTela(pagina), ['AE', '7E', '7C', '10P', 'KO']);
-      assert.equal(await naCena(pagina, 'return cena.painel.botaoTamanho.texto.text'), 'Tamanho', 'o critério antigo perde a seta');
+      assert.equal(await naCena(pagina, 'return cena.painel.botaoTamanho.texto.text'), 'Tamanho ▲▼', 'o critério antigo volta às duas setas');
       assert.match(await naCena(pagina, 'return cena.painel.botaoNaipe.texto.text'), /Naipe ▲/);
       await apertar(pagina, 'botaoNaipe');
       assert.deepEqual(await naTela(pagina), ['KO', '10P', '7C', '7E', 'AE']);

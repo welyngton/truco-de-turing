@@ -519,7 +519,7 @@ describe('telas', () => {
     const final = $('.conquista.final');
     assert.ok(final && final.classList.contains('bloqueada'));
     assert.equal(final.nextElementSibling, $('.conquistas-lista'), 'acima da lista');
-    assert.match(final.textContent, /Conquista final · Singularidade.*Convergência global.*prof\. Peng Yaohao/s);
+    assert.match(final.textContent, /Conquista final · Singularidade.*Convergência global.*dê orgulho para o professor Peng!/s);
     assert.match(final.querySelector('.progresso-final').textContent, new RegExp('1 de ' + (CONQUISTAS.length - 1)));
     assert.equal(final.querySelector('.barra').getAttribute('aria-valuenow'), '1');
     assert.equal($$('.conquistas-lista .conquista.final').length, 0, 'e não se repete na lista');
