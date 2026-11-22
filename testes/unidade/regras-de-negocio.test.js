@@ -498,7 +498,7 @@ describe('Camada de truco (partida até 12 tentos)', () => {
 
 describe('Invariantes em partidas aleatórias', () => {
   it('RN-40 em 300 mãos aleatórias (5 baralhos x 4 terrenos x 3 inícios) nenhuma carta some ou duplica, os donos batem com as redes e toda mão termina', () => {
-    // O baralho de truco usa 2 baralhos de 27 cartas (54); os outros, 52. No Power Bee-Ai a mão é
+    // O baralho de truco usa 2 baralhos de 27 cartas (54); o yinyang, na arquitetura curta, 38; os outros, 52. No Power Bee-Ai a mão é
     // embaralhada com o limbo, sem criar cartas.
     const baralhos = ['classico', 'truco', 'fraternidade', 'yinyang', 'powerbi'];
     const terrenos = ['neutro', 'montanha', 'pantano', 'oceano'];
@@ -510,7 +510,8 @@ describe('Invariantes em partidas aleatórias', () => {
         semente: 500 + g, jogadores: JOGADORES,
         baralho: baralhos[g % 5], terreno: terrenos[Math.floor(g / 5) % 4], inicio: inicios[g % 3],
       });
-      const total = mao.config.baralho === 'truco' ? 54 : 52;
+      /* o Yin-yang agora joga sempre na arquitetura curta (issue #130), com 38 cartas */
+      const total = mao.config.baralho === 'truco' ? 54 : mao.config.baralho === 'yinyang' ? 38 : 52;
       let jogadas = 0;
       while (mao.fase !== 'fim' && jogadas < 500) {
         if (mao.fase === 'inicio') {
