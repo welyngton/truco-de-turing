@@ -126,8 +126,8 @@ export const metodosDeDicas = {
       const maior = Object.entries(conta).sort((a, b) => b[1] - a[1])[0];
       return {
         titulo: 'Livro de conceitos · Transfer learning',
-        corpo: 'Troca quatro cartas de mesmo valor da mão por cartas do limbo. Uma vez por mão; não gasta o turno.',
-        agora: jogador.transferUsado ? 'Agora: você já usou o transfer nesta mão.'
+        corpo: 'Troca quatro cartas de mesmo valor da mão por cartas do limbo. Uma vez por partida; não gasta o turno.',
+        agora: jogador.transferUsado ? 'Agora: você já usou o transfer nesta partida.'
           : valor ? 'Agora: você tem quatro ' + valor + '. Troque se eles não servem para tunar nem atacar.'
             : 'Agora: precisa de quatro cartas iguais; seu maior grupo é ' + (maior ? maior[1] + '× ' + maior[0] : 'nenhum') + '.',
         conceito: conceitoCurto('transfer'),

@@ -159,7 +159,7 @@ describe('consultas', () => {
     for (let i = 0; i < 6; i++) ativarQualquer(mao);
     assert.equal(camadasDesfaziveis(mao, 0), 2);
   });
-  it('valorParaTransfer: quatro iguais na mão, uma vez por mão', () => {
+  it('valorParaTransfer: quatro iguais na mão, uma vez por partida', () => {
     const mao = maoNova();
     darMao(mao, 0, ['7E', '7C', '7P', '7O', '2E']);
     assert.equal(valorParaTransfer(mao, 0), '7');

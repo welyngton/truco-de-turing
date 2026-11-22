@@ -338,7 +338,7 @@ describe('Dropout (GatoNet) e transfer learning', () => {
     assert.throws(() => aplicarJogada(mao, { tipo: 'dropout', jogador: p, n: 3, pagamento: idsDaMao(mao, p).slice(0, 3) }));
   });
 
-  it('RN-27 transfer learning: quadra na mão troca por cartas do limbo, uma vez por mão, e não gasta o turno', () => {
+  it('RN-27 transfer learning: quadra na mão troca por cartas do limbo, uma vez por partida, e não gasta o turno', () => {
     // Mudou na fusão (confirmado pelo professor): o transfer learning gastava o turno.
     const mao = maoNova();
     const p = mao.vez, jogador = mao.jogadores[p];

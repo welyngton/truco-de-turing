@@ -83,3 +83,20 @@ describe('ajustarFonteDoBotao (#121)', () => {
     delete globalThis.getComputedStyle;
   });
 });
+
+describe('transfer learning (issue #122)', () => {
+  it('o botão da barra se chama "Transfer learning" (em duas linhas, como "Early stop")', async () => {
+    /* o layout importa a configuração do navegador, então o teste lê o texto do arquivo */
+    const layout = readFileSync(join(RAIZ, 'src/cenas/mesa/layout.js'), 'utf8');
+    assert.match(layout, /\['transfer', 'Transfer\\nlearning', 1\]/);
+    assert.match(layout, /transfer: 'Transfer learning'/);
+  });
+
+  it('os textos dizem "uma vez por partida", como o motor (transferUsed), e nunca "por mão"', () => {
+    for (const arquivo of ['src/cenas/mesa/entrada.js', 'src/cenas/mesa/dicas.js', 'src/conteudo/textosDoTutorial.js', 'src/interface/telas/ajudaDasAcoes.js']) {
+      const texto = readFileSync(join(RAIZ, arquivo), 'utf8');
+      assert.ok(!/transfer[^\n]*(por mão|nesta mão)/i.test(texto), arquivo + ' ainda fala em "por mão"');
+    }
+    assert.match(readFileSync(join(RAIZ, 'src/cenas/mesa/dicas.js'), 'utf8'), /Uma vez por partida; não gasta o turno/);
+  });
+});
