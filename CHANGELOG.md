@@ -2,6 +2,10 @@
 
 Cada merge na `main` gera uma versão nova (ver `ferramentas/versionar.js`).
 
+## 2.23.2 — 2026-11-22
+
+- Ajustes do professor Peng: Transfer learning, ordem da mão, Power Bee-Ai, limites do Yin-yang e Sobre em abas ([#160](https://github.com/welyngton/truco-de-turing/pull/160), por [@welyngton](https://github.com/welyngton))
+
 ## 2.23.1 — 2026-11-21
 
 - Tutorial com o Percy e ajustes do menu (#118 a #121, #137 a #143) ([#159](https://github.com/welyngton/truco-de-turing/pull/159), por [@welyngton](https://github.com/welyngton))
