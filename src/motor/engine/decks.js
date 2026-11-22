@@ -190,9 +190,9 @@ export const yinyang = {
   score: (state, p) => sumScore(state, p),
 };
 
-// Power BI: apos executar uma acao, as cartas restantes na mao mudam aleatoriamente (troca com o limbo).
+// Power Bee-Ai: apos executar uma acao, as cartas restantes na mao mudam aleatoriamente (troca com o limbo).
 export const powerbi = {
-  id: 'powerbi', name: 'Power BI', emoji: '📊', scoreLabel: 'soma',
+  id: 'powerbi', name: 'Power Bee-Ai', emoji: '🐝', scoreLabel: 'soma',
   desc: 'Depois de cada ação com cartas, sua mão é embaralhada com o limbo: as cartas que restam mudam aleatoriamente.',
   score: (state, p) => sumScore(state, p),
   onAfterAction(state, p, move) {
@@ -204,7 +204,7 @@ export const powerbi = {
     const n = hand.length;
     state.hands[p] = pool.slice(0, n);
     state.limbo = pool.slice(n);
-    state.log.push({ type: 'deck', p, text: 'Power BI: as cartas da mão mudaram.' });
+    state.log.push({ type: 'deck', p, text: 'Power Bee-Ai: as cartas da mão mudaram.' });
   },
 };
 

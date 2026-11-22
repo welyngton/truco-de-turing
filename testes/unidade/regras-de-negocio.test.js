@@ -498,7 +498,7 @@ describe('Camada de truco (partida até 12 tentos)', () => {
 
 describe('Invariantes em partidas aleatórias', () => {
   it('RN-40 em 300 mãos aleatórias (5 baralhos x 4 terrenos x 3 inícios) nenhuma carta some ou duplica, os donos batem com as redes e toda mão termina', () => {
-    // O baralho de truco usa 2 baralhos de 27 cartas (54); os outros, 52. No Power BI a mão é
+    // O baralho de truco usa 2 baralhos de 27 cartas (54); os outros, 52. No Power Bee-Ai a mão é
     // embaralhada com o limbo, sem criar cartas.
     const baralhos = ['classico', 'truco', 'fraternidade', 'yinyang', 'powerbi'];
     const terrenos = ['neutro', 'montanha', 'pantano', 'oceano'];
