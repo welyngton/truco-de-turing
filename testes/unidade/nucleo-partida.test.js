@@ -159,7 +159,7 @@ describe('consultas', () => {
     for (let i = 0; i < 6; i++) ativarQualquer(mao);
     assert.equal(camadasDesfaziveis(mao, 0), 2);
   });
-  it('valorParaTransfer: quatro iguais na mão, uma vez por mão', () => {
+  it('valorParaTransfer: quatro iguais na mão, uma vez por partida', () => {
     const mao = maoNova();
     darMao(mao, 0, ['7E', '7C', '7P', '7O', '2E']);
     assert.equal(valorParaTransfer(mao, 0), '7');
@@ -320,7 +320,7 @@ describe('aplicarJogada', () => {
     assert.equal(mao.eventos.at(-1).entram, 4);
     assert.throws(() => aplicarJogada(mao, { tipo: 'transfer', jogador: mao.vez, cartas: [] }), /indisponível/);
   });
-  it('Power BI embaralha a mão com o limbo depois de uma ação com cartas', () => {
+  it('Power Bee-Ai embaralha a mão com o limbo depois de uma ação com cartas', () => {
     const mao = maoNova({ baralho: 'powerbi' }), j = mao.vez;
     const cartas = darMao(mao, j, ['5E', '5C', '5P', '5O', '3E']).slice(0, 4).map((c) => c.id);
     aplicarJogada(mao, { tipo: 'transfer', jogador: j, cartas });

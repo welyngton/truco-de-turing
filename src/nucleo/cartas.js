@@ -52,3 +52,31 @@ export function baralhoPadrao() {
   for (const naipe of NAIPES) for (const valor of VALORES) cartas.push({ id: valor + naipe, valor, naipe });
   return cartas;
 }
+
+/** Critérios de ordenação da mão e as direções aceitas por `ordenarMao`. */
+export const CRITERIOS_DE_ORDEM = ['tamanho', 'naipe'];
+export const DIRECOES_DE_ORDEM = ['asc', 'desc'];
+
+/**
+ * Ordena uma mão só para exibição (issue #126): devolve uma cópia e nunca altera `cartas` nem o
+ * estado da partida.
+ *  - `'tamanho'`: ordem natural do baralho (Ás, 2 a 10, Valete, Dama, Rei), desempate por naipe
+ *    na ordem de `NAIPES` (espadas, copas, paus, ouros);
+ *  - `'naipe'`: naipes na ordem de `NAIPES`, desempate pelo tamanho natural.
+ *  `'asc'` segue essa ordem; `'desc'` a inverte por inteiro. Cartas idênticas (baralhos repetidos)
+ *  mantêm a ordem em que vieram, nas duas direções (ordenação estável).
+ * @param {{valor: string, naipe: string}[]} cartas
+ * @param {'tamanho'|'naipe'} criterio
+ * @param {'asc'|'desc'} [direcao]
+ */
+export function ordenarMao(cartas, criterio, direcao = 'asc') {
+  if (!CRITERIOS_DE_ORDEM.includes(criterio)) throw new RangeError('critério de ordem desconhecido: ' + criterio);
+  if (!DIRECOES_DE_ORDEM.includes(direcao)) throw new RangeError('direção de ordem desconhecida: ' + direcao);
+  const tamanho = (c) => VALORES.indexOf(c.valor), naipe = (c) => NAIPES.indexOf(c.naipe);
+  const chave = criterio === 'tamanho' ? (c) => [tamanho(c), naipe(c)] : (c) => [naipe(c), tamanho(c)];
+  const sinal = direcao === 'desc' ? -1 : 1;
+  return cartas.slice().sort((a, b) => {
+    const [a1, a2] = chave(a), [b1, b2] = chave(b);
+    return sinal * (a1 - b1 || a2 - b2);
+  });
+}

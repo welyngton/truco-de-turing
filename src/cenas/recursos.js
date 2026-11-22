@@ -170,22 +170,3 @@ export function carregarIconesDasAcoes(cena) {
     imagem.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg width="128" height="128" '));
   }
 }
-
-/**
- * Carrega os ícones de som (SVG) como texturas `icone-som:<nome>`, em 96 px, pintados com `cor`
- * (os SVG usam `currentColor`, que dentro de uma imagem não herda a cor da página). Assíncrono:
- * `aoCarregar` roda a cada textura que chega, para quem desenha trocar o ícone na hora certa.
- */
-export function carregarIconesDeSom(cena, cor, aoCarregar) {
-  for (const [nome, svg] of Object.entries(ICONES_DE_SOM)) {
-    const chave = 'icone-som:' + nome;
-    if (cena.textures.exists(chave) || typeof Image === 'undefined') continue;
-    const imagem = new Image(96, 96);
-    imagem.onload = () => {
-      if (!cena.sys || !cena.textures) return; /* a cena já fechou */
-      if (!cena.textures.exists(chave)) cena.textures.addImage(chave, imagem);
-      if (aoCarregar) aoCarregar(nome);
-    };
-    imagem.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg width="96" height="96" ').replaceAll('currentColor', cor));
-  }
-}

@@ -1,6 +1,6 @@
 /**
  * @file Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de
- * computação), fraternidade (anéis), yin-yang (A e 2) e Power BI (painel de indicadores).
+ * computação), fraternidade (anéis), yin-yang (A e 2) e Power Bee-Ai (abelha sobre uma rede neural, em favo de mel).
  *
  * Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas
  * resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
@@ -203,69 +203,71 @@ function versoYinYang(ctx, W, H, aleatorio) {
   ctx.fillText('YIN · YANG', W / 2, H / 2 + 79.5);
 }
 
-/** Power BI: painel de indicadores (gráficos e um botão de atualizar), que embaralha a mão */
-function versoPowerBI(ctx, W, H, aleatorio) {
-  let Y = '#f2c811', Y2 = '#e8a33a', T = '#3fc1c9';
+/**
+ * Power Bee-Ai: uma abelha desenhada em código, sobrevoando uma rede neural, num favo de mel
+ * escuro. O desenho é original (nada de barras amarelas em sequência de painel de indicadores).
+ */
+function versoPowerBeeAi(ctx, W, H, aleatorio) {
+  const MEL = '#f0a92a', MEL_CLARO = '#ffd36b', ESCURO = '#1a0f05';
   ctx.save(); caminhoArredondado(ctx, 9, 9, W - 18, H - 18, 9); ctx.clip();
-  ctx.fillStyle = degradeLinear(ctx, 0, 0, 0, H, [[0, '#232838'], [1, '#0f121a']]);
+  ctx.fillStyle = degradeRadial(ctx, W / 2, H / 2, 20, W / 2, H / 2, H * 0.72, [[0, '#4a2c0b'], [0.6, '#2a1706'], [1, '#120a03']]);
   ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = 'rgba(242,200,17,.07)'; ctx.lineWidth = 0.8;
-  for (let g = 9; g < W; g += 12) { ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, H); ctx.stroke(); }
-  for (let g2 = 9; g2 < H; g2 += 12) { ctx.beginPath(); ctx.moveTo(0, g2); ctx.lineTo(W, g2); ctx.stroke(); }
-  /* azulejos de mini gráficos */
-  let tiles = [[22, 24, 60, 40, 'bar'], [92, 24, 60, 40, 'line'], [162, 24, 56, 40, 'pie'], [22, 284, 60, 30, 'line'], [92, 284, 60, 30, 'pie'], [162, 284, 56, 30, 'bar']];
-  tiles.forEach(function (t) {
-    ctx.fillStyle = 'rgba(255,255,255,.05)'; caminhoArredondado(ctx, t[0], t[1], t[2], t[3], 4); ctx.fill();
-    ctx.strokeStyle = 'rgba(242,200,17,.25)'; ctx.lineWidth = 0.8; ctx.stroke();
-    ctx.globalAlpha = 0.55;
-    if (t[4] === 'bar') {
-      for (let b = 0; b < 5; b++) { let hh = 4 + aleatorio() * (t[3] - 14); ctx.fillStyle = b % 2 ? T : Y; ctx.fillRect(t[0] + 6 + b * 10, t[1] + t[3] - 5 - hh, 7, hh); }
-    } else if (t[4] === 'line') {
-      ctx.strokeStyle = Y; ctx.lineWidth = 1.6; ctx.beginPath();
-      for (let p = 0; p <= 6; p++) { let px = t[0] + 6 + p * (t[2] - 12) / 6, py = t[1] + 8 + aleatorio() * (t[3] - 16); if (p === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
-      ctx.stroke();
-    } else {
-      let pcx = t[0] + t[2] / 2, pcy = t[1] + t[3] / 2;
-      [[0, 2.4, Y], [2.4, 4.4, T], [4.4, 6.283, Y2]].forEach(function (s) { ctx.strokeStyle = s[2]; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(pcx, pcy, Math.min(11, t[3] / 2 - 5), s[0], s[1]); ctx.stroke(); });
-    }
-    ctx.globalAlpha = 1;
-  });
+  /* favo de mel: hexágonos de contorno fino em toda a carta */
+  const hexagono = (cx, cy, r) => { ctx.beginPath(); for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a); if (k) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.closePath(); };
+  ctx.strokeStyle = 'rgba(240,169,42,.16)'; ctx.lineWidth = 1;
+  const r = 15, dx = r * Math.sqrt(3);
+  for (let linha = -1; linha * r * 1.5 < H + r; linha++) {
+    for (let col = -1; col * dx < W + dx; col++) { hexagono(col * dx + (linha % 2 ? dx / 2 : 0), linha * r * 1.5, r); ctx.stroke(); }
+  }
+  granulado(ctx, 9, 9, W - 18, H - 18, aleatorio, 0.06, 0.1);
   ctx.restore();
-  ctx.strokeStyle = Y; ctx.lineWidth = 2.4; caminhoArredondado(ctx, 15, 15, W - 30, H - 30, 7); ctx.stroke();
-  /* painel central */
-  let px0 = W / 2 - 74, py0 = H / 2 - 92, pw = 148, ph = 184;
+  ctx.strokeStyle = MEL; ctx.lineWidth = 2.4; caminhoArredondado(ctx, 15, 15, W - 30, H - 30, 7); ctx.stroke();
+  ctx.strokeStyle = 'rgba(240,169,42,.55)'; ctx.lineWidth = 1; caminhoArredondado(ctx, 21, 21, W - 42, H - 42, 5); ctx.stroke();
+
+  /* medalhão hexagonal no centro */
+  const cx = W / 2, cy = H / 2 - 8;
   sombraSuave(ctx, 12, 4, 0.6);
-  ctx.fillStyle = '#1b2030'; caminhoArredondado(ctx, px0, py0, pw, ph, 10); ctx.fill();
+  ctx.fillStyle = '#24150a'; hexagono(cx, cy, 88); ctx.fill();
   semSombra(ctx);
-  ctx.strokeStyle = Y; ctx.lineWidth = 2; ctx.stroke();
-  /* KPI */
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#9aa3b8'; ctx.font = '700 8px Spectral, Georgia, serif'; ctx.fillText('ACURÁCIA DA MÃO', px0 + 12, py0 + 16);
-  ctx.fillStyle = Y; ctx.font = '800 22px Spectral, Georgia, serif'; ctx.fillText('?? %', px0 + 12, py0 + 36);
-  /* botão de atualizar (as cartas mudam) */
-  let rx = px0 + pw - 24, ry = py0 + 26;
-  ctx.strokeStyle = T; ctx.lineWidth = 2.4;
-  ctx.beginPath(); ctx.arc(rx, ry, 10, -0.3, Math.PI * 1.3); ctx.stroke();
-  ctx.fillStyle = T; ctx.beginPath(); ctx.moveTo(rx + 12, ry - 8); ctx.lineTo(rx + 11, ry + 2); ctx.lineTo(rx + 3, ry - 4); ctx.closePath(); ctx.fill();
-  /* gráfico de linha da curva de treino */
-  let gx0 = px0 + 12, gy0 = py0 + 58, gw = pw - 24, gh = 52;
-  ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(gx0, gy0, gw, gh);
-  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 0.7;
-  [0.33, 0.66].forEach(function (f) { ctx.beginPath(); ctx.moveTo(gx0, gy0 + gh * f); ctx.lineTo(gx0 + gw, gy0 + gh * f); ctx.stroke(); });
-  let pts = [0.9, 0.7, 0.75, 0.5, 0.42, 0.3, 0.34, 0.18];
-  ctx.fillStyle = degradeLinear(ctx, 0, gy0, 0, gy0 + gh, [[0, 'rgba(242,200,17,.35)'], [1, 'rgba(242,200,17,0)']]);
-  ctx.beginPath(); ctx.moveTo(gx0, gy0 + gh);
-  pts.forEach(function (v, i) { ctx.lineTo(gx0 + i * gw / (pts.length - 1), gy0 + v * gh); });
-  ctx.lineTo(gx0 + gw, gy0 + gh); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = Y; ctx.lineWidth = 2; ctx.beginPath();
-  pts.forEach(function (v, i) { let x = gx0 + i * gw / (pts.length - 1), y = gy0 + v * gh; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
-  ctx.stroke();
-  /* rosca + barras */
-  let dcx = px0 + 36, dcy = py0 + 142;
-  [[0, 3.1, Y], [3.1, 4.9, T], [4.9, 6.283, Y2]].forEach(function (s) { ctx.strokeStyle = s[2]; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(dcx, dcy, 17, s[0] - 1.57, s[1] - 1.57); ctx.stroke(); });
-  [14, 26, 18, 32].forEach(function (hh, i) { ctx.fillStyle = i % 2 ? T : Y; ctx.fillRect(px0 + 74 + i * 15, py0 + 160 - hh, 10, hh); });
-  ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(px0 + 70, py0 + 160, 66, 1);
-  legenda(ctx, W, H / 2 + 84, null, 'DASHBOARD', Y, 150);
+  ctx.strokeStyle = MEL; ctx.lineWidth = 2; ctx.stroke();
+
+  /* rede neural minúscula atrás da abelha: três camadas de nós ligados */
+  const camadas = [[[-58, -30], [-58, 0], [-58, 30]], [[-30, -44], [-30, -14], [-30, 16], [-30, 46]], [[0, -52], [0, 0], [0, 52]]];
+  ctx.strokeStyle = 'rgba(255,211,107,.22)'; ctx.lineWidth = 0.8;
+  for (let k = 0; k < camadas.length - 1; k++) for (const a of camadas[k]) for (const b of camadas[k + 1]) { ctx.beginPath(); ctx.moveTo(cx + a[0], cy + a[1]); ctx.lineTo(cx + b[0], cy + b[1]); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,211,107,.45)';
+  for (const camada of camadas) for (const n of camada) { ctx.beginPath(); ctx.arc(cx + n[0], cy + n[1], 2.4, 0, Math.PI * 2); ctx.fill(); }
+
+  /* a abelha: gira um pouco, de lado, olhando para a esquerda */
+  ctx.save(); ctx.translate(cx + 6, cy + 4); ctx.rotate(-0.35);
+  /* asas, atrás do corpo */
+  ctx.fillStyle = 'rgba(214,236,255,.55)'; ctx.strokeStyle = 'rgba(214,236,255,.9)'; ctx.lineWidth = 1;
+  [[-4, -34, -0.5, 34, 18], [14, -30, 0.35, 30, 16]].forEach(function (a) {
+    ctx.save(); ctx.translate(a[0], a[1]); ctx.rotate(a[2]);
+    ctx.beginPath(); ctx.ellipse(0, -a[3] / 2, a[4], a[3], 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(214,236,255,.55)'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -a[3] * 1.7); ctx.stroke();
+    ctx.restore();
+  });
+  /* corpo listrado: elipse recortada com faixas escuras */
+  ctx.save();
+  ctx.beginPath(); ctx.ellipse(8, 8, 46, 30, 0, 0, Math.PI * 2); ctx.clip();
+  ctx.fillStyle = degradeLinear(ctx, 0, -22, 0, 38, [[0, MEL_CLARO], [1, MEL]]); ctx.fillRect(-60, -30, 130, 80);
+  ctx.fillStyle = ESCURO; for (const x of [-4, 18, 38]) ctx.fillRect(x, -30, 9, 80);
+  ctx.restore();
+  ctx.strokeStyle = ESCURO; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(8, 8, 46, 30, 0, 0, Math.PI * 2); ctx.stroke();
+  /* ferrão */
+  ctx.fillStyle = ESCURO; ctx.beginPath(); ctx.moveTo(52, 2); ctx.lineTo(70, 10); ctx.lineTo(52, 16); ctx.closePath(); ctx.fill();
+  /* cabeça, olho e antenas */
+  ctx.fillStyle = ESCURO; ctx.beginPath(); ctx.arc(-44, 6, 18, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = MEL; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.fillStyle = '#fff6dc'; ctx.beginPath(); ctx.arc(-50, 2, 5.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = ESCURO; ctx.beginPath(); ctx.arc(-51.5, 2, 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = MEL_CLARO; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-50, -10); ctx.quadraticCurveTo(-58, -26, -70, -26); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-40, -11); ctx.quadraticCurveTo(-42, -28, -54, -34); ctx.stroke();
+  ctx.fillStyle = MEL_CLARO; for (const p of [[-70, -26], [-54, -34]]) { ctx.beginPath(); ctx.arc(p[0], p[1], 2.6, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  legenda(ctx, W, H / 2 + 84, null, 'POWER BEE-AI', MEL_CLARO, 150);
 }
 
 /** Nobreza: veludo púrpura com flores-de-lis e uma coroa dourada no medalhão */
@@ -367,7 +369,7 @@ function versoBackprop(ctx, W, H, aleatorio) {
   legenda(ctx, W, H / 2 + 84, null, 'BACKPROP', TINTA, 150);
 }
 
-const VERSOS = { classico: versoClassico, truco: versoTruco, nobreza: versoNobreza, backprop: versoBackprop, fraternidade: versoFraternidade, yinyang: versoYinYang, powerbi: versoPowerBI };
+const VERSOS = { classico: versoClassico, truco: versoTruco, nobreza: versoNobreza, backprop: versoBackprop, fraternidade: versoFraternidade, yinyang: versoYinYang, powerbi: versoPowerBeeAi };
 
 /**
  * Desenha o verso do baralho.

@@ -49,7 +49,7 @@ export const TEXTOS = {
 
   /* ---- #142 */
   'fim-da-mao': 'Fim da mão! As duas redes foram interrompidas e vence a maior soma: a sua tem {soma:0} pontos e a do {rival}, {soma:1}.',
-  'transfer': 'Duas jogadas ficaram de fora do treino. Transfer learning troca 4 cartas iguais da sua mão por cartas do limbo, uma vez por mão e sem gastar a vez.',
+  'transfer': 'Duas jogadas ficaram de fora do treino. Transfer learning troca 4 cartas iguais da sua mão por cartas do limbo, uma vez por partida e sem gastar a vez.',
   'stackoverflow': 'Stack overflow: com 3 cartas iguais sobre o neurônio de um rival, ele perde a rede e toda a mão. Na sua própria rede, é um desastre.',
   'truco': 'E o TRUCO? É o botão que aumenta o valor da mão: o outro jogador aceita, corre ou aumenta. Fica desligado no tutorial.',
   'despedida': 'Pronto, você já sabe jogar! Quando quiser rever um conceito, abra o Livro de conceitos e toque em Aprender mais.',

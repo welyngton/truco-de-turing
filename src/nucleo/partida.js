@@ -144,6 +144,30 @@ function montar(estadoMotor, config, jogadores, simulacao, cartas) {
 }
 
 /**
+ * Limites que cada baralho impõe à mesa (issue #130). O Yin-yang só tem Ás e 2: com mais de um
+ * baralho ou com a arquitetura longa, faltariam cartas distintas para montar a rede. Por isso ele
+ * só joga com 1 baralho e a arquitetura curta.
+ * TEMPORÁRIO: sai quando existirem os coringas, que completam o Yin-yang em qualquer mesa.
+ * O aviso na tela e a trava dos campos do menu são da issue #131 (fora do núcleo).
+ */
+export const LIMITES_DO_BARALHO = {
+  yinyang: { baralhos: 1, arquitetura: 'curta' },
+};
+
+/**
+ * Devolve uma cópia da configuração (ou das opções do menu: `baralho`, `baralhos`, `arquitetura`)
+ * com os `LIMITES_DO_BARALHO` aplicados. Os outros baralhos passam sem mudança. Toda criação de
+ * partida passa por aqui, dentro de `novaMao`: partida local, sorteio, sala online (cada aparelho
+ * monta a mesa com as opções da sala) e tutorial. As opções salvas do menu não são alteradas, para
+ * que trocar de baralho depois não deixe a arquitetura ou a quantidade de baralhos "presas".
+ * @param {{baralho?: string, baralhos?: number, arquitetura?: string}} config
+ */
+export function normalizarConfiguracao(config) {
+  const limites = LIMITES_DO_BARALHO[config && config.baralho];
+  return limites ? { ...config, ...limites } : { ...config };
+}
+
+/**
  * Cria uma mão nova: o motor embaralha, monta a mesa, distribui as cartas e separa o limbo.
  * @param {object} opcoes
  * @param {string} [opcoes.baralho='classico']
@@ -155,10 +179,10 @@ function montar(estadoMotor, config, jogadores, simulacao, cartas) {
  * @param {{nome:string, tipo?:string, oponente?:string}[]} opcoes.jogadores De 2 a 5.
  */
 export function novaMao(opcoes) {
-  const config = {
+  const config = normalizarConfiguracao({
     baralho: opcoes.baralho || 'classico', terreno: opcoes.terreno || 'neutro', inicio: opcoes.inicio || 'revela-descarta',
     arquitetura: opcoes.arquitetura || 'padrao', baralhos: Math.max(1, Math.min(4, Number(opcoes.baralhos) || 1)),
-  };
+  });
   if (!BARALHO_MOTOR[config.baralho]) throw new Error('Baralho desconhecido: ' + config.baralho);
   if (!TERRENO_MOTOR[config.terreno]) throw new Error('Terreno desconhecido: ' + config.terreno);
   if (!INICIO_MOTOR[config.inicio]) throw new Error('Forma de início desconhecida: ' + config.inicio);

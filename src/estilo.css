@@ -230,11 +230,7 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 
 /* ---------- Conquistas ---------- */
 .folha.larga { width: min(1060px, 100%); }
-.conquistas-salao { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; align-items: start; }
-.guilda { text-align: center; position: sticky; top: 0; }
-.guilda .retrato { aspect-ratio: 240 / 330; max-width: 230px; margin: 0 auto; }
-.guilda .retrato canvas { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); }
-.guilda-nota { font-style: italic; font-size: 14px; color: #5a4630; margin: 6px auto 0; max-width: 26ch; }
+.conquistas-salao { display: block; }
 .conquistas-principal { min-width: 0; }
 /* de quem são as conquistas: da conta conectada ou só deste aparelho */
 .conquistas-origem { margin: 2px 0 0; font-size: 14px; color: #5a4630; }
@@ -488,9 +484,6 @@ a.botao { display: inline-block; text-decoration: none; text-align: center; }
 }
 @media (max-width: 760px) {
   .grimorio { grid-template-columns: minmax(0, 1fr); }
-  .conquistas-salao { grid-template-columns: minmax(0, 1fr); }
-  .guilda { position: static; }
-  .guilda .retrato { max-width: 180px; }
   .resultado-grade { grid-template-columns: minmax(0, 1fr); }
   .folha { padding: 22px 18px; font-size: 16px; }
   .grito-truco .grito { font-size: 46px; }
@@ -642,3 +635,24 @@ button.link { background: none; border: 0; padding: 0; color: #6b1a22; text-deco
 .caixa-do-tutorial p { margin: 2px 0 0; font-size: 14px; }
 .caixa-do-tutorial .botao { flex: none; margin: 0; }
 @media (max-width: 520px) { .caixa-do-tutorial { flex-wrap: wrap; } .caixa-do-tutorial .botao { width: 100%; } }
+
+/* Sobre em duas abas (#134): as abas ficam empilhadas na mesma célula, então a folha tem sempre a
+   altura da maior e não pula ao trocar; a aba escondida só fica invisível. */
+.sobre-abas { display: grid; }
+.folha.sobre section.aba { grid-area: 1 / 1; min-width: 0; }
+.folha.sobre section.aba[hidden] { display: block; visibility: hidden; }
+.folha.sobre .abas { margin-top: 8px; }
+/* Equipe (#135): um cartão por pessoa */
+.equipe-lista { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.equipe-lista.equipe-professor { grid-template-columns: minmax(0, 1fr); }
+.equipe-pessoa { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px; border-radius: 10px; border: 1px solid rgba(43, 22, 8, 0.25); background: rgba(255, 255, 255, 0.38); }
+.equipe-professor .equipe-pessoa { grid-template-columns: 130px minmax(0, 1fr); }
+.equipe-retrato { width: 100%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff1b8, #b98a2a 60%, #6a4410); box-shadow: inset 0 0 0 3px rgba(43, 22, 8, 0.35); }
+.equipe-retrato.com-foto { aspect-ratio: 240 / 330; border-radius: 0; background: none; box-shadow: none; display: block; }
+.equipe-retrato.com-foto canvas { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35)); }
+.equipe-iniciais { font: 800 22px var(--fonte-titulo); color: #2b1608; letter-spacing: 0.04em; }
+.equipe-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.equipe-nome { font-family: var(--fonte-titulo); color: #2b1608; }
+.equipe-papel { font-size: 14px; color: #5a4630; font-style: italic; }
+.equipe-minicv { margin: 6px 0 0; font-size: 14px; }
+@media (max-width: 520px) { .equipe-professor .equipe-pessoa { grid-template-columns: 96px minmax(0, 1fr); } }

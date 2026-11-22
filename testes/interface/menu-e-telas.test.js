@@ -80,7 +80,7 @@ describe('menu e telas', () => {
           assert.ok(await pagina.locator('#g-verbete .aprofundar .formula math').evaluate((m) => m.getBoundingClientRect().height > 20));
           await capturar(pagina, '01b-grimorio-formulas');
         }
-        if (botao === '#m-conquistas') { await pagina.waitForSelector('#c-retrato canvas'); await capturar(pagina, '02-conquistas'); }
+        if (botao === '#m-conquistas') { await pagina.waitForSelector('.conquistas-lista .conquista'); assert.equal(await pagina.locator('#c-retrato').count(), 0, 'o retrato do professor saiu das conquistas'); await capturar(pagina, '02-conquistas'); }
         if (botao === '#m-sobre') assert.match(await pagina.locator('.versao').textContent(), /Versão \d+\.\d+\.\d+/);
         if (botao === '#m-mods') await capturar(pagina, '24-mods');
         await pagina.click('.camada:not(.transparente) [data-fechar] >> nth=0');

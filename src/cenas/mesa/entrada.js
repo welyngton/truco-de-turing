@@ -151,7 +151,7 @@ export const metodosDeEntrada = {
     }
     if (id === 'transfer') {
       const v = valorParaTransfer(mao, eu);
-      return v ? 'Transfer learning: troca os quatro ' + v + ' da mão por quatro cartas do limbo. Uma vez por mão; não gasta a vez.' : 'Transfer learning precisa de quatro cartas iguais na mão (uma vez por mão).' + regra;
+      return v ? 'Transfer learning: troca os quatro ' + v + ' da mão por quatro cartas do limbo. Uma vez por partida; não gasta a vez.' : 'Transfer learning precisa de quatro cartas iguais na mão (uma vez por partida).' + regra;
     }
     if (id === 'passar') return podePassar(mao, eu) ? 'Passar: encerra a sua vez sem jogar.' + regra : 'Passar não está disponível: você ainda tem jogada.' + regra;
     return qtd || this.modo !== 'livre' ? 'Limpar a seleção e voltar ao começo da jogada (Esc).' : 'Nada selecionado.';

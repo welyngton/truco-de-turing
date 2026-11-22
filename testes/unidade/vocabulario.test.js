@@ -83,3 +83,51 @@ describe('ajustarFonteDoBotao (#121)', () => {
     delete globalThis.getComputedStyle;
   });
 });
+
+describe('transfer learning (issue #122)', () => {
+  it('o botão da barra se chama "Transfer learning" (em duas linhas, como "Early stop")', async () => {
+    /* o layout importa a configuração do navegador, então o teste lê o texto do arquivo */
+    const layout = readFileSync(join(RAIZ, 'src/cenas/mesa/layout.js'), 'utf8');
+    assert.match(layout, /\['transfer', 'Transfer\\nlearning', 1\]/);
+    assert.match(layout, /transfer: 'Transfer learning'/);
+  });
+
+  it('os textos dizem "uma vez por partida", como o motor (transferUsed), e nunca "por mão"', () => {
+    for (const arquivo of ['src/cenas/mesa/entrada.js', 'src/cenas/mesa/dicas.js', 'src/conteudo/textosDoTutorial.js', 'src/interface/telas/ajudaDasAcoes.js']) {
+      const texto = readFileSync(join(RAIZ, arquivo), 'utf8');
+      assert.ok(!/transfer[^\n]*(por mão|nesta mão)/i.test(texto), arquivo + ' ainda fala em "por mão"');
+    }
+    assert.match(readFileSync(join(RAIZ, 'src/cenas/mesa/dicas.js'), 'utf8'), /Uma vez por partida; não gasta o turno/);
+  });
+});
+
+describe('baralho Power Bee-Ai (issues #128 e #129)', () => {
+  it('o nome é "Power Bee-Ai" na interface e no motor, mas o id interno continua powerbi', async () => {
+    const { BARALHOS } = await import('../../src/nucleo/baralhos.js');
+    const decks = await import('../../src/motor/engine/decks.js');
+    assert.equal(BARALHOS.powerbi.nome, 'Power Bee-Ai');
+    assert.equal(decks.powerbi.id, 'powerbi');
+    assert.equal(decks.powerbi.name, 'Power Bee-Ai');
+  });
+
+  it('nenhum texto do jogo, da documentação ou dos testes cita "Power BI" (a marca de outra empresa)', () => {
+    const achados = [];
+    for (const pasta of ['src', 'docs', 'testes']) {
+      for (const arquivo of arquivos(join(RAIZ, pasta), ['.js', '.md', '.html', '.json'])) {
+        if (/power bi/i.test(readFileSync(arquivo, 'utf8'))) achados.push(arquivo.replace(RAIZ, ''));
+      }
+    }
+    if (/power bi/i.test(readFileSync(join(RAIZ, 'README.md'), 'utf8'))) achados.push('/README.md');
+    /* este arquivo cita o nome antigo de propósito, ao procurá-lo */
+    assert.deepEqual(achados.filter((a) => !a.endsWith('vocabulario.test.js')), []);
+  });
+
+  it('o aviso do baralho não fala em "dashboard" e o verso é desenhado por versoPowerBeeAi, sem a palavra DASHBOARD', () => {
+    const efeitos = readFileSync(join(RAIZ, 'src/cenas/mesa/efeitos.js'), 'utf8');
+    assert.ok(!/dashboard/i.test(efeitos));
+    const versos = readFileSync(join(RAIZ, 'src/arte/versos.js'), 'utf8');
+    assert.match(versos, /function versoPowerBeeAi\(/);
+    assert.ok(!/versoPowerBI|DASHBOARD/.test(versos));
+    assert.match(versos, /POWER BEE-AI/);
+  });
+});

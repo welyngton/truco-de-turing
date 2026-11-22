@@ -194,7 +194,7 @@ Moldura medieval do retrato do professor no quadro de conquistas.
 
 ## `src/arte/versos.js`
 
-Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de computação), fraternidade (anéis), yin-yang (A e 2) e Power BI (painel de indicadores). Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
+Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol), nobreza (coroa em veludo), backprop (grafo de computação), fraternidade (anéis), yin-yang (A e 2) e Power Bee-Ai (abelha sobre uma rede neural, em favo de mel). Convenção da arte: cada função desenha em coordenadas-base e recebe `S` (densidade). O canvas resultante tem (tamanho-base × S) pixels, o que mantém a arte nítida em qualquer tela.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -205,7 +205,7 @@ Versos das cartas, um por baralho: clássico (damasco), truco (baralho espanhol)
 | `versoFraternidade(ctx, W, H, aleatorio)` | função | Fraternidade: corrente de anéis dourados sobre verde, quatro naipes de mãos dadas |
 | `simboloYinYang(ctx, cx, cy, r)` | função | Yin-yang: campo dividido em preto e marfim, só Ás e Dois |
 | `versoYinYang(ctx, W, H, aleatorio)` | função | Verso do baralho yin-yang: metades clara e escura e o símbolo no centro. |
-| `versoPowerBI(ctx, W, H, aleatorio)` | função | Power BI: painel de indicadores (gráficos e um botão de atualizar), que embaralha a mão |
+| `versoPowerBeeAi(ctx, W, H, aleatorio)` | função | Power Bee-Ai: uma abelha desenhada em código, sobrevoando uma rede neural, num favo de mel escuro. O desenho é original (nada de barras amarelas em sequência de painel de indicadores). |
 | `versoNobreza(ctx, W, H, aleatorio)` | função | Nobreza: veludo púrpura com flores-de-lis e uma coroa dourada no medalhão |
 | `florDeLis(ctx, x, y, s)` | função | Flor-de-lis simples, centrada em (x, y), de tamanho s. |
 | `coroa(ctx, cx, cy, l, ouro)` | função | Coroa de três pontas com gemas, de largura l, base em (cx, cy). |
@@ -274,8 +274,7 @@ Parte da CenaMesa: elementos fixos da tela (molduras dos painéis, colunas das c
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `COR_ROTULO` | constante | Cor do rótulo de cada variante de botão. |
-| `BOTAO_DE_SOM` | constante | Botões de ícone de efeitos e música: lado, centro vertical e margem à borda do painel esquerdo (mundo 1280x720). |
-| `TITULO_DO_DETALHE` | constante (exportada) | Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar entre os botões de som. |
+| `TITULO_DO_DETALHE` | constante (exportada) | Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar. |
 | `TEMPO_DE_SEGURAR` | constante | Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. |
 | `desenharCenarioFixo()` | método | Molduras dos painéis laterais, divisórias e colunas das camadas com seus nomes. |
 | `criarBotao(x, y, l, a, rotulo, acao, opcoes = {})` | método | Cria um botão com textura própria e rótulo que se ajusta à largura. O objeto devolvido ganha `definirRotulo(texto)` e `habilitar(sim)`. Com `opcoes.dica`, o botão mostra uma dica flutuante (modo "dicas" ligado): ao passar o mouse, ou, no celular, ao segurar o botão apertado. Soltar depois de segurar não executa a ação, para que dê para ler a dica sem jogar sem querer. A ação roda ao soltar o toque/clique. `explicar`, quando dado, devolve o texto que aparece no quadro de instruções (painel esquerdo) enquanto o cursor está sobre o botão: o que a ação faria agora, antes de confirmar. |
@@ -285,8 +284,9 @@ Parte da CenaMesa: elementos fixos da tela (molduras dos painéis, colunas das c
 | `criarPlacar(p)` | método | Placar (painel direito): título da mão e um bloco por jogador com avatar, nome, nível, situação, detalhes, tentos e soma da rede. Os blocos de cima são os adversários de quem está vendo; o dele fica por último. Com mais de 2 jogadores os blocos são compactos (ver `blocosDoPlacar` em layout.js). |
 | `criarBlocoCompacto(rx, y, rl, a)` | método | Bloco compacto do placar (mesas com 3 a 5 jogadores): avatar pequeno, nome, uma linha com a situação e a mão, e a soma à direita. Tem os mesmos campos do bloco grande, para que `atualizarBlocoDoJogador` sirva aos dois. |
 | `criarBotoesDeAcao(p)` | método | Botão de truco e a barra de ações: selecione cartas da mão e acendem só os botões das jogadas possíveis com elas; passar o cursor num botão explica o efeito no quadro de instruções antes de confirmar. Os botões ficam em `p.acoes[id]`; dropout, transfer e passar também em `p.botaoDropout`, `p.botaoTransfer` e `p.botaoPassar`. |
-| `criarBotoesDeSom(p)` | método | Botões de ícone de efeitos sonoros e música (issue #133), nos cantos de cima do painel esquerdo, onde não cobrem o título, a carta de inspeção nem os botões de ação. Mostram o estado atual (ver `atualizarChaves`) e se atualizam também quando a janela MENU muda o áudio. |
-| `atualizarIconesDeSom()` | método | Põe em cada botão de som o ícone do estado atual (se a textura já chegou). |
+| `criarBotoesDeOrdem(p)` | método | Botões "Tamanho" e "Naipe" à esquerda da mão (issue #127). Só mudam a ordem em que as cartas aparecem (`this.ordemDaMao`, ver `cartasNaOrdemDaMao`); a mão do jogo não é tocada. |
+| `ordenarMinhaMao(criterio)` | método | Clique num botão de ordem: escolhe o critério (crescente) ou, se já era o ativo, inverte a direção. |
+| `atualizarBotoesDeOrdem()` | método | Seta e destaque do critério ativo; os botões somem quando a mão não está à mostra. |
 | `atualizarChaves()` | método | Atualiza os rótulos das chaves (som, música e dicas) nas janelas REGRAS e MENU, se abertas. O botão REGRAS ganha uma estrela quando as dicas estão ligadas. |
 
 ## `src/cenas/mesa/desenho.js`
@@ -300,6 +300,7 @@ Parte da CenaMesa: desenhar o estado da mão na tela. Neurônios, mãos, placar,
 | `mostrarDica(texto)` | método | Mostra a dica do turno no rodapé do painel esquerdo. |
 | `redesenhar()` | método | Redesenha tudo a partir do estado: pontuações, alvos, neurônios, mãos e painéis. |
 | `repousarCarta(v)` | método | Garante que a carta da mesa está inteira e no lugar: opaca, na posição e na profundidade de descanso. Não mexe enquanto a distribuição ainda anima a carta; mantém por cima a que está sob o cursor. Rede de segurança contra qualquer animação interrompida no meio. |
+| `cartasNaOrdemDaMao(cartas)` | método | A mão na ordem de exibição escolhida nos botões Tamanho/Naipe (issue #127), ou como veio do jogo se nenhuma foi escolhida. Como é recalculada a cada desenho, jogar, comprar e o transfer learning mantêm a ordem; a seleção guarda ids de carta, então também sobrevive. |
 | `desenharMaos()` | método | Desenha a mão do jogador de baixo (aberta) e a do de cima (versos). |
 | `posicaoDaMaoDeCima(k, n)` | método | Centro e largura do leque de cartas de um adversário no alto da mesa. |
 | `notaDaCartaDaMao(carta)` | método | Nota da inspeção para uma carta da mão: onde ela pode ser usada agora. |
@@ -356,7 +357,7 @@ Parte da CenaMesa: animações e falas. Traduz os eventos das regras (ver nucleo
 | `animar_transfer()` | método | Transfer learning. |
 | `animar_completa(evento)` | método | Rede chegou à camada de saída. |
 | `animar_vento(evento)` | método | Terreno oceano: o vento mudou de naipe. |
-| `animar_powerbi(evento)` | método | Baralho Power BI: as cartas da mão foram trocadas. |
+| `animar_powerbi(evento)` | método | Baralho Power Bee-Ai: as cartas da mão foram trocadas. |
 | `animar_travada(evento)` | método | Rede finalizada porque não sobrou neurônio livre na camada seguinte. |
 | `animar_passe(evento)` | método | Alguém passou a vez. |
 | `animar_inicio(evento)` | método | Quem começa: mostra as cartas reveladas (ou anuncia o sorteio). |
@@ -402,6 +403,8 @@ Geometria da mesa e utilitários de texto que se ajusta ao espaço. Tudo em coor
 | `PAINEL_DIR` | constante (exportada) | Painel direito (placar, curva, registro e ações). |
 | `ESQ` | constante (exportada) | Posições verticais dentro do painel esquerdo, de cima para baixo. `pilha` é o tamanho das cartas do limbo e do cemitério. |
 | `DIR` | constante (exportada) | Posições verticais dentro do painel direito. Os blocos de placar ficam empilhados a partir de `blocos`, cada um com altura `alturaBloco`; o botão de truco fica logo acima das ações. |
+| `MAO_NA_MESA` | constante (exportada) | Mão do jogador de baixo e os botões "Tamanho" e "Naipe" que a ordenam (issue #127). Os botões ficam empilhados à esquerda da mão, numa coluna que a mão não ocupa: ela é centrada em `centro` e nunca passa de `larguraMax` de espaçamento entre a primeira e a última carta. |
+| `BOTOES_DE_ORDEM` | constante (exportada) | Os dois botões de ordem: [critério, rótulo]. |
 | `NOME_DA_ACAO` | constante (exportada) | Nome de cada ação da barra, para dicas e explicações. |
 | `BARRA_DE_ACOES` | constante (exportada) | Ações da barra, na ordem: [id, rótulo, linha]. O id é o tipo de alvo (ver calcularAlvos) ou a ação. |
 | `blocosDoPlacar(n)` | função (exportada) | Posição dos blocos do placar. Com 2 jogadores, os dois blocos grandes de sempre; com mais, blocos compactos dividindo o mesmo espaço (do topo dos blocos até a curva de treino). |
@@ -544,7 +547,6 @@ Recursos compartilhados pelas cenas do Phaser: texto nítido, câmera ajustada �
 | `liberarCartasDaMao(cena)` | função (exportada) | Libera as cartas da mão da mão anterior (memória de vídeo é limitada em celulares). |
 | `retanguloNaTela(cena, x, y, l, a)` | função (exportada) | Converte um retângulo do mundo do jogo (centro x, y e tamanho l × a) em pixels da página, para posicionar elementos HTML (como as dicas flutuantes) sobre o canvas. |
 | `carregarIconesDasAcoes(cena)` | função (exportada) | Carrega os ícones das ações (SVG) como texturas `icone-acao:<id>`, em 128 px. O carregamento é assíncrono; quem usa confere `textures.exists` e segue sem o ícone se ele ainda não chegou. |
-| `carregarIconesDeSom(cena, cor, aoCarregar)` | função (exportada) | Carrega os ícones de som (SVG) como texturas `icone-som:<nome>`, em 96 px, pintados com `cor` (os SVG usam `currentColor`, que dentro de uma imagem não herda a cor da página). Assíncrono: `aoCarregar` roda a cada textura que chega, para quem desenha trocar o ícone na hora certa. |
 
 ## `src/configuracao.js`
 
@@ -604,6 +606,17 @@ Dicas de jogo do modo "dicas": como jogar bem e o conceito de redes neurais por 
 | `DICAS_GERAIS` | constante (exportada) | Dicas gerais de estratégia, usadas quando nenhuma situação especial aparece. Cada uma liga uma boa prática do jogo a um verbete do Livro de conceitos (`verbete`). |
 | `contarValores(mao)` | função | Contagem de cartas da mão por valor. |
 | `escolherDicaDeJogo(mao, j, partida, recentes = [])` | função (exportada) | Escolhe a dica de jogo para o jogador `j` agora. |
+
+## `src/conteudo/equipe.js`
+
+A equipe do jogo, mostrada na aba "Equipe" da tela Sobre (issue #135): o professor e os autores, um cartão por pessoa. Cada pessoa tem `nome`, `papel` (o que fez ou quem é) e `miniCV` (texto curto, opcional). Os papéis e o texto do professor são os que a tela Sobre já trazia; ninguém ganha texto novo aqui. `miniCV: null` deixa o campo pronto para quando a pessoa enviar o dela. `foto` só existe para quem autorizou o uso da imagem (hoje, o professor); sem foto, o cartão mostra um avatar gerado a partir do nome.
+
+| Nome | Tipo | Descrição |
+|---|---|---|
+| `PROFESSOR` | constante (exportada) | O professor da disciplina. O `miniCV` é o texto que a seção "O professor" já tinha. |
+| `AUTORES` | constante (exportada) | Os autores, na ordem em que sempre apareceram. |
+| `EQUIPE` | constante (exportada) | Todas as pessoas, professor primeiro. |
+| `iniciaisDe(nome)` | função (exportada) | Iniciais para o avatar de quem não tem foto: primeira e última palavra do nome. |
 
 ## `src/conteudo/figurasDaBiblioteca.js`
 
@@ -778,7 +791,7 @@ Conta conectada neste navegador (Firebase): entrar, sair e retomar a conta ao re
 
 ## `src/interface/controlesDeSom.js`
 
-Botões de ícone para ligar e desligar os efeitos sonoros e a música no menu principal (issue #133). A mesa tem os seus, desenhados no canvas (ver `criarBotoesDeSom` em cenas/mesa/cenario.js); os dois lados leem o mesmo estado (`progresso.mudo` e `progresso.musica`) e se atualizam quando qualquer lugar muda o áudio (`Aplicacao.aoMudarAudio`).
+Botões de ícone para ligar e desligar os efeitos sonoros e a música no menu principal (issue #133). Na mesa, efeitos e música ficam só dentro da janela MENU (os botões de ícone que ficavam no alto do painel esquerdo foram removidos); os dois lados leem o mesmo estado (`progresso.mudo` e `progresso.musica`) e se atualizam quando qualquer lugar muda o áudio (`Aplicacao.aoMudarAudio`).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -925,7 +938,7 @@ Tela de avatares: o jogador escolhe o retrato que aparece no placar. Os bloquead
 
 ## `src/interface/telas/conquistas.js`
 
-Quadro de conquistas: retrato do professor em moldura medieval à esquerda e as medalhas à direita (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela. Dois botões levam à página de estatísticas pessoais (estatisticas.js) e ao painel de conquistas globais (conquistasGlobais.js), issue #154.
+Quadro de conquistas: as medalhas em toda a largura (desbloqueadas coloridas; bloqueadas em cinza, com cadeado), com a linha que diz se elas são da conta conectada ou só deste aparelho. A conquista final fica em destaque no alto, com o progresso até ela. Dois botões levam à página de estatísticas pessoais (estatisticas.js) e ao painel de conquistas globais (conquistasGlobais.js), issue #154.
 
 | Nome | Tipo | Descrição |
 |---|---|---|
@@ -1048,12 +1061,14 @@ Tela de revisão didática do fim da mão (e da partida). Mostra, a partir da li
 
 ## `src/interface/telas/sobre.js`
 
-Tela "Sobre": a logo, versão, a disciplina, as regras originais, o professor (e a conquista final em homenagem a ele), os autores, o botão para reportar bugs e sugestões (issues do GitHub), as estatísticas de uso (ligar e desligar) e a licença.
+Tela "Sobre", em duas abas (issue #134): "O jogo" (a logo, a versão, a disciplina, as regras originais, as estatísticas de uso, os dados da conta, o botão para reportar bugs e sugestões e a licença) e "Equipe" (o professor, com a conquista final em homenagem a ele, e os autores, um cartão por pessoa, issue #135).
 
 | Nome | Tipo | Descrição |
 |---|---|---|
 | `situacaoDasEstatisticas()` | função | Situação das estatísticas de uso neste aparelho, em texto. |
-| `abrirSobre()` | função (exportada) | Abre a tela "Sobre". |
+| `ABAS_DO_SOBRE` | constante (exportada) | As abas da tela, na ordem: [id, nome]. |
+| `cartaoDaPessoa(pessoa)` | função | Cartão de uma pessoa da equipe: retrato (foto em moldura ou iniciais), nome, papel e mini currículo, se houver. |
+| `abrirSobre(abaInicial = 'jogo')` | função (exportada) | Abre a tela "Sobre". |
 
 ## `src/motor/bot.js`
 
@@ -1134,6 +1149,8 @@ Cartas do baralho: valores, naipes e nomes. Uma carta é um objeto simples `{ id
 | `ehFigura(carta)` | função (exportada) | Diz se a carta é uma figura (valete, dama ou rei). |
 | `rotuloCarta(carta)` | função (exportada) | Rótulo curto da carta, ex.: '10♠'. |
 | `baralhoPadrao()` | função (exportada) | Baralho padrão de 52 cartas, sem coringas. |
+| `CRITERIOS_DE_ORDEM` | constante (exportada) | Critérios de ordenação da mão e as direções aceitas por `ordenarMao`. |
+| `ordenarMao(cartas, criterio, direcao = 'asc')` | função (exportada) | Ordena uma mão só para exibição (issue #126): devolve uma cópia e nunca altera `cartas` nem o estado da partida. - `'tamanho'`: ordem natural do baralho (Ás, 2 a 10, Valete, Dama, Rei), desempate por naipe na ordem de `NAIPES` (espadas, copas, paus, ouros); - `'naipe'`: naipes na ordem de `NAIPES`, desempate pelo tamanho natural. `'asc'` segue essa ordem; `'desc'` a inverte por inteiro. Cartas idênticas (baralhos repetidos) mantêm a ordem em que vieram, nas duas direções (ordenação estável). |
 
 ## `src/nucleo/oponentes/comum.js`
 
@@ -1180,6 +1197,8 @@ Uma mão do jogo, vista pela interface do Truco de Turing e jogada pelo motor. E
 | `todasAsCartas(estadoMotor)` | função | Todas as cartas da partida no estado do motor, onde quer que estejam. |
 | `indexarCartas(estadoMotor)` | função | Converte as cartas do motor para o formato da interface, uma vez por partida. motor, e id do motor por id da interface. |
 | `montar(estadoMotor, config, jogadores, simulacao, cartas)` | função | Monta a visão da interface em volta de um estado do motor. |
+| `LIMITES_DO_BARALHO` | constante (exportada) | Limites que cada baralho impõe à mesa (issue #130). O Yin-yang só tem Ás e 2: com mais de um baralho ou com a arquitetura longa, faltariam cartas distintas para montar a rede. Por isso ele só joga com 1 baralho e a arquitetura curta. TEMPORÁRIO: sai quando existirem os coringas, que completam o Yin-yang em qualquer mesa. O aviso na tela e a trava dos campos do menu são da issue #131 (fora do núcleo). |
+| `normalizarConfiguracao(config)` | função (exportada) | Devolve uma cópia da configuração (ou das opções do menu: `baralho`, `baralhos`, `arquitetura`) com os `LIMITES_DO_BARALHO` aplicados. Os outros baralhos passam sem mudança. Toda criação de partida passa por aqui, dentro de `novaMao`: partida local, sorteio, sala online (cada aparelho monta a mesa com as opções da sala) e tutorial. As opções salvas do menu não são alteradas, para que trocar de baralho depois não deixe a arquitetura ou a quantidade de baralhos "presas". |
 | `novaMao(opcoes)` | função (exportada) | Cria uma mão nova: o motor embaralha, monta a mesa, distribui as cartas e separa o limbo. |
 | `copiarMao(mao, estadoMotor = motor.cloneState(mao.estadoMotor)` | função (exportada) | Cópia leve da mão para simulações (sem eventos, textos ou histórico). |
 | `atualizarVisao(mao)` | função (exportada) | Refaz a visão da interface a partir do estado do motor (`mao.estadoMotor`). É chamada depois de cada jogada; ferramentas e testes que mexem direto em `mao.estadoMotor` também precisam chamá-la. |

@@ -9,17 +9,14 @@ import { nomeCamada } from '../../nucleo/rede.js';
 import { TERRENOS } from '../../nucleo/terrenos.js';
 import { desenharBotao, MARGEM_BOTAO } from '../../arte/botoes.js';
 import { Som } from '../../interface/som.js';
-import { texturaDeInspecao, carregarIconesDeSom } from '../recursos.js';
-import { CONTROLES_DE_SOM, controleLigado } from '../../interface/controlesDeSom.js';
-import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
+import { texturaDeInspecao } from '../recursos.js';
+import { PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, FOLGA_DE_TOQUE, BARRA_DE_ACOES, MAO_NA_MESA, ORDEM_DA_MAO, BOTOES_DE_ORDEM, colunaX, linhaY, ajustarLinha, geometria, cartaDaMesa, blocosDoPlacar } from './layout.js';
 
 /** Cor do rótulo de cada variante de botão. */
 const COR_ROTULO = { ouro: '#2a1606', vinho: '#fff0e0', pedra: '#f6ecd6' };
-/** Botões de ícone de efeitos e música: lado, centro vertical e margem à borda do painel esquerdo (mundo 1280x720). */
-const BOTAO_DE_SOM = { lado: 32, y: 26, margem: 12 };
-/** Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar entre os botões de som. */
+/** Título do painel que mostra a carta ampliada (o nome interno continua `inspecao`) e a largura que ele pode ocupar. */
 export const TITULO_DO_DETALHE = 'DETALHE DA CARTA';
-const LARGURA_DO_TITULO_DO_DETALHE = PAINEL_ESQ.l - 2 * (BOTAO_DE_SOM.margem + BOTAO_DE_SOM.lado) - 12;
+const LARGURA_DO_TITULO_DO_DETALHE = PAINEL_ESQ.l - 24;
 /** Quanto tempo (ms) o dedo precisa ficar no botão para mostrar a dica em vez de executar a ação. */
 const TEMPO_DE_SEGURAR = 450;
 
@@ -82,7 +79,7 @@ export const metodosDoCenario = {
     botao.add([fundo, texto]);
     botao.setSize(l, a);
     /* área de toque um pouco maior que o desenho (o dedo cobre mais do que o cursor) */
-    const folga = FOLGA_DE_TOQUE;
+    const folga = opcoes.folga ?? FOLGA_DE_TOQUE;
     botao.setInteractive({
       hitArea: new Phaser.Geom.Rectangle(-folga, -folga, l + folga * 2, a + folga * 2),
       hitAreaCallback: Phaser.Geom.Rectangle.Contains,
@@ -192,9 +189,6 @@ export const metodosDoCenario = {
       this.inspecionar('terreno-' + this.opcoes.terreno, t.nome + ': ' + t.resumo);
     });
     p.dica = this.criarTexto(PAINEL_ESQ.x + 14, ESQ.dica, '', { fontSize: '13.5px', color: '#efe3c6', wordWrap: { width: PAINEL_ESQ.l - 28 }, lineSpacing: 1 });
-
-    /* dois botões de ícone no alto do painel, ao lado do título: efeitos sonoros e música, sem abrir a janela MENU */
-    this.criarBotoesDeSom(p);
 
     /* só dois botões no rodapé: REGRAS (como jogar, Livro de conceitos e dicas) e MENU (som, música, sair) */
     const lb = (PAINEL_ESQ.l - 28 - 10) / 2, pedra = { tamanho: 17, variante: 'pedra' };
@@ -310,41 +304,45 @@ export const metodosDoCenario = {
     p.botaoDropout = p.acoes.dropout;
     p.botaoTransfer = p.acoes.transfer;
     p.botaoPassar = p.acoes.passar;
+    this.criarBotoesDeOrdem(p);
   },
 
   /**
-   * Botões de ícone de efeitos sonoros e música (issue #133), nos cantos de cima do painel
-   * esquerdo, onde não cobrem o título, a carta de inspeção nem os botões de ação. Mostram o estado
-   * atual (ver `atualizarChaves`) e se atualizam também quando a janela MENU muda o áudio.
+   * Botões "Tamanho" e "Naipe" à esquerda da mão (issue #127). Só mudam a ordem em que as cartas
+   * aparecem (`this.ordemDaMao`, ver `cartasNaOrdemDaMao`); a mão do jogo não é tocada.
    */
-  criarBotoesDeSom(p) {
-    const lado = BOTAO_DE_SOM.lado, y = BOTAO_DE_SOM.y;
-    const criar = (chave, x) => {
-      const c = CONTROLES_DE_SOM[chave];
-      const botao = this.criarBotao(x, y, lado, lado, '', () => (chave === 'som' ? this.app.alternarSom() : this.app.alternarMusica(this.opcoes.terreno)), {
-        variante: 'pedra',
-        explicar: () => (controleLigado(this.app.progresso, chave) ? c.desligar : c.ligar) + '.',
-      });
-      botao.chaveDeSom = chave;
-      botao.icone = this.add.image(0, 0, '__DEFAULT').setDisplaySize(lado * 0.64, lado * 0.64).setVisible(false);
-      botao.add(botao.icone);
-      return botao;
-    };
-    p.botaoEfeitos = criar('som', PAINEL_ESQ.x + BOTAO_DE_SOM.margem + lado / 2);
-    p.botaoMusica = criar('musica', PAINEL_ESQ.x + PAINEL_ESQ.l - BOTAO_DE_SOM.margem - lado / 2);
-    carregarIconesDeSom(this, COR_ROTULO.pedra, () => this.atualizarIconesDeSom());
-    this.atualizarIconesDeSom();
+  criarBotoesDeOrdem(p) {
+    const o = ORDEM_DA_MAO, pedra = { variante: 'pedra', tamanho: 12, folga: o.folga };
+    this.ordemDaMao = null;
+    p.ordem = {};
+    BOTOES_DE_ORDEM.forEach(([criterio, rotulo], i) => {
+      p.ordem[criterio] = this.criarBotao(o.x, o.ys[i], o.l, o.a, rotulo, () => this.ordenarMinhaMao(criterio), pedra);
+    });
+    p.destaqueDaOrdem = this.add.graphics().setDepth(9);
+    p.botaoTamanho = p.ordem.tamanho;
+    p.botaoNaipe = p.ordem.naipe;
   },
 
-  /** Põe em cada botão de som o ícone do estado atual (se a textura já chegou). */
-  atualizarIconesDeSom() {
-    const p = this.painel;
-    if (!p || !p.botaoEfeitos) return;
-    for (const botao of [p.botaoEfeitos, p.botaoMusica]) {
-      const c = CONTROLES_DE_SOM[botao.chaveDeSom];
-      const chave = 'icone-som:' + (controleLigado(this.app.progresso, botao.chaveDeSom) ? c.ligado : c.desligadoIcone);
-      if (this.textures.exists(chave)) botao.icone.setTexture(chave).setDisplaySize(BOTAO_DE_SOM.lado * 0.64, BOTAO_DE_SOM.lado * 0.64).setVisible(true);
-    }
+  /** Clique num botão de ordem: escolhe o critério (crescente) ou, se já era o ativo, inverte a direção. */
+  ordenarMinhaMao(criterio) {
+    const atual = this.ordemDaMao;
+    this.ordemDaMao = atual && atual.criterio === criterio ? { criterio, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' } : { criterio, direcao: 'asc' };
+    this.desenharMaos();
+  },
+
+  /** Seta e destaque do critério ativo; os botões somem quando a mão não está à mostra. */
+  atualizarBotoesDeOrdem() {
+    const p = this.painel, o = ORDEM_DA_MAO, ordem = this.ordemDaMao, visivel = this.quemVe >= 0;
+    p.destaqueDaOrdem.clear();
+    BOTOES_DE_ORDEM.forEach(([criterio, rotulo], i) => {
+      const botao = p.ordem[criterio], ativo = visivel && ordem && ordem.criterio === criterio;
+      botao.setVisible(visivel);
+      botao.definirRotulo(ativo ? rotulo + (ordem.direcao === 'asc' ? ' \u25B2' : ' \u25BC') : rotulo);
+      if (ativo) {
+        p.destaqueDaOrdem.lineStyle(3, 0xf6dc8f, 1);
+        p.destaqueDaOrdem.strokeRoundedRect(o.x - o.l / 2 - 2, o.ys[i] - o.a / 2 - 2, o.l + 4, o.a + 4, 8);
+      }
+    });
   },
 
   /**
@@ -353,7 +351,6 @@ export const metodosDoCenario = {
    */
   atualizarChaves() {
     this.painel.botaoRegras.definirRotulo(this.app.dicasLigadas ? 'REGRAS \u2605' : 'REGRAS');
-    this.atualizarIconesDeSom();
     const rotulos = {
       som: Som.estaMudo() ? 'Som: não' : 'Som: sim',
       musica: this.app.progresso.musica ? 'Música: sim' : 'Música: não',

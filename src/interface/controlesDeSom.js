@@ -1,8 +1,9 @@
 /**
  * @file Botões de ícone para ligar e desligar os efeitos sonoros e a música no menu principal
- * (issue #133). A mesa tem os seus, desenhados no canvas (ver `criarBotoesDeSom` em
- * cenas/mesa/cenario.js); os dois lados leem o mesmo estado (`progresso.mudo` e `progresso.musica`)
- * e se atualizam quando qualquer lugar muda o áudio (`Aplicacao.aoMudarAudio`).
+ * (issue #133). Na mesa, efeitos e música ficam só dentro da janela MENU (os botões de ícone que
+ * ficavam no alto do painel esquerdo foram removidos); os dois lados leem o mesmo estado
+ * (`progresso.mudo` e `progresso.musica`) e se atualizam quando qualquer lugar muda o áudio
+ * (`Aplicacao.aoMudarAudio`).
  */
 import { ICONES_DE_SOM } from '../arte/icones.js';
 import { Som } from './som.js';

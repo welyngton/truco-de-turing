@@ -5,7 +5,7 @@
  * Nada aqui muda as regras; só lê `this.mao` e `this.partida`.
  */
 import { TAMANHO_CARTA } from '../../configuracao.js';
-import { rotuloCarta, NAIPE } from '../../nucleo/cartas.js';
+import { rotuloCarta, ordenarMao, NAIPE } from '../../nucleo/cartas.js';
 import { BARALHOS } from '../../nucleo/baralhos.js';
 import { TERRENOS } from '../../nucleo/terrenos.js';
 import { ehOculta, nomeCamada } from '../../nucleo/rede.js';
@@ -19,7 +19,7 @@ import { OPONENTES } from '../../nucleo/oponentes/index.js';
 import { texturaDaCartaNaMao, texturaDaCartaNaMesa, texturaDeInspecao } from '../recursos.js';
 import {
   PAINEL_ESQ, PAINEL_DIR, ESQ, DIR, TABULEIRO, colunaX, linhaY, COR_JOGADOR, COR_JOGADOR_CSS, COR_DO_ALVO, NOME_SITUACAO,
-  ajustarCartaDaMesa, ajustarLinha, ajustarBloco, cartaDaMesa, NOME_DA_ACAO,
+  ajustarCartaDaMesa, ajustarLinha, ajustarBloco, cartaDaMesa, NOME_DA_ACAO, MAO_NA_MESA,
 } from './layout.js';
 
 /** Cor da soma no placar: vermelha se uma quadra zerou a rede, laranja se a saída do Backprop saturou. */
@@ -89,6 +89,16 @@ export const metodosDeDesenho = {
     v.imagem.setDepth(v.realcado ? 9 : v.profundidade);
   },
 
+  /**
+   * A mão na ordem de exibição escolhida nos botões Tamanho/Naipe (issue #127), ou como veio do
+   * jogo se nenhuma foi escolhida. Como é recalculada a cada desenho, jogar, comprar e o transfer
+   * learning mantêm a ordem; a seleção guarda ids de carta, então também sobrevive.
+   */
+  cartasNaOrdemDaMao(cartas) {
+    const o = this.ordemDaMao;
+    return o ? ordenarMao(cartas, o.criterio, o.direcao) : cartas;
+  },
+
   /** Desenha a mão do jogador de baixo (aberta) e a do de cima (versos). */
   desenharMaos() {
     const mao = this.mao, baralho = mao.config.baralho;
@@ -97,10 +107,10 @@ export const metodosDeDesenho = {
     this.cartasDaMao = []; this.cartasDoAdversario = [];
     const debaixo = this.jogadorDeBaixo();
     const aberta = this.quemVe >= 0;
-    const cartas = mao.jogadores[debaixo].mao;
-    const espaco = Math.min(TAMANHO_CARTA.maoL + 8, 660 / Math.max(1, cartas.length));
+    const cartas = this.cartasNaOrdemDaMao(mao.jogadores[debaixo].mao);
+    const espaco = Math.min(TAMANHO_CARTA.maoL + 8, MAO_NA_MESA.larguraMax / Math.max(1, cartas.length));
     cartas.forEach((carta, i) => {
-      const x = 610 + (i - (cartas.length - 1) / 2) * espaco;
+      const x = MAO_NA_MESA.centro + (i - (cartas.length - 1) / 2) * espaco;
       const y = this.selecao.includes(carta.id) ? 628 : 646;
       const imagem = this.add.image(x, y, aberta ? texturaDaCartaNaMao(this, carta, baralho) : this.verso('mao'))
         .setDisplaySize(TAMANHO_CARTA.maoL, TAMANHO_CARTA.maoA).setDepth(10 + i);
@@ -136,6 +146,7 @@ export const metodosDeDesenho = {
       const l = TAMANHO_CARTA.maoL + 4, a = TAMANHO_CARTA.maoA + 4;
       this.camadaSelecao.strokeRoundedRect(imagem.x - l / 2, imagem.y - a / 2, l, a, 10);
     }
+    if (this.painel && this.painel.ordem) this.atualizarBotoesDeOrdem();
   },
 
   /**

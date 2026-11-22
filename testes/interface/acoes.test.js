@@ -575,4 +575,25 @@ describe('ações da mesa', () => {
       assert.deepEqual(jogo.erros, []);
     } finally { await jogo.fechar(); }
   });
+
+  it('o botão "Transfer learning" cabe no próprio botão sem mudar o tamanho dos vizinhos, em 640x360, 844x390 e 1280x800', async () => {
+    const jogo = await abrirJogo(servidor.url, { consulta: '?res=1' });
+    const { pagina } = jogo;
+    try {
+      await comecarPartida(pagina, { oponente: 'aleatorio', terreno: 'neutro', partida: '12', inicio: 'sorteio' });
+      for (const tela of [{ width: 640, height: 360 }, { width: 844, height: 390 }, { width: 1280, height: 800 }]) {
+        await pagina.setViewportSize(tela);
+        await pagina.waitForTimeout(250);
+        const medidas = await naCena(pagina, `
+          const dentro = (b) => { const t = b.texto.getBounds(); return t.width <= b.width && t.height <= b.height; };
+          const { transfer, dropout, passar, limpar } = cena.painel.acoes;
+          return { texto: transfer.texto.text, cabe: dentro(transfer), larguras: [transfer.width, dropout.width, passar.width, limpar.width], fonte: transfer.texto.style.fontSize };`);
+        assert.equal(medidas.texto, 'Transfer\nlearning');
+        assert.ok(medidas.cabe, `${tela.width}x${tela.height}: o rótulo passa do botão (${medidas.fonte})`);
+        assert.equal(new Set(medidas.larguras).size, 1, 'os botões da linha mantêm o mesmo tamanho');
+        await capturar(pagina, `42-transfer-learning-${tela.width}x${tela.height}`);
+      }
+      assert.deepEqual(jogo.erros, []);
+    } finally { await jogo.fechar(); }
+  });
 });
