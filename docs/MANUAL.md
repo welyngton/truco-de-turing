@@ -285,10 +285,23 @@ cliques durante animações) e `this.encerrada`.
 
 ### 5.1 Dicas, revisão e música
 
-- **Botões de som** (`controlesDeSom.js` no menu e `criarBotoesDeSom` em `cenario.js` na mesa): dois botões de
-  ícone, um para os efeitos sonoros e outro para a música, no menu principal e no alto do painel esquerdo da
-  mesa. Leem `progresso.mudo` e `progresso.musica` e, como a janela MENU, chamam `alternarSom` e `alternarMusica`;
-  a `Aplicacao` avisa quem se registrou com `aoMudarAudio`, então os três lugares ficam sempre em acordo.
+- **Botões de som** (`controlesDeSom.js`, só no menu principal): dois botões de ícone, um para os efeitos
+  sonoros e outro para a música. Na mesa eles não existem mais no painel "Detalhe da carta": som e música
+  ficam só dentro da janela MENU da mesa. Os dois lugares leem `progresso.mudo` e `progresso.musica`,
+  chamam `alternarSom` e `alternarMusica`, e a `Aplicacao` avisa quem se registrou com `aoMudarAudio`,
+  então ficam sempre em acordo.
+- **Ordem da mão** (`ordenarMao` em `nucleo/cartas.js`; botões em `criarBotoesDeOrdem`, `cenario.js`): os
+  botões **Tamanho** e **Naipe**, à esquerda da mão, só mudam a ordem de exibição (`cartasNaOrdemDaMao`
+  em `desenho.js`); a mão do estado do jogo não é tocada. Tamanho usa a ordem natural (Ás, 2 a 10, Valete,
+  Dama, Rei) com desempate por naipe (espadas, copas, paus, ouros); Naipe usa a ordem dos naipes com
+  desempate por tamanho. O segundo clique inverte a direção (▲ crescente, ▼ decrescente). Como a ordem é
+  refeita a cada desenho, ela continua depois de jogar, comprar e do transfer learning.
+- **Limites do baralho** (`LIMITES_DO_BARALHO` e `normalizarConfiguracao` em `nucleo/partida.js`): o
+  Yin-yang só joga com 1 baralho e a arquitetura curta (faltam cartas distintas para mais). `novaMao`
+  aplica isso em toda partida (local, sala online, tutorial); as opções salvas do menu não mudam. A
+  constante sai quando houver coringas.
+- **Tela Sobre** (`telas/sobre.js`): duas abas, "O jogo" e "Equipe". A Equipe vem de `conteudo/equipe.js`
+  (o professor e os autores: `nome`, `papel`, `miniCV` opcional, `foto` só de quem autorizou).
 - **Botões da mesa** (`cenario.js` e `entrada.js`): o painel esquerdo tem só **REGRAS** (janela com
   Regras, Ajuda das ações, Livro de conceitos e a chave das dicas) e **MENU** (janela com som, música, voltar ao jogo e sair
   da partida); o direito tem TRUCO e a linha Dropout · Transfer · Passar. Os botões são grandes e
