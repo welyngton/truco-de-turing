@@ -51,7 +51,7 @@ export const DIR = {
  * e nunca passa de `larguraMax` de espaçamento entre a primeira e a última carta.
  */
 export const MAO_NA_MESA = { centro: 650, larguraMax: 560 };
-export const ORDEM_DA_MAO = { x: 300, l: 74, a: 44, ys: [610, 662], folga: 8 };
+export const ORDEM_DA_MAO = { x: 298, l: 82, a: 44, ys: [610, 662], folga: 8 };
 /** Os dois botões de ordem: [critério, rótulo]. */
 export const BOTOES_DE_ORDEM = [['tamanho', 'Tamanho'], ['naipe', 'Naipe']];
 
