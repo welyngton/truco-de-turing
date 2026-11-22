@@ -508,7 +508,7 @@ describe('telas', () => {
     assert.equal($('.avatar-opcao[data-avatar="gato"]').getAttribute('aria-pressed'), 'true');
     assert.match($('.avatar-opcao[data-avatar="cosmico"]').textContent, /Contra tudo e contra todos/);
   });
-  it('conquistas: medalhas bloqueadas e desbloqueadas, contagem e retrato', async () => {
+  it('conquistas: medalhas bloqueadas e desbloqueadas, contagem e sem o retrato do professor', async () => {
     const app = appFalso();
     abrirConquistas(app);
     assert.match($('.conquistas-resumo').textContent, new RegExp('1 de ' + CONQUISTAS.length));
@@ -523,8 +523,9 @@ describe('telas', () => {
     assert.match(final.querySelector('.progresso-final').textContent, new RegExp('1 de ' + (CONQUISTAS.length - 1)));
     assert.equal(final.querySelector('.barra').getAttribute('aria-valuenow'), '1');
     assert.equal($$('.conquistas-lista .conquista.final').length, 0, 'e não se repete na lista');
-    await esperar(50);
-    assert.ok($('#c-retrato canvas'));
+    assert.equal($('#c-retrato'), null, 'o retrato do professor foi para a aba Equipe da tela Sobre');
+    assert.equal($('.guilda'), null);
+    assert.equal($('.conquistas-salao').children.length, 1, 'a lista ocupa toda a largura, sem coluna lateral');
     assert.match(medalhaHtml(CONQUISTAS[0], true), /medalha/);
     assert.match(medalhaHtml(CONQUISTAS[0], false), /cadeado|bloquead/);
   });
@@ -557,23 +558,48 @@ describe('telas', () => {
     assert.equal($('#g-raridade'), null, 'sem conta não há comparação');
     assert.equal($('#g-estatisticas'), null);
   });
-  it('sobre: versão, disciplina, professor e autores', () => {
+  it('sobre: duas abas, "O jogo" (padrão) e "Equipe"; a equipe tem um cartão por pessoa', () => {
     abrirSobre();
-    const texto = $('.camada').textContent;
-    assert.ok(texto.includes('Versão ' + VERSAO));
-    assert.match(texto, /Peng Yaohao/);
-    /* a logo completa abre a tela, com nome acessível e sem depender de fonte (as letras são curvas) */
+    const abas = $$('.sobre .abas [role="tab"]');
+    assert.deepEqual(abas.map((a) => a.textContent), ['O jogo', 'Equipe']);
+    assert.equal($('.sobre .abas').getAttribute('role'), 'tablist');
+    assert.equal(abas[0].getAttribute('aria-selected'), 'true', 'abre em "O jogo"');
+    const painel = (id) => $('section.aba[data-aba="' + id + '"]');
+    assert.equal(painel('jogo').hidden, false);
+    assert.equal(painel('equipe').hidden, true);
+    /* "O jogo": tudo o que havia, menos autores e professor */
+    const jogo = painel('jogo').textContent;
+    assert.ok($('.camada').textContent.includes('Versão ' + VERSAO));
+    for (const termo of ['A disciplina', 'As regras originais', 'Estatísticas de uso', 'Dados da conta', 'Bugs e sugestões', 'Créditos e licença', 'Power Bee-Ai']) assert.ok(jogo.includes(termo), termo);
+    assert.ok(!/Autores|O professor|Welyngton/.test(jogo), 'autores e professor ficam na Equipe');
     assert.match($('.sobre-logo svg').getAttribute('aria-label'), /Truco de Turing/);
     assert.equal($('.sobre-logo svg text'), null);
+    /* "Equipe": o professor e os autores, um cartão por pessoa, com os textos de antes */
+    const equipe = painel('equipe').textContent;
+    assert.match(equipe, /O professor/);
+    assert.match(equipe, /Peng Yaohao é professor da Universidade de Brasília/);
     assert.match($('.homenagem').textContent, /Convergência global.*homenagem ao prof\. Peng.*Singularidade/s);
-    for (const termo of ['Truco de Turing', 'Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo']) assert.ok(texto.includes(termo), termo);
-    /* bugs e sugestões: o botão leva às issues do repositório, em outra aba */
+    assert.equal(painel('equipe').querySelectorAll('.equipe-pessoa').length, 5);
+    for (const termo of ['Welyngton', 'Diego Casagrande', 'Vinícius Chiconato', 'Suzy Arcanjo', 'interface, arte, sons, conquistas e modo truco', 'Testes e validação das regras', 'Correções nas regras', 'Verbetes das ações']) assert.ok(equipe.includes(termo), termo);
+    assert.equal(painel('equipe').querySelectorAll('.equipe-retrato.com-foto').length, 1, 'só o professor tem foto');
+    assert.equal(painel('equipe').querySelector('.equipe-minicv') === null, false, 'o professor tem mini currículo');
+    assert.equal(painel('equipe').querySelectorAll('.equipe-minicv').length, 1, 'os autores ainda não enviaram o deles (campo pronto)');
+    /* trocar de aba */
+    abas[1].dispatchEvent(new window.Event('click'));
+    assert.equal(painel('jogo').hidden, true);
+    assert.equal(painel('equipe').hidden, false);
+    assert.equal(abas[1].getAttribute('aria-selected'), 'true');
+    assert.equal(abas[1].tabIndex, 0);
+    assert.equal(abas[0].tabIndex, -1);
+  });
+  it('sobre: bugs e sugestões e estatísticas de uso continuam na aba "O jogo"', () => {
+    abrirSobre();
+    const texto = $('section.aba[data-aba="jogo"]').textContent;
     const reportar = $('#s-reportar');
     assert.equal(reportar.getAttribute('href'), 'https://github.com/welyngton/truco-de-turing/issues/new');
     assert.equal(reportar.getAttribute('target'), '_blank');
     assert.match(reportar.getAttribute('rel'), /noopener/);
     assert.equal($('#s-issues').getAttribute('href'), 'https://github.com/welyngton/truco-de-turing/issues');
-    /* estatísticas de uso: o texto sempre aparece; fora do site publicado não há botões e nada é medido */
     assert.match(texto, /Estatísticas de uso/);
     assert.match(texto, /Google Analytics/);
     assert.match($('#s-estatisticas').textContent, /fora do site publicado/);
